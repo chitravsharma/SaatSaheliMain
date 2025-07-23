@@ -2,30 +2,38 @@ import logo from './logo.svg';
 import './App.css';
 
 import React, { useState, useEffect } from "react";
-import FlipBook from "./FlipBook";
-import { Link } from 'react-router-dom';
+
+import Header from './modules/Header';
+import Footer from './modules/Footer';
+import { Routes, Route } from 'react-router-dom';
+import Home from './pages/Home';
+import About from './pages/About';
+import Contacts from './pages/Contacts';
+import Sidebar from './modules/Sidebar';
+
 
 function App() {
-	const [query, setQuery] = useState('');
+	/*const [query, setQuery] = useState('');*/
+	const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+	const toggleSidebar = () => {
+	   setIsSidebarOpen(!isSidebarOpen);
+	 };
   	return (
    		 <div className="App">
-   		   <h1>My Flipbook</h1>
-		   <Link 
-			   to={{
-			       pathname: "/create",
-			       search: "?query=string",
-			       hash: "#hash",
-			     }}
-		   />
-		   Search by Book id :
-		   <input
-		       type="text"
-		       className="border p-2 w-full mb-4"
-		       placeholder="Search..."
-			   value = {query}
-			   onChange={(e) => setQuery(e.target.value)}
-		     />
-   		   <FlipBook bookId={query} />
+		 <Header />
+		 <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/contacts" element={<Contacts />} />
+            <Route path="/about" element={<About />} />
+         </Routes>
+		 <Sidebar isOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
+		 <div className={`main-content ${isSidebarOpen ? 'shifted' : ''}`}>
+			 <main>
+		       <p></p>
+		     </main>
+		 </div>
+		
+		   <Footer />
    		 </div>
   );
 }
@@ -54,4 +62,3 @@ export default App;
     </div>
   );
 }*/
-

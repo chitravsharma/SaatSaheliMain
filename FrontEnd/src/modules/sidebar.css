@@ -1,0 +1,49 @@
+/* src/Sidebar.css */
+.sidebar {
+  width: 250px;
+  height: 100%;
+  position: fixed;
+  top: 0;
+  left: -250px; /* Initially hidden off-screen */
+  background-color: lightblue;
+  color: white;
+  transition: left 0.3s ease-in-out; /* Smooth transition for sliding */
+  z-index: 100;
+}
+
+.sidebar.open {
+  left: 0; /* Slide into view */
+}
+
+.sidebar nav ul {
+  list-style: none;
+  padding: 20px 0;
+}
+
+.sidebar nav li a {
+  display: block;
+  padding: 10px 20px;
+  text-decoration: none;
+  color: white;
+}
+
+.sidebar nav li a:hover {
+  background-color: lightblue;
+}
+
+.toggle-button {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 10px 15px;
+  cursor: pointer;
+  position: absolute;
+  top: 15px;
+  right: -80px; /* Adjust as needed to position the button */
+}
+
+/* Optional: Styles for main content to shift when sidebar opens */
+.main-content.shifted {
+  margin-left: 250px;
+  transition: margin-left 0.3s ease-in-out;
+}
