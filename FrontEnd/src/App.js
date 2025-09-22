@@ -1,7 +1,6 @@
-import logo from './logo.svg';
 import './App.css';
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, myRef, useRef  } from "react";
 
 import Header from './modules/Header';
 import Footer from './modules/Footer';
@@ -14,6 +13,16 @@ import Sidebar from './modules/Sidebar';
 
 function App() {
 	/*const [query, setQuery] = useState('');*/
+	const myRef = useRef('');
+	useEffect(() => {
+	  if (myRef.current) {
+	    // It's safe to use the ref here
+	    myRef.current.focus();
+	  } else {
+	    console.warn("Ref is still null after mount.");
+	  }
+	}, []); 
+
 	const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 	const toggleSidebar = () => {
 	   setIsSidebarOpen(!isSidebarOpen);
@@ -40,25 +49,3 @@ function App() {
 
 
 export default App;
-
-
-/*function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
-}*/

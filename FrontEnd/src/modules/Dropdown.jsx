@@ -3,7 +3,7 @@ import './Dropdown.css'; // Import the CSS file for styling
 
 const Dropdown = ({ options, onSelect }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [selectedOption, setSelectedOption] = useState(null);
+  const [selectedOption, setSelectedOption] = useState('');
 
   const handleToggle = () => {
     setIsOpen(!isOpen);

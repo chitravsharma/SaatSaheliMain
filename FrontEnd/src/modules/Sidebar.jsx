@@ -12,7 +12,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
 		  <div className="grid-item">
 	  		  <img src={saraswati} className="App-logo2" alt="saraswati-logo" />
 	  	 </div>
-        <ul>
+        <ul className="grid-item">
           <li><a href="/">Home</a></li>
           <li><a href="/about">About</a></li>
           <li><a href="/contact">Contact</a></li>
