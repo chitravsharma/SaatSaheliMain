@@ -3,7 +3,7 @@ import { GoogleLogin, GoogleOAuthProvider } from "@react-oauth/google";
 
 
 /* const clientId = "YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com"; */
-const clientId = "164490284768-php1rloatm7lc9k0cmspvo2asrfstu0q.apps.googleusercontent.com" ;
+const clientId = "+++++++++++++++++++++++++++++.apps.googleusercontent.com" ;
 
 
 function WelcomePage({ onLoginClick }) {
