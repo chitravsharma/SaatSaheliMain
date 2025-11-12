@@ -5,9 +5,11 @@
 
 .dropdown-toggle {
   background-color: lightblue;
-  border: 1px solid #ccc;
-  padding: 8px 16px;
+  border: none; 
+  padding: 15px;
+  font-size: 20px;
   cursor: pointer;
+  text-align: right;
 }
 
 .dropdown-menu {

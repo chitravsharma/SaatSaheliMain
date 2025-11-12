@@ -22,7 +22,9 @@ const Header = () => (
 	 </div>
 	  <div className="grid-item">
 		    <nav>
+			<Link to="/Login">Login</Link> |
 		      <Link to="/">Home</Link> | <Link to="/about">About</Link> | 
+			  <Link to="/Logout">Logout</Link> |
 			  <Dropdown options={options} onSelect={handleDropdownSelect} />
 			| {welcomeMessage}
 		    </nav>

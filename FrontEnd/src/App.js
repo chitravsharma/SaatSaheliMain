@@ -8,11 +8,15 @@ import { Routes, Route } from 'react-router-dom';
 import Home from './pages/Home';
 import About from './pages/About';
 import Contacts from './pages/Contacts';
+import Login from './pages/Login';
+import Logout from './pages/Logout';
 import Sidebar from './modules/Sidebar';
 
 
 function App() {
 	/*const [query, setQuery] = useState('');*/
+	const [user, setUser] = useState(null);
+	const [page, setPage] = useState('welcome');
 	const myRef = useRef('');
 	useEffect(() => {
 	  if (myRef.current) {
@@ -31,9 +35,11 @@ function App() {
    		 <div className="App">
 		 <Header />
 		 <Routes>
+		 	<Route path="/Login" element={<Login />} />
             <Route path="/" element={<Home />} />
             <Route path="/contacts" element={<Contacts />} />
             <Route path="/about" element={<About />} />
+			<Route path="/logout" element={<Logout setUser={setUser} setPage={setPage} />} />
          </Routes>
 		 <Sidebar isOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
 		 <div className={`main-content ${isSidebarOpen ? 'shifted' : ''}`}>

@@ -18,7 +18,7 @@ const Dropdown = ({ options, onSelect }) => {
   return (
     <div className="dropdown">
       <button className="dropdown-toggle" onClick={handleToggle}>
-        {selectedOption ? selectedOption.label : 'Select an option'} 
+        {selectedOption ? selectedOption.label : 'Select'} 
       </button>
       {isOpen && (
         <ul className="dropdown-menu">
