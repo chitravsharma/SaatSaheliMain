@@ -3,77 +3,42 @@ package com.SaatSaheli.spring.model;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.SaatSaheli.spring.model.Page;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
-
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.OneToMany;
-
-@Entity
 public class Book {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private String title;
-    
-    @JsonManagedReference
-   @OneToMany(mappedBy = "book")
-    	/*	cascade = CascadeType.ALL)*/
+    private Long userId;
+    private String status; // DRAFT, PUBLISHED, ARCHIVED
+    private String createdDate;
+    private String modifiedDate;
     private List<Page> pages = new ArrayList<>();
+    private String authorName; // transient - not persisted to sheet, enriched by service
 
-	/**
-	 * @return the id
-	 */
-	public Long getId() {
-		return id;
-	}
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
 
-	/**
-	 * @param id the id to set
-	 */
-	public void setId(Long id) {
-		this.id = id;
-	}
+    public String getTitle() { return title; }
+    public void setTitle(String title) { this.title = title; }
 
-	/**
-	 * @return the title
-	 */
-	public String getTitle() {
-		return title;
-	}
+    public Long getUserId() { return userId; }
+    public void setUserId(Long userId) { this.userId = userId; }
 
-	/**
-	 * @param title the title to set
-	 */
-	public void setTitle(String title) {
-		this.title = title;
-	}
+    public String getStatus() { return status; }
+    public void setStatus(String status) { this.status = status; }
 
-	/**
-	 * @return the pages
-	 */
-	public List<Page> getPages() {
-		return pages;
-	}
+    public String getCreatedDate() { return createdDate; }
+    public void setCreatedDate(String createdDate) { this.createdDate = createdDate; }
 
-	/**
-	 * @param pages the pages to set
-	 */
-	public void setPages(List<Page> pages) {
-		this.pages = pages;
-	}
+    public String getModifiedDate() { return modifiedDate; }
+    public void setModifiedDate(String modifiedDate) { this.modifiedDate = modifiedDate; }
 
-	@Override
-	public String toString() {
-		return "Book [id=" + id + ", title=" + title + ", pages=" + pages + ", getId()=" + getId() + ", getTitle()="
-				+ getTitle() + ", getPages()=" + getPages() + ", getClass()=" + getClass() + ", hashCode()="
-				+ hashCode() + ", toString()=" + super.toString() + "]";
-	}
+    public List<Page> getPages() { return pages; }
+    public void setPages(List<Page> pages) { this.pages = pages; }
 
-    // Getters and setters
+    public String getAuthorName() { return authorName; }
+    public void setAuthorName(String authorName) { this.authorName = authorName; }
+
+    @Override
+    public String toString() {
+        return "Book [id=" + id + ", title=" + title + ", status=" + status + "]";
+    }
 }

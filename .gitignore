@@ -1,0 +1,25 @@
+# OS files
+.DS_Store
+Thumbs.db
+
+# Build output
+SaatSaheli/target/
+FrontEnd/node_modules/
+FrontEnd/build/
+
+# IDE
+.idea/
+*.iml
+.vscode/
+*.swp
+
+# Credentials - never commit these
+*.json
+!FrontEnd/public/manifest.json
+!FrontEnd/package.json
+!FrontEnd/package-lock.json
+
+# Environment
+.env
+.env.local
+.env.*.local

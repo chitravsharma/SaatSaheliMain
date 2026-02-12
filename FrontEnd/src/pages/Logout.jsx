@@ -1,18 +1,15 @@
-import React from 'react';
-import { googleLogout } from '@react-oauth/google';
+import React, { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 
-function Logout({ setUser, setPage }) {
-  const handleLogout = () => {
-    googleLogout();         // Log out from Google OAuth
-    setUser(null);          // Clear logged-in user state
-    setPage('welcome');     // Navigate back to welcome screen
-  };
+function Logout() {
+  const navigate = useNavigate();
 
-  return (
-    <button onClick={handleLogout}>
-      Logout
-    </button>
-  );
+  useEffect(() => {
+    localStorage.removeItem('saatSaheliUser');
+    navigate('/Login');
+  }, [navigate]);
+
+  return null;
 }
 
 export default Logout;

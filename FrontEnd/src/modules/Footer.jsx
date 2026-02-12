@@ -1,8 +1,9 @@
 import React from 'react';
+import './Footer.css';
 
 const Footer = () => (
-  <footer style={{ padding: '1rem', backgroundColor: '#f0f0f0', marginTop: 'auto' }}>
-    <p>&copy; 2025 SaatSaheli</p>
+  <footer className="site-footer" role="contentinfo">
+    <p>&copy; 2026 SaatSaheli. All rights reserved.</p>
   </footer>
 );
 
