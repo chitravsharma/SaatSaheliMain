@@ -61,7 +61,7 @@ function Home() {
 
   return (
     <div className="home-container">
-      <h1>Saat Saheli Books</h1>
+      <h1>Welcome to Saat Saheli – A Community for Passion and Creativity!</h1>
 
       <form className="home-search-form" onSubmit={handleSearch} role="search" aria-label="Search books">
         <h2>Search Books</h2>

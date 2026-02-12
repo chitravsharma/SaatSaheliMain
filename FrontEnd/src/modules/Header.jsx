@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import saraswati from './saraswati.png';
 import Dropdown from './Dropdown';
 import { useAuth } from '../AuthContext';
@@ -7,18 +7,22 @@ import './Header.css';
 
 const welcomeMessage = process.env.REACT_APP_WELCOME_MESSAGE;
 const options = [
-  { label: 'Contact Us', value: 'ContactUs' },
-  { label: 'Site Policies', value: 'SitePolicies' },
-  { label: 'Feedback', value: 'Feedback' },
+  { label: 'Contact Us', value: '/contacts' },
+  { label: 'Site Policies', value: '/policies' },
+  { label: 'Feedback', value: '/contacts' },
 ];
-const handleDropdownSelect = (selectedOption) => {
-  console.log('Selected:', selectedOption);
-};
 
 const Header = () => {
   const { user } = useAuth();
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const menuRef = useRef(null);
+  const navigate = useNavigate();
+
+  const handleDropdownSelect = (selectedOption) => {
+    if (selectedOption?.value) {
+      navigate(selectedOption.value);
+    }
+  };
 
   // Close menu when clicking outside
   useEffect(() => {
