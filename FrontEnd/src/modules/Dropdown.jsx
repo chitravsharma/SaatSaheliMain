@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import strings from '../constants/strings';
 import './Dropdown.css'; // Import the CSS file for styling
 
 const Dropdown = ({ options, onSelect }) => {
@@ -18,7 +19,7 @@ const Dropdown = ({ options, onSelect }) => {
   return (
     <div className="dropdown">
       <button className="dropdown-toggle" onClick={handleToggle}>
-        {selectedOption ? selectedOption.label : 'Select'} 
+        {selectedOption ? selectedOption.label : strings.dropdown.defaultText}
       </button>
       {isOpen && (
         <ul className="dropdown-menu">

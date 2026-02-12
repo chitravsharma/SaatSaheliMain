@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import axios from "axios";
 import FlipBook from "../FlipBook";
+import strings from "../constants/strings";
 import "../BookManager.css";
 
 const API = "http://localhost:8081/api/books";
@@ -51,68 +52,68 @@ function SearchBooks() {
 
   return (
     <div className="book-manager search-page">
-      <h1>Search Books</h1>
+      <h1>{strings.searchBooks.heading}</h1>
 
       <div className="bm-search-form">
         <div className="bm-search-fields">
           <input
             type="text"
-            placeholder="Book ID"
+            placeholder={strings.searchBooks.placeholderBookId}
             value={searchId}
             onChange={(e) => setSearchId(e.target.value)}
             className="bm-input bm-input-small"
-            aria-label="Search by book ID"
+            aria-label={strings.searchBooks.ariaBookId}
           />
           <input
             type="text"
-            placeholder="Title"
+            placeholder={strings.searchBooks.placeholderTitle}
             value={searchTitle}
             onChange={(e) => setSearchTitle(e.target.value)}
             className="bm-input"
-            aria-label="Search by title"
+            aria-label={strings.searchBooks.ariaTitle}
           />
           <input
             type="text"
-            placeholder="Author name"
+            placeholder={strings.searchBooks.placeholderAuthor}
             value={searchAuthor}
             onChange={(e) => setSearchAuthor(e.target.value)}
             className="bm-input"
-            aria-label="Search by author"
+            aria-label={strings.searchBooks.ariaAuthor}
           />
           <select
             value={searchStatus}
             onChange={(e) => setSearchStatus(e.target.value)}
             className="bm-format-select"
-            aria-label="Filter by status"
+            aria-label={strings.searchBooks.ariaStatus}
           >
-            <option value="">All Statuses</option>
-            <option value="DRAFT">Draft</option>
-            <option value="PUBLISHED">Published</option>
-            <option value="ARCHIVED">Archived</option>
+            <option value="">{strings.searchBooks.statusAll}</option>
+            <option value="DRAFT">{strings.searchBooks.statusDraft}</option>
+            <option value="PUBLISHED">{strings.searchBooks.statusPublished}</option>
+            <option value="ARCHIVED">{strings.searchBooks.statusArchived}</option>
           </select>
         </div>
         <div className="bm-search-actions">
           <button className="bm-btn bm-btn-all" onClick={handleSearch} disabled={loading}>
-            {loading ? "Searching..." : "Search"}
+            {loading ? strings.searchBooks.searching : strings.searchBooks.searchButton}
           </button>
-          <button className="bm-btn bm-btn-back" onClick={handleClear}>Clear</button>
+          <button className="bm-btn bm-btn-back" onClick={handleClear}>{strings.searchBooks.clearButton}</button>
         </div>
       </div>
 
       {searched && !selectedBook && (
         <div className="bm-search-results-table">
-          <h3>Results ({results.length})</h3>
+          <h3>{strings.searchBooks.resultsHeading(results.length)}</h3>
           {results.length === 0 ? (
-            <p>No books found.</p>
+            <p>{strings.searchBooks.noResults}</p>
           ) : (
             <table className="bm-results-table">
               <thead>
                 <tr>
-                  <th>ID</th>
-                  <th>Title</th>
-                  <th>Author</th>
-                  <th>Status</th>
-                  <th>Modified</th>
+                  <th>{strings.searchBooks.thId}</th>
+                  <th>{strings.searchBooks.thTitle}</th>
+                  <th>{strings.searchBooks.thAuthor}</th>
+                  <th>{strings.searchBooks.thStatus}</th>
+                  <th>{strings.searchBooks.thModified}</th>
                 </tr>
               </thead>
               <tbody>
@@ -124,7 +125,7 @@ function SearchBooks() {
                         {book.title}
                       </button>
                     </td>
-                    <td>{book.authorName || "—"}</td>
+                    <td>{book.authorName || strings.searchBooks.emptyAuthor}</td>
                     <td>
                       <span className={`bm-status-dot ${book.status === "PUBLISHED" ? "dot-published" : "dot-draft"}`} />
                       {book.status}
@@ -141,7 +142,7 @@ function SearchBooks() {
       {searched && selectedBook && (
         <div className="bm-split-view">
           <aside className="bm-split-sidebar">
-            <h4>Books ({results.length})</h4>
+            <h4>{strings.searchBooks.booksHeading(results.length)}</h4>
             <ul className="bm-split-list">
               {results.map((book) => (
                 <li
@@ -156,12 +157,12 @@ function SearchBooks() {
               ))}
             </ul>
             <button className="bm-btn bm-btn-back bm-btn-sm" onClick={() => setSelectedBook(null)} style={{ marginTop: "10px" }}>
-              Back to Table
+              {strings.searchBooks.backToTable}
             </button>
           </aside>
           <div className="bm-split-reader">
             <h2>{selectedBook.title}</h2>
-            {selectedBook.authorName && <p className="bm-date">by {selectedBook.authorName}</p>}
+            {selectedBook.authorName && <p className="bm-date">{strings.searchBooks.byAuthor(selectedBook.authorName)}</p>}
             <FlipBook bookId={selectedBook.id} />
           </div>
         </div>

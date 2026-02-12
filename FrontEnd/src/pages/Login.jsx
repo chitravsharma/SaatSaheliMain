@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { GoogleLogin, GoogleOAuthProvider } from "@react-oauth/google";
 import axios from "axios";
 import { useAuth } from "../AuthContext";
+import strings from "../constants/strings";
 import './Login.css';
 
 const API_BASE = "http://localhost:8081/api/auth";
@@ -47,7 +48,7 @@ export default function Login() {
     setSuccess("");
 
     if (!loginEmail.trim() || !loginPassword.trim()) {
-      setError("Email and password are required.");
+      setError(strings.login.errorEmailPasswordRequired);
       return;
     }
 
@@ -60,7 +61,7 @@ export default function Login() {
       });
       saveUserAndRedirect(res.data);
     } catch (err) {
-      const msg = err.response?.data?.error || "Login failed. Please try again.";
+      const msg = err.response?.data?.error || strings.login.errorLoginFailed;
       setError(msg);
     } finally {
       setLoading(false);
@@ -73,15 +74,15 @@ export default function Login() {
     setSuccess("");
 
     if (!firstName.trim() || !email.trim() || !password.trim()) {
-      setError("First name, email, and password are required.");
+      setError(strings.login.errorSignupRequired);
       return;
     }
     if (password !== confirmPassword) {
-      setError("Passwords do not match.");
+      setError(strings.login.errorPasswordMismatch);
       return;
     }
     if (password.length < 6) {
-      setError("Password must be at least 6 characters.");
+      setError(strings.login.errorPasswordLength);
       return;
     }
 
@@ -97,7 +98,7 @@ export default function Login() {
       });
       saveUserAndRedirect(res.data);
     } catch (err) {
-      const msg = err.response?.data?.error || "Signup failed. Please try again.";
+      const msg = err.response?.data?.error || strings.login.errorSignupFailed;
       setError(msg);
     } finally {
       setLoading(false);
@@ -142,7 +143,7 @@ export default function Login() {
         }
       }
     } catch (err) {
-      const msg = err.response?.data?.error || "Google sign-in failed. Please try again.";
+      const msg = err.response?.data?.error || strings.login.errorGoogleFailed;
       setError(msg);
     } finally {
       setLoading(false);
@@ -160,23 +161,23 @@ export default function Login() {
       <div className="auth-container">
         <div className="auth-card">
           <div className="auth-welcome">
-            <h1>Saat Saheli</h1>
-            <p>Your digital book platform</p>
+            <h1>{strings.login.brand}</h1>
+            <p>{strings.login.tagline}</p>
           </div>
 
           {mode === "login" && (
             <>
-              <h2>Log In</h2>
+              <h2>{strings.login.logInHeading}</h2>
               <form className="auth-form" onSubmit={handleLogin}>
                 {error && <div className="auth-error" role="alert">{error}</div>}
                 {success && <div className="auth-success" role="status">{success}</div>}
 
                 <div className="auth-field">
-                  <label htmlFor="login-email">Email</label>
+                  <label htmlFor="login-email">{strings.login.labelEmail}</label>
                   <input
                     id="login-email"
                     type="email"
-                    placeholder="Enter your email"
+                    placeholder={strings.login.placeholderEmail}
                     value={loginEmail}
                     onChange={(e) => setLoginEmail(e.target.value)}
                     required
@@ -185,11 +186,11 @@ export default function Login() {
                 </div>
 
                 <div className="auth-field">
-                  <label htmlFor="login-password">Password</label>
+                  <label htmlFor="login-password">{strings.login.labelPassword}</label>
                   <input
                     id="login-password"
                     type="password"
-                    placeholder="Enter your password"
+                    placeholder={strings.login.placeholderPassword}
                     value={loginPassword}
                     onChange={(e) => setLoginPassword(e.target.value)}
                     required
@@ -202,16 +203,16 @@ export default function Login() {
                   className="auth-btn auth-btn-primary"
                   disabled={loading}
                 >
-                  {loading ? "Logging in..." : "Log In"}
+                  {loading ? strings.login.loggingIn : strings.login.logInButton}
                 </button>
               </form>
 
-              <div className="auth-divider"><span>or</span></div>
+              <div className="auth-divider"><span>{strings.common.or}</span></div>
 
               <div style={{ display: "flex", justifyContent: "center" }}>
                 <GoogleLogin
                   onSuccess={handleGoogleSuccess}
-                  onError={() => setError("Google sign-in failed. Please try again.")}
+                  onError={() => setError(strings.login.errorGoogleFailed)}
                   text="signin_with"
                   shape="rectangular"
                   size="large"
@@ -220,9 +221,9 @@ export default function Login() {
               </div>
 
               <div className="auth-switch">
-                Don't have an account?{" "}
+                {strings.login.noAccount}{" "}
                 <button onClick={() => switchMode("signup")}>
-                  Create Account
+                  {strings.login.switchToSignup}
                 </button>
               </div>
             </>
@@ -230,18 +231,18 @@ export default function Login() {
 
           {mode === "signup" && (
             <>
-              <h2>Create Account</h2>
+              <h2>{strings.login.createAccountHeading}</h2>
               <form className="auth-form" onSubmit={handleSignup}>
                 {error && <div className="auth-error" role="alert">{error}</div>}
                 {success && <div className="auth-success" role="status">{success}</div>}
 
                 <div className="auth-field-row">
                   <div className="auth-field">
-                    <label htmlFor="signup-first">First Name *</label>
+                    <label htmlFor="signup-first">{strings.login.labelFirstName}</label>
                     <input
                       id="signup-first"
                       type="text"
-                      placeholder="First name"
+                      placeholder={strings.login.placeholderFirstName}
                       value={firstName}
                       onChange={(e) => setFirstName(e.target.value)}
                       required
@@ -249,11 +250,11 @@ export default function Login() {
                     />
                   </div>
                   <div className="auth-field">
-                    <label htmlFor="signup-last">Last Name</label>
+                    <label htmlFor="signup-last">{strings.login.labelLastName}</label>
                     <input
                       id="signup-last"
                       type="text"
-                      placeholder="Last name"
+                      placeholder={strings.login.placeholderLastName}
                       value={lastName}
                       onChange={(e) => setLastName(e.target.value)}
                       autoComplete="family-name"
@@ -262,11 +263,11 @@ export default function Login() {
                 </div>
 
                 <div className="auth-field">
-                  <label htmlFor="signup-email">Email *</label>
+                  <label htmlFor="signup-email">{strings.login.labelSignupEmail}</label>
                   <input
                     id="signup-email"
                     type="email"
-                    placeholder="Enter your email"
+                    placeholder={strings.login.placeholderEmail}
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
@@ -275,11 +276,11 @@ export default function Login() {
                 </div>
 
                 <div className="auth-field">
-                  <label htmlFor="signup-phone">Phone Number</label>
+                  <label htmlFor="signup-phone">{strings.login.labelPhone}</label>
                   <input
                     id="signup-phone"
                     type="tel"
-                    placeholder="(optional)"
+                    placeholder={strings.login.placeholderPhone}
                     value={phoneNumber}
                     onChange={(e) => setPhoneNumber(e.target.value)}
                     autoComplete="tel"
@@ -287,11 +288,11 @@ export default function Login() {
                 </div>
 
                 <div className="auth-field">
-                  <label htmlFor="signup-password">Password *</label>
+                  <label htmlFor="signup-password">{strings.login.labelSignupPassword}</label>
                   <input
                     id="signup-password"
                     type="password"
-                    placeholder="At least 6 characters"
+                    placeholder={strings.login.placeholderSignupPassword}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
@@ -301,11 +302,11 @@ export default function Login() {
                 </div>
 
                 <div className="auth-field">
-                  <label htmlFor="signup-confirm">Confirm Password *</label>
+                  <label htmlFor="signup-confirm">{strings.login.labelConfirmPassword}</label>
                   <input
                     id="signup-confirm"
                     type="password"
-                    placeholder="Re-enter your password"
+                    placeholder={strings.login.placeholderConfirmPassword}
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     required
@@ -318,16 +319,16 @@ export default function Login() {
                   className="auth-btn auth-btn-primary"
                   disabled={loading}
                 >
-                  {loading ? "Creating Account..." : "Create Account"}
+                  {loading ? strings.login.creatingAccount : strings.login.createAccountButton}
                 </button>
               </form>
 
-              <div className="auth-divider"><span>or</span></div>
+              <div className="auth-divider"><span>{strings.common.or}</span></div>
 
               <div style={{ display: "flex", justifyContent: "center" }}>
                 <GoogleLogin
                   onSuccess={handleGoogleSuccess}
-                  onError={() => setError("Google sign-in failed. Please try again.")}
+                  onError={() => setError(strings.login.errorGoogleFailed)}
                   text="signup_with"
                   shape="rectangular"
                   size="large"
@@ -336,9 +337,9 @@ export default function Login() {
               </div>
 
               <div className="auth-switch">
-                Already have an account?{" "}
+                {strings.login.hasAccount}{" "}
                 <button onClick={() => switchMode("login")}>
-                  Log In
+                  {strings.login.switchToLogin}
                 </button>
               </div>
             </>

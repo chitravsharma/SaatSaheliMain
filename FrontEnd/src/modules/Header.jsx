@@ -3,14 +3,10 @@ import { Link, useNavigate } from 'react-router-dom';
 import saraswati from './saraswati.png';
 import Dropdown from './Dropdown';
 import { useAuth } from '../AuthContext';
+import strings from '../constants/strings';
 import './Header.css';
 
 const welcomeMessage = process.env.REACT_APP_WELCOME_MESSAGE;
-const options = [
-  { label: 'Contact Us', value: '/contacts' },
-  { label: 'Site Policies', value: '/policies' },
-  { label: 'Feedback', value: '/contacts' },
-];
 
 const Header = () => {
   const { user } = useAuth();
@@ -37,17 +33,17 @@ const Header = () => {
 
   return (
     <header className="site-header" role="banner">
-      <a className="skip-link" href="#main-content">Skip to main content</a>
+      <a className="skip-link" href="#main-content">{strings.header.skipLink}</a>
       <div className="header-container">
         <div className="header-logo">
-          <img src={saraswati} className="header-logo-img" alt="SaatSaheli Saraswati logo" />
+          <img src={saraswati} className="header-logo-img" alt={strings.header.logoAlt} />
         </div>
         <nav className="header-nav" role="navigation" aria-label="Main navigation">
-          <Link to="/" className="nav-link">Home</Link>
-          <Link to="/about" className="nav-link">About</Link>
-          <Link to="/books" className="nav-link">Books</Link>
-          <Link to="/search" className="nav-link">Search</Link>
-          <Dropdown options={options} onSelect={handleDropdownSelect} />
+          <Link to="/" className="nav-link">{strings.header.navHome}</Link>
+          <Link to="/about" className="nav-link">{strings.header.navAbout}</Link>
+          <Link to="/books" className="nav-link">{strings.header.navBooks}</Link>
+          <Link to="/search" className="nav-link">{strings.header.navSearch}</Link>
+          <Dropdown options={strings.header.dropdownOptions} onSelect={handleDropdownSelect} />
           {welcomeMessage && <span className="welcome-msg" aria-live="polite">{welcomeMessage}</span>}
 
           {user ? (
@@ -63,16 +59,16 @@ const Header = () => {
               {userMenuOpen && (
                 <div className="header-user-dropdown" role="menu">
                   <Link to="/account" className="header-user-item" role="menuitem" onClick={() => setUserMenuOpen(false)}>
-                    My Account
+                    {strings.header.myAccount}
                   </Link>
                   <Link to="/logout" className="header-user-item" role="menuitem" onClick={() => setUserMenuOpen(false)}>
-                    Logout
+                    {strings.header.logout}
                   </Link>
                 </div>
               )}
             </div>
           ) : (
-            <Link to="/Login" className="nav-link">Login</Link>
+            <Link to="/Login" className="nav-link">{strings.header.navLogin}</Link>
           )}
         </nav>
       </div>

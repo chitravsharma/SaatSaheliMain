@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import axios from "axios";
 import FlipBook from "../FlipBook";
 import PageLayoutEditor from "../PageLayoutEditor";
+import strings from "../constants/strings";
 import "../BookManager.css";
 
 const API = "http://localhost:8081/api/books";
@@ -90,9 +91,9 @@ function BookManager() {
         headers: { "Content-Type": "multipart/form-data" },
       });
       setUrl(res.data.url);
-      showMessage("Image uploaded!");
+      showMessage(strings.bookManager.msgImageUploaded);
     } catch (err) {
-      showMessage("Upload failed: " + (err.response?.data?.error || err.message));
+      showMessage(strings.bookManager.msgUploadFailed(err.response?.data?.error || err.message));
     } finally {
       setUploadingState(false);
     }
@@ -133,7 +134,7 @@ function BookManager() {
 
   const handleCreateBook = async () => {
     if (!newTitle.trim()) {
-      showMessage("Please enter a book title");
+      showMessage(strings.bookManager.msgEnterTitle);
       return;
     }
     try {
@@ -142,10 +143,10 @@ function BookManager() {
       setSelectedBook(res.data);
       setPages(res.data.pages || []);
       setNewTitle("");
-      showMessage("Book created as Draft!");
+      showMessage(strings.bookManager.msgBookCreated);
       setView("edit");
     } catch (err) {
-      showMessage("Failed to create book: " + (err.response?.data?.error || err.message));
+      showMessage(strings.bookManager.msgCreateFailed(err.response?.data?.error || err.message));
     } finally {
       setLoading(false);
     }
@@ -162,9 +163,9 @@ function BookManager() {
     try {
       const res = await axios.put(`${API}/${selectedBook.id}`, { title: selectedBook.title });
       setSelectedBook(res.data);
-      showMessage("Title updated!");
+      showMessage(strings.bookManager.msgTitleUpdated);
     } catch (err) {
-      showMessage("Failed to update title");
+      showMessage(strings.bookManager.msgTitleFailed);
     }
   };
 
@@ -173,9 +174,9 @@ function BookManager() {
     try {
       const res = await axios.put(`${API}/${selectedBook.id}/publish`);
       setSelectedBook(res.data);
-      showMessage("Book published!");
+      showMessage(strings.bookManager.msgPublished);
     } catch (err) {
-      showMessage("Failed to publish");
+      showMessage(strings.bookManager.msgPublishFailed);
     }
   };
 
@@ -184,29 +185,29 @@ function BookManager() {
     try {
       const res = await axios.put(`${API}/${selectedBook.id}/draft`);
       setSelectedBook(res.data);
-      showMessage("Saved as draft!");
+      showMessage(strings.bookManager.msgDraftSaved);
     } catch (err) {
-      showMessage("Failed to save draft");
+      showMessage(strings.bookManager.msgDraftFailed);
     }
   };
 
   const handleDeleteBook = async (bookId) => {
-    if (!window.confirm("Are you sure you want to delete this book and all its pages?")) return;
+    if (!window.confirm(strings.bookManager.confirmDeleteBook)) return;
     try {
       await axios.delete(`${API}/${bookId}`);
-      showMessage("Book deleted!");
+      showMessage(strings.bookManager.msgBookDeleted);
       setSelectedBook(null);
       setPages([]);
       setView("menu");
     } catch (err) {
-      showMessage("Failed to delete book");
+      showMessage(strings.bookManager.msgDeleteBookFailed);
     }
   };
 
   const handleAddPage = async () => {
     if (!selectedBook) return;
     if (!pageNumber) {
-      showMessage("Page number is required");
+      showMessage(strings.bookManager.msgPageNumberRequired);
       return;
     }
     try {
@@ -218,7 +219,7 @@ function BookManager() {
         imageUrl: pageImageUrl,
         imageUrl2: pageImageUrl2,
       });
-      showMessage("Page added!");
+      showMessage(strings.bookManager.msgPageAdded);
       setPageContent("");
       setPageNumber("");
       setPageImageUrl("");
@@ -229,7 +230,7 @@ function BookManager() {
       setPageLayout({});
       await fetchBookPages(selectedBook.id);
     } catch (err) {
-      showMessage("Failed to add page");
+      showMessage(strings.bookManager.msgAddPageFailed);
     }
   };
 
@@ -243,22 +244,22 @@ function BookManager() {
         imageUrl: editingPage.imageUrl,
         imageUrl2: editingPage.imageUrl2,
       });
-      showMessage("Page updated!");
+      showMessage(strings.bookManager.msgPageUpdated);
       setEditingPage(null);
       await fetchBookPages(selectedBook.id);
     } catch (err) {
-      showMessage("Failed to update page");
+      showMessage(strings.bookManager.msgUpdatePageFailed);
     }
   };
 
   const handleDeletePage = async (pageId) => {
-    if (!window.confirm("Delete this page?")) return;
+    if (!window.confirm(strings.bookManager.confirmDeletePage)) return;
     try {
       await axios.delete(`${API}/page/${pageId}`);
-      showMessage("Page deleted!");
+      showMessage(strings.bookManager.msgPageDeleted);
       await fetchBookPages(selectedBook.id);
     } catch (err) {
-      showMessage("Failed to delete page");
+      showMessage(strings.bookManager.msgDeletePageFailed);
     }
   };
 
@@ -298,7 +299,7 @@ function BookManager() {
             onClick={() => setUrl("")}
             type="button"
           >
-            Remove
+            {strings.common.remove}
           </button>
         </div>
       ) : (
@@ -315,9 +316,9 @@ function BookManager() {
             }}
           />
           <label htmlFor={inputId} className="bm-btn bm-btn-edit bm-btn-sm">
-            Choose File
+            {strings.bookManager.chooseFile}
           </label>
-          {uploading && <span className="bm-uploading">Uploading...</span>}
+          {uploading && <span className="bm-uploading">{strings.bookManager.uploading}</span>}
         </div>
       )}
     </div>
@@ -326,24 +327,24 @@ function BookManager() {
   // Render formatting toolbar
   const renderFormatToolbar = (family, setFamily, size, setSize, color, setColor) => (
     <div className="bm-format-toolbar">
-      <label className="bm-format-label">Text Formatting</label>
+      <label className="bm-format-label">{strings.bookManager.textFormatting}</label>
       <div className="bm-format-controls">
         <select
           value={family}
           onChange={(e) => setFamily(e.target.value)}
           className="bm-format-select"
-          aria-label="Font family"
+          aria-label={strings.bookManager.ariaFontFamily}
         >
-          <option value="sans-serif">Sans-serif</option>
-          <option value="serif">Serif</option>
-          <option value="monospace">Monospace</option>
-          <option value="cursive">Cursive</option>
+          <option value="sans-serif">{strings.bookManager.fontSans}</option>
+          <option value="serif">{strings.bookManager.fontSerif}</option>
+          <option value="monospace">{strings.bookManager.fontMono}</option>
+          <option value="cursive">{strings.bookManager.fontCursive}</option>
         </select>
         <select
           value={size}
           onChange={(e) => setSize(e.target.value)}
           className="bm-format-select"
-          aria-label="Font size"
+          aria-label={strings.bookManager.ariaFontSize}
         >
           <option value="12px">12px</option>
           <option value="14px">14px</option>
@@ -361,7 +362,7 @@ function BookManager() {
             value={color}
             onChange={(e) => setColor(e.target.value)}
             className="bm-color-picker"
-            aria-label="Font color"
+            aria-label={strings.bookManager.ariaFontColor}
           />
           <span className="bm-color-label">{color}</span>
         </div>
@@ -373,17 +374,17 @@ function BookManager() {
   if (view === "menu") {
     return (
       <div className="book-manager">
-        <h1>Book Manager</h1>
+        <h1>{strings.bookManager.heading}</h1>
         {message && <div className="bm-message">{message}</div>}
         <div className="bm-button-row">
           <button className="bm-btn bm-btn-create" onClick={() => setView("create")}>
-            Create New Book
+            {strings.bookManager.createNewBook}
           </button>
           <button className="bm-btn bm-btn-draft" onClick={() => { fetchDrafts(); setView("drafts"); }}>
-            My Drafts
+            {strings.bookManager.myDrafts}
           </button>
           <button className="bm-btn bm-btn-all" onClick={() => { fetchBooks(); setView("allbooks"); }}>
-            All My Books
+            {strings.bookManager.allMyBooks}
           </button>
         </div>
       </div>
@@ -394,20 +395,20 @@ function BookManager() {
   if (view === "create") {
     return (
       <div className="book-manager">
-        <h1>Create New Book</h1>
+        <h1>{strings.bookManager.createHeading}</h1>
         {message && <div className="bm-message">{message}</div>}
         <div className="bm-form">
           <input
             type="text"
-            placeholder="Enter book title..."
+            placeholder={strings.bookManager.placeholderTitle}
             value={newTitle}
             onChange={(e) => setNewTitle(e.target.value)}
             className="bm-input"
           />
           <button className="bm-btn bm-btn-create" onClick={handleCreateBook} disabled={loading}>
-            {loading ? "Creating..." : "Create Book"}
+            {loading ? strings.bookManager.creating : strings.bookManager.createButton}
           </button>
-          <button className="bm-btn bm-btn-back" onClick={() => setView("menu")}>Back</button>
+          <button className="bm-btn bm-btn-back" onClick={() => setView("menu")}>{strings.common.back}</button>
         </div>
       </div>
     );
@@ -417,27 +418,27 @@ function BookManager() {
   if (view === "drafts") {
     return (
       <div className="book-manager">
-        <h1>My Drafts</h1>
+        <h1>{strings.bookManager.draftsHeading}</h1>
         {message && <div className="bm-message">{message}</div>}
-        {loading ? <p>Loading...</p> : (
+        {loading ? <p>{strings.common.loading}</p> : (
           <div className="bm-book-list">
-            {books.length === 0 && <p>No drafts found.</p>}
+            {books.length === 0 && <p>{strings.bookManager.noDrafts}</p>}
             {books.map((book) => (
               <div key={book.id} className="bm-book-card">
                 <div className="bm-book-info">
                   <h3>{book.title}</h3>
                   <span className="bm-status bm-status-draft">DRAFT</span>
-                  <p className="bm-date">Modified: {book.modifiedDate}</p>
+                  <p className="bm-date">{strings.bookManager.modified}{book.modifiedDate}</p>
                 </div>
                 <div className="bm-book-actions">
-                  <button className="bm-btn bm-btn-edit" onClick={() => handleEditBook(book)}>Edit</button>
-                  <button className="bm-btn bm-btn-delete" onClick={() => handleDeleteBook(book.id)}>Delete</button>
+                  <button className="bm-btn bm-btn-edit" onClick={() => handleEditBook(book)}>{strings.common.edit}</button>
+                  <button className="bm-btn bm-btn-delete" onClick={() => handleDeleteBook(book.id)}>{strings.common.delete}</button>
                 </div>
               </div>
             ))}
           </div>
         )}
-        <button className="bm-btn bm-btn-back" onClick={() => setView("menu")}>Back</button>
+        <button className="bm-btn bm-btn-back" onClick={() => setView("menu")}>{strings.common.back}</button>
       </div>
     );
   }
@@ -446,11 +447,11 @@ function BookManager() {
   if (view === "allbooks") {
     return (
       <div className="book-manager">
-        <h1>All My Books</h1>
+        <h1>{strings.bookManager.allBooksHeading}</h1>
         {message && <div className="bm-message">{message}</div>}
-        {loading ? <p>Loading...</p> : (
+        {loading ? <p>{strings.common.loading}</p> : (
           <div className="bm-book-list">
-            {books.length === 0 && <p>No books found.</p>}
+            {books.length === 0 && <p>{strings.bookManager.noBooks}</p>}
             {books.map((book) => (
               <div key={book.id} className="bm-book-card">
                 <div className="bm-book-info">
@@ -458,18 +459,18 @@ function BookManager() {
                   <span className={`bm-status ${book.status === "PUBLISHED" ? "bm-status-published" : "bm-status-draft"}`}>
                     {book.status}
                   </span>
-                  <p className="bm-date">Modified: {book.modifiedDate}</p>
+                  <p className="bm-date">{strings.bookManager.modified}{book.modifiedDate}</p>
                 </div>
                 <div className="bm-book-actions">
-                  <button className="bm-btn bm-btn-edit" onClick={() => handleEditBook(book)}>Edit</button>
-                  <button className="bm-btn bm-btn-preview" onClick={() => { setSelectedBook(book); setView("preview"); }}>Preview</button>
-                  <button className="bm-btn bm-btn-delete" onClick={() => handleDeleteBook(book.id)}>Delete</button>
+                  <button className="bm-btn bm-btn-edit" onClick={() => handleEditBook(book)}>{strings.common.edit}</button>
+                  <button className="bm-btn bm-btn-preview" onClick={() => { setSelectedBook(book); setView("preview"); }}>{strings.bookManager.preview}</button>
+                  <button className="bm-btn bm-btn-delete" onClick={() => handleDeleteBook(book.id)}>{strings.common.delete}</button>
                 </div>
               </div>
             ))}
           </div>
         )}
-        <button className="bm-btn bm-btn-back" onClick={() => setView("menu")}>Back</button>
+        <button className="bm-btn bm-btn-back" onClick={() => setView("menu")}>{strings.common.back}</button>
       </div>
     );
   }
@@ -478,7 +479,7 @@ function BookManager() {
   if (view === "edit") {
     return (
       <div className="book-manager">
-        <h1>Edit Book</h1>
+        <h1>{strings.bookManager.editHeading}</h1>
         {message && <div className="bm-message">{message}</div>}
 
         {selectedBook && (
@@ -491,27 +492,27 @@ function BookManager() {
                 onChange={(e) => setSelectedBook({ ...selectedBook, title: e.target.value })}
                 className="bm-input bm-input-title"
               />
-              <button className="bm-btn bm-btn-edit" onClick={handleUpdateTitle}>Save Title</button>
+              <button className="bm-btn bm-btn-edit" onClick={handleUpdateTitle}>{strings.bookManager.saveTitle}</button>
               <span className={`bm-status ${selectedBook.status === "PUBLISHED" ? "bm-status-published" : "bm-status-draft"}`}>
                 {selectedBook.status}
               </span>
             </div>
 
             <div className="bm-action-bar">
-              <button className="bm-btn bm-btn-draft" onClick={handleSaveDraft}>Save as Draft</button>
-              <button className="bm-btn bm-btn-create" onClick={handlePublish}>Publish</button>
-              <button className="bm-btn bm-btn-preview" onClick={() => setView("preview")}>Preview</button>
-              <button className="bm-btn bm-btn-delete" onClick={() => handleDeleteBook(selectedBook.id)}>Delete Book</button>
+              <button className="bm-btn bm-btn-draft" onClick={handleSaveDraft}>{strings.bookManager.saveAsDraft}</button>
+              <button className="bm-btn bm-btn-create" onClick={handlePublish}>{strings.bookManager.publish}</button>
+              <button className="bm-btn bm-btn-preview" onClick={() => setView("preview")}>{strings.bookManager.preview}</button>
+              <button className="bm-btn bm-btn-delete" onClick={() => handleDeleteBook(selectedBook.id)}>{strings.bookManager.deleteBook}</button>
             </div>
 
             {/* Add page form */}
             <div className="bm-add-page">
-              <h3>Add New Page</h3>
+              <h3>{strings.bookManager.addNewPage}</h3>
               <div className="bm-page-form-grid">
                 <div className="bm-form-row">
-                  <input type="number" placeholder="Page #" value={pageNumber}
+                  <input type="number" placeholder={strings.bookManager.placeholderPageNumber} value={pageNumber}
                     onChange={(e) => setPageNumber(e.target.value)} className="bm-input bm-input-small" />
-                  <textarea placeholder="Page content..." value={pageContent}
+                  <textarea placeholder={strings.bookManager.placeholderContent} value={pageContent}
                     onChange={(e) => setPageContent(e.target.value)} className="bm-input bm-textarea" rows={3} />
                 </div>
 
@@ -522,8 +523,8 @@ function BookManager() {
                 )}
 
                 <div className="bm-upload-row">
-                  {renderImageUpload("Image 1", pageImageUrl, setPageImageUrl, uploading1, setUploading1, "add-img1")}
-                  {renderImageUpload("Image 2", pageImageUrl2, setPageImageUrl2, uploading2, setUploading2, "add-img2")}
+                  {renderImageUpload(strings.bookManager.image1Label, pageImageUrl, setPageImageUrl, uploading1, setUploading1, "add-img1")}
+                  {renderImageUpload(strings.bookManager.image2Label, pageImageUrl2, setPageImageUrl2, uploading2, setUploading2, "add-img2")}
                 </div>
 
                 {(pageImageUrl || pageImageUrl2) && (
@@ -537,13 +538,13 @@ function BookManager() {
                   />
                 )}
 
-                <button className="bm-btn bm-btn-create" onClick={handleAddPage}>Add Page</button>
+                <button className="bm-btn bm-btn-create" onClick={handleAddPage}>{strings.bookManager.addPage}</button>
               </div>
             </div>
 
             {/* Pages list */}
             <div className="bm-pages-list">
-              <h3>Pages ({pages.length})</h3>
+              <h3>{strings.bookManager.pagesCount(pages.length)}</h3>
               {pages.map((page) => (
                 <div key={page.id} className="bm-page-card">
                   {editingPage && editingPage.id === page.id ? (
@@ -554,7 +555,7 @@ function BookManager() {
                           className="bm-input bm-input-small" />
                         <textarea value={editingPage.content || ""}
                           onChange={(e) => setEditingPage({ ...editingPage, content: e.target.value })}
-                          className="bm-input bm-textarea" placeholder="Content" rows={3} />
+                          className="bm-input bm-textarea" placeholder={strings.bookManager.placeholderEditContent} rows={3} />
                       </div>
 
                       {renderFormatToolbar(
@@ -568,7 +569,7 @@ function BookManager() {
 
                       <div className="bm-upload-row">
                         {renderImageUpload(
-                          "Image 1",
+                          strings.bookManager.image1Label,
                           editingPage.imageUrl,
                           (url) => setEditingPage((p) => ({ ...p, imageUrl: url })),
                           editUploading1,
@@ -576,7 +577,7 @@ function BookManager() {
                           "edit-img1"
                         )}
                         {renderImageUpload(
-                          "Image 2",
+                          strings.bookManager.image2Label,
                           editingPage.imageUrl2,
                           (url) => setEditingPage((p) => ({ ...p, imageUrl2: url })),
                           editUploading2,
@@ -597,23 +598,23 @@ function BookManager() {
                       )}
 
                       <div className="bm-page-actions">
-                        <button className="bm-btn bm-btn-create" onClick={handleUpdatePage}>Save</button>
-                        <button className="bm-btn bm-btn-back" onClick={() => setEditingPage(null)}>Cancel</button>
+                        <button className="bm-btn bm-btn-create" onClick={handleUpdatePage}>{strings.common.save}</button>
+                        <button className="bm-btn bm-btn-back" onClick={() => setEditingPage(null)}>{strings.common.cancel}</button>
                       </div>
                     </div>
                   ) : (
                     <div className="bm-page-display">
                       <span className="bm-page-num">#{page.pageNumber}</span>
-                      <span className="bm-page-content">{page.content || "(empty)"}</span>
+                      <span className="bm-page-content">{page.content || strings.bookManager.emptyPage}</span>
                       {page.imageUrl && (
-                        <img src={resolveImageUrl(page.imageUrl)} alt="img1" className="bm-page-thumb" />
+                        <img src={resolveImageUrl(page.imageUrl)} alt={strings.bookManager.image1Alt} className="bm-page-thumb" />
                       )}
                       {page.imageUrl2 && (
-                        <img src={resolveImageUrl(page.imageUrl2)} alt="img2" className="bm-page-thumb" />
+                        <img src={resolveImageUrl(page.imageUrl2)} alt={strings.bookManager.image2Alt} className="bm-page-thumb" />
                       )}
                       <div className="bm-page-actions">
-                        <button className="bm-btn bm-btn-edit" onClick={() => startEditingPage(page)}>Edit</button>
-                        <button className="bm-btn bm-btn-delete" onClick={() => handleDeletePage(page.id)}>Delete</button>
+                        <button className="bm-btn bm-btn-edit" onClick={() => startEditingPage(page)}>{strings.common.edit}</button>
+                        <button className="bm-btn bm-btn-delete" onClick={() => handleDeletePage(page.id)}>{strings.common.delete}</button>
                       </div>
                     </div>
                   )}
@@ -623,7 +624,7 @@ function BookManager() {
           </div>
         )}
         <button className="bm-btn bm-btn-back" onClick={() => setView("menu")} style={{ marginTop: "20px" }}>
-          Back to Menu
+          {strings.bookManager.backToMenu}
         </button>
       </div>
     );
@@ -633,13 +634,13 @@ function BookManager() {
   if (view === "preview" && selectedBook) {
     return (
       <div className="book-manager">
-        <h1>Preview: {selectedBook.title}</h1>
+        <h1>{strings.bookManager.previewHeading(selectedBook.title)}</h1>
         <FlipBook bookId={selectedBook.id} />
         <button className="bm-btn bm-btn-back" onClick={() => setView("edit")} style={{ marginTop: "20px" }}>
-          Back to Edit
+          {strings.bookManager.backToEdit}
         </button>
         <button className="bm-btn bm-btn-back" onClick={() => setView("menu")} style={{ marginTop: "20px", marginLeft: "10px" }}>
-          Back to Menu
+          {strings.bookManager.backToMenu}
         </button>
       </div>
     );

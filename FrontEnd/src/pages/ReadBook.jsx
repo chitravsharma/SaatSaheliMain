@@ -1,6 +1,7 @@
 import React from "react";
 import { useParams, Link } from "react-router-dom";
 import FlipBook from "../FlipBook";
+import strings from "../constants/strings";
 import "../BookManager.css";
 
 function ReadBook() {
@@ -11,7 +12,7 @@ function ReadBook() {
       <FlipBook bookId={bookId} />
       <div style={{ marginTop: "20px" }}>
         <Link to="/search" className="bm-btn bm-btn-back" style={{ textDecoration: "none" }}>
-          Back to Search
+          {strings.readBook.backToSearch}
         </Link>
       </div>
     </div>

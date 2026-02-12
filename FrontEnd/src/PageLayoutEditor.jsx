@@ -1,4 +1,5 @@
 import React, { useState, useRef, useCallback, useEffect } from "react";
+import strings from "./constants/strings";
 
 const PAGE_W = 400;
 const PAGE_H = 500;
@@ -117,7 +118,7 @@ export default function PageLayoutEditor({ imageUrl, imageUrl2, content, textSty
 
   return (
     <div className="ple-container">
-      <div className="ple-label-bar">Page Layout Editor — drag images to position, drag corner to resize</div>
+      <div className="ple-label-bar">{strings.pageLayoutEditor.labelBar}</div>
       <div className="ple-canvas" style={{ width: PAGE_W, height: PAGE_H }}>
         {/* Text layer */}
         <div
@@ -141,7 +142,7 @@ export default function PageLayoutEditor({ imageUrl, imageUrl2, content, textSty
             src={img1Src}
             layout={img1Layout}
             onChange={(l) => update("image1", l)}
-            label="Image 1"
+            label={strings.pageLayoutEditor.image1Label}
           />
         )}
         {img2Src && (
@@ -149,7 +150,7 @@ export default function PageLayoutEditor({ imageUrl, imageUrl2, content, textSty
             src={img2Src}
             layout={img2Layout}
             onChange={(l) => update("image2", l)}
-            label="Image 2"
+            label={strings.pageLayoutEditor.image2Label}
           />
         )}
       </div>

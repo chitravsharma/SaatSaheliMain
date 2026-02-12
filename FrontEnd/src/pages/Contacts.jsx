@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import strings from '../constants/strings';
 import './Contacts.css';
 
 const Contact = () => {
@@ -9,7 +10,7 @@ const Contact = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    const mailtoLink = `mailto:saheli@saatsaheli.com?subject=Contact from ${encodeURIComponent(name)}&body=${encodeURIComponent(message)}%0A%0AFrom: ${encodeURIComponent(name)} (${encodeURIComponent(email)})`;
+    const mailtoLink = `mailto:${strings.contact.email}?subject=${encodeURIComponent(strings.contact.mailtoSubject(name))}&body=${encodeURIComponent(strings.contact.mailtoBody(message, name, email))}`;
     window.location.href = mailtoLink;
     setSent(true);
     setName('');
@@ -21,61 +22,57 @@ const Contact = () => {
   return (
     <div className="contact-page">
       <div className="contact-hero">
-        <h1>Contact Us</h1>
+        <h1>{strings.contact.heading}</h1>
         <hr className="contact-divider" />
       </div>
 
       <div className="contact-intro">
-        <h2>Questions or Comments?</h2>
-        <p>
-          Contact us today to join our creative community, create your own page,
-          share your hobbies, and explore a world of talent and creativity with
-          Saat Saheli!
-        </p>
+        <h2>{strings.contact.subheading}</h2>
+        <p>{strings.contact.intro}</p>
       </div>
 
       <div className="contact-form-card">
         <form className="contact-form" onSubmit={handleSubmit}>
           <div className="contact-field">
-            <label htmlFor="contact-name">Name</label>
+            <label htmlFor="contact-name">{strings.contact.labelName}</label>
             <input
               id="contact-name"
               type="text"
-              placeholder="Your name"
+              placeholder={strings.contact.placeholderName}
               value={name}
               onChange={(e) => setName(e.target.value)}
               required
             />
           </div>
           <div className="contact-field">
-            <label htmlFor="contact-email">Email</label>
+            <label htmlFor="contact-email">{strings.contact.labelEmail}</label>
             <input
               id="contact-email"
               type="email"
-              placeholder="Your email"
+              placeholder={strings.contact.placeholderEmail}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
             />
           </div>
           <div className="contact-field">
-            <label htmlFor="contact-message">Message</label>
+            <label htmlFor="contact-message">{strings.contact.labelMessage}</label>
             <textarea
               id="contact-message"
-              placeholder="Write your message..."
+              placeholder={strings.contact.placeholderMessage}
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               required
             />
           </div>
-          <button type="submit" className="contact-submit">Send Message</button>
+          <button type="submit" className="contact-submit">{strings.contact.sendButton}</button>
         </form>
-        {sent && <div className="contact-sent">Thank you! Your message is ready to send.</div>}
+        {sent && <div className="contact-sent">{strings.contact.successMessage}</div>}
       </div>
 
       <div className="contact-email">
-        Or email us directly at{' '}
-        <a href="mailto:saheli@saatsaheli.com">saheli@saatsaheli.com</a>
+        {strings.contact.emailPrompt}{' '}
+        <a href={`mailto:${strings.contact.email}`}>{strings.contact.email}</a>
       </div>
     </div>
   );

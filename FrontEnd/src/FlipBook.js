@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import HTMLFlipBook from "react-pageflip";
 import axios from "axios";
+import strings from "./constants/strings";
 
 // Resolve image URL (supports local uploads and Drive URLs)
 function resolveImageUrl(url) {
@@ -65,7 +66,7 @@ function FlipBook({ bookId }) {
 
           return (
             <div key={index} className="card-box" style={{ position: "relative", overflow: "hidden" }}>
-              <h2 style={{ margin: "4px 8px", fontSize: "0.9rem" }}>Page {page.pageNumber}</h2>
+              <h2 style={{ margin: "4px 8px", fontSize: "0.9rem" }}>{strings.flipBook.pageHeading(page.pageNumber)}</h2>
               {hasLayout ? (
                 <>
                   <div style={{
@@ -83,7 +84,7 @@ function FlipBook({ bookId }) {
                   {img1Src && (
                     <img
                       src={img1Src}
-                      alt={`Page ${page.pageNumber} - 1`}
+                      alt={strings.flipBook.pageImageAlt(page.pageNumber, 1)}
                       style={{
                         position: "absolute",
                         left: img1Layout.x,
@@ -98,7 +99,7 @@ function FlipBook({ bookId }) {
                   {img2Src && (
                     <img
                       src={img2Src}
-                      alt={`Page ${page.pageNumber} - 2`}
+                      alt={strings.flipBook.pageImageAlt(page.pageNumber, 2)}
                       style={{
                         position: "absolute",
                         left: img2Layout.x,

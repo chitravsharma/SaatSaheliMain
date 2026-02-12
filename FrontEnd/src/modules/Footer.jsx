@@ -1,9 +1,10 @@
 import React from 'react';
+import strings from '../constants/strings';
 import './Footer.css';
 
 const Footer = () => (
   <footer className="site-footer" role="contentinfo">
-    <p>&copy; 2026 SaatSaheli. All rights reserved.</p>
+    <p>{strings.footer.copyright}</p>
   </footer>
 );
 
