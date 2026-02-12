@@ -259,6 +259,24 @@ const strings = {
     byAuthor: (name) => `by ${name}`,
   },
 
+  account: {
+    heading: "My Account",
+    userInfoHeading: "Profile",
+    labelName: "Name",
+    labelEmail: "Email",
+    booksHeading: "My Books",
+    thTitle: "Title",
+    thStatus: "Status",
+    thCreated: "Created",
+    thModified: "Modified",
+    thActions: "Actions",
+    editButton: "Edit",
+    emptyState: "You haven't created any books yet.",
+    loading: "Loading your books...",
+    error: "Failed to load books. Please try again.",
+    loginRequired: "Please log in to view your account.",
+  },
+
   readBook: {
     backToSearch: "Back to Search",
   },
@@ -266,6 +284,8 @@ const strings = {
   flipBook: {
     pageHeading: (n) => `Page ${n}`,
     pageImageAlt: (n, i) => `Page ${n} - ${i}`,
+    prevPage: "Previous page",
+    nextPage: "Next page",
   },
 
   pageLayoutEditor: {

@@ -14,6 +14,7 @@ import BookManager from './pages/BookManager';
 import SearchBooks from './pages/SearchBooks';
 import ReadBook from './pages/ReadBook';
 import SitePolicies from './pages/SitePolicies';
+import Account from './pages/Account';
 
 
 function App() {
@@ -29,6 +30,7 @@ function App() {
           <Route path="/books" element={<BookManager />} />
           <Route path="/search" element={<SearchBooks />} />
           <Route path="/read/:bookId" element={<ReadBook />} />
+          <Route path="/account" element={<Account />} />
           <Route path="/policies" element={<SitePolicies />} />
           <Route path="/logout" element={<Logout />} />
         </Routes>

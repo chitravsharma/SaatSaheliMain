@@ -1,7 +1,9 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import axios from "axios";
 import FlipBook from "../FlipBook";
 import PageLayoutEditor from "../PageLayoutEditor";
+import { useAuth } from "../AuthContext";
 import strings from "../constants/strings";
 import "../BookManager.css";
 
@@ -31,6 +33,9 @@ const DEFAULT_FORMAT = {
 };
 
 function BookManager() {
+  const { user } = useAuth();
+  const location = useLocation();
+  const userId = user?.userId || 1;
   const [view, setView] = useState("menu");
   const [books, setBooks] = useState([]);
   const [selectedBook, setSelectedBook] = useState(null);
@@ -57,6 +62,27 @@ function BookManager() {
   const [uploading2, setUploading2] = useState(false);
   const [editUploading1, setEditUploading1] = useState(false);
   const [editUploading2, setEditUploading2] = useState(false);
+
+  // Open book for editing when navigated from Account page
+  useEffect(() => {
+    const editBookId = location.state?.editBookId;
+    if (editBookId) {
+      const openBook = async () => {
+        try {
+          const res = await axios.get(`${API}/${editBookId}`);
+          setSelectedBook(res.data);
+          const pagesRes = await axios.get(`${API}/${editBookId}/pages`);
+          setPages(Array.isArray(pagesRes.data) ? pagesRes.data : []);
+          setView("edit");
+        } catch {
+          // fall back to menu if book not found
+        }
+      };
+      openBook();
+      // Clear the state so refreshing doesn't re-trigger
+      window.history.replaceState({}, "");
+    }
+  }, [location.state]);
 
   const showMessage = (msg) => {
     setMessage(msg);
@@ -102,7 +128,7 @@ function BookManager() {
   const fetchBooks = async () => {
     try {
       setLoading(true);
-      const res = await axios.get(`${API}/user/1`);
+      const res = await axios.get(`${API}/user/${userId}`);
       setBooks(Array.isArray(res.data) ? res.data : []);
     } catch (err) {
       setBooks([]);
@@ -139,7 +165,7 @@ function BookManager() {
     }
     try {
       setLoading(true);
-      const res = await axios.post(`${API}/create`, { title: newTitle, userId: 1 });
+      const res = await axios.post(`${API}/create`, { title: newTitle, userId });
       setSelectedBook(res.data);
       setPages(res.data.pages || []);
       setNewTitle("");
@@ -636,12 +662,14 @@ function BookManager() {
       <div className="book-manager">
         <h1>{strings.bookManager.previewHeading(selectedBook.title)}</h1>
         <FlipBook bookId={selectedBook.id} />
-        <button className="bm-btn bm-btn-back" onClick={() => setView("edit")} style={{ marginTop: "20px" }}>
-          {strings.bookManager.backToEdit}
-        </button>
-        <button className="bm-btn bm-btn-back" onClick={() => setView("menu")} style={{ marginTop: "20px", marginLeft: "10px" }}>
-          {strings.bookManager.backToMenu}
-        </button>
+        <div className="bm-preview-actions">
+          <button className="bm-btn bm-btn-back" onClick={() => setView("edit")}>
+            {strings.bookManager.backToEdit}
+          </button>
+          <button className="bm-btn bm-btn-back" onClick={() => setView("menu")}>
+            {strings.bookManager.backToMenu}
+          </button>
+        </div>
       </div>
     );
   }

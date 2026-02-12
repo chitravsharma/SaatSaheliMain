@@ -10,7 +10,7 @@ function ReadBook() {
   return (
     <div className="book-manager">
       <FlipBook bookId={bookId} />
-      <div style={{ marginTop: "20px" }}>
+      <div className="bm-preview-actions">
         <Link to="/search" className="bm-btn bm-btn-back" style={{ textDecoration: "none" }}>
           {strings.readBook.backToSearch}
         </Link>

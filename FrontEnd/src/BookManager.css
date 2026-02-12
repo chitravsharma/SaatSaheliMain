@@ -711,6 +711,15 @@
   color: #1a1a2e;
 }
 
+/* Preview actions - spacing below FlipBook */
+.bm-preview-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin-top: 40px;
+  padding-top: 20px;
+}
+
 /* Skip link for keyboard navigation */
 .bm-skip-link {
   position: absolute;
