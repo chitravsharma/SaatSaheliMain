@@ -1,13 +1,15 @@
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../AuthContext';
 
 function Logout() {
   const navigate = useNavigate();
+  const { logout } = useAuth();
 
   useEffect(() => {
-    localStorage.removeItem('saatSaheliUser');
+    logout();
     navigate('/Login');
-  }, [navigate]);
+  }, [navigate, logout]);
 
   return null;
 }

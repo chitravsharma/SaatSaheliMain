@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { GoogleLogin, GoogleOAuthProvider } from "@react-oauth/google";
 import axios from "axios";
+import { useAuth } from "../AuthContext";
 import './Login.css';
 
 const API_BASE = "http://localhost:8081/api/auth";
@@ -9,6 +10,7 @@ const GOOGLE_CLIENT_ID = "48927390752-qq6q50a1pfo5uajai4072ehnoifs0s7t.apps.goog
 
 export default function Login() {
   const navigate = useNavigate();
+  const { login: authLogin } = useAuth();
   const [mode, setMode] = useState("login"); // "login" | "signup"
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -35,7 +37,7 @@ export default function Login() {
       role: data.role,
       provider: data.provider,
     };
-    localStorage.setItem("saatSaheliUser", JSON.stringify(userData));
+    authLogin(userData);
     navigate("/");
   };
 

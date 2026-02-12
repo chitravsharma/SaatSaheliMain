@@ -1,9 +1,20 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import axios from "axios";
 import FlipBook from "../FlipBook";
 import "../BookManager.css";
 
 const API = "http://localhost:8081/api/books";
+const UPLOAD_API = "http://localhost:8081/api/upload";
+
+// Helper to convert Drive share URL to embeddable thumbnail
+function driveUrlToThumbnail(url) {
+  if (!url) return url;
+  const match = url.match(/\/file\/d\/([^/]+)\//);
+  if (match) {
+    return `https://drive.google.com/thumbnail?id=${match[1]}&sz=w400`;
+  }
+  return url;
+}
 
 function BookManager() {
   const [view, setView] = useState("menu"); // menu, create, drafts, edit, preview
@@ -17,13 +28,59 @@ function BookManager() {
   // Page form state
   const [pageContent, setPageContent] = useState("");
   const [pageNumber, setPageNumber] = useState("");
-  const [pageFormat, setPageFormat] = useState("");
   const [pageImageUrl, setPageImageUrl] = useState("");
+  const [pageImageUrl2, setPageImageUrl2] = useState("");
   const [editingPage, setEditingPage] = useState(null);
+
+  // Format state
+  const [formatFontFamily, setFormatFontFamily] = useState("sans-serif");
+  const [formatFontSize, setFormatFontSize] = useState("16px");
+  const [formatColor, setFormatColor] = useState("#1a1a2e");
+
+  // Upload state
+  const [uploading1, setUploading1] = useState(false);
+  const [uploading2, setUploading2] = useState(false);
+  const [editUploading1, setEditUploading1] = useState(false);
+  const [editUploading2, setEditUploading2] = useState(false);
 
   const showMessage = (msg) => {
     setMessage(msg);
     setTimeout(() => setMessage(""), 3000);
+  };
+
+  const buildFormatJson = (family, size, color) => {
+    return JSON.stringify({ fontFamily: family, fontSize: size, color: color });
+  };
+
+  const parseFormatJson = (formatStr) => {
+    try {
+      const parsed = JSON.parse(formatStr);
+      return {
+        fontFamily: parsed.fontFamily || "sans-serif",
+        fontSize: parsed.fontSize || "16px",
+        color: parsed.color || "#1a1a2e",
+      };
+    } catch {
+      return { fontFamily: "sans-serif", fontSize: "16px", color: "#1a1a2e" };
+    }
+  };
+
+  const handleUpload = async (file, setUrl, setUploadingState) => {
+    if (!file) return;
+    setUploadingState(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const res = await axios.post(UPLOAD_API, formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      setUrl(res.data.url);
+      showMessage("Image uploaded!");
+    } catch (err) {
+      showMessage("Upload failed: " + (err.response?.data?.error || err.message));
+    } finally {
+      setUploadingState(false);
+    }
   };
 
   const fetchBooks = async () => {
@@ -32,7 +89,6 @@ function BookManager() {
       const res = await axios.get(`${API}/user/1`);
       setBooks(Array.isArray(res.data) ? res.data : []);
     } catch (err) {
-      // If no books yet, just set empty
       setBooks([]);
     } finally {
       setLoading(false);
@@ -139,17 +195,22 @@ function BookManager() {
       return;
     }
     try {
-      const res = await axios.post(`${API}/${selectedBook.id}/page`, {
+      const formatJson = buildFormatJson(formatFontFamily, formatFontSize, formatColor);
+      await axios.post(`${API}/${selectedBook.id}/page`, {
         pageNumber: parseInt(pageNumber),
         content: pageContent,
-        format: pageFormat,
+        format: formatJson,
         imageUrl: pageImageUrl,
+        imageUrl2: pageImageUrl2,
       });
       showMessage("Page added!");
       setPageContent("");
       setPageNumber("");
-      setPageFormat("");
       setPageImageUrl("");
+      setPageImageUrl2("");
+      setFormatFontFamily("sans-serif");
+      setFormatFontSize("16px");
+      setFormatColor("#1a1a2e");
       await fetchBookPages(selectedBook.id);
     } catch (err) {
       showMessage("Failed to add page");
@@ -164,6 +225,7 @@ function BookManager() {
         content: editingPage.content,
         format: editingPage.format,
         imageUrl: editingPage.imageUrl,
+        imageUrl2: editingPage.imageUrl2,
       });
       showMessage("Page updated!");
       setEditingPage(null);
@@ -183,6 +245,117 @@ function BookManager() {
       showMessage("Failed to delete page");
     }
   };
+
+  const startEditingPage = (page) => {
+    const fmt = parseFormatJson(page.format);
+    setEditingPage({
+      ...page,
+      _fontFamily: fmt.fontFamily,
+      _fontSize: fmt.fontSize,
+      _color: fmt.color,
+    });
+  };
+
+  const updateEditFormat = (key, value) => {
+    setEditingPage((prev) => {
+      const updated = { ...prev, [key]: value };
+      updated.format = buildFormatJson(
+        updated._fontFamily,
+        updated._fontSize,
+        updated._color
+      );
+      return updated;
+    });
+  };
+
+  // Render the image upload area
+  const renderImageUpload = (label, url, setUrl, uploading, setUploading, inputId) => (
+    <div className="bm-upload-area">
+      <label className="bm-upload-label">{label}</label>
+      {url ? (
+        <div className="bm-upload-preview">
+          <img src={driveUrlToThumbnail(url)} alt={label} className="bm-upload-thumb" />
+          <button
+            className="bm-btn bm-btn-delete bm-btn-sm"
+            onClick={() => setUrl("")}
+            type="button"
+          >
+            Remove
+          </button>
+        </div>
+      ) : (
+        <div className="bm-upload-controls">
+          <input
+            type="file"
+            accept="image/*"
+            id={inputId}
+            className="bm-file-input"
+            onChange={(e) => {
+              if (e.target.files[0]) {
+                handleUpload(e.target.files[0], setUrl, setUploading);
+              }
+            }}
+          />
+          <label htmlFor={inputId} className="bm-btn bm-btn-edit bm-btn-sm">
+            Choose File
+          </label>
+          {uploading && <span className="bm-uploading">Uploading...</span>}
+        </div>
+      )}
+    </div>
+  );
+
+  // Render formatting toolbar
+  const renderFormatToolbar = (family, setFamily, size, setSize, color, setColor) => (
+    <div className="bm-format-toolbar">
+      <label className="bm-format-label">Text Formatting</label>
+      <div className="bm-format-controls">
+        <select
+          value={family}
+          onChange={(e) => setFamily(e.target.value)}
+          className="bm-format-select"
+          aria-label="Font family"
+        >
+          <option value="sans-serif">Sans-serif</option>
+          <option value="serif">Serif</option>
+          <option value="monospace">Monospace</option>
+          <option value="cursive">Cursive</option>
+        </select>
+        <select
+          value={size}
+          onChange={(e) => setSize(e.target.value)}
+          className="bm-format-select"
+          aria-label="Font size"
+        >
+          <option value="12px">12px</option>
+          <option value="14px">14px</option>
+          <option value="16px">16px</option>
+          <option value="18px">18px</option>
+          <option value="20px">20px</option>
+          <option value="24px">24px</option>
+          <option value="28px">28px</option>
+          <option value="32px">32px</option>
+          <option value="36px">36px</option>
+        </select>
+        <div className="bm-color-picker-wrap">
+          <input
+            type="color"
+            value={color}
+            onChange={(e) => setColor(e.target.value)}
+            className="bm-color-picker"
+            aria-label="Font color"
+          />
+          <span className="bm-color-label">{color}</span>
+        </div>
+      </div>
+      <div
+        className="bm-format-preview"
+        style={{ fontFamily: family, fontSize: size, color: color }}
+      >
+        Preview text
+      </div>
+    </div>
+  );
 
   // Main menu
   if (view === "menu") {
@@ -322,15 +495,25 @@ function BookManager() {
             {/* Add page form */}
             <div className="bm-add-page">
               <h3>Add New Page</h3>
-              <div className="bm-page-form">
-                <input type="number" placeholder="Page #" value={pageNumber}
-                  onChange={(e) => setPageNumber(e.target.value)} className="bm-input bm-input-small" />
-                <input type="text" placeholder="Content" value={pageContent}
-                  onChange={(e) => setPageContent(e.target.value)} className="bm-input" />
-                <input type="text" placeholder="Format (bold, italic)" value={pageFormat}
-                  onChange={(e) => setPageFormat(e.target.value)} className="bm-input bm-input-small" />
-                <input type="text" placeholder="Image URL" value={pageImageUrl}
-                  onChange={(e) => setPageImageUrl(e.target.value)} className="bm-input" />
+              <div className="bm-page-form-grid">
+                <div className="bm-form-row">
+                  <input type="number" placeholder="Page #" value={pageNumber}
+                    onChange={(e) => setPageNumber(e.target.value)} className="bm-input bm-input-small" />
+                  <textarea placeholder="Page content..." value={pageContent}
+                    onChange={(e) => setPageContent(e.target.value)} className="bm-input bm-textarea" rows={3} />
+                </div>
+
+                {renderFormatToolbar(
+                  formatFontFamily, setFormatFontFamily,
+                  formatFontSize, setFormatFontSize,
+                  formatColor, setFormatColor
+                )}
+
+                <div className="bm-upload-row">
+                  {renderImageUpload("Image 1", pageImageUrl, setPageImageUrl, uploading1, setUploading1, "add-img1")}
+                  {renderImageUpload("Image 2", pageImageUrl2, setPageImageUrl2, uploading2, setUploading2, "add-img2")}
+                </div>
+
                 <button className="bm-btn bm-btn-create" onClick={handleAddPage}>Add Page</button>
               </div>
             </div>
@@ -342,28 +525,61 @@ function BookManager() {
                 <div key={page.id} className="bm-page-card">
                   {editingPage && editingPage.id === page.id ? (
                     <div className="bm-page-edit-form">
-                      <input type="number" value={editingPage.pageNumber}
-                        onChange={(e) => setEditingPage({ ...editingPage, pageNumber: parseInt(e.target.value) })}
-                        className="bm-input bm-input-small" />
-                      <input type="text" value={editingPage.content || ""}
-                        onChange={(e) => setEditingPage({ ...editingPage, content: e.target.value })}
-                        className="bm-input" placeholder="Content" />
-                      <input type="text" value={editingPage.format || ""}
-                        onChange={(e) => setEditingPage({ ...editingPage, format: e.target.value })}
-                        className="bm-input bm-input-small" placeholder="Format" />
-                      <input type="text" value={editingPage.imageUrl || ""}
-                        onChange={(e) => setEditingPage({ ...editingPage, imageUrl: e.target.value })}
-                        className="bm-input" placeholder="Image URL" />
-                      <button className="bm-btn bm-btn-create" onClick={handleUpdatePage}>Save</button>
-                      <button className="bm-btn bm-btn-back" onClick={() => setEditingPage(null)}>Cancel</button>
+                      <div className="bm-form-row">
+                        <input type="number" value={editingPage.pageNumber}
+                          onChange={(e) => setEditingPage({ ...editingPage, pageNumber: parseInt(e.target.value) })}
+                          className="bm-input bm-input-small" />
+                        <textarea value={editingPage.content || ""}
+                          onChange={(e) => setEditingPage({ ...editingPage, content: e.target.value })}
+                          className="bm-input bm-textarea" placeholder="Content" rows={3} />
+                      </div>
+
+                      {renderFormatToolbar(
+                        editingPage._fontFamily,
+                        (val) => updateEditFormat("_fontFamily", val),
+                        editingPage._fontSize,
+                        (val) => updateEditFormat("_fontSize", val),
+                        editingPage._color,
+                        (val) => updateEditFormat("_color", val)
+                      )}
+
+                      <div className="bm-upload-row">
+                        {renderImageUpload(
+                          "Image 1",
+                          editingPage.imageUrl,
+                          (url) => setEditingPage({ ...editingPage, imageUrl: url }),
+                          editUploading1,
+                          setEditUploading1,
+                          "edit-img1"
+                        )}
+                        {renderImageUpload(
+                          "Image 2",
+                          editingPage.imageUrl2,
+                          (url) => setEditingPage({ ...editingPage, imageUrl2: url }),
+                          editUploading2,
+                          setEditUploading2,
+                          "edit-img2"
+                        )}
+                      </div>
+
+                      <div className="bm-page-actions">
+                        <button className="bm-btn bm-btn-create" onClick={handleUpdatePage}>Save</button>
+                        <button className="bm-btn bm-btn-back" onClick={() => setEditingPage(null)}>Cancel</button>
+                      </div>
                     </div>
                   ) : (
                     <div className="bm-page-display">
                       <span className="bm-page-num">#{page.pageNumber}</span>
                       <span className="bm-page-content">{page.content || "(empty)"}</span>
+                      {page.imageUrl && (
+                        <img src={driveUrlToThumbnail(page.imageUrl)} alt="img1" className="bm-page-thumb" />
+                      )}
+                      {page.imageUrl2 && (
+                        <img src={driveUrlToThumbnail(page.imageUrl2)} alt="img2" className="bm-page-thumb" />
+                      )}
                       {page.format && <span className="bm-page-format">[{page.format}]</span>}
                       <div className="bm-page-actions">
-                        <button className="bm-btn bm-btn-edit" onClick={() => setEditingPage({ ...page })}>Edit</button>
+                        <button className="bm-btn bm-btn-edit" onClick={() => startEditingPage(page)}>Edit</button>
                         <button className="bm-btn bm-btn-delete" onClick={() => handleDeletePage(page.id)}>Delete</button>
                       </div>
                     </div>

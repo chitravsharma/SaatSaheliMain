@@ -11,6 +11,8 @@ import Contacts from './pages/Contacts';
 import Login from './pages/Login';
 import Logout from './pages/Logout';
 import BookManager from './pages/BookManager';
+import SearchBooks from './pages/SearchBooks';
+import ReadBook from './pages/ReadBook';
 import Sidebar from './modules/Sidebar';
 
 
@@ -39,6 +41,8 @@ function App() {
             <Route path="/contacts" element={<Contacts />} />
             <Route path="/about" element={<About />} />
 			<Route path="/books" element={<BookManager />} />
+			<Route path="/search" element={<SearchBooks />} />
+			<Route path="/read/:bookId" element={<ReadBook />} />
 			<Route path="/logout" element={<Logout />} />
          </Routes>
 		 </main>
