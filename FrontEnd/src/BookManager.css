@@ -502,6 +502,59 @@
   min-height: 28px;
 }
 
+/* Page Layout Editor */
+.ple-container {
+  margin-top: 12px;
+}
+.ple-label-bar {
+  font-size: 0.75rem;
+  color: #4b5563;
+  margin-bottom: 6px;
+  font-style: italic;
+}
+.ple-canvas {
+  position: relative;
+  background: #ffffff;
+  border: 2px solid #0f3460;
+  border-radius: 6px;
+  overflow: hidden;
+  user-select: none;
+}
+.ple-draggable {
+  border: 2px dashed #0e6e7a;
+  border-radius: 4px;
+  box-sizing: border-box;
+}
+.ple-draggable:hover {
+  border-color: #0f3460;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+.ple-label {
+  position: absolute;
+  top: 2px;
+  left: 4px;
+  background: rgba(15, 52, 96, 0.8);
+  color: #fff;
+  font-size: 0.6rem;
+  padding: 1px 5px;
+  border-radius: 3px;
+  pointer-events: none;
+}
+.ple-resize-handle {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: 16px;
+  height: 16px;
+  cursor: se-resize;
+  background: linear-gradient(135deg, transparent 50%, #0f3460 50%);
+  border-radius: 0 0 2px 0;
+}
+.ple-text {
+  font-size: 14px;
+  line-height: 1.4;
+}
+
 /* Search form */
 .bm-search-form {
   background: #eff6ff;

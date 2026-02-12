@@ -1,14 +1,20 @@
 import React, { useState } from "react";
 import axios from "axios";
 import FlipBook from "../FlipBook";
+import PageLayoutEditor from "../PageLayoutEditor";
 import "../BookManager.css";
 
 const API = "http://localhost:8081/api/books";
 const UPLOAD_API = "http://localhost:8081/api/upload";
 
-// Helper to convert Drive share URL to embeddable thumbnail
-function driveUrlToThumbnail(url) {
+// Helper to resolve image URL (supports local uploads and Drive URLs)
+function resolveImageUrl(url) {
   if (!url) return url;
+  // Local upload path
+  if (url.startsWith("/uploads/")) {
+    return `http://localhost:8081${url}`;
+  }
+  // Google Drive shareable link
   const match = url.match(/\/file\/d\/([^/]+)\//);
   if (match) {
     return `https://drive.google.com/thumbnail?id=${match[1]}&sz=w400`;
@@ -16,8 +22,15 @@ function driveUrlToThumbnail(url) {
   return url;
 }
 
+const DEFAULT_FORMAT = {
+  fontFamily: "sans-serif",
+  fontSize: "16px",
+  color: "#1a1a2e",
+  layout: {},
+};
+
 function BookManager() {
-  const [view, setView] = useState("menu"); // menu, create, drafts, edit, preview
+  const [view, setView] = useState("menu");
   const [books, setBooks] = useState([]);
   const [selectedBook, setSelectedBook] = useState(null);
   const [pages, setPages] = useState([]);
@@ -36,6 +49,7 @@ function BookManager() {
   const [formatFontFamily, setFormatFontFamily] = useState("sans-serif");
   const [formatFontSize, setFormatFontSize] = useState("16px");
   const [formatColor, setFormatColor] = useState("#1a1a2e");
+  const [pageLayout, setPageLayout] = useState({});
 
   // Upload state
   const [uploading1, setUploading1] = useState(false);
@@ -48,8 +62,8 @@ function BookManager() {
     setTimeout(() => setMessage(""), 3000);
   };
 
-  const buildFormatJson = (family, size, color) => {
-    return JSON.stringify({ fontFamily: family, fontSize: size, color: color });
+  const buildFormatJson = (family, size, color, layout) => {
+    return JSON.stringify({ fontFamily: family, fontSize: size, color: color, layout: layout || {} });
   };
 
   const parseFormatJson = (formatStr) => {
@@ -59,9 +73,10 @@ function BookManager() {
         fontFamily: parsed.fontFamily || "sans-serif",
         fontSize: parsed.fontSize || "16px",
         color: parsed.color || "#1a1a2e",
+        layout: parsed.layout || {},
       };
     } catch {
-      return { fontFamily: "sans-serif", fontSize: "16px", color: "#1a1a2e" };
+      return { ...DEFAULT_FORMAT };
     }
   };
 
@@ -195,7 +210,7 @@ function BookManager() {
       return;
     }
     try {
-      const formatJson = buildFormatJson(formatFontFamily, formatFontSize, formatColor);
+      const formatJson = buildFormatJson(formatFontFamily, formatFontSize, formatColor, pageLayout);
       await axios.post(`${API}/${selectedBook.id}/page`, {
         pageNumber: parseInt(pageNumber),
         content: pageContent,
@@ -211,6 +226,7 @@ function BookManager() {
       setFormatFontFamily("sans-serif");
       setFormatFontSize("16px");
       setFormatColor("#1a1a2e");
+      setPageLayout({});
       await fetchBookPages(selectedBook.id);
     } catch (err) {
       showMessage("Failed to add page");
@@ -253,6 +269,7 @@ function BookManager() {
       _fontFamily: fmt.fontFamily,
       _fontSize: fmt.fontSize,
       _color: fmt.color,
+      _layout: fmt.layout || {},
     });
   };
 
@@ -262,7 +279,8 @@ function BookManager() {
       updated.format = buildFormatJson(
         updated._fontFamily,
         updated._fontSize,
-        updated._color
+        updated._color,
+        updated._layout
       );
       return updated;
     });
@@ -274,7 +292,7 @@ function BookManager() {
       <label className="bm-upload-label">{label}</label>
       {url ? (
         <div className="bm-upload-preview">
-          <img src={driveUrlToThumbnail(url)} alt={label} className="bm-upload-thumb" />
+          <img src={resolveImageUrl(url)} alt={label} className="bm-upload-thumb" />
           <button
             className="bm-btn bm-btn-delete bm-btn-sm"
             onClick={() => setUrl("")}
@@ -347,12 +365,6 @@ function BookManager() {
           />
           <span className="bm-color-label">{color}</span>
         </div>
-      </div>
-      <div
-        className="bm-format-preview"
-        style={{ fontFamily: family, fontSize: size, color: color }}
-      >
-        Preview text
       </div>
     </div>
   );
@@ -514,6 +526,17 @@ function BookManager() {
                   {renderImageUpload("Image 2", pageImageUrl2, setPageImageUrl2, uploading2, setUploading2, "add-img2")}
                 </div>
 
+                {(pageImageUrl || pageImageUrl2) && (
+                  <PageLayoutEditor
+                    imageUrl={pageImageUrl}
+                    imageUrl2={pageImageUrl2}
+                    content={pageContent}
+                    textStyle={{ fontFamily: formatFontFamily, fontSize: formatFontSize, color: formatColor }}
+                    layout={pageLayout}
+                    onLayoutChange={setPageLayout}
+                  />
+                )}
+
                 <button className="bm-btn bm-btn-create" onClick={handleAddPage}>Add Page</button>
               </div>
             </div>
@@ -547,7 +570,7 @@ function BookManager() {
                         {renderImageUpload(
                           "Image 1",
                           editingPage.imageUrl,
-                          (url) => setEditingPage({ ...editingPage, imageUrl: url }),
+                          (url) => setEditingPage((p) => ({ ...p, imageUrl: url })),
                           editUploading1,
                           setEditUploading1,
                           "edit-img1"
@@ -555,12 +578,23 @@ function BookManager() {
                         {renderImageUpload(
                           "Image 2",
                           editingPage.imageUrl2,
-                          (url) => setEditingPage({ ...editingPage, imageUrl2: url }),
+                          (url) => setEditingPage((p) => ({ ...p, imageUrl2: url })),
                           editUploading2,
                           setEditUploading2,
                           "edit-img2"
                         )}
                       </div>
+
+                      {(editingPage.imageUrl || editingPage.imageUrl2) && (
+                        <PageLayoutEditor
+                          imageUrl={editingPage.imageUrl}
+                          imageUrl2={editingPage.imageUrl2}
+                          content={editingPage.content}
+                          textStyle={{ fontFamily: editingPage._fontFamily, fontSize: editingPage._fontSize, color: editingPage._color }}
+                          layout={editingPage._layout}
+                          onLayoutChange={(l) => updateEditFormat("_layout", l)}
+                        />
+                      )}
 
                       <div className="bm-page-actions">
                         <button className="bm-btn bm-btn-create" onClick={handleUpdatePage}>Save</button>
@@ -572,12 +606,11 @@ function BookManager() {
                       <span className="bm-page-num">#{page.pageNumber}</span>
                       <span className="bm-page-content">{page.content || "(empty)"}</span>
                       {page.imageUrl && (
-                        <img src={driveUrlToThumbnail(page.imageUrl)} alt="img1" className="bm-page-thumb" />
+                        <img src={resolveImageUrl(page.imageUrl)} alt="img1" className="bm-page-thumb" />
                       )}
                       {page.imageUrl2 && (
-                        <img src={driveUrlToThumbnail(page.imageUrl2)} alt="img2" className="bm-page-thumb" />
+                        <img src={resolveImageUrl(page.imageUrl2)} alt="img2" className="bm-page-thumb" />
                       )}
-                      {page.format && <span className="bm-page-format">[{page.format}]</span>}
                       <div className="bm-page-actions">
                         <button className="bm-btn bm-btn-edit" onClick={() => startEditingPage(page)}>Edit</button>
                         <button className="bm-btn bm-btn-delete" onClick={() => handleDeletePage(page.id)}>Delete</button>
