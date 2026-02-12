@@ -6,8 +6,12 @@ import com.SaatSaheli.spring.model.User;
 import com.SaatSaheli.spring.repository.BookRepository;
 import com.SaatSaheli.spring.repository.PageRepository;
 import com.SaatSaheli.spring.repository.UserRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import jakarta.annotation.PostConstruct;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
@@ -21,7 +25,15 @@ import java.util.stream.Collectors;
 @Service
 public class BookService {
 
+    private static final Logger log = LoggerFactory.getLogger(BookService.class);
     private static final DateTimeFormatter DTF = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
+    private static final String[] RANDOM_TITLES = {
+            "Untitled Story", "My Adventures", "A New Beginning", "The Journey",
+            "Creative Tales", "Thoughts & Ideas", "Inspiration Book", "Dream Journal",
+            "My Collection", "The Notebook", "Wandering Pages", "Hidden Chapters",
+            "Open Horizons", "Quiet Reflections", "Bold Strokes", "Fresh Canvas"
+    };
 
     @Autowired
     private BookRepository bookRepo;
@@ -31,6 +43,49 @@ public class BookService {
 
     @Autowired
     private UserRepository userRepo;
+
+    @PostConstruct
+    public void syncOrphanedPages() {
+        try {
+            List<Page> allPages = pageRepo.findAll();
+            List<Book> allBooks = bookRepo.findAll();
+
+            Set<Long> existingBookIds = allBooks.stream()
+                    .map(Book::getId)
+                    .collect(Collectors.toSet());
+
+            Set<Long> orphanedBookIds = allPages.stream()
+                    .map(Page::getBookId)
+                    .filter(id -> id != null && !existingBookIds.contains(id))
+                    .collect(Collectors.toSet());
+
+            if (orphanedBookIds.isEmpty()) {
+                log.info("No orphaned pages found - all bookIds exist in Books table");
+                return;
+            }
+
+            log.info("Found {} orphaned bookIds in Pages table: {}", orphanedBookIds.size(), orphanedBookIds);
+
+            String now = LocalDateTime.now().format(DTF);
+            int created = 0;
+            for (Long bookId : orphanedBookIds) {
+                String title = RANDOM_TITLES[(int) (bookId % RANDOM_TITLES.length)];
+                Book book = new Book();
+                book.setId(bookId);
+                book.setTitle(title + " #" + bookId);
+                book.setUserId(1L);
+                book.setStatus("DRAFT");
+                book.setCreatedDate(now);
+                book.setModifiedDate(now);
+                bookRepo.saveWithId(book);
+                created++;
+                log.info("Created missing book: id={}, title='{}'", bookId, book.getTitle());
+            }
+            log.info("Sync complete - created {} missing books", created);
+        } catch (Exception e) {
+            log.error("Failed to sync orphaned pages: {}", e.getMessage(), e);
+        }
+    }
 
     public Book createBook(String title, Long userId) throws IOException {
         String now = LocalDateTime.now().format(DTF);
@@ -73,25 +128,35 @@ public class BookService {
         return book;
     }
 
-    public Book updateBook(Long id, String title, String status) throws IOException {
+    public Book updateBook(Long id, String title, String status, Long requestUserId) throws IOException {
         Optional<Book> bookOpt = bookRepo.findById(id);
         if (bookOpt.isEmpty()) throw new RuntimeException("Book not found");
         Book book = bookOpt.get();
+        if (requestUserId != null && !requestUserId.equals(book.getUserId())) {
+            throw new RuntimeException("Only the author can edit this book");
+        }
         if (title != null) book.setTitle(title);
         if (status != null) book.setStatus(status);
         book.setModifiedDate(LocalDateTime.now().format(DTF));
         return bookRepo.save(book);
     }
 
-    public Book publishBook(Long id) throws IOException {
-        return updateBook(id, null, "PUBLISHED");
+    public Book publishBook(Long id, Long requestUserId) throws IOException {
+        return updateBook(id, null, "PUBLISHED", requestUserId);
     }
 
-    public Book saveDraft(Long id) throws IOException {
-        return updateBook(id, null, "DRAFT");
+    public Book saveDraft(Long id, Long requestUserId) throws IOException {
+        return updateBook(id, null, "DRAFT", requestUserId);
     }
 
-    public void deleteBook(Long id) throws IOException {
+    public void deleteBook(Long id, Long requestUserId) throws IOException {
+        Optional<Book> bookOpt = bookRepo.findById(id);
+        if (bookOpt.isPresent()) {
+            Book book = bookOpt.get();
+            if (requestUserId != null && !requestUserId.equals(book.getUserId())) {
+                throw new RuntimeException("Only the author can delete this book");
+            }
+        }
         pageRepo.deleteByBookId(id);
         bookRepo.deleteById(id);
     }
@@ -108,7 +173,7 @@ public class BookService {
         return bookRepo.findByUserIdAndStatus(userId, "DRAFT");
     }
 
-    public List<Book> searchBooks(Long id, String title, String author, String status) throws IOException {
+    public List<Book> searchBooks(Long id, String title, String author, String status, Long requestUserId) throws IOException {
         List<Book> books = bookRepo.findAll();
 
         // Build a userId->User lookup for author enrichment
@@ -133,6 +198,13 @@ public class BookService {
         final Set<Long> finalAuthorMatchIds = authorMatchIds;
 
         List<Book> filtered = books.stream()
+                // Hide DRAFT books unless the requesting user is the author
+                .filter(b -> {
+                    if ("DRAFT".equalsIgnoreCase(b.getStatus())) {
+                        return requestUserId != null && requestUserId.equals(b.getUserId());
+                    }
+                    return true;
+                })
                 .filter(b -> id == null || b.getId().equals(id))
                 .filter(b -> title == null || title.trim().isEmpty()
                         || (b.getTitle() != null && b.getTitle().toLowerCase().contains(title.trim().toLowerCase())))
@@ -159,14 +231,17 @@ public class BookService {
         return pageRepo.findByBookIdOrderByPageNumberAsc(bookId);
     }
 
-    public Page addPage(Long bookId, Page page) throws IOException {
+    public Page addPage(Long bookId, Page page, Long requestUserId) throws IOException {
+        Optional<Book> bookOpt = bookRepo.findById(bookId);
+        if (bookOpt.isPresent() && requestUserId != null && !requestUserId.equals(bookOpt.get().getUserId())) {
+            throw new RuntimeException("Only the author can add pages to this book");
+        }
         String now = LocalDateTime.now().format(DTF);
         page.setBookId(bookId);
         page.setCreatedDate(now);
         page.setModifiedDate(now);
         Page saved = pageRepo.save(page);
         // Update book modified date
-        Optional<Book> bookOpt = bookRepo.findById(bookId);
         if (bookOpt.isPresent()) {
             Book book = bookOpt.get();
             book.setModifiedDate(now);
@@ -175,10 +250,17 @@ public class BookService {
         return saved;
     }
 
-    public Page updatePage(Long pageId, Page updated) throws IOException {
+    public Page updatePage(Long pageId, Page updated, Long requestUserId) throws IOException {
         Optional<Page> pageOpt = pageRepo.findById(pageId);
         if (pageOpt.isEmpty()) throw new RuntimeException("Page not found");
         Page page = pageOpt.get();
+        // Check ownership via the book
+        if (requestUserId != null && page.getBookId() != null) {
+            Optional<Book> bookOpt = bookRepo.findById(page.getBookId());
+            if (bookOpt.isPresent() && !requestUserId.equals(bookOpt.get().getUserId())) {
+                throw new RuntimeException("Only the author can edit pages of this book");
+            }
+        }
         if (updated.getContent() != null) page.setContent(updated.getContent());
         if (updated.getImageUrl() != null) page.setImageUrl(updated.getImageUrl());
         if (updated.getImageUrl2() != null) page.setImageUrl2(updated.getImageUrl2());
@@ -188,7 +270,14 @@ public class BookService {
         return pageRepo.save(page);
     }
 
-    public void deletePage(Long pageId) throws IOException {
+    public void deletePage(Long pageId, Long requestUserId) throws IOException {
+        Optional<Page> pageOpt = pageRepo.findById(pageId);
+        if (pageOpt.isPresent() && requestUserId != null && pageOpt.get().getBookId() != null) {
+            Optional<Book> bookOpt = bookRepo.findById(pageOpt.get().getBookId());
+            if (bookOpt.isPresent() && !requestUserId.equals(bookOpt.get().getUserId())) {
+                throw new RuntimeException("Only the author can delete pages of this book");
+            }
+        }
         pageRepo.deleteById(pageId);
     }
 }

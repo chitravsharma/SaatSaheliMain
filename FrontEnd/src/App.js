@@ -15,6 +15,7 @@ import SearchBooks from './pages/SearchBooks';
 import ReadBook from './pages/ReadBook';
 import SitePolicies from './pages/SitePolicies';
 import Account from './pages/Account';
+import CategoryPage from './pages/CategoryPage';
 
 
 function App() {
@@ -32,6 +33,7 @@ function App() {
           <Route path="/read/:bookId" element={<ReadBook />} />
           <Route path="/account" element={<Account />} />
           <Route path="/policies" element={<SitePolicies />} />
+          <Route path="/category/:category" element={<CategoryPage />} />
           <Route path="/logout" element={<Logout />} />
         </Routes>
       </main>

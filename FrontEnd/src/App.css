@@ -57,7 +57,10 @@
 .center-container {
   display: flex;
   justify-content: center;
-  margin-top: 2.5rem;
+  margin-top: 1.5rem;
+  overflow: hidden;
+  padding: 0 16px;
+  box-sizing: border-box;
 }
 
 .App-link {
@@ -119,6 +122,14 @@
   cursor: not-allowed;
 }
 
+.flipbook-page-indicator {
+  color: #4b5563;
+  font-size: 0.875rem;
+  font-weight: 600;
+  min-width: 60px;
+  text-align: center;
+}
+
 /* Main content wrapper */
 .main-content {
   flex: 1;
@@ -127,7 +138,32 @@
 /* Responsive */
 @media (max-width: 768px) {
   .card-box {
-    padding: 0.75rem;
+    padding: 0.5rem;
+    border-radius: 8px;
+  }
+
+  .center-container {
+    margin-top: 0.5rem;
+    padding: 0 4px;
+  }
+
+  .flipbook-nav-wrapper {
+    gap: 8px;
+    width: 100%;
+  }
+
+  .flipbook-arrow-row {
+    gap: 16px;
+  }
+
+  .flipbook-arrow {
+    width: 40px;
+    height: 40px;
+    font-size: 1.5rem;
+  }
+
+  .flipbook-page-indicator {
+    font-size: 0.8rem;
   }
 }
 

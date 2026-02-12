@@ -33,8 +33,33 @@ function parseFormat(formatStr) {
   }
 }
 
-const PAGE_W = 400;
-const PAGE_H = 500;
+const DESKTOP_W = 400;
+const DESKTOP_H = 500;
+const ASPECT_RATIO = DESKTOP_H / DESKTOP_W; // 1.25
+
+function usePageSize() {
+  const [size, setSize] = useState({ w: DESKTOP_W, h: DESKTOP_H });
+
+  useEffect(() => {
+    const update = () => {
+      const vw = window.innerWidth;
+      if (vw < 500) {
+        const w = Math.min(vw - 32, 360);
+        setSize({ w, h: Math.round(w * ASPECT_RATIO) });
+      } else if (vw < 768) {
+        const w = Math.min(vw - 48, 380);
+        setSize({ w, h: Math.round(w * ASPECT_RATIO) });
+      } else {
+        setSize({ w: DESKTOP_W, h: DESKTOP_H });
+      }
+    };
+    update();
+    window.addEventListener("resize", update);
+    return () => window.removeEventListener("resize", update);
+  }, []);
+
+  return size;
+}
 
 const defaultImgLayout = (key) => ({
   x: key === "image1" ? 10 : 210,
@@ -47,6 +72,10 @@ function FlipBook({ bookId }) {
   const [pages, setPages] = useState([]);
   const [currentPage, setCurrentPage] = useState(0);
   const flipBookRef = useRef(null);
+  const pageSize = usePageSize();
+
+  // Scale factor for positioning elements relative to desktop size
+  const scale = pageSize.w / DESKTOP_W;
 
   useEffect(() => {
     axios.get(`http://localhost:8081/api/books/${bookId}/pages`)
@@ -80,6 +109,9 @@ function FlipBook({ bookId }) {
           >
             &#8249;
           </button>
+          <span className="flipbook-page-indicator">
+            {currentPage + 1} / {totalPages}
+          </span>
           <button
             className="flipbook-arrow"
             onClick={handleNext}
@@ -90,9 +122,13 @@ function FlipBook({ bookId }) {
           </button>
         </div>
         <HTMLFlipBook
-          width={PAGE_W}
-          height={PAGE_H}
+          width={pageSize.w}
+          height={pageSize.h}
           showCover={true}
+          usePortrait={true}
+          showPageCorners={true}
+          swipeDistance={30}
+          mobileScrollSupport={false}
           ref={flipBookRef}
           onFlip={onFlip}
         >
@@ -103,7 +139,7 @@ function FlipBook({ bookId }) {
           const hasLayout = img1Src || img2Src;
           const img1Layout = layout.image1 || defaultImgLayout("image1");
           const img2Layout = layout.image2 || defaultImgLayout("image2");
-          const textLayout = layout.text || { x: 10, y: 10, width: PAGE_W - 20, height: 40 };
+          const textLayout = layout.text || { x: 10, y: 10, width: DESKTOP_W - 20, height: 40 };
 
           const pageNum = page.pageNumber;
           const pageNumStyle = {
@@ -122,10 +158,11 @@ function FlipBook({ bookId }) {
                 <>
                   <div style={{
                     position: "absolute",
-                    left: textLayout.x,
-                    top: textLayout.y,
-                    width: textLayout.width,
+                    left: textLayout.x * scale,
+                    top: textLayout.y * scale,
+                    width: textLayout.width * scale,
                     ...textStyle,
+                    fontSize: textStyle.fontSize ? `${parseFloat(textStyle.fontSize) * scale}px` : undefined,
                     whiteSpace: "pre-wrap",
                     wordBreak: "break-word",
                     pointerEvents: "none",
@@ -138,10 +175,10 @@ function FlipBook({ bookId }) {
                       alt={strings.flipBook.pageImageAlt(page.pageNumber, 1)}
                       style={{
                         position: "absolute",
-                        left: img1Layout.x,
-                        top: img1Layout.y,
-                        width: img1Layout.width,
-                        height: img1Layout.height,
+                        left: img1Layout.x * scale,
+                        top: img1Layout.y * scale,
+                        width: img1Layout.width * scale,
+                        height: img1Layout.height * scale,
                         objectFit: "cover",
                         borderRadius: 4,
                       }}
@@ -153,10 +190,10 @@ function FlipBook({ bookId }) {
                       alt={strings.flipBook.pageImageAlt(page.pageNumber, 2)}
                       style={{
                         position: "absolute",
-                        left: img2Layout.x,
-                        top: img2Layout.y,
-                        width: img2Layout.width,
-                        height: img2Layout.height,
+                        left: img2Layout.x * scale,
+                        top: img2Layout.y * scale,
+                        width: img2Layout.width * scale,
+                        height: img2Layout.height * scale,
                         objectFit: "cover",
                         borderRadius: 4,
                       }}

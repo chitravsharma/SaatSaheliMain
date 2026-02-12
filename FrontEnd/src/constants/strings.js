@@ -18,6 +18,8 @@ const strings = {
   header: {
     skipLink: "Skip to main content",
     logoAlt: "SaatSaheli Saraswati logo",
+    siteName: "Saat Saheli",
+    siteTagline: "Welcome to Saat Saheli \u2013 A Community for Passion and Creativity!",
     navHome: "Home",
     navAbout: "About",
     navBooks: "Books",
@@ -33,6 +35,9 @@ const strings = {
   },
 
   footer: {
+    contactUs: "Contact Us",
+    sitePolicies: "Site Policies",
+    feedback: "Feedback",
     copyright: "\u00A9 2026 SaatSaheli. All rights reserved.",
   },
 
@@ -275,6 +280,17 @@ const strings = {
     loading: "Loading your books...",
     error: "Failed to load books. Please try again.",
     loginRequired: "Please log in to view your account.",
+  },
+
+  publicBooks: {
+    heading: "Published Books",
+    loading: "Loading books...",
+    error: "Failed to load books. Please try again.",
+    emptyState: "No published books available yet.",
+    readButton: "Read",
+    backToBooks: "Back to Books",
+    home: "Home",
+    loginPrompt: "Log in to create and manage your own books.",
   },
 
   readBook: {

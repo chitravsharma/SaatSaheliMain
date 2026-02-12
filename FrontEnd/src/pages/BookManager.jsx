@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, Link } from "react-router-dom";
 import axios from "axios";
 import FlipBook from "../FlipBook";
 import PageLayoutEditor from "../PageLayoutEditor";
@@ -9,6 +9,81 @@ import "../BookManager.css";
 
 const API = "http://localhost:8081/api/books";
 const UPLOAD_API = "http://localhost:8081/api/upload";
+
+// Public books browser shown when no user is logged in
+function PublicBooks() {
+  const [books, setBooks] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [readingBookId, setReadingBookId] = useState(null);
+
+  useEffect(() => {
+    const fetchPublished = async () => {
+      try {
+        const res = await axios.get(`${API}/search?status=PUBLISHED`);
+        setBooks(Array.isArray(res.data) ? res.data : []);
+      } catch {
+        setError(strings.publicBooks.error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchPublished();
+  }, []);
+
+  if (readingBookId) {
+    return (
+      <div className="book-manager">
+        <FlipBook bookId={readingBookId} />
+        <div className="bm-preview-actions">
+          <button className="bm-btn bm-btn-back" onClick={() => setReadingBookId(null)}>
+            {strings.publicBooks.backToBooks}
+          </button>
+          <Link to="/" className="bm-btn bm-btn-back" style={{ textDecoration: "none" }}>
+            {strings.publicBooks.home}
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="book-manager">
+      <h1>{strings.publicBooks.heading}</h1>
+      <p className="bm-public-hint">
+        <Link to="/Login">{strings.publicBooks.loginPrompt}</Link>
+      </p>
+
+      {loading && <p>{strings.publicBooks.loading}</p>}
+      {error && <p className="bm-message">{error}</p>}
+
+      {!loading && !error && books.length === 0 && (
+        <p>{strings.publicBooks.emptyState}</p>
+      )}
+
+      {!loading && !error && books.length > 0 && (
+        <div className="bm-public-grid">
+          {books.map((book) => (
+            <button
+              key={book.id}
+              className="bm-public-card"
+              onClick={() => setReadingBookId(book.id)}
+              aria-label={`Read ${book.title}`}
+            >
+              <div className="bm-public-cover">
+                <span className="bm-public-cover-title">{book.title}</span>
+              </div>
+              {book.authorName && (
+                <span className="bm-public-author">{book.authorName}</span>
+              )}
+              <span className="bm-public-read">{strings.publicBooks.readButton}</span>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 // Helper to resolve image URL (supports local uploads and Drive URLs)
 function resolveImageUrl(url) {
@@ -43,6 +118,25 @@ function BookManager() {
   const [newTitle, setNewTitle] = useState("");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
+  const [publishedBooks, setPublishedBooks] = useState([]);
+  const [publishedLoading, setPublishedLoading] = useState(true);
+  const [readingBookId, setReadingBookId] = useState(null);
+
+  // Fetch published books for the menu view
+  useEffect(() => {
+    if (!user) return;
+    const fetchPublished = async () => {
+      try {
+        const res = await axios.get(`${API}/search?status=PUBLISHED&userId=${userId}`);
+        setPublishedBooks(Array.isArray(res.data) ? res.data : []);
+      } catch {
+        setPublishedBooks([]);
+      } finally {
+        setPublishedLoading(false);
+      }
+    };
+    fetchPublished();
+  }, [user, userId]);
 
   // Page form state
   const [pageContent, setPageContent] = useState("");
@@ -140,7 +234,7 @@ function BookManager() {
   const fetchDrafts = async () => {
     try {
       setLoading(true);
-      const res = await axios.get(`${API}/user/1/drafts`);
+      const res = await axios.get(`${API}/user/${userId}/drafts`);
       setBooks(Array.isArray(res.data) ? res.data : []);
     } catch (err) {
       setBooks([]);
@@ -187,7 +281,7 @@ function BookManager() {
   const handleUpdateTitle = async () => {
     if (!selectedBook) return;
     try {
-      const res = await axios.put(`${API}/${selectedBook.id}`, { title: selectedBook.title });
+      const res = await axios.put(`${API}/${selectedBook.id}`, { title: selectedBook.title, userId: String(userId) });
       setSelectedBook(res.data);
       showMessage(strings.bookManager.msgTitleUpdated);
     } catch (err) {
@@ -198,7 +292,7 @@ function BookManager() {
   const handlePublish = async () => {
     if (!selectedBook) return;
     try {
-      const res = await axios.put(`${API}/${selectedBook.id}/publish`);
+      const res = await axios.put(`${API}/${selectedBook.id}/publish?userId=${userId}`);
       setSelectedBook(res.data);
       showMessage(strings.bookManager.msgPublished);
     } catch (err) {
@@ -209,7 +303,7 @@ function BookManager() {
   const handleSaveDraft = async () => {
     if (!selectedBook) return;
     try {
-      const res = await axios.put(`${API}/${selectedBook.id}/draft`);
+      const res = await axios.put(`${API}/${selectedBook.id}/draft?userId=${userId}`);
       setSelectedBook(res.data);
       showMessage(strings.bookManager.msgDraftSaved);
     } catch (err) {
@@ -220,7 +314,7 @@ function BookManager() {
   const handleDeleteBook = async (bookId) => {
     if (!window.confirm(strings.bookManager.confirmDeleteBook)) return;
     try {
-      await axios.delete(`${API}/${bookId}`);
+      await axios.delete(`${API}/${bookId}?userId=${userId}`);
       showMessage(strings.bookManager.msgBookDeleted);
       setSelectedBook(null);
       setPages([]);
@@ -238,7 +332,7 @@ function BookManager() {
     }
     try {
       const formatJson = buildFormatJson(formatFontFamily, formatFontSize, formatColor, pageLayout);
-      await axios.post(`${API}/${selectedBook.id}/page`, {
+      await axios.post(`${API}/${selectedBook.id}/page?userId=${userId}`, {
         pageNumber: parseInt(pageNumber),
         content: pageContent,
         format: formatJson,
@@ -263,7 +357,7 @@ function BookManager() {
   const handleUpdatePage = async () => {
     if (!editingPage) return;
     try {
-      await axios.put(`${API}/page/${editingPage.id}`, {
+      await axios.put(`${API}/page/${editingPage.id}?userId=${userId}`, {
         pageNumber: editingPage.pageNumber,
         content: editingPage.content,
         format: editingPage.format,
@@ -281,7 +375,7 @@ function BookManager() {
   const handleDeletePage = async (pageId) => {
     if (!window.confirm(strings.bookManager.confirmDeletePage)) return;
     try {
-      await axios.delete(`${API}/page/${pageId}`);
+      await axios.delete(`${API}/page/${pageId}?userId=${userId}`);
       showMessage(strings.bookManager.msgPageDeleted);
       await fetchBookPages(selectedBook.id);
     } catch (err) {
@@ -396,23 +490,80 @@ function BookManager() {
     </div>
   );
 
+  // Show public books browser if not logged in
+  if (!user) return <PublicBooks />;
+
   // Main menu
   if (view === "menu") {
+    const isReading = !!readingBookId;
     return (
-      <div className="book-manager">
-        <h1>{strings.bookManager.heading}</h1>
-        {message && <div className="bm-message">{message}</div>}
-        <div className="bm-button-row">
-          <button className="bm-btn bm-btn-create" onClick={() => setView("create")}>
-            {strings.bookManager.createNewBook}
-          </button>
-          <button className="bm-btn bm-btn-draft" onClick={() => { fetchDrafts(); setView("drafts"); }}>
-            {strings.bookManager.myDrafts}
-          </button>
-          <button className="bm-btn bm-btn-all" onClick={() => { fetchBooks(); setView("allbooks"); }}>
-            {strings.bookManager.allMyBooks}
-          </button>
+      <div className={`book-manager ${isReading ? "bm-layout-reading" : ""}`}>
+        <div className={isReading ? "bm-sidebar" : ""}>
+          <h1>{strings.bookManager.heading}</h1>
+          {message && <div className="bm-message">{message}</div>}
+          <div className={`bm-button-row ${isReading ? "bm-button-col" : ""}`}>
+            <button className="bm-btn bm-btn-create" onClick={() => { setReadingBookId(null); setView("create"); }}>
+              {strings.bookManager.createNewBook}
+            </button>
+            <button className="bm-btn bm-btn-draft" onClick={() => { setReadingBookId(null); fetchDrafts(); setView("drafts"); }}>
+              {strings.bookManager.myDrafts}
+            </button>
+            <button className="bm-btn bm-btn-all" onClick={() => { setReadingBookId(null); fetchBooks(); setView("allbooks"); }}>
+              {strings.bookManager.allMyBooks}
+            </button>
+          </div>
+
+          <h2 className="bm-published-heading">{strings.publicBooks.heading}</h2>
+          {publishedLoading && <p>{strings.publicBooks.loading}</p>}
+          {!publishedLoading && publishedBooks.length === 0 && (
+            <p>{strings.publicBooks.emptyState}</p>
+          )}
+          {!publishedLoading && publishedBooks.length > 0 && (
+            isReading ? (
+              <div className="bm-book-btn-list">
+                {publishedBooks.map((book) => (
+                  <button
+                    key={book.id}
+                    className={`bm-btn bm-btn-book-item ${readingBookId === book.id ? "bm-btn-book-active" : ""}`}
+                    onClick={() => setReadingBookId(book.id)}
+                  >
+                    {book.title}
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <div className="bm-public-grid">
+                {publishedBooks.map((book) => (
+                  <button
+                    key={book.id}
+                    className="bm-public-card"
+                    onClick={() => setReadingBookId(book.id)}
+                    aria-label={`Read ${book.title}`}
+                  >
+                    <div className="bm-public-cover">
+                      <span className="bm-public-cover-title">{book.title}</span>
+                    </div>
+                    {book.authorName && (
+                      <span className="bm-public-author">{book.authorName}</span>
+                    )}
+                    <span className="bm-public-read">{strings.publicBooks.readButton}</span>
+                  </button>
+                ))}
+              </div>
+            )
+          )}
         </div>
+
+        {isReading && (
+          <div className="bm-reader-main">
+            <FlipBook bookId={readingBookId} />
+            <div className="bm-preview-actions">
+              <button className="bm-btn bm-btn-back" onClick={() => setReadingBookId(null)}>
+                {strings.publicBooks.backToBooks}
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     );
   }

@@ -27,9 +27,10 @@ public class BookController {
             @RequestParam(required = false) Long id,
             @RequestParam(required = false) String title,
             @RequestParam(required = false) String author,
-            @RequestParam(required = false) String status) {
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) Long userId) {
         try {
-            return ResponseEntity.ok(bookService.searchBooks(id, title, author, status));
+            return ResponseEntity.ok(bookService.searchBooks(id, title, author, status, userId));
         } catch (IOException e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(errorMap("Failed to search books: " + e.getMessage()));
@@ -69,8 +70,11 @@ public class BookController {
         try {
             String title = body.get("title");
             String status = body.get("status");
-            Book book = bookService.updateBook(bookId, title, status);
+            Long reqUserId = body.get("userId") != null ? Long.parseLong(body.get("userId")) : null;
+            Book book = bookService.updateBook(bookId, title, status, reqUserId);
             return ResponseEntity.ok(book);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorMap(e.getMessage()));
         } catch (IOException e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(errorMap("Failed to update book: " + e.getMessage()));
@@ -78,9 +82,11 @@ public class BookController {
     }
 
     @PutMapping("/{bookId}/publish")
-    public ResponseEntity<?> publishBook(@PathVariable Long bookId) {
+    public ResponseEntity<?> publishBook(@PathVariable Long bookId, @RequestParam(required = false) Long userId) {
         try {
-            return ResponseEntity.ok(bookService.publishBook(bookId));
+            return ResponseEntity.ok(bookService.publishBook(bookId, userId));
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorMap(e.getMessage()));
         } catch (IOException e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(errorMap("Failed to publish book: " + e.getMessage()));
@@ -88,9 +94,11 @@ public class BookController {
     }
 
     @PutMapping("/{bookId}/draft")
-    public ResponseEntity<?> saveDraft(@PathVariable Long bookId) {
+    public ResponseEntity<?> saveDraft(@PathVariable Long bookId, @RequestParam(required = false) Long userId) {
         try {
-            return ResponseEntity.ok(bookService.saveDraft(bookId));
+            return ResponseEntity.ok(bookService.saveDraft(bookId, userId));
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorMap(e.getMessage()));
         } catch (IOException e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(errorMap("Failed to save draft: " + e.getMessage()));
@@ -98,10 +106,12 @@ public class BookController {
     }
 
     @DeleteMapping("/{bookId}")
-    public ResponseEntity<?> deleteBook(@PathVariable Long bookId) {
+    public ResponseEntity<?> deleteBook(@PathVariable Long bookId, @RequestParam(required = false) Long userId) {
         try {
-            bookService.deleteBook(bookId);
+            bookService.deleteBook(bookId, userId);
             return ResponseEntity.ok(Map.of("message", "Book deleted successfully"));
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorMap(e.getMessage()));
         } catch (IOException e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(errorMap("Failed to delete book: " + e.getMessage()));
@@ -139,9 +149,12 @@ public class BookController {
     }
 
     @PostMapping("/{bookId}/page")
-    public ResponseEntity<?> addPage(@PathVariable Long bookId, @RequestBody Page page) {
+    public ResponseEntity<?> addPage(@PathVariable Long bookId, @RequestBody Page page,
+                                     @RequestParam(required = false) Long userId) {
         try {
-            return ResponseEntity.ok(bookService.addPage(bookId, page));
+            return ResponseEntity.ok(bookService.addPage(bookId, page, userId));
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorMap(e.getMessage()));
         } catch (IOException e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(errorMap("Failed to add page: " + e.getMessage()));
@@ -149,9 +162,12 @@ public class BookController {
     }
 
     @PutMapping("/page/{pageId}")
-    public ResponseEntity<?> updatePage(@PathVariable Long pageId, @RequestBody Page updated) {
+    public ResponseEntity<?> updatePage(@PathVariable Long pageId, @RequestBody Page updated,
+                                        @RequestParam(required = false) Long userId) {
         try {
-            return ResponseEntity.ok(bookService.updatePage(pageId, updated));
+            return ResponseEntity.ok(bookService.updatePage(pageId, updated, userId));
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorMap(e.getMessage()));
         } catch (IOException e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(errorMap("Failed to update page: " + e.getMessage()));
@@ -159,10 +175,12 @@ public class BookController {
     }
 
     @DeleteMapping("/page/{pageId}")
-    public ResponseEntity<?> deletePage(@PathVariable Long pageId) {
+    public ResponseEntity<?> deletePage(@PathVariable Long pageId, @RequestParam(required = false) Long userId) {
         try {
-            bookService.deletePage(pageId);
+            bookService.deletePage(pageId, userId);
             return ResponseEntity.ok(Map.of("message", "Page deleted successfully"));
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorMap(e.getMessage()));
         } catch (IOException e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(errorMap("Failed to delete page: " + e.getMessage()));

@@ -117,20 +117,43 @@
 /* Responsive */
 @media (max-width: 768px) {
   .account-page {
-    padding: 16px;
-    margin: 12px;
+    padding: 12px;
+    margin: 8px;
+  }
+
+  .account-page h1 {
+    font-size: 1.35rem;
+  }
+
+  .account-page h2 {
+    font-size: 1.1rem;
+  }
+
+  .acct-user-info {
+    padding: 14px;
+    margin-bottom: 20px;
+  }
+
+  .acct-books-table {
+    font-size: 0.8rem;
   }
 
   .acct-books-table th,
   .acct-books-table td {
-    padding: 6px 8px;
+    padding: 8px 6px;
     font-size: 0.75rem;
   }
 
-  /* Hide Created column on small screens */
+  /* Hide Created and Modified columns on small screens */
   .acct-books-table th:nth-child(3),
-  .acct-books-table td:nth-child(3) {
+  .acct-books-table td:nth-child(3),
+  .acct-books-table th:nth-child(4),
+  .acct-books-table td:nth-child(4) {
     display: none;
+  }
+
+  .acct-book-link {
+    font-size: 0.8rem;
   }
 }
 
