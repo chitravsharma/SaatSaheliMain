@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
 import axios from "axios";
+import FlipBook from "../FlipBook";
 import "../BookManager.css";
 
 const API = "http://localhost:8081/api/books";
@@ -13,10 +13,12 @@ function SearchBooks() {
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
+  const [selectedBook, setSelectedBook] = useState(null);
 
   const handleSearch = async () => {
     setLoading(true);
     setSearched(true);
+    setSelectedBook(null);
     try {
       const params = new URLSearchParams();
       if (searchId.trim()) params.append("id", searchId.trim());
@@ -40,10 +42,15 @@ function SearchBooks() {
     setSearchStatus("");
     setResults([]);
     setSearched(false);
+    setSelectedBook(null);
+  };
+
+  const handleSelectBook = (book) => {
+    setSelectedBook(book);
   };
 
   return (
-    <div className="book-manager">
+    <div className="book-manager search-page">
       <h1>Search Books</h1>
 
       <div className="bm-search-form">
@@ -92,33 +99,71 @@ function SearchBooks() {
         </div>
       </div>
 
-      {searched && (
-        <div className="bm-book-list">
+      {searched && !selectedBook && (
+        <div className="bm-search-results-table">
           <h3>Results ({results.length})</h3>
-          {results.length === 0 && <p>No books found.</p>}
-          {results.map((book) => (
-            <div key={book.id} className="bm-book-card">
-              <div className="bm-book-info">
-                <h3>
-                  <Link to={`/read/${book.id}`} className="bm-book-link">
-                    {book.title}
-                  </Link>
-                </h3>
-                <span className={`bm-status ${book.status === "PUBLISHED" ? "bm-status-published" : "bm-status-draft"}`}>
-                  {book.status}
-                </span>
-                {book.authorName && (
-                  <p className="bm-date">Author: {book.authorName}</p>
-                )}
-                <p className="bm-date">ID: {book.id} | Modified: {book.modifiedDate}</p>
-              </div>
-              <div className="bm-book-actions">
-                <Link to={`/read/${book.id}`} className="bm-btn bm-btn-preview" style={{ textDecoration: "none" }}>
-                  Read
-                </Link>
-              </div>
-            </div>
-          ))}
+          {results.length === 0 ? (
+            <p>No books found.</p>
+          ) : (
+            <table className="bm-results-table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Title</th>
+                  <th>Author</th>
+                  <th>Status</th>
+                  <th>Modified</th>
+                </tr>
+              </thead>
+              <tbody>
+                {results.map((book) => (
+                  <tr key={book.id}>
+                    <td>{book.id}</td>
+                    <td>
+                      <button className="bm-table-link" onClick={() => handleSelectBook(book)}>
+                        {book.title}
+                      </button>
+                    </td>
+                    <td>{book.authorName || "—"}</td>
+                    <td>
+                      <span className={`bm-status-dot ${book.status === "PUBLISHED" ? "dot-published" : "dot-draft"}`} />
+                      {book.status}
+                    </td>
+                    <td>{book.modifiedDate}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+      )}
+
+      {searched && selectedBook && (
+        <div className="bm-split-view">
+          <aside className="bm-split-sidebar">
+            <h4>Books ({results.length})</h4>
+            <ul className="bm-split-list">
+              {results.map((book) => (
+                <li
+                  key={book.id}
+                  className={`bm-split-item ${book.id === selectedBook.id ? "bm-split-active" : ""}`}
+                >
+                  <button className="bm-split-link" onClick={() => handleSelectBook(book)}>
+                    <span className="bm-split-num">{book.id}</span>
+                    <span className="bm-split-title">{book.title}</span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+            <button className="bm-btn bm-btn-back bm-btn-sm" onClick={() => setSelectedBook(null)} style={{ marginTop: "10px" }}>
+              Back to Table
+            </button>
+          </aside>
+          <div className="bm-split-reader">
+            <h2>{selectedBook.title}</h2>
+            {selectedBook.authorName && <p className="bm-date">by {selectedBook.authorName}</p>}
+            <FlipBook bookId={selectedBook.id} />
+          </div>
         </div>
       )}
     </div>
