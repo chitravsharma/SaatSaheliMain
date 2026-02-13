@@ -233,6 +233,12 @@ const strings = {
     confirmDeletePage: "Delete this page?",
     msgPageDeleted: "Page deleted!",
     msgDeletePageFailed: "Failed to delete page",
+    createWithAI: "Create with AI",
+    generatingImage: "Generating...",
+    msgImageGenerated: "AI image generated!",
+    msgGenerateFailed: (err) => `AI generation failed: ${err}`,
+    msgEmptyContentForAI: "Please enter a description for the AI image.",
+    aiPromptDialog: "Describe the image you want to generate:",
   },
 
   searchBooks: {
@@ -302,6 +308,11 @@ const strings = {
     pageImageAlt: (n, i) => `Page ${n} - ${i}`,
     prevPage: "Previous page",
     nextPage: "Next page",
+    firstPage: "First page",
+    lastPage: "Last page",
+    zoomIn: "Zoom in",
+    zoomOut: "Zoom out",
+    zoomReset: "Reset zoom",
   },
 
   pageLayoutEditor: {
