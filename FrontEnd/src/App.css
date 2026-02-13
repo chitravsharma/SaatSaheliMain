@@ -1,9 +1,21 @@
+/* App - Contemporary theme with ADA/WCAG 2.1 AA compliance */
+
 .App {
   text-align: center;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: #f8fafc;
+  color: #1a1a2e;
 }
 
 .App-logo {
   height: 40vmin;
+  pointer-events: none;
+}
+
+.App-logo2 {
+  height: 20vmin;
   pointer-events: none;
 }
 
@@ -14,7 +26,7 @@
 }
 
 .App-header {
-  background-color: #282c34;
+  background-color: #0f3460;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
@@ -23,30 +35,41 @@
   font-size: calc(10px + 2vmin);
   color: white;
 }
+
 .page {
-  background-color: #fefefe;
-  border: 1px solid #ccc;
-  padding: 20px;
-  font-size: 20px;
+  background-color: #ffffff;
+  border: 2px solid #e5e7eb;
+  padding: 24px;
+  font-size: 1.125rem;
   text-align: center;
-}
-.card-box {
-  padding: 1rem;              /* p-4 */
-  background-color: rgb(64, 128, 128)0;    /* bg-white */
-  border: 1px solid #ddd;     /* border */
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); /* shadow-md */
-  border-radius: 6px;         /* optional for smoother corners */
+  border-radius: 12px;
+  color: #1a1a2e;
 }
 
-/* Centered container with top margin */
+.card-box {
+  padding: 1rem;
+  background-color: #ffffff;
+  border: 2px solid #e5e7eb;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  border-radius: 12px;
+}
+
 .center-container {
-  display: flex;              /* flex */
-  justify-content: center;   /* justify-center */
-  margin-top: 2.5rem;         /* mt-10 (~40px) */
+  display: flex;
+  justify-content: center;
+  margin-top: 1.5rem;
+  overflow: hidden;
+  padding: 0 16px;
+  box-sizing: border-box;
 }
 
 .App-link {
-  color: #61dafb;
+  color: #0f3460;
+  font-weight: 600;
+}
+.App-link:focus-visible {
+  outline: 3px solid #0f3460;
+  outline-offset: 2px;
 }
 
 @keyframes App-logo-spin {
@@ -55,5 +78,106 @@
   }
   to {
     transform: rotate(360deg);
+  }
+}
+
+/* FlipBook navigation wrapper */
+.flipbook-nav-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+.flipbook-arrow-row {
+  display: flex;
+  gap: 24px;
+}
+
+.flipbook-arrow {
+  background: #0f3460;
+  color: #ffffff;
+  border: 2px solid transparent;
+  border-radius: 50%;
+  width: 48px;
+  height: 48px;
+  font-size: 1.75rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s;
+  flex-shrink: 0;
+  line-height: 1;
+}
+.flipbook-arrow:hover:not(:disabled) {
+  background: #0a254a;
+}
+.flipbook-arrow:focus-visible {
+  outline: 3px solid #0f3460;
+  outline-offset: 2px;
+}
+.flipbook-arrow:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.flipbook-page-indicator {
+  color: #4b5563;
+  font-size: 0.875rem;
+  font-weight: 600;
+  min-width: 60px;
+  text-align: center;
+}
+
+/* Main content wrapper */
+.main-content {
+  flex: 1;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .card-box {
+    padding: 0.5rem;
+    border-radius: 8px;
+  }
+
+  .center-container {
+    margin-top: 0.5rem;
+    padding: 0 4px;
+  }
+
+  .flipbook-nav-wrapper {
+    gap: 8px;
+    width: 100%;
+  }
+
+  .flipbook-arrow-row {
+    gap: 16px;
+  }
+
+  .flipbook-arrow {
+    width: 40px;
+    height: 40px;
+    font-size: 1.5rem;
+  }
+
+  .flipbook-page-indicator {
+    font-size: 0.8rem;
+  }
+}
+
+/* High contrast mode */
+@media (forced-colors: active) {
+  .card-box,
+  .page {
+    border: 2px solid;
+  }
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .App-logo {
+    animation: none;
   }
 }

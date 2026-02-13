@@ -1,0 +1,77 @@
+.about-page {
+  max-width: 720px;
+  margin: 60px auto;
+  padding: 0 24px;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+}
+
+.about-hero {
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+.about-hero h1 {
+  font-size: 2.4rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #6366f1, #a855f7, #ec4899);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+}
+
+.about-divider {
+  width: 60px;
+  height: 4px;
+  background: linear-gradient(90deg, #6366f1, #a855f7);
+  border: none;
+  border-radius: 2px;
+  margin: 16px auto 32px;
+}
+
+.about-card {
+  background: linear-gradient(145deg, #ffffff, #f8f9ff);
+  border: 1px solid #e8e8f0;
+  border-radius: 16px;
+  padding: 36px 32px;
+  box-shadow: 0 4px 24px rgba(99, 102, 241, 0.08);
+}
+
+.about-card p {
+  font-size: 1.15rem;
+  line-height: 1.8;
+  color: #374151;
+  margin: 0;
+}
+
+.about-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+  margin-top: 32px;
+}
+
+.about-tag {
+  background: linear-gradient(135deg, #ede9fe, #fce7f3);
+  color: #6d28d9;
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 6px 16px;
+  border-radius: 20px;
+  letter-spacing: 0.3px;
+}
+
+@media (max-width: 600px) {
+  .about-hero h1 {
+    font-size: 1.8rem;
+  }
+
+  .about-card {
+    padding: 24px 20px;
+  }
+
+  .about-card p {
+    font-size: 1.05rem;
+  }
+}

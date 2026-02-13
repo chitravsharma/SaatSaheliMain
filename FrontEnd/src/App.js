@@ -1,57 +1,46 @@
-import logo from './logo.svg';
 import './App.css';
 
-import React, { useState, useEffect } from "react";
-import FlipBook from "./FlipBook";
-import { Link } from 'react-router-dom';
+import React from "react";
+
+import Header from './modules/Header';
+import Footer from './modules/Footer';
+import { Routes, Route } from 'react-router-dom';
+import Home from './pages/Home';
+import About from './pages/About';
+import Contacts from './pages/Contacts';
+import Login from './pages/Login';
+import Logout from './pages/Logout';
+import BookManager from './pages/BookManager';
+import SearchBooks from './pages/SearchBooks';
+import ReadBook from './pages/ReadBook';
+import SitePolicies from './pages/SitePolicies';
+import Account from './pages/Account';
+import CategoryPage from './pages/CategoryPage';
+
 
 function App() {
-	const [query, setQuery] = useState('');
-  	return (
-   		 <div className="App">
-   		   <h1>My Flipbook</h1>
-		   <Link 
-			   to={{
-			       pathname: "/create",
-			       search: "?query=string",
-			       hash: "#hash",
-			     }}
-		   />
-		   Search by Book id :
-		   <input
-		       type="text"
-		       className="border p-2 w-full mb-4"
-		       placeholder="Search..."
-			   value = {query}
-			   onChange={(e) => setQuery(e.target.value)}
-		     />
-   		   <FlipBook bookId={query} />
-   		 </div>
+  return (
+    <div className="App">
+      <Header />
+      <main id="main-content">
+        <Routes>
+          <Route path="/Login" element={<Login />} />
+          <Route path="/" element={<Home />} />
+          <Route path="/contacts" element={<Contacts />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/books" element={<BookManager />} />
+          <Route path="/search" element={<SearchBooks />} />
+          <Route path="/read/:bookId" element={<ReadBook />} />
+          <Route path="/account" element={<Account />} />
+          <Route path="/policies" element={<SitePolicies />} />
+          <Route path="/category/:category" element={<CategoryPage />} />
+          <Route path="/logout" element={<Logout />} />
+        </Routes>
+      </main>
+      <Footer />
+    </div>
   );
 }
 
 
 export default App;
-
-
-/*function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
-}*/
-

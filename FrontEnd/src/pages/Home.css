@@ -1,0 +1,137 @@
+/* Home page - About content with category links */
+
+.home-container {
+  max-width: 720px;
+  margin: 60px auto;
+  padding: 0 24px;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.6;
+  color: #1a1a2e;
+}
+
+.home-hero {
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+.home-hero h1 {
+  font-size: 2.4rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #0f3460, #2471a3, #d4a017);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+}
+
+.home-divider {
+  width: 60px;
+  height: 4px;
+  background: linear-gradient(90deg, #0f3460, #d4a017);
+  border: none;
+  border-radius: 2px;
+  margin: 16px auto 32px;
+}
+
+.home-card {
+  background: linear-gradient(145deg, #ffffff, #f8fafc);
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  padding: 36px 32px;
+  box-shadow: 0 4px 24px rgba(15, 52, 96, 0.08);
+}
+
+.home-card p {
+  font-size: 1.15rem;
+  line-height: 1.8;
+  color: #374151;
+  margin: 0;
+}
+
+.home-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+  margin-top: 32px;
+}
+
+.home-tag-link {
+  background: linear-gradient(135deg, #0f3460, #1a5276);
+  color: #ffffff;
+  font-size: 0.95rem;
+  font-weight: 600;
+  padding: 10px 24px;
+  border-radius: 24px;
+  text-decoration: none;
+  letter-spacing: 0.3px;
+  transition: transform 0.2s, box-shadow 0.2s;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+}
+.home-tag-link:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(15, 52, 96, 0.25);
+  background: linear-gradient(135deg, #0a254a, #0f3460);
+}
+.home-tag-link:focus-visible {
+  outline: 3px solid #d4a017;
+  outline-offset: 2px;
+}
+
+.home-back-link {
+  color: #0f3460;
+  font-weight: 600;
+  text-decoration: underline;
+  font-size: 1rem;
+}
+.home-back-link:hover {
+  color: #0a254a;
+}
+.home-back-link:focus-visible {
+  outline: 3px solid #0f3460;
+  outline-offset: 2px;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  .home-container {
+    margin: 24px auto;
+    padding: 0 16px;
+  }
+
+  .home-hero h1 {
+    font-size: 1.8rem;
+  }
+
+  .home-card {
+    padding: 24px 20px;
+  }
+
+  .home-card p {
+    font-size: 1.05rem;
+  }
+
+  .home-tag-link {
+    font-size: 0.85rem;
+    padding: 8px 18px;
+  }
+}
+
+/* High contrast mode */
+@media (forced-colors: active) {
+  .home-tag-link {
+    border: 2px solid ButtonText;
+  }
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .home-tag-link {
+    transition: none;
+  }
+  .home-tag-link:hover {
+    transform: none;
+  }
+}
