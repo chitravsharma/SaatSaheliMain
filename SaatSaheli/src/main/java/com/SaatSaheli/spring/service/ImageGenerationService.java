@@ -12,11 +12,27 @@ import java.nio.file.Paths;
 import java.util.Map;
 import java.util.UUID;
 
+import static java.util.Map.entry;
+
 @Service
 public class ImageGenerationService {
 
     private static final String UPLOAD_DIR = "./uploads";
-    private static final String STYLE_PREFIX = "Children's book illustration, colorful, whimsical style: ";
+
+    private static final Map<String, String> STYLE_PREFIXES = Map.ofEntries(
+        entry("general",     "High quality, detailed illustration: "),
+        entry("children",    "Children's book illustration, colorful, whimsical style: "),
+        entry("poetry",      "Artistic, dreamy, poetic watercolor illustration: "),
+        entry("story",       "Vivid storytelling illustration, narrative scene: "),
+        entry("art",         "Fine art painting, museum quality, expressive brushwork: "),
+        entry("science",     "Scientific illustration, accurate, educational diagram style: "),
+        entry("politics",    "Editorial illustration, bold political commentary style: "),
+        entry("technology",  "Futuristic, sleek technology concept art: "),
+        entry("geography",   "Beautiful landscape, geographical illustration, natural scenery: "),
+        entry("history",     "Historical illustration, period-accurate, vintage style: "),
+        entry("fantasy",     "Epic fantasy art, magical, otherworldly scene: "),
+        entry("realistic",   "Photorealistic, high detail, lifelike rendering: ")
+    );
 
     @Value("${huggingface.api.token}")
     private String apiToken;
@@ -29,7 +45,7 @@ public class ImageGenerationService {
 
     private final RestClient restClient = RestClient.create();
 
-    public String generateImage(String prompt) throws IOException {
+    public String generateImage(String prompt, String style) throws IOException {
         if (prompt == null || prompt.trim().isEmpty()) {
             throw new IllegalArgumentException("Prompt cannot be empty");
         }
@@ -43,7 +59,9 @@ public class ImageGenerationService {
             Files.createDirectories(uploadPath);
         }
 
-        String enhancedPrompt = STYLE_PREFIX + prompt.trim();
+        String prefix = STYLE_PREFIXES.getOrDefault(
+                style != null ? style : "general", STYLE_PREFIXES.get("general"));
+        String enhancedPrompt = prefix + prompt.trim();
         String url = "https://router.huggingface.co/hf-inference/models/" + model;
 
         byte[] imageBytes = null;

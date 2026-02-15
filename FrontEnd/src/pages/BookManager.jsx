@@ -163,6 +163,7 @@ function BookManager() {
   const [generating2, setGenerating2] = useState(false);
   const [editGenerating1, setEditGenerating1] = useState(false);
   const [editGenerating2, setEditGenerating2] = useState(false);
+  const [imageStyle, setImageStyle] = useState("general");
 
   // Open book for editing when navigated from Account page
   useEffect(() => {
@@ -235,7 +236,7 @@ function BookManager() {
     }
     setGeneratingState(true);
     try {
-      const res = await axios.post(GENERATE_API, { prompt: prompt.trim() }, { timeout: 90000 });
+      const res = await axios.post(GENERATE_API, { prompt: prompt.trim(), style: imageStyle }, { timeout: 90000 });
       setUrl(res.data.url);
       showMessage(strings.bookManager.msgImageGenerated);
     } catch (err) {
@@ -465,14 +466,26 @@ function BookManager() {
             {strings.bookManager.chooseFile}
           </label>
           {contentForAI !== undefined && (
-            <button
-              className="bm-btn bm-btn-ai bm-btn-sm"
-              type="button"
-              disabled={generating || uploading}
-              onClick={() => handleGenerateImage(contentForAI, setUrl, setGenerating)}
-            >
-              {generating ? strings.bookManager.generatingImage : strings.bookManager.createWithAI}
-            </button>
+            <div className="bm-ai-controls">
+              <select
+                className="bm-format-select"
+                value={imageStyle}
+                onChange={(e) => setImageStyle(e.target.value)}
+                aria-label={strings.bookManager.imageStyleLabel}
+              >
+                {strings.bookManager.imageStyles.map((s) => (
+                  <option key={s.value} value={s.value}>{s.label}</option>
+                ))}
+              </select>
+              <button
+                className="bm-btn bm-btn-ai bm-btn-sm"
+                type="button"
+                disabled={generating || uploading}
+                onClick={() => handleGenerateImage(contentForAI, setUrl, setGenerating)}
+              >
+                {generating ? strings.bookManager.generatingImage : strings.bookManager.createWithAI}
+              </button>
+            </div>
           )}
           {uploading && <span className="bm-uploading">{strings.bookManager.uploading}</span>}
           {generating && <span className="bm-uploading">{strings.bookManager.generatingImage}</span>}

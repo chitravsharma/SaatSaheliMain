@@ -239,6 +239,21 @@ const strings = {
     msgGenerateFailed: (err) => `AI generation failed: ${err}`,
     msgEmptyContentForAI: "Please enter a description for the AI image.",
     aiPromptDialog: "Describe the image you want to generate:",
+    imageStyleLabel: "Image Style",
+    imageStyles: [
+      { value: "general", label: "General" },
+      { value: "children", label: "Children's Book" },
+      { value: "poetry", label: "Poetry" },
+      { value: "story", label: "Story" },
+      { value: "art", label: "Fine Art" },
+      { value: "science", label: "Science" },
+      { value: "politics", label: "Politics" },
+      { value: "technology", label: "Technology" },
+      { value: "geography", label: "Geography" },
+      { value: "history", label: "History" },
+      { value: "fantasy", label: "Fantasy" },
+      { value: "realistic", label: "Realistic" },
+    ],
   },
 
   searchBooks: {

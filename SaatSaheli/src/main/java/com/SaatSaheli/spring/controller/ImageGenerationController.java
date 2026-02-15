@@ -19,11 +19,12 @@ public class ImageGenerationController {
     @PostMapping("/generate-image")
     public ResponseEntity<?> generateImage(@RequestBody Map<String, String> body) {
         String prompt = body.get("prompt");
+        String style = body.get("style");
         if (prompt == null || prompt.trim().isEmpty()) {
             return ResponseEntity.badRequest().body(Map.of("error", "Prompt is required"));
         }
         try {
-            String url = imageGenerationService.generateImage(prompt);
+            String url = imageGenerationService.generateImage(prompt, style);
             return ResponseEntity.ok(Map.of("url", url));
         } catch (IllegalStateException e) {
             return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)

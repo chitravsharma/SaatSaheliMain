@@ -412,6 +412,11 @@
   gap: 8px;
   flex-wrap: wrap;
 }
+.bm-ai-controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
 .bm-uploading {
   color: #0e6e7a;
   font-size: 0.85rem;
