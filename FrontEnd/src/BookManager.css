@@ -140,13 +140,14 @@
   margin-top: 40px;
 }
 .bm-button-row .bm-btn {
-  padding: 24px 48px;
-  font-size: 1.125rem;
-  border-radius: 12px;
-  min-height: 80px;
-  display: flex;
+  padding: 14px 28px;
+  font-size: 0.95rem;
+  border-radius: 10px;
+  min-height: 52px;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
+  gap: 8px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.1);
 }
 
@@ -725,6 +726,20 @@
   color: #1a1a2e;
 }
 
+/* Reader navigation bar above the book */
+.bm-reader-nav {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+.bm-reader-nav .bm-btn {
+  padding: 6px 14px;
+  font-size: 0.8rem;
+  min-height: 36px;
+}
+
 /* Preview actions - spacing below FlipBook */
 .bm-preview-actions {
   display: flex;
@@ -928,6 +943,45 @@
   letter-spacing: 0.03em;
 }
 
+/* Document upload button - blue variant */
+.bm-btn-upload {
+  background-color: #1d4ed8;
+  color: #ffffff;
+  border-color: #1d4ed8;
+}
+.bm-btn-upload:hover { background-color: #1e40af; border-color: #1e40af; }
+
+/* Document upload area */
+.bm-doc-upload-area {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  border: 2px dashed #93c5fd;
+  border-radius: 10px;
+  background: #f0f7ff;
+  width: 100%;
+  max-width: 420px;
+  box-sizing: border-box;
+  justify-content: center;
+}
+.bm-doc-filename {
+  font-size: 0.875rem;
+  color: #1a1a2e;
+  font-weight: 500;
+  word-break: break-all;
+}
+
+/* Hint text for document upload */
+.bm-doc-hint {
+  color: #4b5563;
+  font-size: 0.8rem;
+  max-width: 420px;
+  text-align: center;
+  line-height: 1.5;
+  margin: 0;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .book-manager {
@@ -949,9 +1003,9 @@
     margin-top: 24px;
   }
   .bm-button-row .bm-btn {
-    padding: 16px 24px;
-    font-size: 1rem;
-    min-height: 56px;
+    padding: 12px 20px;
+    font-size: 0.9rem;
+    min-height: 48px;
   }
   .bm-book-card {
     flex-direction: column;
@@ -1027,6 +1081,15 @@
   .bm-preview-actions {
     margin-top: 24px;
     flex-wrap: wrap;
+  }
+  .bm-reader-nav {
+    gap: 4px;
+    margin-bottom: 8px;
+  }
+  .bm-reader-nav .bm-btn {
+    padding: 5px 10px;
+    font-size: 0.75rem;
+    min-height: 32px;
   }
   .bm-public-grid {
     grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));

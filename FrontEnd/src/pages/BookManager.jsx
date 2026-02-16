@@ -4,7 +4,7 @@ import axios from "axios";
 import FlipBook from "../FlipBook";
 import PageLayoutEditor from "../PageLayoutEditor";
 import { useAuth } from "../AuthContext";
-import strings from "../constants/strings";
+import { useStrings } from "../LanguageContext";
 import "../BookManager.css";
 
 const API = `${process.env.REACT_APP_API_URL}/api/books`;
@@ -13,6 +13,7 @@ const GENERATE_API = `${process.env.REACT_APP_API_URL}/api/generate-image`;
 
 // Public books browser shown when no user is logged in
 function PublicBooks() {
+  const strings = useStrings();
   const [books, setBooks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -33,17 +34,32 @@ function PublicBooks() {
   }, []);
 
   if (readingBookId) {
+    const currentIndex = books.findIndex((b) => b.id === readingBookId);
+    const hasPrev = currentIndex > 0;
+    const hasNext = currentIndex < books.length - 1;
+
     return (
       <div className="book-manager">
-        <FlipBook bookId={readingBookId} />
-        <div className="bm-preview-actions">
+        <div className="bm-reader-nav">
           <button className="bm-btn bm-btn-back" onClick={() => setReadingBookId(null)}>
             {strings.publicBooks.backToBooks}
           </button>
-          <Link to="/" className="bm-btn bm-btn-back" style={{ textDecoration: "none" }}>
-            {strings.publicBooks.home}
-          </Link>
+          <button
+            className="bm-btn bm-btn-back"
+            disabled={!hasPrev}
+            onClick={() => hasPrev && setReadingBookId(books[currentIndex - 1].id)}
+          >
+            {strings.readBook.prevBook}
+          </button>
+          <button
+            className="bm-btn bm-btn-back"
+            disabled={!hasNext}
+            onClick={() => hasNext && setReadingBookId(books[currentIndex + 1].id)}
+          >
+            {strings.readBook.nextBook}
+          </button>
         </div>
+        <FlipBook bookId={readingBookId} />
       </div>
     );
   }
@@ -110,6 +126,7 @@ const DEFAULT_FORMAT = {
 
 function BookManager() {
   const { user } = useAuth();
+  const strings = useStrings();
   const location = useLocation();
   const userId = user?.userId || 1;
   const [view, setView] = useState("menu");
@@ -122,6 +139,8 @@ function BookManager() {
   const [publishedBooks, setPublishedBooks] = useState([]);
   const [publishedLoading, setPublishedLoading] = useState(true);
   const [readingBookId, setReadingBookId] = useState(null);
+  const [docFile, setDocFile] = useState(null);
+  const [docUploading, setDocUploading] = useState(false);
 
   // Fetch published books for the menu view
   useEffect(() => {
@@ -553,12 +572,19 @@ function BookManager() {
           {message && <div className="bm-message">{message}</div>}
           <div className={`bm-button-row ${isReading ? "bm-button-col" : ""}`}>
             <button className="bm-btn bm-btn-create" onClick={() => { setReadingBookId(null); setView("create"); }}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14M5 12h14"/></svg>
               {strings.bookManager.createNewBook}
             </button>
+            <button className="bm-btn bm-btn-upload" onClick={() => { setReadingBookId(null); setNewTitle(""); setDocFile(null); setView("upload-doc"); }}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><polyline points="9 15 12 12 15 15"/></svg>
+              {strings.bookManager.createFromDocument}
+            </button>
             <button className="bm-btn bm-btn-draft" onClick={() => { setReadingBookId(null); fetchDrafts(); setView("drafts"); }}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
               {strings.bookManager.myDrafts}
             </button>
             <button className="bm-btn bm-btn-all" onClick={() => { setReadingBookId(null); fetchBooks(); setView("allbooks"); }}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
               {strings.bookManager.allMyBooks}
             </button>
           </div>
@@ -604,16 +630,35 @@ function BookManager() {
           )}
         </div>
 
-        {isReading && (
-          <div className="bm-reader-main">
-            <FlipBook bookId={readingBookId} />
-            <div className="bm-preview-actions">
-              <button className="bm-btn bm-btn-back" onClick={() => setReadingBookId(null)}>
-                {strings.publicBooks.backToBooks}
-              </button>
+        {isReading && (() => {
+          const currentIndex = publishedBooks.findIndex((b) => b.id === readingBookId);
+          const hasPrev = currentIndex > 0;
+          const hasNext = currentIndex < publishedBooks.length - 1;
+          return (
+            <div className="bm-reader-main">
+              <div className="bm-reader-nav">
+                <button className="bm-btn bm-btn-back" onClick={() => setReadingBookId(null)}>
+                  {strings.publicBooks.backToBooks}
+                </button>
+                <button
+                  className="bm-btn bm-btn-back"
+                  disabled={!hasPrev}
+                  onClick={() => hasPrev && setReadingBookId(publishedBooks[currentIndex - 1].id)}
+                >
+                  {strings.readBook.prevBook}
+                </button>
+                <button
+                  className="bm-btn bm-btn-back"
+                  disabled={!hasNext}
+                  onClick={() => hasNext && setReadingBookId(publishedBooks[currentIndex + 1].id)}
+                >
+                  {strings.readBook.nextBook}
+                </button>
+              </div>
+              <FlipBook bookId={readingBookId} />
             </div>
-          </div>
-        )}
+          );
+        })()}
       </div>
     );
   }
@@ -636,6 +681,84 @@ function BookManager() {
             {loading ? strings.bookManager.creating : strings.bookManager.createButton}
           </button>
           <button className="bm-btn bm-btn-back" onClick={() => setView("menu")}>{strings.common.back}</button>
+        </div>
+      </div>
+    );
+  }
+
+  // Upload document to create book
+  if (view === "upload-doc") {
+    const handleDocUpload = async () => {
+      if (!newTitle.trim()) {
+        showMessage(strings.bookManager.msgEnterTitle);
+        return;
+      }
+      if (!docFile) {
+        showMessage(strings.bookManager.msgDocUploadFailed("No file selected"));
+        return;
+      }
+      setDocUploading(true);
+      try {
+        const formData = new FormData();
+        formData.append("file", docFile);
+        formData.append("title", newTitle.trim());
+        formData.append("userId", userId);
+        const res = await axios.post(`${API}/upload-document`, formData, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
+        const book = res.data;
+        setSelectedBook(book);
+        setPages(book.pages || []);
+        const pageCount = (book.pages || []).length;
+        showMessage(strings.bookManager.msgBookFromDoc(pageCount));
+        setNewTitle("");
+        setDocFile(null);
+        setView("edit");
+      } catch (err) {
+        showMessage(strings.bookManager.msgDocUploadFailed(err.response?.data?.error || err.message));
+      } finally {
+        setDocUploading(false);
+      }
+    };
+
+    return (
+      <div className="book-manager">
+        <h1>{strings.bookManager.uploadDocHeading}</h1>
+        {message && <div className="bm-message">{message}</div>}
+        <div className="bm-form">
+          <input
+            type="text"
+            placeholder={strings.bookManager.placeholderTitle}
+            value={newTitle}
+            onChange={(e) => setNewTitle(e.target.value)}
+            className="bm-input"
+          />
+          <div className="bm-doc-upload-area">
+            <input
+              type="file"
+              accept=".pdf,.docx,.doc"
+              id="doc-upload-input"
+              className="bm-file-input"
+              onChange={(e) => {
+                if (e.target.files[0]) setDocFile(e.target.files[0]);
+              }}
+            />
+            <label htmlFor="doc-upload-input" className="bm-btn bm-btn-edit">
+              {strings.bookManager.chooseFile}
+            </label>
+            {docFile && <span className="bm-doc-filename">{docFile.name}</span>}
+          </div>
+          <p className="bm-doc-hint">{strings.bookManager.uploadDocHint}</p>
+          <button
+            className="bm-btn bm-btn-upload"
+            onClick={handleDocUpload}
+            disabled={docUploading}
+          >
+            {docUploading ? strings.bookManager.uploadingDoc : strings.bookManager.uploadDocButton}
+          </button>
+          <button className="bm-btn bm-btn-back" onClick={() => setView("menu")}>
+            {strings.common.back}
+          </button>
         </div>
       </div>
     );
