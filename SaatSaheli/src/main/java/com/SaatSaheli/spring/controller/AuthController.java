@@ -9,6 +9,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -28,6 +30,7 @@ public class AuthController {
     private LoginRepository loginRepo;
 
     private static final DateTimeFormatter DTF = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+    private static final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
     /**
      * POST /api/auth/signup
@@ -72,7 +75,7 @@ public class AuthController {
             Login login = new Login();
             login.setUserId(user.getId());
             login.setEmail(email);
-            login.setPassword(password != null ? password : "");
+            login.setPassword(password != null && !password.isEmpty() ? passwordEncoder.encode(password) : "");
             login.setStatus("ACTIVE");
             login.setAccountCreatedDate(now);
             login.setLastLoginDate(now);
@@ -124,7 +127,7 @@ public class AuthController {
 
             // Verify password for email provider
             if ("email".equals(provider)) {
-                if (password == null || !password.equals(login.getPassword())) {
+                if (password == null || !passwordEncoder.matches(password, login.getPassword())) {
                     return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorMap("Invalid password"));
                 }
             }

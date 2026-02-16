@@ -7,8 +7,9 @@ import { useAuth } from "../AuthContext";
 import strings from "../constants/strings";
 import "../BookManager.css";
 
-const API = "http://localhost:8081/api/books";
-const UPLOAD_API = "http://localhost:8081/api/upload";
+const API = `${process.env.REACT_APP_API_URL}/api/books`;
+const UPLOAD_API = `${process.env.REACT_APP_API_URL}/api/upload`;
+const GENERATE_API = `${process.env.REACT_APP_API_URL}/api/generate-image`;
 
 // Public books browser shown when no user is logged in
 function PublicBooks() {
@@ -90,7 +91,7 @@ function resolveImageUrl(url) {
   if (!url) return url;
   // Local upload path
   if (url.startsWith("/uploads/")) {
-    return `http://localhost:8081${url}`;
+    return `${process.env.REACT_APP_API_URL}${url}`;
   }
   // Google Drive shareable link
   const match = url.match(/\/file\/d\/([^/]+)\//);
@@ -157,6 +158,13 @@ function BookManager() {
   const [editUploading1, setEditUploading1] = useState(false);
   const [editUploading2, setEditUploading2] = useState(false);
 
+  // AI generation state
+  const [generating1, setGenerating1] = useState(false);
+  const [generating2, setGenerating2] = useState(false);
+  const [editGenerating1, setEditGenerating1] = useState(false);
+  const [editGenerating2, setEditGenerating2] = useState(false);
+  const [imageStyle, setImageStyle] = useState("general");
+
   // Open book for editing when navigated from Account page
   useEffect(() => {
     const editBookId = location.state?.editBookId;
@@ -216,6 +224,25 @@ function BookManager() {
       showMessage(strings.bookManager.msgUploadFailed(err.response?.data?.error || err.message));
     } finally {
       setUploadingState(false);
+    }
+  };
+
+  const handleGenerateImage = async (content, setUrl, setGeneratingState) => {
+    const prompt = window.prompt(strings.bookManager.aiPromptDialog, content?.trim() || "");
+    if (prompt === null) return; // user cancelled
+    if (!prompt.trim()) {
+      showMessage(strings.bookManager.msgEmptyContentForAI);
+      return;
+    }
+    setGeneratingState(true);
+    try {
+      const res = await axios.post(GENERATE_API, { prompt: prompt.trim(), style: imageStyle }, { timeout: 90000 });
+      setUrl(res.data.url);
+      showMessage(strings.bookManager.msgImageGenerated);
+    } catch (err) {
+      showMessage(strings.bookManager.msgGenerateFailed(err.response?.data?.error || err.message));
+    } finally {
+      setGeneratingState(false);
     }
   };
 
@@ -408,7 +435,7 @@ function BookManager() {
   };
 
   // Render the image upload area
-  const renderImageUpload = (label, url, setUrl, uploading, setUploading, inputId) => (
+  const renderImageUpload = (label, url, setUrl, uploading, setUploading, inputId, contentForAI, generating, setGenerating) => (
     <div className="bm-upload-area">
       <label className="bm-upload-label">{label}</label>
       {url ? (
@@ -438,7 +465,30 @@ function BookManager() {
           <label htmlFor={inputId} className="bm-btn bm-btn-edit bm-btn-sm">
             {strings.bookManager.chooseFile}
           </label>
+          {contentForAI !== undefined && (
+            <div className="bm-ai-controls">
+              <select
+                className="bm-format-select"
+                value={imageStyle}
+                onChange={(e) => setImageStyle(e.target.value)}
+                aria-label={strings.bookManager.imageStyleLabel}
+              >
+                {strings.bookManager.imageStyles.map((s) => (
+                  <option key={s.value} value={s.value}>{s.label}</option>
+                ))}
+              </select>
+              <button
+                className="bm-btn bm-btn-ai bm-btn-sm"
+                type="button"
+                disabled={generating || uploading}
+                onClick={() => handleGenerateImage(contentForAI, setUrl, setGenerating)}
+              >
+                {generating ? strings.bookManager.generatingImage : strings.bookManager.createWithAI}
+              </button>
+            </div>
+          )}
           {uploading && <span className="bm-uploading">{strings.bookManager.uploading}</span>}
+          {generating && <span className="bm-uploading">{strings.bookManager.generatingImage}</span>}
         </div>
       )}
     </div>
@@ -700,8 +750,8 @@ function BookManager() {
                 )}
 
                 <div className="bm-upload-row">
-                  {renderImageUpload(strings.bookManager.image1Label, pageImageUrl, setPageImageUrl, uploading1, setUploading1, "add-img1")}
-                  {renderImageUpload(strings.bookManager.image2Label, pageImageUrl2, setPageImageUrl2, uploading2, setUploading2, "add-img2")}
+                  {renderImageUpload(strings.bookManager.image1Label, pageImageUrl, setPageImageUrl, uploading1, setUploading1, "add-img1", pageContent, generating1, setGenerating1)}
+                  {renderImageUpload(strings.bookManager.image2Label, pageImageUrl2, setPageImageUrl2, uploading2, setUploading2, "add-img2", pageContent, generating2, setGenerating2)}
                 </div>
 
                 {(pageImageUrl || pageImageUrl2) && (
@@ -751,7 +801,10 @@ function BookManager() {
                           (url) => setEditingPage((p) => ({ ...p, imageUrl: url })),
                           editUploading1,
                           setEditUploading1,
-                          "edit-img1"
+                          "edit-img1",
+                          editingPage.content,
+                          editGenerating1,
+                          setEditGenerating1
                         )}
                         {renderImageUpload(
                           strings.bookManager.image2Label,
@@ -759,7 +812,10 @@ function BookManager() {
                           (url) => setEditingPage((p) => ({ ...p, imageUrl2: url })),
                           editUploading2,
                           setEditUploading2,
-                          "edit-img2"
+                          "edit-img2",
+                          editingPage.content,
+                          editGenerating2,
+                          setEditGenerating2
                         )}
                       </div>
 

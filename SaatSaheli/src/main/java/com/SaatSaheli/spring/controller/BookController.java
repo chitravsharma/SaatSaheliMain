@@ -13,6 +13,8 @@ import org.springframework.web.bind.annotation.*;
 
 import com.SaatSaheli.spring.model.Book;
 import com.SaatSaheli.spring.service.BookService;
+import com.SaatSaheli.spring.service.DocumentExtractionService;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/api/books")
@@ -21,6 +23,9 @@ public class BookController {
 
     @Autowired
     private BookService bookService;
+
+    @Autowired
+    private DocumentExtractionService documentExtractionService;
 
     @GetMapping("/search")
     public ResponseEntity<?> searchBooks(
@@ -50,6 +55,44 @@ public class BookController {
         } catch (IOException e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(errorMap("Failed to create book: " + e.getMessage()));
+        }
+    }
+
+    @PostMapping("/upload-document")
+    public ResponseEntity<?> uploadDocument(
+            @RequestParam("file") MultipartFile file,
+            @RequestParam("title") String title,
+            @RequestParam(value = "userId", required = false) Long userId) {
+        try {
+            if (file.isEmpty()) {
+                return ResponseEntity.badRequest().body(errorMap("File is required"));
+            }
+            if (title == null || title.trim().isEmpty()) {
+                return ResponseEntity.badRequest().body(errorMap("Title is required"));
+            }
+            String filename = file.getOriginalFilename();
+            boolean isPdf = filename != null && filename.toLowerCase().endsWith(".pdf");
+
+            Book book;
+            if (isPdf) {
+                List<String> imageUrls = documentExtractionService.extractPdfAsImages(file);
+                if (imageUrls.isEmpty()) {
+                    return ResponseEntity.badRequest().body(errorMap("No pages could be rendered from the PDF"));
+                }
+                book = bookService.createBookFromPdfImages(title.trim(), userId, imageUrls);
+            } else {
+                List<String> pageTexts = documentExtractionService.extractText(file);
+                if (pageTexts.isEmpty()) {
+                    return ResponseEntity.badRequest().body(errorMap("No text could be extracted from the document"));
+                }
+                book = bookService.createBookFromDocument(title.trim(), userId, pageTexts);
+            }
+            return ResponseEntity.ok(book);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(errorMap(e.getMessage()));
+        } catch (IOException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(errorMap("Failed to process document: " + e.getMessage()));
         }
     }
 

@@ -4,6 +4,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import jakarta.annotation.PostConstruct;
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -34,6 +36,13 @@ public class LocalFileService {
         Path filePath = Paths.get(UPLOAD_DIR, uniqueName);
         Files.copy(file.getInputStream(), filePath);
 
+        return "/uploads/" + uniqueName;
+    }
+
+    public String saveBufferedImage(BufferedImage image, String extension) throws IOException {
+        String uniqueName = UUID.randomUUID() + "." + extension;
+        Path filePath = Paths.get(UPLOAD_DIR, uniqueName);
+        ImageIO.write(image, extension, filePath.toFile());
         return "/uploads/" + uniqueName;
     }
 }

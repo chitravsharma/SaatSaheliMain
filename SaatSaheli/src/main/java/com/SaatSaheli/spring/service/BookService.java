@@ -156,13 +156,16 @@ public class BookService {
             if (requestUserId != null && !requestUserId.equals(book.getUserId())) {
                 throw new RuntimeException("Only the author can delete this book");
             }
+            book.setStatus("DELETED");
+            book.setModifiedDate(LocalDateTime.now().format(DTF));
+            bookRepo.save(book);
         }
-        pageRepo.deleteByBookId(id);
-        bookRepo.deleteById(id);
     }
 
     public List<Book> getBooksByUser(Long userId) throws IOException {
-        List<Book> books = bookRepo.findByUserId(userId);
+        List<Book> books = bookRepo.findByUserId(userId).stream()
+                .filter(b -> !"DELETED".equalsIgnoreCase(b.getStatus()))
+                .collect(Collectors.toList());
         for (Book book : books) {
             book.setPages(pageRepo.findByBookIdOrderByPageNumberAsc(book.getId()));
         }
@@ -198,6 +201,8 @@ public class BookService {
         final Set<Long> finalAuthorMatchIds = authorMatchIds;
 
         List<Book> filtered = books.stream()
+                // Hide DELETED books from everyone
+                .filter(b -> !"DELETED".equalsIgnoreCase(b.getStatus()))
                 // Hide DRAFT books unless the requesting user is the author
                 .filter(b -> {
                     if ("DRAFT".equalsIgnoreCase(b.getStatus())) {
@@ -225,6 +230,98 @@ public class BookService {
         }
 
         return filtered;
+    }
+
+    public Book createBookFromDocument(String title, Long userId, List<String> pageTexts) throws IOException {
+        String now = LocalDateTime.now().format(DTF);
+        Book book = new Book();
+        book.setTitle(title);
+        book.setUserId(userId);
+        book.setStatus("DRAFT");
+        book.setCreatedDate(now);
+        book.setModifiedDate(now);
+        book = bookRepo.save(book);
+
+        // Cover page
+        Page cover = new Page();
+        cover.setBookId(book.getId());
+        cover.setPageNumber(1);
+        cover.setContent(title);
+        cover.setFormat("bold");
+        cover.setCreatedDate(now);
+        cover.setModifiedDate(now);
+        pageRepo.save(cover);
+
+        // Content pages from extracted text
+        for (int i = 0; i < pageTexts.size(); i++) {
+            Page page = new Page();
+            page.setBookId(book.getId());
+            page.setPageNumber(i + 2);
+            page.setContent(pageTexts.get(i));
+            page.setCreatedDate(now);
+            page.setModifiedDate(now);
+            pageRepo.save(page);
+        }
+
+        // Back page
+        Page back = new Page();
+        back.setBookId(book.getId());
+        back.setPageNumber(99);
+        back.setContent("The End");
+        back.setFormat("italic");
+        back.setCreatedDate(now);
+        back.setModifiedDate(now);
+        pageRepo.save(back);
+
+        book.setPages(pageRepo.findByBookIdOrderByPageNumberAsc(book.getId()));
+        return book;
+    }
+
+    public Book createBookFromPdfImages(String title, Long userId, List<String> imageUrls) throws IOException {
+        String now = LocalDateTime.now().format(DTF);
+        Book book = new Book();
+        book.setTitle(title);
+        book.setUserId(userId);
+        book.setStatus("DRAFT");
+        book.setCreatedDate(now);
+        book.setModifiedDate(now);
+        book = bookRepo.save(book);
+
+        // Cover page
+        Page cover = new Page();
+        cover.setBookId(book.getId());
+        cover.setPageNumber(1);
+        cover.setContent(title);
+        cover.setFormat("bold");
+        cover.setCreatedDate(now);
+        cover.setModifiedDate(now);
+        pageRepo.save(cover);
+
+        // Image pages from rendered PDF — full-page layout
+        String fullPageFormat = "{\"layout\":{\"image1\":{\"x\":10,\"y\":0,\"width\":530,\"height\":700}}}";
+        for (int i = 0; i < imageUrls.size(); i++) {
+            Page page = new Page();
+            page.setBookId(book.getId());
+            page.setPageNumber(i + 2);
+            page.setImageUrl(imageUrls.get(i));
+            page.setFormat(fullPageFormat);
+            page.setCreatedDate(now);
+            page.setModifiedDate(now);
+            pageRepo.save(page);
+        }
+
+        // Back page
+        Page back = new Page();
+        back.setBookId(book.getId());
+        back.setPageNumber(99);
+        back.setContent("The End");
+        back.setFormat("italic");
+        back.setCreatedDate(now);
+        back.setModifiedDate(now);
+        pageRepo.save(back);
+
+        book.setPages(pageRepo.findByBookIdOrderByPageNumberAsc(book.getId()));
+        return book;
     }
 
     public List<Page> getPagesByBookId(Long bookId) throws IOException {
