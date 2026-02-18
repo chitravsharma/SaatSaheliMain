@@ -4,7 +4,9 @@ Thumbs.db
 
 # Build output
 SaatSaheli/target/
+SSMainApp/target/
 FrontEnd/node_modules/
+FrontEnd/node/
 FrontEnd/build/
 
 # IDE

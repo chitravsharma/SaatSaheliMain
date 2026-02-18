@@ -11,6 +11,8 @@ import org.springframework.web.bind.annotation.*;
 
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
+import com.SaatSaheli.spring.util.RoleUtil;
+
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -158,8 +160,20 @@ public class AuthController {
      * Body: { status: "ACTIVE" | "INACTIVE" | "DISABLED" | "DELETED" | "BLOCKED" }
      */
     @PutMapping("/{loginId}/status")
-    public ResponseEntity<?> updateStatus(@PathVariable Long loginId, @RequestBody Map<String, String> body) {
+    public ResponseEntity<?> updateStatus(
+            @PathVariable Long loginId,
+            @RequestBody Map<String, String> body,
+            @RequestHeader(value = "X-User-Id", required = false) String callerUserId) {
         try {
+            // Verify caller is ADMIN or SUPER_ADMIN
+            if (callerUserId == null || callerUserId.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorMap("Admin access required"));
+            }
+            Optional<User> callerOpt = userRepo.findById(Long.parseLong(callerUserId));
+            if (callerOpt.isEmpty() || !RoleUtil.isAdmin(callerOpt.get().getRole())) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorMap("Admin access required"));
+            }
+
             String newStatus = body.get("status");
             if (newStatus == null || !isValidStatus(newStatus)) {
                 return ResponseEntity.badRequest().body(errorMap("Invalid status. Must be: ACTIVE, INACTIVE, DISABLED, DELETED, BLOCKED"));
@@ -210,6 +224,11 @@ public class AuthController {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorMap("User not found"));
             }
             User user = userOpt.get();
+            // Block role changes through this endpoint — use admin endpoint instead
+            if (updated.getRole() != null && !updated.getRole().equalsIgnoreCase(user.getRole())) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body(errorMap("Role changes are not allowed through this endpoint"));
+            }
             if (updated.getFirstName() != null) user.setFirstName(updated.getFirstName());
             if (updated.getMiddleName() != null) user.setMiddleName(updated.getMiddleName());
             if (updated.getLastName() != null) user.setLastName(updated.getLastName());
