@@ -6,6 +6,7 @@ import com.SaatSaheli.spring.model.User;
 import com.SaatSaheli.spring.repository.BookRepository;
 import com.SaatSaheli.spring.repository.PageRepository;
 import com.SaatSaheli.spring.repository.UserRepository;
+import com.SaatSaheli.spring.util.RoleUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -160,6 +161,40 @@ public class BookService {
             book.setModifiedDate(LocalDateTime.now().format(DTF));
             bookRepo.save(book);
         }
+    }
+
+    /** Role-aware updateBook: admins skip ownership check */
+    public Book updateBook(Long id, String title, String status, Long requestUserId, String requestUserRole) throws IOException {
+        if (RoleUtil.isAdmin(requestUserRole)) {
+            return updateBook(id, title, status, null);
+        }
+        return updateBook(id, title, status, requestUserId);
+    }
+
+    /** Role-aware deleteBook: admins skip ownership check */
+    public void deleteBook(Long id, Long requestUserId, String requestUserRole) throws IOException {
+        if (RoleUtil.isAdmin(requestUserRole)) {
+            deleteBook(id, null);
+        } else {
+            deleteBook(id, requestUserId);
+        }
+    }
+
+    /** Get all books (for admin dashboard) */
+    public List<Book> getAllBooks() throws IOException {
+        List<Book> books = bookRepo.findAll();
+        List<User> allUsers = userRepo.findAll();
+        Map<Long, User> userMap = allUsers.stream()
+                .collect(Collectors.toMap(User::getId, u -> u, (a, b) -> a));
+        for (Book book : books) {
+            if (book.getUserId() != null && userMap.containsKey(book.getUserId())) {
+                User u = userMap.get(book.getUserId());
+                String name = (u.getFirstName() != null ? u.getFirstName() : "")
+                        + (u.getLastName() != null ? " " + u.getLastName() : "");
+                book.setAuthorName(name.trim());
+            }
+        }
+        return books;
     }
 
     public List<Book> getBooksByUser(Long userId) throws IOException {

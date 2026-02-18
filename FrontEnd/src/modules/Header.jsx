@@ -71,6 +71,18 @@ const Header = () => {
             <svg className="nav-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
             {strings.header.navSearch}
           </Link>
+          {user && (
+            <Link to="/chat" className="nav-link" onClick={closeMobileNav}>
+              <svg className="nav-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+              {strings.header.navChat || "Chat"}
+            </Link>
+          )}
+          {user && (user.role === "ADMIN" || user.role === "SUPER_ADMIN") && (
+            <Link to="/admin" className="nav-link" onClick={closeMobileNav}>
+              <svg className="nav-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              {strings.header.navAdmin || "Admin"}
+            </Link>
+          )}
           {welcomeMessage && <span className="welcome-msg" aria-live="polite">{welcomeMessage}</span>}
 
           <select
