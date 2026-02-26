@@ -3,7 +3,7 @@ import axios from "axios";
 import { useAuth } from "./AuthContext";
 import { useNavigate, useLocation } from "react-router-dom";
 
-const API = "http://localhost:8081/api/auth";
+const API = `${process.env.REACT_APP_API_URL}/api/auth`;
 
 function LoginPage() {
     const { login } = useAuth();

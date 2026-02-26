@@ -1,7 +1,9 @@
-import strings from '../constants/strings';
+import { useStrings } from '../LanguageContext';
 import './About.css';
 
-const About = () => (
+const About = () => {
+  const strings = useStrings();
+  return (
   <div className="about-page">
     <div className="about-hero">
       <h1>{strings.about.heading}</h1>
@@ -16,6 +18,7 @@ const About = () => (
       ))}
     </div>
   </div>
-);
+  );
+};
 
 export default About;

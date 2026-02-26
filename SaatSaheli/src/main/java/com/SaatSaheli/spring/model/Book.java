@@ -10,6 +10,7 @@ public class Book {
     private String status; // DRAFT, PUBLISHED, ARCHIVED
     private String createdDate;
     private String modifiedDate;
+    private String category; // e.g., "Art", "Music", "Writing", "Tech", "Creativity", "Community"
     private List<Page> pages = new ArrayList<>();
     private String authorName; // transient - not persisted to sheet, enriched by service
 
@@ -33,6 +34,9 @@ public class Book {
 
     public List<Page> getPages() { return pages; }
     public void setPages(List<Page> pages) { this.pages = pages; }
+
+    public String getCategory() { return category; }
+    public void setCategory(String category) { this.category = category; }
 
     public String getAuthorName() { return authorName; }
     public void setAuthorName(String authorName) { this.authorName = authorName; }

@@ -57,7 +57,7 @@
 .center-container {
   display: flex;
   justify-content: center;
-  margin-top: 1.5rem;
+  margin-top: 0.5rem;
   overflow: hidden;
   padding: 0 16px;
   box-sizing: border-box;
@@ -86,32 +86,39 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 20px;
+  gap: 8px;
+}
+
+.flipbook-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  flex-wrap: wrap;
+  justify-content: center;
 }
 
 .flipbook-arrow-row {
   display: flex;
-  gap: 24px;
+  align-items: center;
+  gap: 12px;
 }
 
 .flipbook-arrow {
-  background: #0f3460;
-  color: #ffffff;
-  border: 2px solid transparent;
-  border-radius: 50%;
-  width: 48px;
-  height: 48px;
+  background: none;
+  color: #0f3460;
+  border: none;
+  padding: 4px;
   font-size: 1.75rem;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background-color 0.2s;
+  transition: color 0.2s;
   flex-shrink: 0;
   line-height: 1;
 }
 .flipbook-arrow:hover:not(:disabled) {
-  background: #0a254a;
+  color: #0a254a;
 }
 .flipbook-arrow:focus-visible {
   outline: 3px solid #0f3460;
@@ -128,6 +135,76 @@
   font-weight: 600;
   min-width: 60px;
   text-align: center;
+}
+
+/* Zoom controls */
+.flipbook-zoom-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.flipbook-zoom-btn {
+  background: #0f3460;
+  color: #ffffff;
+  border: 2px solid transparent;
+  border-radius: 6px;
+  width: 36px;
+  height: 36px;
+  font-size: 1.25rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s;
+  line-height: 1;
+}
+.flipbook-zoom-btn:hover:not(:disabled) {
+  background: #0a254a;
+}
+.flipbook-zoom-btn:focus-visible {
+  outline: 3px solid #0f3460;
+  outline-offset: 2px;
+}
+.flipbook-zoom-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.flipbook-zoom-label {
+  color: #4b5563;
+  font-size: 0.85rem;
+  font-weight: 600;
+  min-width: 48px;
+  text-align: center;
+  cursor: pointer;
+  user-select: none;
+  border-radius: 4px;
+  padding: 2px 4px;
+}
+.flipbook-zoom-label:hover {
+  background: #e5e7eb;
+}
+.flipbook-zoom-label:focus-visible {
+  outline: 3px solid #0f3460;
+  outline-offset: 2px;
+}
+
+/* Zoom wrapper */
+.flipbook-zoom-wrapper {
+  display: flex;
+  justify-content: center;
+  transition: transform 0.2s ease;
+}
+
+/* Center single pages (cover / last) in two-page spread mode */
+.flipbook-zoom-wrapper .stf__parent {
+  display: flex;
+  justify-content: center;
+}
+
+.flipbook-zoom-wrapper .stf__parent .stf__wrapper {
+  transition: transform 0.3s ease;
 }
 
 /* Main content wrapper */
@@ -152,18 +229,32 @@
     width: 100%;
   }
 
+  .flipbook-toolbar {
+    gap: 12px;
+  }
+
   .flipbook-arrow-row {
-    gap: 16px;
+    gap: 8px;
   }
 
   .flipbook-arrow {
-    width: 40px;
-    height: 40px;
-    font-size: 1.5rem;
+    font-size: 1.4rem;
   }
 
   .flipbook-page-indicator {
     font-size: 0.8rem;
+    min-width: 50px;
+  }
+
+  .flipbook-zoom-btn {
+    width: 32px;
+    height: 32px;
+    font-size: 1rem;
+  }
+
+  .flipbook-zoom-label {
+    font-size: 0.75rem;
+    min-width: 40px;
   }
 }
 

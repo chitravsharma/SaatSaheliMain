@@ -1,12 +1,13 @@
 import React, { useState } from "react";
 import axios from "axios";
 import FlipBook from "../FlipBook";
-import strings from "../constants/strings";
+import { useStrings } from "../LanguageContext";
 import "../BookManager.css";
 
-const API = "http://localhost:8081/api/books";
+const API = `${process.env.REACT_APP_API_URL}/api/books`;
 
 function SearchBooks() {
+  const strings = useStrings();
   const [searchId, setSearchId] = useState("");
   const [searchTitle, setSearchTitle] = useState("");
   const [searchAuthor, setSearchAuthor] = useState("");

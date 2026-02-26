@@ -1,9 +1,10 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import strings from "../constants/strings";
+import { useStrings } from "../LanguageContext";
 import "./Home.css";
 
 function Home() {
+  const strings = useStrings();
   return (
     <div className="home-container">
       <div className="home-hero">

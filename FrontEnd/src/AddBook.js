@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import axios from "axios";
 import HTMLFlipBook from "react-pageflip";
 
-const API = "http://localhost:8081/api/books";
+const API = `${process.env.REACT_APP_API_URL}/api/books`;
 
 function AddBook() {
     const [title, setTitle] = useState("");
