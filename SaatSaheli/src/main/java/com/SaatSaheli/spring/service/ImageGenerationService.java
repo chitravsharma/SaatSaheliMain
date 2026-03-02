@@ -5,12 +5,17 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.regex.Pattern;
 
 import static java.util.Map.entry;
 
@@ -18,6 +23,9 @@ import static java.util.Map.entry;
 public class ImageGenerationService {
 
     private static final String UPLOAD_DIR = "./uploads";
+    private static final Pattern DEVANAGARI = Pattern.compile("[\\u0900-\\u097F]");
+    private static final String TRANSLATION_MODEL = "Helsinki-NLP/opus-mt-hi-en";
+    private static final ObjectMapper objectMapper = new ObjectMapper();
 
     private static final Map<String, String> STYLE_PREFIXES = Map.ofEntries(
         entry("general",     "High quality, detailed illustration: "),
@@ -59,9 +67,15 @@ public class ImageGenerationService {
             Files.createDirectories(uploadPath);
         }
 
+        // Translate Hindi text to English for Stable Diffusion
+        String processedPrompt = prompt.trim();
+        if (DEVANAGARI.matcher(processedPrompt).find()) {
+            processedPrompt = translateHindiToEnglish(processedPrompt);
+        }
+
         String prefix = STYLE_PREFIXES.getOrDefault(
                 style != null ? style : "general", STYLE_PREFIXES.get("general"));
-        String enhancedPrompt = prefix + prompt.trim();
+        String enhancedPrompt = prefix + processedPrompt;
         String url = "https://router.huggingface.co/hf-inference/models/" + model;
 
         byte[] imageBytes = null;
@@ -102,5 +116,31 @@ public class ImageGenerationService {
         Files.write(filePath, imageBytes);
 
         return "/uploads/" + filename;
+    }
+
+    private String translateHindiToEnglish(String hindiText) throws IOException {
+        String url = "https://router.huggingface.co/hf-inference/models/" + TRANSLATION_MODEL;
+        try {
+            byte[] responseBytes = restClient.post()
+                    .uri(url)
+                    .header("Authorization", "Bearer " + apiToken)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(Map.of("inputs", hindiText))
+                    .retrieve()
+                    .body(byte[].class);
+
+            if (responseBytes != null && responseBytes.length > 0) {
+                JsonNode root = objectMapper.readTree(responseBytes);
+                if (root.isArray() && !root.isEmpty()) {
+                    String translated = root.get(0).path("translation_text").asText("");
+                    if (!translated.isEmpty()) {
+                        return translated;
+                    }
+                }
+            }
+        } catch (Exception e) {
+            // If translation fails, return original text as fallback
+        }
+        return hindiText;
     }
 }

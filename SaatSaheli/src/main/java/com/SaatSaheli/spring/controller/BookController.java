@@ -47,10 +47,11 @@ public class BookController {
         try {
             String title = (String) body.get("title");
             Long userId = body.get("userId") != null ? Long.parseLong(body.get("userId").toString()) : null;
+            String category = body.get("category") != null ? body.get("category").toString() : null;
             if (title == null || title.isEmpty()) {
                 return ResponseEntity.badRequest().body(errorMap("Title is required"));
             }
-            Book book = bookService.createBook(title, userId);
+            Book book = bookService.createBook(title, userId, category);
             return ResponseEntity.ok(book);
         } catch (IOException e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -178,6 +179,26 @@ public class BookController {
         } catch (IOException e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(errorMap("Failed to get drafts: " + e.getMessage()));
+        }
+    }
+
+    @GetMapping("/category/{category}")
+    public ResponseEntity<?> getBooksByCategory(@PathVariable String category) {
+        try {
+            return ResponseEntity.ok(bookService.getPublishedBooksByCategory(category));
+        } catch (IOException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(errorMap("Failed to get books by category: " + e.getMessage()));
+        }
+    }
+
+    @GetMapping("/category/{category}/user/{userId}")
+    public ResponseEntity<?> getBooksByUserAndCategory(@PathVariable String category, @PathVariable Long userId) {
+        try {
+            return ResponseEntity.ok(bookService.getBooksByUserAndCategory(userId, category));
+        } catch (IOException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(errorMap("Failed to get user books by category: " + e.getMessage()));
         }
     }
 

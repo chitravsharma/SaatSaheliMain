@@ -1,5 +1,5 @@
 import React, { useState, useRef, useCallback, useEffect } from "react";
-import strings from "./constants/strings";
+import { useStrings } from "./LanguageContext";
 
 const PAGE_W = 400;
 const PAGE_H = 500;
@@ -8,7 +8,7 @@ const PAGE_H = 500;
 function resolveImageUrl(url) {
   if (!url) return null;
   if (url.startsWith("/uploads/")) {
-    return `http://localhost:8081${url}`;
+    return `${process.env.REACT_APP_API_URL}${url}`;
   }
   const match = url.match(/\/file\/d\/([^/]+)\//);
   if (match) {
@@ -105,6 +105,7 @@ function DraggableImage({ src, layout, onChange, label }) {
 }
 
 export default function PageLayoutEditor({ imageUrl, imageUrl2, content, textStyle, layout, onLayoutChange }) {
+  const strings = useStrings();
   const img1Src = resolveImageUrl(imageUrl);
   const img2Src = resolveImageUrl(imageUrl2);
 

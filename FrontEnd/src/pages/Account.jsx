@@ -2,13 +2,14 @@ import React, { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import axios from "axios";
 import { useAuth } from "../AuthContext";
-import strings from "../constants/strings";
+import { useStrings } from "../LanguageContext";
 import "../Account.css";
 
-const API = "http://localhost:8081/api/books";
+const API = `${process.env.REACT_APP_API_URL}/api/books`;
 
 function Account() {
   const { user } = useAuth();
+  const strings = useStrings();
   const navigate = useNavigate();
   const [books, setBooks] = useState([]);
   const [loading, setLoading] = useState(true);

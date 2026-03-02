@@ -16,6 +16,7 @@ import ReadBook from './pages/ReadBook';
 import SitePolicies from './pages/SitePolicies';
 import Account from './pages/Account';
 import CategoryPage from './pages/CategoryPage';
+import TechPage from './pages/TechPage';
 import AdminDashboard from './pages/AdminDashboard';
 import Chat from './pages/Chat';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -36,6 +37,7 @@ function App() {
           <Route path="/read/:bookId" element={<ReadBook />} />
           <Route path="/account" element={<Account />} />
           <Route path="/policies" element={<SitePolicies />} />
+          <Route path="/category/tech" element={<TechPage />} />
           <Route path="/category/:category" element={<CategoryPage />} />
           <Route path="/admin" element={<ProtectedRoute requiredRole="ADMIN"><AdminDashboard /></ProtectedRoute>} />
           <Route path="/chat" element={<ProtectedRoute><Chat /></ProtectedRoute>} />

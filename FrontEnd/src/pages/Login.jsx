@@ -3,15 +3,16 @@ import { useNavigate } from "react-router-dom";
 import { GoogleLogin, GoogleOAuthProvider } from "@react-oauth/google";
 import axios from "axios";
 import { useAuth } from "../AuthContext";
-import strings from "../constants/strings";
+import { useStrings } from "../LanguageContext";
 import './Login.css';
 
-const API_BASE = "http://localhost:8081/api/auth";
-const GOOGLE_CLIENT_ID = "48927390752-qq6q50a1pfo5uajai4072ehnoifs0s7t.apps.googleusercontent.com";
+const API_BASE = `${process.env.REACT_APP_API_URL}/api/auth`;
+const GOOGLE_CLIENT_ID = process.env.REACT_APP_GOOGLE_CLIENT_ID;
 
 export default function Login() {
   const navigate = useNavigate();
   const { login: authLogin } = useAuth();
+  const strings = useStrings();
   const [mode, setMode] = useState("login"); // "login" | "signup"
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");

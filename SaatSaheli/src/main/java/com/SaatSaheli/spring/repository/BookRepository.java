@@ -43,7 +43,7 @@ public class BookRepository {
         if (headersVerified) return;
         try {
             ValueRange response = sheetsService.spreadsheets().values()
-                    .get(spreadsheetId, SHEET_NAME + "!A1:F1").execute();
+                    .get(spreadsheetId, SHEET_NAME + "!A1:G1").execute();
             List<List<Object>> values = response.getValues();
             if (values == null || values.isEmpty() || values.get(0).isEmpty()
                     || !"id".equalsIgnoreCase(values.get(0).get(0).toString().trim())) {
@@ -85,16 +85,16 @@ public class BookRepository {
 
     private void writeHeaders() throws IOException {
         ValueRange headerBody = new ValueRange().setValues(List.of(
-                Arrays.asList("id", "title", "userId", "status", "createdDate", "modifiedDate")));
+                Arrays.asList("id", "title", "userId", "status", "createdDate", "modifiedDate", "category")));
         sheetsService.spreadsheets().values()
-                .update(spreadsheetId, SHEET_NAME + "!A1:F1", headerBody)
+                .update(spreadsheetId, SHEET_NAME + "!A1:G1", headerBody)
                 .setValueInputOption("RAW").execute();
     }
 
     public List<Book> findAll() throws IOException {
         ensureHeaders();
         ValueRange response = sheetsService.spreadsheets().values()
-                .get(spreadsheetId, SHEET_NAME + "!A2:F").execute();
+                .get(spreadsheetId, SHEET_NAME + "!A2:G").execute();
         List<List<Object>> values = response.getValues();
         List<Book> books = new ArrayList<>();
         if (values == null) {
@@ -140,7 +140,7 @@ public class BookRepository {
         } else {
             int rowIndex = findRowIndex(book.getId());
             if (rowIndex == -1) throw new RuntimeException("Book not found with id: " + book.getId());
-            String updateRange = SHEET_NAME + "!A" + rowIndex + ":F" + rowIndex;
+            String updateRange = SHEET_NAME + "!A" + rowIndex + ":G" + rowIndex;
             ValueRange body = new ValueRange().setValues(List.of(bookToRow(book)));
             sheetsService.spreadsheets().values()
                     .update(spreadsheetId, updateRange, body)
@@ -162,7 +162,7 @@ public class BookRepository {
     public void deleteById(Long id) throws IOException {
         int rowIndex = findRowIndex(id);
         if (rowIndex == -1) return;
-        String clearRange = SHEET_NAME + "!A" + rowIndex + ":F" + rowIndex;
+        String clearRange = SHEET_NAME + "!A" + rowIndex + ":G" + rowIndex;
         sheetsService.spreadsheets().values()
                 .clear(spreadsheetId, clearRange, new ClearValuesRequest()).execute();
     }
@@ -211,6 +211,7 @@ public class BookRepository {
         if (row.size() > 3 && row.get(3) != null) b.setStatus(row.get(3).toString());
         if (row.size() > 4 && row.get(4) != null) b.setCreatedDate(row.get(4).toString());
         if (row.size() > 5 && row.get(5) != null) b.setModifiedDate(row.get(5).toString());
+        if (row.size() > 6 && row.get(6) != null) b.setCategory(row.get(6).toString());
         return b;
     }
 
@@ -221,7 +222,8 @@ public class BookRepository {
                 b.getUserId() != null ? b.getUserId() : "",
                 b.getStatus() != null ? b.getStatus() : "DRAFT",
                 b.getCreatedDate() != null ? b.getCreatedDate() : "",
-                b.getModifiedDate() != null ? b.getModifiedDate() : ""
+                b.getModifiedDate() != null ? b.getModifiedDate() : "",
+                b.getCategory() != null ? b.getCategory() : ""
         );
     }
 }

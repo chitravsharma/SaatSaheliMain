@@ -1,7 +1,9 @@
-import strings from '../constants/strings';
+import { useStrings } from '../LanguageContext';
 import './SitePolicies.css';
 
-const SitePolicies = () => (
+const SitePolicies = () => {
+  const strings = useStrings();
+  return (
   <div className="policies-page">
     <div className="policies-hero">
       <h1>{strings.sitePolicies.heading}</h1>
@@ -55,6 +57,7 @@ const SitePolicies = () => (
 
     <div className="policies-updated">{strings.sitePolicies.lastUpdated}</div>
   </div>
-);
+  );
+};
 
 export default SitePolicies;

@@ -21,7 +21,12 @@ FrontEnd/build/
 !FrontEnd/package.json
 !FrontEnd/package-lock.json
 
-# Environment
+# Uploads
+SaatSaheli/uploads/
+
+# Environment — never commit .env (secrets), but .env.example is safe
 .env
 .env.local
 .env.*.local
+!.env.example
+!FrontEnd/.env.example

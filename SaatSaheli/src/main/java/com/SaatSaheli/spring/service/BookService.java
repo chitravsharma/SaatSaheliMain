@@ -89,10 +89,15 @@ public class BookService {
     }
 
     public Book createBook(String title, Long userId) throws IOException {
+        return createBook(title, userId, null);
+    }
+
+    public Book createBook(String title, Long userId, String category) throws IOException {
         String now = LocalDateTime.now().format(DTF);
         Book book = new Book();
         book.setTitle(title);
         book.setUserId(userId);
+        book.setCategory(category);
         book.setStatus("DRAFT");
         book.setCreatedDate(now);
         book.setModifiedDate(now);
@@ -205,6 +210,34 @@ public class BookService {
             book.setPages(pageRepo.findByBookIdOrderByPageNumberAsc(book.getId()));
         }
         return books;
+    }
+
+    /** Get published books by category, enriched with author names */
+    public List<Book> getPublishedBooksByCategory(String category) throws IOException {
+        List<Book> books = bookRepo.findAll().stream()
+                .filter(b -> category.equalsIgnoreCase(b.getCategory()))
+                .filter(b -> "PUBLISHED".equalsIgnoreCase(b.getStatus()))
+                .collect(Collectors.toList());
+        List<User> allUsers = userRepo.findAll();
+        Map<Long, User> userMap = allUsers.stream()
+                .collect(Collectors.toMap(User::getId, u -> u, (a, b) -> a));
+        for (Book book : books) {
+            if (book.getUserId() != null && userMap.containsKey(book.getUserId())) {
+                User u = userMap.get(book.getUserId());
+                String name = (u.getFirstName() != null ? u.getFirstName() : "")
+                        + (u.getLastName() != null ? " " + u.getLastName() : "");
+                book.setAuthorName(name.trim());
+            }
+        }
+        return books;
+    }
+
+    /** Get books by user and category (for "my books in this category") */
+    public List<Book> getBooksByUserAndCategory(Long userId, String category) throws IOException {
+        return bookRepo.findByUserId(userId).stream()
+                .filter(b -> category.equalsIgnoreCase(b.getCategory()))
+                .filter(b -> !"DELETED".equalsIgnoreCase(b.getStatus()))
+                .collect(Collectors.toList());
     }
 
     public List<Book> getDraftsByUser(Long userId) throws IOException {

@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import strings from '../constants/strings';
+import { useStrings } from '../LanguageContext';
 import './Contacts.css';
 
 const Contact = () => {
+  const strings = useStrings();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [message, setMessage] = useState('');
