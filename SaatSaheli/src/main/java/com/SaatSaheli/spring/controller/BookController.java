@@ -1,6 +1,5 @@
 package com.SaatSaheli.spring.controller;
 
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -36,7 +35,7 @@ public class BookController {
             @RequestParam(required = false) Long userId) {
         try {
             return ResponseEntity.ok(bookService.searchBooks(id, title, author, status, userId));
-        } catch (IOException e) {
+        } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(errorMap("Failed to search books: " + e.getMessage()));
         }
@@ -53,7 +52,7 @@ public class BookController {
             }
             Book book = bookService.createBook(title, userId, category);
             return ResponseEntity.ok(book);
-        } catch (IOException e) {
+        } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(errorMap("Failed to create book: " + e.getMessage()));
         }
@@ -91,7 +90,7 @@ public class BookController {
             return ResponseEntity.ok(book);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(errorMap(e.getMessage()));
-        } catch (IOException e) {
+        } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(errorMap("Failed to process document: " + e.getMessage()));
         }
@@ -101,11 +100,11 @@ public class BookController {
     public ResponseEntity<?> getBook(@PathVariable Long bookId) {
         try {
             return ResponseEntity.ok(bookService.getBook(bookId));
-        } catch (IOException e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(errorMap("Failed to get book: " + e.getMessage()));
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorMap(e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(errorMap("Failed to get book: " + e.getMessage()));
         }
     }
 
@@ -119,7 +118,7 @@ public class BookController {
             return ResponseEntity.ok(book);
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorMap(e.getMessage()));
-        } catch (IOException e) {
+        } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(errorMap("Failed to update book: " + e.getMessage()));
         }
@@ -131,7 +130,7 @@ public class BookController {
             return ResponseEntity.ok(bookService.publishBook(bookId, userId));
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorMap(e.getMessage()));
-        } catch (IOException e) {
+        } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(errorMap("Failed to publish book: " + e.getMessage()));
         }
@@ -143,7 +142,7 @@ public class BookController {
             return ResponseEntity.ok(bookService.saveDraft(bookId, userId));
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorMap(e.getMessage()));
-        } catch (IOException e) {
+        } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(errorMap("Failed to save draft: " + e.getMessage()));
         }
@@ -156,7 +155,7 @@ public class BookController {
             return ResponseEntity.ok(Map.of("message", "Book deleted successfully"));
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorMap(e.getMessage()));
-        } catch (IOException e) {
+        } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(errorMap("Failed to delete book: " + e.getMessage()));
         }
@@ -166,7 +165,7 @@ public class BookController {
     public ResponseEntity<?> getBooksByUser(@PathVariable Long userId) {
         try {
             return ResponseEntity.ok(bookService.getBooksByUser(userId));
-        } catch (IOException e) {
+        } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(errorMap("Failed to get books: " + e.getMessage()));
         }
@@ -176,7 +175,7 @@ public class BookController {
     public ResponseEntity<?> getDraftsByUser(@PathVariable Long userId) {
         try {
             return ResponseEntity.ok(bookService.getDraftsByUser(userId));
-        } catch (IOException e) {
+        } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(errorMap("Failed to get drafts: " + e.getMessage()));
         }
@@ -186,7 +185,7 @@ public class BookController {
     public ResponseEntity<?> getBooksByCategory(@PathVariable String category) {
         try {
             return ResponseEntity.ok(bookService.getPublishedBooksByCategory(category));
-        } catch (IOException e) {
+        } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(errorMap("Failed to get books by category: " + e.getMessage()));
         }
@@ -196,7 +195,7 @@ public class BookController {
     public ResponseEntity<?> getBooksByUserAndCategory(@PathVariable String category, @PathVariable Long userId) {
         try {
             return ResponseEntity.ok(bookService.getBooksByUserAndCategory(userId, category));
-        } catch (IOException e) {
+        } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(errorMap("Failed to get user books by category: " + e.getMessage()));
         }
@@ -206,7 +205,7 @@ public class BookController {
     public ResponseEntity<?> getPages(@PathVariable Long bookId) {
         try {
             return ResponseEntity.ok(bookService.getPagesByBookId(bookId));
-        } catch (IOException e) {
+        } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(errorMap("Failed to get pages: " + e.getMessage()));
         }
@@ -219,7 +218,7 @@ public class BookController {
             return ResponseEntity.ok(bookService.addPage(bookId, page, userId));
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorMap(e.getMessage()));
-        } catch (IOException e) {
+        } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(errorMap("Failed to add page: " + e.getMessage()));
         }
@@ -232,7 +231,7 @@ public class BookController {
             return ResponseEntity.ok(bookService.updatePage(pageId, updated, userId));
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorMap(e.getMessage()));
-        } catch (IOException e) {
+        } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(errorMap("Failed to update page: " + e.getMessage()));
         }
@@ -245,7 +244,7 @@ public class BookController {
             return ResponseEntity.ok(Map.of("message", "Page deleted successfully"));
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorMap(e.getMessage()));
-        } catch (IOException e) {
+        } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(errorMap("Failed to delete page: " + e.getMessage()));
         }

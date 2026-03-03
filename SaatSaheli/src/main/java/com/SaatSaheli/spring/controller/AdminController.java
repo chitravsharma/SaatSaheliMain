@@ -12,9 +12,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.io.IOException;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -22,8 +20,6 @@ import java.util.stream.Collectors;
 @RequestMapping("/api/admin")
 @CrossOrigin(origins = "*")
 public class AdminController {
-
-    private static final DateTimeFormatter DTF = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     @Autowired
     private UserRepository userRepo;
@@ -73,7 +69,7 @@ public class AdminController {
                 result.add(entry);
             }
             return ResponseEntity.ok(result);
-        } catch (IOException e) {
+        } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(errorMap("Failed to list users: " + e.getMessage()));
         }
@@ -106,11 +102,11 @@ public class AdminController {
 
             User user = userOpt.get();
             user.setRole(newRole.toUpperCase());
-            user.setModifiedDate(LocalDateTime.now().format(DTF));
+            user.setModifiedDate(LocalDateTime.now());
             userRepo.save(user);
 
             return ResponseEntity.ok(user);
-        } catch (IOException e) {
+        } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(errorMap("Failed to change role: " + e.getMessage()));
         }
@@ -143,7 +139,7 @@ public class AdminController {
             loginRepo.save(login);
 
             return ResponseEntity.ok(login);
-        } catch (IOException e) {
+        } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(errorMap("Failed to change status: " + e.getMessage()));
         }
@@ -159,7 +155,7 @@ public class AdminController {
             }
             List<Book> books = bookService.getAllBooks();
             return ResponseEntity.ok(books);
-        } catch (IOException e) {
+        } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(errorMap("Failed to list books: " + e.getMessage()));
         }
@@ -177,7 +173,7 @@ public class AdminController {
             }
             bookService.deleteBook(bookId, null, caller.getRole());
             return ResponseEntity.ok(Map.of("message", "Book deleted"));
-        } catch (IOException e) {
+        } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(errorMap("Failed to delete book: " + e.getMessage()));
         }
@@ -214,7 +210,7 @@ public class AdminController {
             stats.put("draftBooks", draftBooks);
 
             return ResponseEntity.ok(stats);
-        } catch (IOException e) {
+        } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(errorMap("Failed to fetch stats: " + e.getMessage()));
         }

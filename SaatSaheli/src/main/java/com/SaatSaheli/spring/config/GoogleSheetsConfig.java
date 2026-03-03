@@ -4,8 +4,6 @@ import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
 import com.google.api.client.json.gson.GsonFactory;
 import com.google.api.services.drive.Drive;
 import com.google.api.services.drive.DriveScopes;
-import com.google.api.services.sheets.v4.Sheets;
-import com.google.api.services.sheets.v4.SheetsScopes;
 import com.google.auth.http.HttpCredentialsAdapter;
 import com.google.auth.oauth2.GoogleCredentials;
 import org.springframework.beans.factory.annotation.Value;
@@ -15,7 +13,7 @@ import org.springframework.context.annotation.Configuration;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
-import java.util.Arrays;
+import java.util.List;
 
 @Configuration
 public class GoogleSheetsConfig {
@@ -23,34 +21,17 @@ public class GoogleSheetsConfig {
     @Value("${google.sheets.credentials-file}")
     private String credentialsFilePath;
 
-    @Value("${google.sheets.application-name}")
-    private String applicationName;
-
-    @Bean
-    public Sheets sheetsService() throws IOException, GeneralSecurityException {
-        GoogleCredentials credentials = GoogleCredentials
-                .fromStream(new FileInputStream(credentialsFilePath))
-                .createScoped(Arrays.asList(SheetsScopes.SPREADSHEETS, DriveScopes.DRIVE_FILE));
-
-        return new Sheets.Builder(
-                GoogleNetHttpTransport.newTrustedTransport(),
-                GsonFactory.getDefaultInstance(),
-                new HttpCredentialsAdapter(credentials))
-                .setApplicationName(applicationName)
-                .build();
-    }
-
     @Bean
     public Drive driveService() throws IOException, GeneralSecurityException {
         GoogleCredentials credentials = GoogleCredentials
                 .fromStream(new FileInputStream(credentialsFilePath))
-                .createScoped(Arrays.asList(SheetsScopes.SPREADSHEETS, DriveScopes.DRIVE_FILE));
+                .createScoped(List.of(DriveScopes.DRIVE_FILE));
 
         return new Drive.Builder(
                 GoogleNetHttpTransport.newTrustedTransport(),
                 GsonFactory.getDefaultInstance(),
                 new HttpCredentialsAdapter(credentials))
-                .setApplicationName(applicationName)
+                .setApplicationName("SaatSaheli")
                 .build();
     }
 }

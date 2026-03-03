@@ -13,9 +13,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 import com.SaatSaheli.spring.util.RoleUtil;
 
-import java.io.IOException;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -31,7 +29,6 @@ public class AuthController {
     @Autowired
     private LoginRepository loginRepo;
 
-    private static final DateTimeFormatter DTF = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
     private static final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
     /**
@@ -50,12 +47,12 @@ public class AuthController {
             }
 
             // Check if email already exists
-            Optional<Login> existing = loginRepo.findByEmail(email);
+            Optional<Login> existing = loginRepo.findByEmailIgnoreCase(email);
             if (existing.isPresent()) {
                 return ResponseEntity.status(HttpStatus.CONFLICT).body(errorMap("Account with this email already exists"));
             }
 
-            String now = LocalDateTime.now().format(DTF);
+            LocalDateTime now = LocalDateTime.now();
 
             // Create User
             User user = new User();
@@ -88,7 +85,7 @@ public class AuthController {
             Map<String, Object> response = buildUserResponse(user, login);
             return ResponseEntity.ok(response);
 
-        } catch (IOException e) {
+        } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(errorMap("Failed to create account: " + e.getMessage()));
         }
@@ -109,7 +106,7 @@ public class AuthController {
                 return ResponseEntity.badRequest().body(errorMap("Email is required"));
             }
 
-            Optional<Login> loginOpt = loginRepo.findByEmail(email);
+            Optional<Login> loginOpt = loginRepo.findByEmailIgnoreCase(email);
             if (loginOpt.isEmpty()) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorMap("Account not found"));
             }
@@ -135,7 +132,7 @@ public class AuthController {
             }
 
             // Update last login date
-            String now = LocalDateTime.now().format(DTF);
+            LocalDateTime now = LocalDateTime.now();
             login.setLastLoginDate(now);
             login.setStatus("ACTIVE");
             loginRepo.save(login);
@@ -149,7 +146,7 @@ public class AuthController {
             Map<String, Object> response = buildUserResponse(userOpt.get(), login);
             return ResponseEntity.ok(response);
 
-        } catch (IOException e) {
+        } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(errorMap("Login failed: " + e.getMessage()));
         }
@@ -189,7 +186,7 @@ public class AuthController {
             loginRepo.save(login);
 
             return ResponseEntity.ok(login);
-        } catch (IOException e) {
+        } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(errorMap("Failed to update status: " + e.getMessage()));
         }
@@ -206,7 +203,7 @@ public class AuthController {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorMap("User not found"));
             }
             return ResponseEntity.ok(userOpt.get());
-        } catch (IOException e) {
+        } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(errorMap("Failed to fetch user: " + e.getMessage()));
         }
@@ -236,10 +233,10 @@ public class AuthController {
             if (updated.getEmail() != null) user.setEmail(updated.getEmail());
             if (updated.getAge() != null) user.setAge(updated.getAge());
             if (updated.getGender() != null) user.setGender(updated.getGender());
-            user.setModifiedDate(LocalDateTime.now().format(DTF));
+            user.setModifiedDate(LocalDateTime.now());
             user = userRepo.save(user);
             return ResponseEntity.ok(user);
-        } catch (IOException e) {
+        } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(errorMap("Failed to update user: " + e.getMessage()));
         }

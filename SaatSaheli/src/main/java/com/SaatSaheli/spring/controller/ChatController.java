@@ -12,9 +12,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.io.IOException;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -22,8 +20,6 @@ import java.util.stream.Collectors;
 @RequestMapping("/api/chat")
 @CrossOrigin(origins = "*")
 public class ChatController {
-
-    private static final DateTimeFormatter DTF = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     private static final String[][] DEFAULT_ROOMS = {
             {"Art", "Art", "Discuss visual arts, painting, drawing, and more"},
@@ -52,7 +48,7 @@ public class ChatController {
                 rooms = initializeDefaultRooms();
             }
             return ResponseEntity.ok(rooms);
-        } catch (IOException e) {
+        } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(errorMap("Failed to list rooms: " + e.getMessage()));
         }
@@ -66,7 +62,12 @@ public class ChatController {
             @RequestParam(defaultValue = "50") int limit,
             @RequestHeader("X-User-Id") String callerUserId) {
         try {
-            List<ChatMessage> messages = messageRepo.findByRoomIdAfter(roomId, afterId);
+            List<ChatMessage> messages;
+            if (afterId != null) {
+                messages = messageRepo.findByRoomIdAndIdGreaterThan(roomId, afterId);
+            } else {
+                messages = messageRepo.findByRoomId(roomId);
+            }
             // Filter out deleted messages (show placeholder instead)
             List<Map<String, Object>> result = messages.stream()
                     .sorted(Comparator.comparingLong(ChatMessage::getId))
@@ -84,7 +85,7 @@ public class ChatController {
                     })
                     .collect(Collectors.toList());
             return ResponseEntity.ok(result);
-        } catch (IOException e) {
+        } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(errorMap("Failed to get messages: " + e.getMessage()));
         }
@@ -117,12 +118,12 @@ public class ChatController {
             msg.setSenderId(userId);
             msg.setSenderName(senderName);
             msg.setMessage(text.trim());
-            msg.setCreatedDate(LocalDateTime.now().format(DTF));
+            msg.setCreatedDate(LocalDateTime.now());
             msg.setIsDeleted(false);
             msg = messageRepo.save(msg);
 
             return ResponseEntity.ok(msg);
-        } catch (IOException e) {
+        } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(errorMap("Failed to send message: " + e.getMessage()));
         }
@@ -159,24 +160,23 @@ public class ChatController {
             messageRepo.save(msg);
 
             return ResponseEntity.ok(Map.of("message", "Message deleted"));
-        } catch (IOException e) {
+        } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(errorMap("Failed to delete message: " + e.getMessage()));
         }
     }
 
-    private List<ChatRoom> initializeDefaultRooms() throws IOException {
-        String now = LocalDateTime.now().format(DTF);
+    private List<ChatRoom> initializeDefaultRooms() {
+        LocalDateTime now = LocalDateTime.now();
         List<ChatRoom> rooms = new ArrayList<>();
         for (int i = 0; i < DEFAULT_ROOMS.length; i++) {
             ChatRoom room = new ChatRoom();
-            room.setId((long) (i + 1));
             room.setName(DEFAULT_ROOMS[i][0]);
             room.setCategory(DEFAULT_ROOMS[i][1]);
             room.setDescription(DEFAULT_ROOMS[i][2]);
             room.setCreatedDate(now);
             room.setModifiedDate(now);
-            roomRepo.save(room);
+            room = roomRepo.save(room);
             rooms.add(room);
         }
         return rooms;
