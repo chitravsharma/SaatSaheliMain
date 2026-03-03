@@ -3,19 +3,19 @@ import ReactDOM from 'react-dom/client';
 import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
-import { BrowserRouter } from 'react-router-dom';
+import { HashRouter } from 'react-router-dom';
 import { AuthProvider } from './AuthContext';
 import { LanguageProvider } from './LanguageContext';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
-   <BrowserRouter>
+   <HashRouter>
     <LanguageProvider>
       <AuthProvider>
         <App />
       </AuthProvider>
     </LanguageProvider>
-  </BrowserRouter>
+  </HashRouter>
 );
 
 // If you want to start measuring performance in your app, pass a function

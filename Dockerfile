@@ -4,10 +4,8 @@ WORKDIR /app/frontend
 COPY FrontEnd/package.json FrontEnd/package-lock.json ./
 RUN npm ci
 COPY FrontEnd/ ./
-ARG REACT_APP_API_URL=""
-ARG REACT_APP_GOOGLE_CLIENT_ID
-ENV REACT_APP_API_URL=$REACT_APP_API_URL
-ENV REACT_APP_GOOGLE_CLIENT_ID=$REACT_APP_GOOGLE_CLIENT_ID
+ENV REACT_APP_API_URL=""
+ENV REACT_APP_GOOGLE_CLIENT_ID=48927390752-qq6q50a1pfo5uajai4072ehnoifs0s7t.apps.googleusercontent.com
 RUN npm run build
 
 # Stage 2: Build Spring Boot JAR with frontend bundled
