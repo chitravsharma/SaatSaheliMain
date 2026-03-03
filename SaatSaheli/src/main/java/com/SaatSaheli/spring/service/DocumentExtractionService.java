@@ -19,7 +19,7 @@ import java.util.List;
 public class DocumentExtractionService {
 
     @Autowired
-    private LocalFileService localFileService;
+    private GoogleDriveService googleDriveService;
 
     private static final int DOCX_PAGE_CHAR_LIMIT = 500;
 
@@ -45,7 +45,7 @@ public class DocumentExtractionService {
             int totalPages = doc.getNumberOfPages();
             for (int i = 0; i < totalPages; i++) {
                 BufferedImage image = renderer.renderImageWithDPI(i, 150);
-                String url = localFileService.saveBufferedImage(image, "png");
+                String url = googleDriveService.saveBufferedImage(image, "png");
                 imageUrls.add(url);
             }
         }

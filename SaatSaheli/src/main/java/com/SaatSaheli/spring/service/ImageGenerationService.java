@@ -1,5 +1,6 @@
 package com.SaatSaheli.spring.service;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
@@ -9,10 +10,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.regex.Pattern;
@@ -22,7 +19,6 @@ import static java.util.Map.entry;
 @Service
 public class ImageGenerationService {
 
-    private static final String UPLOAD_DIR = "./uploads";
     private static final Pattern DEVANAGARI = Pattern.compile("[\\u0900-\\u097F]");
     private static final String TRANSLATION_MODEL = "Helsinki-NLP/opus-mt-hi-en";
     private static final ObjectMapper objectMapper = new ObjectMapper();
@@ -51,6 +47,9 @@ public class ImageGenerationService {
     @Value("${huggingface.api.timeout:60000}")
     private int timeout;
 
+    @Autowired
+    private GoogleDriveService googleDriveService;
+
     private final RestClient restClient = RestClient.create();
 
     public String generateImage(String prompt, String style) throws IOException {
@@ -59,12 +58,6 @@ public class ImageGenerationService {
         }
         if ("YOUR_HF_TOKEN_HERE".equals(apiToken) || apiToken == null || apiToken.isBlank()) {
             throw new IllegalStateException("Hugging Face API token is not configured");
-        }
-
-        // Ensure uploads directory exists
-        Path uploadPath = Paths.get(UPLOAD_DIR);
-        if (!Files.exists(uploadPath)) {
-            Files.createDirectories(uploadPath);
         }
 
         // Translate Hindi text to English for Stable Diffusion
@@ -111,11 +104,9 @@ public class ImageGenerationService {
             throw new IOException("No image data received from API");
         }
 
+        // Upload to Google Drive instead of local filesystem
         String filename = UUID.randomUUID() + ".png";
-        Path filePath = Paths.get(UPLOAD_DIR, filename);
-        Files.write(filePath, imageBytes);
-
-        return "/uploads/" + filename;
+        return googleDriveService.uploadBytes(imageBytes, filename, "image/png");
     }
 
     private String translateHindiToEnglish(String hindiText) throws IOException {
