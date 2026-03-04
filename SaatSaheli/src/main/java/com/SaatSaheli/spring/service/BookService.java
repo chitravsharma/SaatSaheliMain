@@ -269,7 +269,7 @@ public class BookService {
                         || (b.getUserId() != null && finalAuthorMatchIds.contains(b.getUserId())))
                 .collect(Collectors.toList());
 
-        // Enrich with author name
+        // Enrich with author name and pages
         for (Book book : filtered) {
             if (book.getUserId() != null && userMap.containsKey(book.getUserId())) {
                 User u = userMap.get(book.getUserId());
@@ -277,6 +277,7 @@ public class BookService {
                         + (u.getLastName() != null ? " " + u.getLastName() : "");
                 book.setAuthorName(name.trim());
             }
+            book.setPages(pageRepo.findByBookIdOrderByPageNumberAsc(book.getId()));
         }
 
         return filtered;
