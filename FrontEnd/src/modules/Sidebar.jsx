@@ -1,5 +1,5 @@
 import React from 'react';
-import saraswati from './saraswati.png';
+import siteLogo from './SaatSaheliLogo.jpg';
 import './sidebar.css'; // Import the CSS file for styling
 
 const Sidebar = ({ isOpen, toggleSidebar }) => {
@@ -10,7 +10,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
       </button>
       <nav>
 		  <div className="grid-item">
-	  		  <img src={saraswati} className="App-logo2" alt="saraswati-logo" />
+	  		  <img src={siteLogo} className="App-logo2" alt="SaatSaheli logo" />
 	  	 </div>
         <ul className="grid-item">
           <li><a href="/">Home</a></li>

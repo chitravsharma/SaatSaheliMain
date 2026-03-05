@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import saraswati from './saraswati.png';
+import siteLogo from './SaatSaheliLogo.jpg';
 import { useAuth } from '../AuthContext';
 import { useStrings, useLanguage } from '../LanguageContext';
 import './Header.css';
@@ -35,7 +35,7 @@ const Header = () => {
       <div className="header-container">
         <div className="header-top-row">
           <div className="header-logo">
-            <img src={saraswati} className="header-logo-img" alt={strings.header.logoAlt} />
+            <img src={siteLogo} className="header-logo-img" alt={strings.header.logoAlt} />
             <div className="header-brand">
               <span className="header-site-name">{strings.header.siteName}</span>
               <span className="header-tagline">{strings.header.siteTagline}</span>

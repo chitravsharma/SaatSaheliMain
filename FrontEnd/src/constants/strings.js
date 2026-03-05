@@ -17,7 +17,7 @@ export const en = {
 
   header: {
     skipLink: "Skip to main content",
-    logoAlt: "SaatSaheli Saraswati logo",
+    logoAlt: "SaatSaheli logo",
     siteName: "Saat Saheli",
     siteTagline: "Welcome to Saat Saheli \u2013 A Community for Passion and Creativity!",
     navHome: "Home",
