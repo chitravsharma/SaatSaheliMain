@@ -5,22 +5,22 @@ import org.apache.pdfbox.rendering.PDFRenderer;
 import org.apache.pdfbox.text.PDFTextStripper;
 import org.apache.poi.xwpf.usermodel.XWPFDocument;
 import org.apache.poi.xwpf.usermodel.XWPFParagraph;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 public class DocumentExtractionService {
 
-    @Autowired
-    private GoogleDriveService googleDriveService;
-
+    private static final String UPLOAD_DIR = "./uploads/";
     private static final int DOCX_PAGE_CHAR_LIMIT = 500;
 
     public List<String> extractText(MultipartFile file) throws IOException {
@@ -39,14 +39,21 @@ public class DocumentExtractionService {
     }
 
     public List<String> extractPdfAsImages(MultipartFile file) throws IOException {
+        File uploadDir = new File(UPLOAD_DIR);
+        if (!uploadDir.exists()) {
+            uploadDir.mkdirs();
+        }
+
         List<String> imageUrls = new ArrayList<>();
         try (PDDocument doc = PDDocument.load(file.getInputStream())) {
             PDFRenderer renderer = new PDFRenderer(doc);
             int totalPages = doc.getNumberOfPages();
             for (int i = 0; i < totalPages; i++) {
                 BufferedImage image = renderer.renderImageWithDPI(i, 150);
-                String url = googleDriveService.saveBufferedImage(image, "png");
-                imageUrls.add(url);
+                String filename = UUID.randomUUID() + ".png";
+                File outFile = new File(uploadDir, filename);
+                ImageIO.write(image, "png", outFile);
+                imageUrls.add("/uploads/" + filename);
             }
         }
         return imageUrls;
