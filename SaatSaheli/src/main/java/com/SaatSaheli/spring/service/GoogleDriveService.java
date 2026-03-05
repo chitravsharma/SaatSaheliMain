@@ -20,13 +20,20 @@ import java.util.UUID;
 @Service
 public class GoogleDriveService {
 
-    @Autowired
+    @Autowired(required = false)
     private Drive driveService;
 
-    @Value("${google.drive.folder-id}")
+    @Value("${google.drive.folder-id:}")
     private String folderId;
 
+    private void checkDriveAvailable() {
+        if (driveService == null) {
+            throw new IllegalStateException("Google Drive is not configured. Set GOOGLE_CREDENTIALS_JSON or google.sheets.credentials-file to enable file uploads.");
+        }
+    }
+
     public String uploadFile(MultipartFile file) throws IOException {
+        checkDriveAvailable();
         File fileMetadata = new File();
         fileMetadata.setName(file.getOriginalFilename());
         fileMetadata.setParents(Collections.singletonList(folderId));
@@ -50,6 +57,7 @@ public class GoogleDriveService {
     }
 
     public String uploadBytes(byte[] data, String filename, String mimeType) throws IOException {
+        checkDriveAvailable();
         File fileMetadata = new File();
         fileMetadata.setName(filename);
         fileMetadata.setParents(Collections.singletonList(folderId));
