@@ -233,6 +233,11 @@ public class AuthController {
             if (updated.getEmail() != null) user.setEmail(updated.getEmail());
             if (updated.getAge() != null) user.setAge(updated.getAge());
             if (updated.getGender() != null) user.setGender(updated.getGender());
+            if (updated.getDisplayName() != null) user.setDisplayName(updated.getDisplayName());
+            if (updated.getHeadline() != null) user.setHeadline(updated.getHeadline());
+            if (updated.getProfileImageUrl() != null) user.setProfileImageUrl(updated.getProfileImageUrl());
+            if (updated.getLocation() != null) user.setLocation(updated.getLocation());
+            if (updated.getBio() != null) user.setBio(updated.getBio());
             user.setModifiedDate(LocalDateTime.now());
             user = userRepo.save(user);
             return ResponseEntity.ok(user);

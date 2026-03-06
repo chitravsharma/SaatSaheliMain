@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { Link } from "react-router-dom";
 import axios from "axios";
 import FlipBook from "../FlipBook";
 import { useStrings } from "../LanguageContext";
@@ -126,7 +127,13 @@ function SearchBooks() {
                         {book.title}
                       </button>
                     </td>
-                    <td>{book.authorName || strings.searchBooks.emptyAuthor}</td>
+                    <td>
+                      {book.authorName ? (
+                        <Link to={`/profile/${book.userId}`} className="bm-author-link">
+                          {book.authorName}
+                        </Link>
+                      ) : strings.searchBooks.emptyAuthor}
+                    </td>
                     <td>
                       <span className={`bm-status-dot ${book.status === "PUBLISHED" ? "dot-published" : "dot-draft"}`} />
                       {book.status}
@@ -163,7 +170,13 @@ function SearchBooks() {
           </aside>
           <div className="bm-split-reader">
             <h2>{selectedBook.title}</h2>
-            {selectedBook.authorName && <p className="bm-date">{strings.searchBooks.byAuthor(selectedBook.authorName)}</p>}
+            {selectedBook.authorName && (
+              <p className="bm-date">
+                <Link to={`/profile/${selectedBook.userId}`} className="bm-author-link">
+                  {strings.searchBooks.byAuthor(selectedBook.authorName)}
+                </Link>
+              </p>
+            )}
             <FlipBook bookId={selectedBook.id} />
           </div>
         </div>

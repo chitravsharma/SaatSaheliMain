@@ -91,7 +91,13 @@ function PublicBooks() {
                 <span className="bm-public-cover-title">{book.title}</span>
               </div>
               {book.authorName && (
-                <span className="bm-public-author">{book.authorName}</span>
+                <Link
+                  to={`/profile/${book.userId}`}
+                  className="bm-public-author bm-author-link"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  {book.authorName}
+                </Link>
               )}
               <span className="bm-public-read">{strings.publicBooks.readButton}</span>
             </button>
