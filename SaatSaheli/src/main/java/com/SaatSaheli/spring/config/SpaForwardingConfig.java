@@ -21,7 +21,7 @@ public class SpaForwardingConfig implements WebMvcConfigurer {
                     @Override
                     protected Resource getResource(String resourcePath, Resource location) throws IOException {
                         // Don't intercept API or uploads paths
-                        if (resourcePath.startsWith("api/") || resourcePath.startsWith("uploads/")) {
+                        if (resourcePath.startsWith("api/")) {
                             return null;
                         }
 

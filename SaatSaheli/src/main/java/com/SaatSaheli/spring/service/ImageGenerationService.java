@@ -8,8 +8,8 @@ import org.springframework.web.client.RestClient;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import java.io.File;
-import java.io.FileOutputStream;
+import org.springframework.beans.factory.annotation.Autowired;
+
 import java.io.IOException;
 import java.util.Map;
 import java.util.UUID;
@@ -19,6 +19,9 @@ import static java.util.Map.entry;
 
 @Service
 public class ImageGenerationService {
+
+    @Autowired
+    private GoogleDriveService googleDriveService;
 
     private static final Pattern DEVANAGARI = Pattern.compile("[\\u0900-\\u097F]");
     private static final String TRANSLATION_MODEL = "Helsinki-NLP/opus-mt-hi-en";
@@ -47,8 +50,6 @@ public class ImageGenerationService {
 
     @Value("${huggingface.api.timeout:60000}")
     private int timeout;
-
-    private static final String UPLOAD_DIR = "./uploads/";
 
     private final RestClient restClient = RestClient.create();
 
@@ -104,17 +105,9 @@ public class ImageGenerationService {
             throw new IOException("No image data received from API");
         }
 
-        // Save to local filesystem
-        File uploadDir = new File(UPLOAD_DIR);
-        if (!uploadDir.exists()) {
-            uploadDir.mkdirs();
-        }
+        // Upload to Google Drive for persistent storage
         String filename = UUID.randomUUID() + ".png";
-        File outFile = new File(uploadDir, filename);
-        try (FileOutputStream fos = new FileOutputStream(outFile)) {
-            fos.write(imageBytes);
-        }
-        return "/uploads/" + filename;
+        return googleDriveService.uploadBytes(imageBytes, filename, "image/png");
     }
 
     private String translateHindiToEnglish(String hindiText) throws IOException {
