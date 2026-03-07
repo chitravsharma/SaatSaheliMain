@@ -1,6 +1,6 @@
 package com.SaatSaheli.spring.controller;
 
-import com.SaatSaheli.spring.service.GoogleDriveService;
+import com.SaatSaheli.spring.service.CloudinaryService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -16,7 +16,7 @@ import java.util.Map;
 public class FileUploadController {
 
     @Autowired
-    private GoogleDriveService googleDriveService;
+    private CloudinaryService cloudinaryService;
 
     @PostMapping("/upload")
     public ResponseEntity<?> uploadFile(@RequestParam("file") MultipartFile file) {
@@ -24,7 +24,7 @@ public class FileUploadController {
             return ResponseEntity.badRequest().body(Map.of("error", "File is empty"));
         }
         try {
-            String url = googleDriveService.uploadFile(file);
+            String url = cloudinaryService.uploadFile(file);
             return ResponseEntity.ok(Map.of("url", url));
         } catch (IOException e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)

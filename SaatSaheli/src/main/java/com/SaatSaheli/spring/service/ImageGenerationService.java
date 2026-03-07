@@ -21,7 +21,7 @@ import static java.util.Map.entry;
 public class ImageGenerationService {
 
     @Autowired
-    private GoogleDriveService googleDriveService;
+    private CloudinaryService cloudinaryService;
 
     private static final Pattern DEVANAGARI = Pattern.compile("[\\u0900-\\u097F]");
     private static final String TRANSLATION_MODEL = "Helsinki-NLP/opus-mt-hi-en";
@@ -105,9 +105,9 @@ public class ImageGenerationService {
             throw new IOException("No image data received from API");
         }
 
-        // Upload to Google Drive for persistent storage
+        // Upload to Cloudinary for persistent storage
         String filename = UUID.randomUUID() + ".png";
-        return googleDriveService.uploadBytes(imageBytes, filename, "image/png");
+        return cloudinaryService.uploadBytes(imageBytes, filename, "image/png");
     }
 
     private String translateHindiToEnglish(String hindiText) throws IOException {
