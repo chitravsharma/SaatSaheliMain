@@ -4,7 +4,7 @@ import React from "react";
 
 import Header from './modules/Header';
 import Footer from './modules/Footer';
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, useLocation } from 'react-router-dom';
 import Home from './pages/Home';
 import About from './pages/About';
 import Contacts from './pages/Contacts';
@@ -24,6 +24,11 @@ import PublicProfile from './pages/PublicProfile';
 import ProtectedRoute from './components/ProtectedRoute';
 
 
+function BookManagerWrapper() {
+  const location = useLocation();
+  return <BookManager key={location.key} />;
+}
+
 function App() {
   return (
     <div className="App">
@@ -34,7 +39,7 @@ function App() {
           <Route path="/" element={<Home />} />
           <Route path="/contacts" element={<Contacts />} />
           <Route path="/about" element={<About />} />
-          <Route path="/books" element={<BookManager />} />
+          <Route path="/books" element={<BookManagerWrapper />} />
           <Route path="/search" element={<SearchBooks />} />
           <Route path="/read/:bookId" element={<ReadBook />} />
           <Route path="/account" element={<Account />} />

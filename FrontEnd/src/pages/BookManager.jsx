@@ -136,15 +136,6 @@ function BookManager() {
   const location = useLocation();
   const userId = user?.userId || 1;
   const [view, setView] = useState("menu");
-
-  // Reset to menu when navigating to /books via header link
-  useEffect(() => {
-    if (!location.state?.editBookId) {
-      setView("menu");
-      setSelectedBook(null);
-      setReadingBookId(null);
-    }
-  }, [location.key]);
   const [books, setBooks] = useState([]);
   const [selectedBook, setSelectedBook] = useState(null);
   const [pages, setPages] = useState([]);
