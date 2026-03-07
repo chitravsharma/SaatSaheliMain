@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { useAuth } from "../AuthContext";
 import { useStrings } from "../LanguageContext";
@@ -10,6 +11,7 @@ const POLL_INTERVAL = 5000;
 const Chat = () => {
     const { user, isAdmin } = useAuth();
     const strings = useStrings();
+    const navigate = useNavigate();
     const s = strings.chat || {};
 
     const [rooms, setRooms] = useState([]);
@@ -119,6 +121,17 @@ const Chat = () => {
 
     return (
         <div className="chat-container">
+            <div className="chat-nav-bar">
+                <button className="bm-btn bm-btn-back" onClick={() => navigate(-1)}>
+                    {strings.common.back}
+                </button>
+                <Link to="/books" className="bm-btn bm-btn-back" style={{ textDecoration: "none" }}>
+                    {strings.readBook?.books || "Books"}
+                </Link>
+                <Link to="/" className="bm-btn bm-btn-back" style={{ textDecoration: "none" }}>
+                    {strings.readBook?.home || "Home"}
+                </Link>
+            </div>
             <div className="chat-sidebar">
                 <h2>{s.roomsHeading || "Chat Rooms"}</h2>
                 <div className="chat-room-list">

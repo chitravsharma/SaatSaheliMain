@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { useStrings } from "../LanguageContext";
 import "../PublicProfile.css";
@@ -9,6 +9,7 @@ const API = process.env.REACT_APP_API_URL;
 function PublicProfile() {
   const { userId } = useParams();
   const strings = useStrings();
+  const navigate = useNavigate();
   const s = strings.publicProfile;
 
   const [profile, setProfile] = useState(null);
@@ -48,6 +49,14 @@ function PublicProfile() {
 
   return (
     <div className="pub-profile-page">
+      <div className="pub-profile-nav">
+        <button className="bm-btn bm-btn-back" onClick={() => navigate(-1)}>
+          {strings.common.back}
+        </button>
+        <Link to="/books" className="bm-btn bm-btn-back" style={{ textDecoration: "none" }}>
+          {strings.readBook.books}
+        </Link>
+      </div>
       <div className="pub-profile-header">
         {profile.profileImageUrl && (
           <img

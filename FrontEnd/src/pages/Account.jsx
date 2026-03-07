@@ -69,6 +69,17 @@ function Account() {
 
   return (
     <div className="account-page">
+      <div className="acct-nav-bar">
+        <button className="bm-btn bm-btn-back" onClick={() => navigate(-1)}>
+          {strings.common.back}
+        </button>
+        <Link to="/books" className="bm-btn bm-btn-back" style={{ textDecoration: "none" }}>
+          {strings.readBook.books}
+        </Link>
+        <Link to="/" className="bm-btn bm-btn-back" style={{ textDecoration: "none" }}>
+          {strings.readBook.home}
+        </Link>
+      </div>
       <h1>{strings.account.heading}</h1>
 
       <div className="acct-profile-card">

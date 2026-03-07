@@ -1,6 +1,14 @@
+.chat-nav-bar {
+    display: flex;
+    gap: 8px;
+    margin: 12px auto 8px;
+    max-width: 1200px;
+    padding: 0 8px;
+}
+
 .chat-container {
     display: flex;
-    height: calc(100vh - 140px);
+    height: calc(100vh - 180px);
     max-width: 1200px;
     margin: 0 auto;
     border: 1px solid #e5e7eb;

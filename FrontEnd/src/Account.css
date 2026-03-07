@@ -1,6 +1,12 @@
 /* Account page — modern theme, left-aligned profile */
 /* ADA/WCAG 2.1 AA compliant */
 
+.acct-nav-bar {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
 .account-page {
   max-width: 960px;
   margin: 32px auto;
