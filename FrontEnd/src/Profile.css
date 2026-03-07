@@ -111,6 +111,36 @@
   font-size: 1rem;
 }
 
+.profile-checkbox-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+.profile-checkbox-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border: 2px solid #e5e7eb;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  user-select: none;
+}
+.profile-checkbox-label:hover {
+  border-color: #0f3460;
+}
+.profile-checkbox-label input[type="checkbox"] {
+  display: none;
+}
+.profile-checkbox-label.checked {
+  background: #0f3460;
+  color: #ffffff;
+  border-color: #0f3460;
+}
+
 @media (max-width: 768px) {
   .profile-page {
     padding: 12px;

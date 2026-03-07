@@ -44,6 +44,12 @@ public class User {
     @Column(columnDefinition = "TEXT")
     private String bio;
 
+    @Column(columnDefinition = "TEXT")
+    private String interests; // comma-separated: "My Page,Book,Gallery,Poems,Blog,Article,Recipes,DIY,Other"
+
+    @Column(columnDefinition = "TEXT")
+    private String fields; // comma-separated: "Art,Music,Writing,Tech,Creativity,Community"
+
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     @Column(name = "created_date")
     private LocalDateTime createdDate;
@@ -93,6 +99,12 @@ public class User {
 
     public String getBio() { return bio; }
     public void setBio(String bio) { this.bio = bio; }
+
+    public String getInterests() { return interests; }
+    public void setInterests(String interests) { this.interests = interests; }
+
+    public String getFields() { return fields; }
+    public void setFields(String fields) { this.fields = fields; }
 
     public LocalDateTime getCreatedDate() { return createdDate; }
     public void setCreatedDate(LocalDateTime createdDate) { this.createdDate = createdDate; }

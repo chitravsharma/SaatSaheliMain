@@ -238,6 +238,8 @@ public class AuthController {
             if (updated.getProfileImageUrl() != null) user.setProfileImageUrl(updated.getProfileImageUrl());
             if (updated.getLocation() != null) user.setLocation(updated.getLocation());
             if (updated.getBio() != null) user.setBio(updated.getBio());
+            if (updated.getInterests() != null) user.setInterests(updated.getInterests());
+            if (updated.getFields() != null) user.setFields(updated.getFields());
             user.setModifiedDate(LocalDateTime.now());
             user = userRepo.save(user);
             return ResponseEntity.ok(user);

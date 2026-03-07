@@ -76,6 +76,7 @@ function FlipBook({ bookId }) {
   const [pages, setPages] = useState([]);
   const [currentPage, setCurrentPage] = useState(0);
   const [zoomIndex, setZoomIndex] = useState(DEFAULT_ZOOM_INDEX);
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const flipBookRef = useRef(null);
   const pageSize = usePageSize();
 
@@ -89,6 +90,15 @@ function FlipBook({ bookId }) {
       .then(res => setPages(res.data))
       .catch(err => console.error(err));
   }, [bookId]);
+
+  useEffect(() => {
+    if (!isFullscreen) return;
+    const handleEsc = (e) => {
+      if (e.key === "Escape") setIsFullscreen(false);
+    };
+    window.addEventListener("keydown", handleEsc);
+    return () => window.removeEventListener("keydown", handleEsc);
+  }, [isFullscreen]);
 
   const handlePrev = useCallback(() => {
     flipBookRef.current?.pageFlip()?.flipPrev();
@@ -127,7 +137,7 @@ function FlipBook({ bookId }) {
 
   const totalPages = pages.length;
 
-  return (
+  const content = (
     <div className="center-container">
       <div className="flipbook-nav-wrapper">
         <div className="flipbook-toolbar">
@@ -197,6 +207,14 @@ function FlipBook({ bookId }) {
               +
             </button>
           </div>
+          <button
+            className="flipbook-fullscreen-btn"
+            onClick={() => setIsFullscreen((prev) => !prev)}
+            aria-label={isFullscreen ? strings.flipBook.exitFullscreen : strings.flipBook.fullscreen}
+            title={isFullscreen ? strings.flipBook.exitFullscreen : strings.flipBook.fullscreen}
+          >
+            {isFullscreen ? "\u2715" : "\u26F6"}
+          </button>
         </div>
         <div
           className="flipbook-zoom-wrapper"
@@ -298,5 +316,15 @@ function FlipBook({ bookId }) {
       </div>
     </div>
   );
+
+  if (isFullscreen) {
+    return (
+      <div className="flipbook-fullscreen-overlay">
+        {content}
+      </div>
+    );
+  }
+
+  return content;
 }
 export default FlipBook;

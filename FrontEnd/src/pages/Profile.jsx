@@ -19,6 +19,8 @@ function Profile() {
     location: "",
     bio: "",
   });
+  const [interests, setInterests] = useState([]);
+  const [fields, setFields] = useState([]);
   const [profileImageUrl, setProfileImageUrl] = useState("");
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -39,6 +41,8 @@ function Profile() {
           bio: data.bio || "",
         });
         setProfileImageUrl(data.profileImageUrl || "");
+        setInterests(data.interests ? data.interests.split(",") : []);
+        setFields(data.fields ? data.fields.split(",") : []);
       } catch {
         setError(s.loadError);
       } finally {
@@ -94,6 +98,8 @@ function Profile() {
         location: form.location,
         bio: form.bio,
         profileImageUrl: profileImageUrl,
+        interests: interests.join(","),
+        fields: fields.join(","),
       });
       setMessage(s.saved);
     } catch {
@@ -187,6 +193,52 @@ function Profile() {
             rows={5}
             maxLength={1000}
           />
+        </div>
+
+        <div className="profile-field">
+          <label>{s.labelInterests}</label>
+          <div className="profile-checkbox-group">
+            {s.interestOptions.map((opt) => (
+              <label
+                key={opt}
+                className={`profile-checkbox-label${interests.includes(opt) ? " checked" : ""}`}
+              >
+                <input
+                  type="checkbox"
+                  checked={interests.includes(opt)}
+                  onChange={() =>
+                    setInterests((prev) =>
+                      prev.includes(opt) ? prev.filter((i) => i !== opt) : [...prev, opt]
+                    )
+                  }
+                />
+                {opt}
+              </label>
+            ))}
+          </div>
+        </div>
+
+        <div className="profile-field">
+          <label>{s.labelFields}</label>
+          <div className="profile-checkbox-group">
+            {s.fieldOptions.map((opt) => (
+              <label
+                key={opt}
+                className={`profile-checkbox-label${fields.includes(opt) ? " checked" : ""}`}
+              >
+                <input
+                  type="checkbox"
+                  checked={fields.includes(opt)}
+                  onChange={() =>
+                    setFields((prev) =>
+                      prev.includes(opt) ? prev.filter((f) => f !== opt) : [...prev, opt]
+                    )
+                  }
+                />
+                {opt}
+              </label>
+            ))}
+          </div>
         </div>
 
         <div className="profile-actions">

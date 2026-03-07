@@ -17,6 +17,8 @@ function SearchBooks() {
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
   const [selectedBook, setSelectedBook] = useState(null);
+  const [showAdvanced, setShowAdvanced] = useState(false);
+  const [searchCategory, setSearchCategory] = useState("");
 
   const handleSearch = async () => {
     setLoading(true);
@@ -28,6 +30,7 @@ function SearchBooks() {
       if (searchTitle.trim()) params.append("title", searchTitle.trim());
       if (searchAuthor.trim()) params.append("author", searchAuthor.trim());
       if (searchStatus) params.append("status", searchStatus);
+      if (searchCategory) params.append("category", searchCategory);
 
       const res = await axios.get(`${API}/search?${params.toString()}`);
       setResults(Array.isArray(res.data) ? res.data : []);
@@ -43,6 +46,7 @@ function SearchBooks() {
     setSearchTitle("");
     setSearchAuthor("");
     setSearchStatus("");
+    setSearchCategory("");
     setResults([]);
     setSearched(false);
     setSelectedBook(null);
@@ -99,7 +103,32 @@ function SearchBooks() {
             {loading ? strings.searchBooks.searching : strings.searchBooks.searchButton}
           </button>
           <button className="bm-btn bm-btn-back" onClick={handleClear}>{strings.searchBooks.clearButton}</button>
+          <button
+            className="bm-btn bm-btn-edit"
+            type="button"
+            onClick={() => setShowAdvanced((prev) => !prev)}
+          >
+            {showAdvanced ? strings.searchBooks.simpleSearch : strings.searchBooks.advancedSearch}
+          </button>
         </div>
+        {showAdvanced && (
+          <div className="bm-search-fields" style={{ marginTop: "12px" }}>
+            <select
+              value={searchCategory}
+              onChange={(e) => setSearchCategory(e.target.value)}
+              className="bm-format-select"
+              aria-label={strings.searchBooks.categoryFilter}
+            >
+              <option value="">{strings.searchBooks.categoryAll}</option>
+              <option value="Art">Art</option>
+              <option value="Music">Music</option>
+              <option value="Writing">Writing</option>
+              <option value="Tech">Tech</option>
+              <option value="Creativity">Creativity</option>
+              <option value="Community">Community</option>
+            </select>
+          </div>
+        )}
       </div>
 
       {searched && !selectedBook && (

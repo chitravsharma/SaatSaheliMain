@@ -293,6 +293,10 @@ export const en = {
     booksHeading: (n) => `Books (${n})`,
     backToTable: "Back to Table",
     byAuthor: (name) => `by ${name}`,
+    advancedSearch: "Advanced Search",
+    simpleSearch: "Simple Search",
+    categoryFilter: "Category",
+    categoryAll: "All Categories",
   },
 
   account: {
@@ -306,6 +310,8 @@ export const en = {
     labelHeadline: "Headline",
     labelLocation: "Location",
     labelBio: "About Me",
+    labelInterests: "My Interests",
+    labelFields: "My Fields",
     booksHeading: "My Books",
     thTitle: "Title",
     thStatus: "Status",
@@ -336,6 +342,10 @@ export const en = {
     imageUploaded: "Image uploaded!",
     imageUploadFailed: "Failed to upload image.",
     nameRequired: "Display name is required.",
+    labelInterests: "I want to create",
+    labelFields: "My Fields of Interest",
+    interestOptions: ["My Page", "Book", "Gallery", "Poems", "Blog", "Article", "Recipes", "DIY", "Other"],
+    fieldOptions: ["Art", "Music", "Writing", "Tech", "Creativity", "Community"],
     saveButton: "Save Profile",
     saving: "Saving...",
     saved: "Profile saved!",
@@ -383,6 +393,8 @@ export const en = {
     zoomIn: "Zoom in",
     zoomOut: "Zoom out",
     zoomReset: "Reset zoom",
+    fullscreen: "Full Screen",
+    exitFullscreen: "Exit Full Screen",
   },
 
   pageLayoutEditor: {
@@ -784,6 +796,10 @@ export const hi = {
     booksHeading: (n) => `किताबें (${n})`,
     backToTable: "तालिका पर वापस",
     byAuthor: (name) => `लेखक: ${name}`,
+    advancedSearch: "उन्नत खोज",
+    simpleSearch: "सामान्य खोज",
+    categoryFilter: "श्रेणी",
+    categoryAll: "सभी श्रेणियां",
   },
 
   account: {
@@ -797,6 +813,8 @@ export const hi = {
     labelHeadline: "शीर्षक",
     labelLocation: "स्थान",
     labelBio: "मेरे बारे में",
+    labelInterests: "मेरी रुचियां",
+    labelFields: "मेरे क्षेत्र",
     booksHeading: "मेरी किताबें",
     thTitle: "शीर्षक",
     thStatus: "स्थिति",
@@ -827,6 +845,10 @@ export const hi = {
     imageUploaded: "चित्र अपलोड हो गया!",
     imageUploadFailed: "चित्र अपलोड करने में विफल।",
     nameRequired: "प्रदर्शन नाम आवश्यक है।",
+    labelInterests: "मैं बनाना चाहती हूं",
+    labelFields: "मेरी रुचि के क्षेत्र",
+    interestOptions: ["My Page", "Book", "Gallery", "Poems", "Blog", "Article", "Recipes", "DIY", "Other"],
+    fieldOptions: ["Art", "Music", "Writing", "Tech", "Creativity", "Community"],
     saveButton: "प्रोफ़ाइल सहेजें",
     saving: "सहेज रहे हैं...",
     saved: "प्रोफ़ाइल सहेजी गई!",
@@ -874,6 +896,8 @@ export const hi = {
     zoomIn: "ज़ूम इन",
     zoomOut: "ज़ूम आउट",
     zoomReset: "ज़ूम रीसेट",
+    fullscreen: "फ़ुल स्क्रीन",
+    exitFullscreen: "फ़ुल स्क्रीन बंद करें",
   },
 
   pageLayoutEditor: {

@@ -32,9 +32,10 @@ public class BookController {
             @RequestParam(required = false) String title,
             @RequestParam(required = false) String author,
             @RequestParam(required = false) String status,
-            @RequestParam(required = false) Long userId) {
+            @RequestParam(required = false) Long userId,
+            @RequestParam(required = false) String category) {
         try {
-            return ResponseEntity.ok(bookService.searchBooks(id, title, author, status, userId));
+            return ResponseEntity.ok(bookService.searchBooks(id, title, author, status, userId, category));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(errorMap("Failed to search books: " + e.getMessage()));

@@ -122,6 +122,26 @@ function Account() {
             <p className="acct-bio-text">{profile.bio}</p>
           </div>
         )}
+        {profile?.interests && (
+          <div className="acct-tags-section">
+            <h3 className="acct-bio-label">{strings.account.labelInterests}</h3>
+            <div className="acct-tags">
+              {profile.interests.split(",").map((item, i) => (
+                <span key={i} className="acct-tag">{item.trim()}</span>
+              ))}
+            </div>
+          </div>
+        )}
+        {profile?.fields && (
+          <div className="acct-tags-section">
+            <h3 className="acct-bio-label">{strings.account.labelFields}</h3>
+            <div className="acct-tags">
+              {profile.fields.split(",").map((item, i) => (
+                <span key={i} className="acct-tag acct-tag-field">{item.trim()}</span>
+              ))}
+            </div>
+          </div>
+        )}
         <div className="acct-profile-actions">
           <Link to="/profile" className="acct-profile-link">
             {profile?.displayName ? strings.account.editProfile : strings.account.createProfile}

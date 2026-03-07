@@ -10,7 +10,7 @@
 }
 
 .home-hero {
-  text-align: center;
+  text-align: left;
   margin-bottom: 40px;
 }
 
@@ -30,7 +30,7 @@
   background: linear-gradient(90deg, #0f3460, #d4a017);
   border: none;
   border-radius: 2px;
-  margin: 16px auto 32px;
+  margin: 16px 0 32px;
 }
 
 .home-card {
@@ -52,7 +52,7 @@
   display: flex;
   flex-wrap: wrap;
   gap: 12px;
-  justify-content: center;
+  justify-content: flex-start;
   margin-top: 32px;
 }
 

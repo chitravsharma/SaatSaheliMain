@@ -226,7 +226,7 @@ public class BookService {
         return bookRepo.findByUserIdAndStatusIgnoreCase(userId, "DRAFT");
     }
 
-    public List<Book> searchBooks(Long id, String title, String author, String status, Long requestUserId) {
+    public List<Book> searchBooks(Long id, String title, String author, String status, Long requestUserId, String category) {
         List<Book> books = bookRepo.findAll();
 
         // Build a userId->User lookup for author enrichment
@@ -267,6 +267,8 @@ public class BookService {
                         || status.trim().equalsIgnoreCase(b.getStatus()))
                 .filter(b -> finalAuthorMatchIds == null
                         || (b.getUserId() != null && finalAuthorMatchIds.contains(b.getUserId())))
+                .filter(b -> category == null || category.trim().isEmpty()
+                        || category.trim().equalsIgnoreCase(b.getCategory()))
                 .collect(Collectors.toList());
 
         // Enrich with author name and pages
