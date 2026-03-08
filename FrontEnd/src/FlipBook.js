@@ -216,11 +216,11 @@ function FlipBook({ bookId }) {
             {isFullscreen ? "\u2715" : "\u26F6"}
           </button>
         </div>
+        <div className="flipbook-zoom-scroll">
         <div
           className="flipbook-zoom-wrapper"
           style={{
             transform: `scale(${zoomLevel})`,
-            transformOrigin: "top center",
           }}
         >
           <HTMLFlipBook
@@ -312,6 +312,7 @@ function FlipBook({ bookId }) {
             );
           })}
           </HTMLFlipBook>
+        </div>
         </div>
       </div>
     </div>

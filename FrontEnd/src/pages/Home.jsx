@@ -18,10 +18,6 @@ function Home() {
 
   return (
     <div className="home-container">
-      <div className="home-hero">
-        <h1>{strings.home.welcomeHeading}</h1>
-        <hr className="home-divider" />
-      </div>
       <div className="home-tags">
         {strings.about.tags.map((tag) => (
           <Link

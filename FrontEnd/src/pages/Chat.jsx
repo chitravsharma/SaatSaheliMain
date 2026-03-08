@@ -120,12 +120,11 @@ const Chat = () => {
     };
 
     return (
+        <div className="chat-wrapper">
+            <button className="chat-back-arrow" onClick={() => navigate(-1)} aria-label={strings.common.back} title={strings.common.back}>
+                &#8592;
+            </button>
         <div className="chat-container">
-            <div className="chat-nav-bar">
-                <button className="bm-btn bm-btn-back" onClick={() => navigate(-1)}>
-                    {strings.common.back}
-                </button>
-            </div>
             <div className="chat-sidebar">
                 <h2>{s.roomsHeading || "Chat Rooms"}</h2>
                 <div className="chat-room-list">
@@ -204,6 +203,10 @@ const Chat = () => {
                     <div className="chat-empty-room">{s.selectRoom || "Select a room to start chatting"}</div>
                 )}
             </div>
+        </div>
+            <button className="chat-back-arrow" onClick={() => navigate(-1)} aria-label={strings.common.back} title={strings.common.back}>
+                &#8592;
+            </button>
         </div>
     );
 };

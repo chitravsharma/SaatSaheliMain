@@ -193,16 +193,18 @@ function Account() {
         </div>
       </div>
 
-      <h2>{strings.account.booksHeading}</h2>
-
       {loading && <div className="loading-spinner" />}
       {error && <p className="acct-error">{error}</p>}
 
-      {!loading && !error && books.length === 0 && (
-        <p className="acct-empty">{strings.account.emptyState}</p>
-      )}
+      {!loading && !error && (userInterests.includes("Book") || books.length > 0) && (
+        <>
+          <h2>{strings.account.booksHeading}</h2>
 
-      {!loading && !error && books.length > 0 && (
+          {books.length === 0 && (
+            <p className="acct-empty">{strings.account.emptyState}</p>
+          )}
+
+          {books.length > 0 && (
         <table className="acct-books-table">
           <thead>
             <tr>
@@ -242,6 +244,8 @@ function Account() {
             ))}
           </tbody>
         </table>
+          )}
+        </>
       )}
 
       {/* Interest-based sections */}

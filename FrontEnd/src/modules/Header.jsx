@@ -38,7 +38,8 @@ const Header = () => {
             <img src={siteLogo} className="header-logo-img" alt={strings.header.logoAlt} />
             <div className="header-brand">
               <span className="header-site-name">{strings.header.siteName}</span>
-              <span className="header-tagline">{strings.header.siteTagline}</span>
+              <span className="header-tagline">Welcome to Saat Saheli</span>
+              <span className="header-tagline">A Community for Passion and Creativity!</span>
             </div>
           </div>
           <button

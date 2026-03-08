@@ -1,9 +1,28 @@
-.chat-nav-bar {
-    display: flex;
-    gap: 8px;
-    margin: 12px auto 8px;
+.chat-wrapper {
     max-width: 1200px;
-    padding: 0 8px;
+    margin: 0 auto;
+    padding: 8px;
+}
+
+.chat-back-arrow {
+    background: none;
+    border: none;
+    font-size: 1.4rem;
+    color: #0f3460;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 6px;
+    line-height: 1;
+    transition: background 0.15s;
+}
+
+.chat-back-arrow:hover {
+    background: rgba(15, 52, 96, 0.1);
+}
+
+.chat-back-arrow:focus-visible {
+    outline: 2px solid #0f3460;
+    outline-offset: 2px;
 }
 
 .chat-container {

@@ -190,11 +190,19 @@
   outline-offset: 2px;
 }
 
+/* Zoom scroll container - scrollable when zoomed */
+.flipbook-zoom-scroll {
+  overflow: auto;
+  max-height: 80vh;
+  max-width: 100%;
+}
+
 /* Zoom wrapper */
 .flipbook-zoom-wrapper {
   display: flex;
   justify-content: center;
   transition: transform 0.2s ease;
+  transform-origin: top center;
 }
 
 /* Center single pages (cover / last) in two-page spread mode */
