@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import axios from "axios";
 import { useAuth } from "../AuthContext";
@@ -7,6 +7,7 @@ import "../Account.css";
 
 const API_BOOKS = `${process.env.REACT_APP_API_URL}/api/books`;
 const API_AUTH = `${process.env.REACT_APP_API_URL}/api/auth`;
+const UPLOAD_API = `${process.env.REACT_APP_API_URL}/api/upload`;
 
 function Account() {
   const { user } = useAuth();
@@ -16,6 +17,10 @@ function Account() {
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [galleryImages, setGalleryImages] = useState([]);
+  const [uploadingGallery, setUploadingGallery] = useState(false);
+  const [galleryMsg, setGalleryMsg] = useState("");
+  const galleryInputRef = useRef(null);
 
   useEffect(() => {
     if (!user) return;
@@ -29,6 +34,11 @@ function Account() {
         ]);
         setBooks(Array.isArray(booksRes.data) ? booksRes.data : []);
         setProfile(profileRes.data);
+        // Load saved gallery images from localStorage
+        const savedGallery = localStorage.getItem(`gallery_${user.userId}`);
+        if (savedGallery) {
+          setGalleryImages(JSON.parse(savedGallery));
+        }
       } catch {
         setError(strings.account.error);
       } finally {
@@ -37,6 +47,41 @@ function Account() {
     };
     fetchData();
   }, [user]);
+
+  const handleGalleryUpload = async (e) => {
+    const files = Array.from(e.target.files);
+    if (!files.length) return;
+    setUploadingGallery(true);
+    setGalleryMsg("");
+    const uploaded = [];
+    for (const file of files) {
+      try {
+        const formData = new FormData();
+        formData.append("file", file);
+        const res = await axios.post(UPLOAD_API, formData);
+        const url = res.data.url.startsWith("http") ? res.data.url : `${process.env.REACT_APP_API_URL}${res.data.url}`;
+        uploaded.push({ url, name: file.name });
+      } catch {
+        // skip failed uploads
+      }
+    }
+    if (uploaded.length > 0) {
+      const updated = [...galleryImages, ...uploaded];
+      setGalleryImages(updated);
+      localStorage.setItem(`gallery_${user.userId}`, JSON.stringify(updated));
+      setGalleryMsg(`${uploaded.length} image(s) uploaded!`);
+    }
+    setUploadingGallery(false);
+    if (galleryInputRef.current) galleryInputRef.current.value = "";
+  };
+
+  const removeGalleryImage = (index) => {
+    const updated = galleryImages.filter((_, i) => i !== index);
+    setGalleryImages(updated);
+    localStorage.setItem(`gallery_${user.userId}`, JSON.stringify(updated));
+  };
+
+  const userInterests = profile?.interests ? profile.interests.split(",").map(s => s.trim()) : [];
 
   if (!user) {
     return (
@@ -73,12 +118,6 @@ function Account() {
         <button className="bm-btn bm-btn-back" onClick={() => navigate(-1)}>
           {strings.common.back}
         </button>
-        <Link to="/books" className="bm-btn bm-btn-back" style={{ textDecoration: "none" }}>
-          {strings.readBook.books}
-        </Link>
-        <Link to="/" className="bm-btn bm-btn-back" style={{ textDecoration: "none" }}>
-          {strings.readBook.home}
-        </Link>
       </div>
       <h1>{strings.account.heading}</h1>
 
@@ -156,7 +195,7 @@ function Account() {
 
       <h2>{strings.account.booksHeading}</h2>
 
-      {loading && <p className="acct-loading">{strings.account.loading}</p>}
+      {loading && <div className="loading-spinner" />}
       {error && <p className="acct-error">{error}</p>}
 
       {!loading && !error && books.length === 0 && (
@@ -203,6 +242,131 @@ function Account() {
             ))}
           </tbody>
         </table>
+      )}
+
+      {/* Interest-based sections */}
+      {!loading && userInterests.length > 0 && (
+        <div className="acct-interests-sections">
+          <h2>My Sections</h2>
+
+          {userInterests.includes("Gallery") && (
+            <div className="acct-section-card">
+              <h3 className="acct-section-title">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                Gallery
+              </h3>
+              <div className="acct-gallery-grid">
+                {galleryImages.map((img, i) => (
+                  <div key={i} className="acct-gallery-item">
+                    <img src={img.url} alt={img.name} className="acct-gallery-img" />
+                    <button className="acct-gallery-remove" onClick={() => removeGalleryImage(i)} title="Remove">&times;</button>
+                  </div>
+                ))}
+              </div>
+              {galleryMsg && <p className="acct-gallery-msg">{galleryMsg}</p>}
+              <div className="acct-gallery-upload">
+                <label className="bm-btn bm-btn-create bm-btn-sm" style={{ cursor: "pointer" }}>
+                  {uploadingGallery ? "Uploading..." : "Upload Photos"}
+                  <input
+                    ref={galleryInputRef}
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    onChange={handleGalleryUpload}
+                    disabled={uploadingGallery}
+                    style={{ display: "none" }}
+                  />
+                </label>
+              </div>
+            </div>
+          )}
+
+          {userInterests.includes("My Page") && (
+            <div className="acct-section-card">
+              <h3 className="acct-section-title">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                My Page
+              </h3>
+              <p className="acct-section-desc">Your personal page. <Link to={`/profile/${user.userId}`}>View your public profile</Link> to see how it looks.</p>
+            </div>
+          )}
+
+          {userInterests.includes("Book") && (
+            <div className="acct-section-card">
+              <h3 className="acct-section-title">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
+                Books
+              </h3>
+              <p className="acct-section-desc">Create and manage your books. <Link to="/books">Go to Book Manager</Link></p>
+            </div>
+          )}
+
+          {userInterests.includes("Poems") && (
+            <div className="acct-section-card">
+              <h3 className="acct-section-title">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+                Poems
+              </h3>
+              <p className="acct-section-desc">Share your poetry with the community. <Link to="/category/writing">Create in Writing category</Link></p>
+            </div>
+          )}
+
+          {userInterests.includes("Blog") && (
+            <div className="acct-section-card">
+              <h3 className="acct-section-title">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                Blog
+              </h3>
+              <p className="acct-section-desc">Write blog posts to share your thoughts. <Link to="/books">Create a new book as your blog</Link></p>
+            </div>
+          )}
+
+          {userInterests.includes("Article") && (
+            <div className="acct-section-card">
+              <h3 className="acct-section-title">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                Articles
+              </h3>
+              <p className="acct-section-desc">Publish articles on your favorite topics. <Link to="/books">Create a new book as your article</Link></p>
+            </div>
+          )}
+
+          {userInterests.includes("Recipes") && (
+            <div className="acct-section-card">
+              <h3 className="acct-section-title">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 8h1a4 4 0 010 8h-1"/><path d="M2 8h16v9a4 4 0 01-4 4H6a4 4 0 01-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>
+                Recipes
+              </h3>
+              <p className="acct-section-desc">Share your favorite recipes. <Link to="/books">Create a recipe book</Link></p>
+            </div>
+          )}
+
+          {userInterests.includes("DIY") && (
+            <div className="acct-section-card">
+              <h3 className="acct-section-title">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg>
+                DIY
+              </h3>
+              <p className="acct-section-desc">Share your DIY projects and tutorials. <Link to="/category/creativity">Explore Creativity</Link></p>
+            </div>
+          )}
+
+          {userInterests.includes("Other") && (
+            <div className="acct-section-card">
+              <h3 className="acct-section-title">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                Other
+              </h3>
+              <p className="acct-section-desc">Explore and create content across all categories. <Link to="/books">Go to Book Manager</Link></p>
+            </div>
+          )}
+        </div>
+      )}
+
+      {!loading && userInterests.length === 0 && profile?.displayName && (
+        <div className="acct-no-interests">
+          <p>You haven't selected any interests yet. <Link to="/profile">Edit your profile</Link> to choose what you'd like to create.</p>
+        </div>
       )}
     </div>
   );

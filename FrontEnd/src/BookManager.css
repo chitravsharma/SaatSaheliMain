@@ -138,6 +138,7 @@
   justify-content: center;
   flex-wrap: wrap;
   margin-top: 40px;
+  text-align: center;
 }
 .bm-button-row .bm-btn {
   padding: 14px 28px;
@@ -158,6 +159,7 @@
   align-items: center;
   gap: 16px;
   margin-top: 24px;
+  text-align: center;
 }
 
 .bm-input {
@@ -994,6 +996,19 @@
   text-align: center;
   line-height: 1.5;
   margin: 0;
+}
+
+/* Button spinner for loading states */
+.btn-spinner {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  border-top-color: #ffffff;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  vertical-align: middle;
+  margin-right: 4px;
 }
 
 /* Responsive */

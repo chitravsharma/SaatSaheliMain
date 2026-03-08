@@ -125,12 +125,6 @@ const Chat = () => {
                 <button className="bm-btn bm-btn-back" onClick={() => navigate(-1)}>
                     {strings.common.back}
                 </button>
-                <Link to="/books" className="bm-btn bm-btn-back" style={{ textDecoration: "none" }}>
-                    {strings.readBook?.books || "Books"}
-                </Link>
-                <Link to="/" className="bm-btn bm-btn-back" style={{ textDecoration: "none" }}>
-                    {strings.readBook?.home || "Home"}
-                </Link>
             </div>
             <div className="chat-sidebar">
                 <h2>{s.roomsHeading || "Chat Rooms"}</h2>

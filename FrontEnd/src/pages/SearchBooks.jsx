@@ -100,7 +100,9 @@ function SearchBooks() {
         </div>
         <div className="bm-search-actions">
           <button className="bm-btn bm-btn-all" onClick={handleSearch} disabled={loading}>
-            {loading ? strings.searchBooks.searching : strings.searchBooks.searchButton}
+            {loading ? (
+              <><span className="btn-spinner" /> {strings.searchBooks.searching}</>
+            ) : strings.searchBooks.searchButton}
           </button>
           <button className="bm-btn bm-btn-back" onClick={handleClear}>{strings.searchBooks.clearButton}</button>
           <button
