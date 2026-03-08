@@ -253,8 +253,28 @@ function FlipBook({ bookId }) {
               pointerEvents: "none",
             };
 
+            // Text-only page margins (print-friendly: ~1 inch = 72px equivalent)
+            const PAGE_MARGIN = 40 * scale;
+            const textOnlyStyle = {
+              ...textStyle,
+              padding: `${PAGE_MARGIN}px`,
+              paddingTop: `${PAGE_MARGIN + 12}px`,
+              paddingBottom: `${PAGE_MARGIN + 12}px`,
+              whiteSpace: "pre-wrap",
+              wordBreak: "break-word",
+              fontSize: textStyle.fontSize || `${Math.max(14, 16 * scale)}px`,
+              lineHeight: 1.75,
+              color: textStyle.color || "#1a1a2e",
+              fontFamily: textStyle.fontFamily || "'Georgia', 'Times New Roman', serif",
+              margin: 0,
+              height: "100%",
+              boxSizing: "border-box",
+              overflow: "hidden",
+              textAlign: "left",
+            };
+
             return (
-              <div key={index} className="card-box" style={{ position: "relative", overflow: "hidden" }}>
+              <div key={index} className="card-box flipbook-page" style={{ position: "relative", overflow: "hidden" }}>
                 <span style={{ ...pageNumStyle, top: 6 }}>{pageNum}</span>
                 <span style={{ ...pageNumStyle, bottom: 6 }}>{pageNum}</span>
                 {hasLayout ? (
@@ -304,9 +324,9 @@ function FlipBook({ bookId }) {
                     )}
                   </>
                 ) : (
-                  <p style={{ ...textStyle, padding: "8px", whiteSpace: "pre-wrap", wordBreak: "break-word" }}>
+                  <div style={textOnlyStyle}>
                     {page.content}
-                  </p>
+                  </div>
                 )}
               </div>
             );

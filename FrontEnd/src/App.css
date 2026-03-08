@@ -47,11 +47,18 @@
 }
 
 .card-box {
-  padding: 1rem;
+  padding: 0;
   background-color: #ffffff;
-  border: 2px solid #e5e7eb;
+  border: 1px solid #d1d5db;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  border-radius: 12px;
+  border-radius: 4px;
+}
+
+/* Book page specific styling for clean print-like look */
+.flipbook-page {
+  background: #fffef9;
+  border: 1px solid #c8c4b8;
+  box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.02), 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .center-container {
@@ -348,5 +355,26 @@
 @media (prefers-reduced-motion: reduce) {
   .App-logo {
     animation: none;
+  }
+}
+
+/* Print styles for book pages */
+@media print {
+  .site-header, .site-footer, .flipbook-toolbar,
+  .flipbook-zoom-controls, .flipbook-fullscreen-btn,
+  .flipbook-arrow-row, .bm-reader-nav, .chat-back-arrow {
+    display: none !important;
+  }
+
+  .flipbook-page {
+    page-break-after: always;
+    border: none !important;
+    box-shadow: none !important;
+    margin: 0.75in;
+    background: #fff !important;
+  }
+
+  .flipbook-zoom-wrapper {
+    transform: none !important;
   }
 }
