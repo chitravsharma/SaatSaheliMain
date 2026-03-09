@@ -77,10 +77,13 @@ function FlipBook({ bookId }) {
   const [currentPage, setCurrentPage] = useState(0);
   const [zoomIndex, setZoomIndex] = useState(DEFAULT_ZOOM_INDEX);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [pinchZoom, setPinchZoom] = useState(1);
   const flipBookRef = useRef(null);
+  const pinchRef = useRef({ startDist: 0, startZoom: 1 });
+  const fullscreenRef = useRef(null);
   const pageSize = usePageSize();
 
-  const zoomLevel = ZOOM_LEVELS[zoomIndex];
+  const zoomLevel = ZOOM_LEVELS[zoomIndex] * pinchZoom;
 
   // Scale factor for positioning elements relative to desktop size
   const scale = pageSize.w / DESKTOP_W;
@@ -91,14 +94,75 @@ function FlipBook({ bookId }) {
       .catch(err => console.error(err));
   }, [bookId]);
 
+  // Native fullscreen API for mobile
+  const toggleFullscreen = useCallback(() => {
+    if (!isFullscreen) {
+      setIsFullscreen(true);
+      setPinchZoom(1);
+      // Use native fullscreen on mobile
+      const el = fullscreenRef.current || document.documentElement;
+      if (el.requestFullscreen) el.requestFullscreen().catch(() => {});
+      else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+    } else {
+      setIsFullscreen(false);
+      setPinchZoom(1);
+      if (document.exitFullscreen) document.exitFullscreen().catch(() => {});
+      else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+    }
+  }, [isFullscreen]);
+
   useEffect(() => {
     if (!isFullscreen) return;
     const handleEsc = (e) => {
-      if (e.key === "Escape") setIsFullscreen(false);
+      if (e.key === "Escape") { setIsFullscreen(false); setPinchZoom(1); }
+    };
+    const handleFsChange = () => {
+      if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+        setIsFullscreen(false);
+        setPinchZoom(1);
+      }
     };
     window.addEventListener("keydown", handleEsc);
-    return () => window.removeEventListener("keydown", handleEsc);
+    document.addEventListener("fullscreenchange", handleFsChange);
+    document.addEventListener("webkitfullscreenchange", handleFsChange);
+    return () => {
+      window.removeEventListener("keydown", handleEsc);
+      document.removeEventListener("fullscreenchange", handleFsChange);
+      document.removeEventListener("webkitfullscreenchange", handleFsChange);
+    };
   }, [isFullscreen]);
+
+  // Pinch-to-zoom for touch devices
+  useEffect(() => {
+    const el = fullscreenRef.current;
+    if (!el) return;
+    const getTouchDist = (touches) => {
+      const dx = touches[0].clientX - touches[1].clientX;
+      const dy = touches[0].clientY - touches[1].clientY;
+      return Math.sqrt(dx * dx + dy * dy);
+    };
+    const onTouchStart = (e) => {
+      if (e.touches.length === 2) {
+        pinchRef.current.startDist = getTouchDist(e.touches);
+        pinchRef.current.startZoom = pinchZoom;
+      }
+    };
+    const onTouchMove = (e) => {
+      if (e.touches.length === 2) {
+        e.preventDefault();
+        const dist = getTouchDist(e.touches);
+        const ratio = dist / pinchRef.current.startDist;
+        const newZoom = Math.max(0.5, Math.min(3, pinchRef.current.startZoom * ratio));
+        setPinchZoom(newZoom);
+      }
+    };
+    el.addEventListener("touchstart", onTouchStart, { passive: true });
+    el.addEventListener("touchmove", onTouchMove, { passive: false });
+    return () => {
+      el.removeEventListener("touchstart", onTouchStart);
+      el.removeEventListener("touchmove", onTouchMove);
+    };
+  });
 
   const handlePrev = useCallback(() => {
     flipBookRef.current?.pageFlip()?.flipPrev();
@@ -209,18 +273,19 @@ function FlipBook({ bookId }) {
           </div>
           <button
             className="flipbook-fullscreen-btn"
-            onClick={() => setIsFullscreen((prev) => !prev)}
+            onClick={toggleFullscreen}
             aria-label={isFullscreen ? strings.flipBook.exitFullscreen : strings.flipBook.fullscreen}
             title={isFullscreen ? strings.flipBook.exitFullscreen : strings.flipBook.fullscreen}
           >
             {isFullscreen ? "\u2715" : "\u26F6"}
           </button>
         </div>
-        <div className="flipbook-zoom-scroll">
+        <div className="flipbook-zoom-scroll" ref={fullscreenRef}>
         <div
           className="flipbook-zoom-wrapper"
           style={{
             transform: `scale(${zoomLevel})`,
+            touchAction: "none",
           }}
         >
           <HTMLFlipBook
@@ -333,6 +398,9 @@ function FlipBook({ bookId }) {
           })}
           </HTMLFlipBook>
         </div>
+        </div>
+        <div className="flipbook-copyright">
+          &copy; {new Date().getFullYear()} @chitravsharma &mdash; SaatSaheli. All rights reserved.
         </div>
       </div>
     </div>

@@ -104,16 +104,20 @@ export const en = {
     termsHeading: "Terms of Use",
     termsBody:
       "By accessing and using SaatSaheli, you agree to comply with these terms. SaatSaheli is a creative community platform for sharing hobbies, skills, and passions. All users must use the platform respectfully and in accordance with applicable laws.",
-    contentHeading: "Content Policy",
-    contentIntro: "Users are responsible for the content they publish. Content must be:",
+    contentHeading: "Content Creation Policy",
+    contentIntro: "Users are responsible for all content they create and publish, including books, poems, art, gallery images, tech posts, DIY projects, articles, recipes, and any other creative works. All content must be:",
     contentRules: [
       "Original or properly attributed to the creator",
-      "Free from hate speech, harassment, or harmful material",
+      "Free from hate speech, harassment, bullying, or harmful material",
       "Appropriate for a general audience",
       "Not infringing on any copyright or intellectual property rights",
+      "Free from spam, misleading information, or deceptive content",
+      "Not promoting illegal activities or distributing malicious content",
+      "Respectful of other community members and their creative works",
     ],
     contentFooter:
-      "SaatSaheli reserves the right to remove any content that violates these guidelines.",
+      "SaatSaheli reserves the right to remove any content that violates these guidelines without prior notice. Repeated violations may result in account suspension or permanent removal.",
+    contentAcceptance: "By creating any content on SaatSaheli, you confirm that you have read, understood, and agree to abide by these content guidelines.",
     privacyHeading: "Privacy Policy",
     privacyBody:
       "We value your privacy. SaatSaheli collects only the information necessary to provide our services, including your name, email address, and content you create. We do not sell or share your personal information with third parties. Your data is stored securely and used solely for operating the platform.",
@@ -164,6 +168,9 @@ export const en = {
     errorLoginFailed: "Login failed. Please try again.",
     errorSignupFailed: "Signup failed. Please try again.",
     errorGoogleFailed: "Google sign-in failed. Please try again.",
+    errorInvalidEmail: "Please enter a valid email address.",
+    errorInvalidPhone: "Please enter a valid phone number (at least 10 digits).",
+    errorTermsRequired: "You must accept the Terms and Conditions to create an account.",
     noAccount: "Don't have an account?",
     hasAccount: "Already have an account?",
     switchToSignup: "Create Account",
@@ -496,6 +503,19 @@ export const en = {
     deleteMessage: "Delete",
   },
 
+  gallery: {
+    heading: "Photo Gallery",
+    back: "Back",
+    noPhotos: "No photos in this gallery yet.",
+    writeComment: "Write a comment...",
+    postComment: "Post",
+    noComments: "No comments yet. Be the first!",
+    commentsHeading: (n) => `Comments (${n})`,
+    deleteComment: "Delete",
+    loginToComment: "Log in to comment",
+    photos: (n) => `${n} photo${n !== 1 ? "s" : ""}`,
+  },
+
   dropdown: {
     defaultText: "Select",
   },
@@ -667,6 +687,9 @@ export const hi = {
     errorLoginFailed: "लॉगिन विफल। कृपया पुनः प्रयास करें।",
     errorSignupFailed: "साइनअप विफल। कृपया पुनः प्रयास करें।",
     errorGoogleFailed: "Google साइन-इन विफल। कृपया पुनः प्रयास करें।",
+    errorInvalidEmail: "कृपया एक वैध ईमेल पता दर्ज करें।",
+    errorInvalidPhone: "कृपया एक वैध फोन नंबर दर्ज करें (कम से कम 10 अंक)।",
+    errorTermsRequired: "खाता बनाने के लिए आपको नियम और शर्तें स्वीकार करनी होंगी।",
     noAccount: "खाता नहीं है?",
     hasAccount: "पहले से खाता है?",
     switchToSignup: "खाता बनाएं",
@@ -997,6 +1020,19 @@ export const hi = {
     sendButton: "भेजें",
     sending: "...",
     deleteMessage: "हटाएं",
+  },
+
+  gallery: {
+    heading: "फोटो गैलरी",
+    back: "वापस",
+    noPhotos: "इस गैलरी में अभी कोई फोटो नहीं है।",
+    writeComment: "टिप्पणी लिखें...",
+    postComment: "पोस्ट करें",
+    noComments: "अभी तक कोई टिप्पणी नहीं। पहले बनें!",
+    commentsHeading: (n) => `टिप्पणियां (${n})`,
+    deleteComment: "हटाएं",
+    loginToComment: "टिप्पणी करने के लिए लॉग इन करें",
+    photos: (n) => `${n} फोटो`,
   },
 
   dropdown: {

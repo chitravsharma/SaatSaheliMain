@@ -5,6 +5,7 @@ import FlipBook from "../FlipBook";
 import PageLayoutEditor from "../PageLayoutEditor";
 import { useAuth } from "../AuthContext";
 import { useStrings } from "../LanguageContext";
+import TermsGate from "../components/TermsGate";
 import "../BookManager.css";
 
 const API = `${process.env.REACT_APP_API_URL}/api/books`;
@@ -568,6 +569,7 @@ function BookManager() {
   // Show public books browser if not logged in
   if (!user) return <PublicBooks />;
 
+  const wrappedContent = (() => {
   // Main menu
   if (view === "menu") {
     const isReading = !!readingBookId;
@@ -1011,6 +1013,9 @@ function BookManager() {
   }
 
   return null;
+  })();
+
+  return <TermsGate userId={userId}>{wrappedContent}</TermsGate>;
 }
 
 export default BookManager;

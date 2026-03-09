@@ -224,6 +224,40 @@
   font-style: italic;
 }
 
+/* Terms checkbox */
+.auth-terms {
+  margin-top: 4px;
+}
+
+.auth-terms-label {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 0.85rem;
+  color: #4b5563;
+  cursor: pointer;
+  line-height: 1.4;
+}
+
+.auth-terms-checkbox {
+  width: 18px;
+  height: 18px;
+  margin-top: 2px;
+  flex-shrink: 0;
+  accent-color: #0f3460;
+  cursor: pointer;
+}
+
+.auth-terms-label a {
+  color: #0f3460;
+  font-weight: 600;
+  text-decoration: underline;
+}
+
+.auth-terms-label a:hover {
+  color: #0a254a;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .auth-container {

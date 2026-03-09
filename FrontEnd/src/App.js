@@ -21,6 +21,9 @@ import AdminDashboard from './pages/AdminDashboard';
 import Chat from './pages/Chat';
 import Profile from './pages/Profile';
 import PublicProfile from './pages/PublicProfile';
+import UserManual from './pages/UserManual';
+import AdminManual from './pages/AdminManual';
+import GalleryView from './pages/GalleryView';
 import ProtectedRoute from './components/ProtectedRoute';
 
 
@@ -50,6 +53,9 @@ function App() {
           <Route path="/category/:category" element={<CategoryPage />} />
           <Route path="/admin" element={<ProtectedRoute requiredRole="ADMIN"><AdminDashboard /></ProtectedRoute>} />
           <Route path="/chat" element={<ProtectedRoute><Chat /></ProtectedRoute>} />
+          <Route path="/gallery/:galleryId" element={<GalleryView />} />
+          <Route path="/manual" element={<UserManual />} />
+          <Route path="/admin-manual" element={<ProtectedRoute requiredRole="ADMIN"><AdminManual /></ProtectedRoute>} />
           <Route path="/logout" element={<Logout />} />
         </Routes>
       </main>

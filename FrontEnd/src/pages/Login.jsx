@@ -29,6 +29,7 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
 
   const saveUserAndRedirect = (data) => {
     const userData = {
@@ -76,6 +77,24 @@ export default function Login() {
 
     if (!firstName.trim() || !email.trim() || !password.trim()) {
       setError(strings.login.errorSignupRequired);
+      return;
+    }
+    // Email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email.trim())) {
+      setError(strings.login.errorInvalidEmail || "Please enter a valid email address.");
+      return;
+    }
+    // Phone validation (if provided, must be 10+ digits)
+    if (phoneNumber.trim()) {
+      const digits = phoneNumber.replace(/\D/g, "");
+      if (digits.length < 10) {
+        setError(strings.login.errorInvalidPhone || "Please enter a valid phone number (at least 10 digits).");
+        return;
+      }
+    }
+    if (!acceptedTerms) {
+      setError(strings.login.errorTermsRequired || "You must accept the Terms and Conditions to create an account.");
       return;
     }
     if (password !== confirmPassword) {
@@ -313,6 +332,18 @@ export default function Login() {
                     required
                     autoComplete="new-password"
                   />
+                </div>
+
+                <div className="auth-terms">
+                  <label className="auth-terms-label">
+                    <input
+                      type="checkbox"
+                      checked={acceptedTerms}
+                      onChange={(e) => setAcceptedTerms(e.target.checked)}
+                      className="auth-terms-checkbox"
+                    />
+                    <span>I accept the <a href="/policies" target="_blank" rel="noopener noreferrer">Terms and Conditions</a> and <a href="/policies" target="_blank" rel="noopener noreferrer">Content Creation Policy</a></span>
+                  </label>
                 </div>
 
                 <button

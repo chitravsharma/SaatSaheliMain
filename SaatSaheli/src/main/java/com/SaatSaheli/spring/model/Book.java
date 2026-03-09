@@ -37,6 +37,12 @@ public class Book {
     @Transient
     private String authorName; // not persisted, enriched by service
 
+    @Transient
+    private int likeCount;
+
+    @Transient
+    private int commentCount;
+
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
@@ -63,6 +69,12 @@ public class Book {
 
     public String getAuthorName() { return authorName; }
     public void setAuthorName(String authorName) { this.authorName = authorName; }
+
+    public int getLikeCount() { return likeCount; }
+    public void setLikeCount(int likeCount) { this.likeCount = likeCount; }
+
+    public int getCommentCount() { return commentCount; }
+    public void setCommentCount(int commentCount) { this.commentCount = commentCount; }
 
     @Override
     public String toString() {

@@ -24,6 +24,7 @@ const SitePolicies = () => {
         ))}
       </ul>
       <p>{strings.sitePolicies.contentFooter}</p>
+      <p><strong>{strings.sitePolicies.contentAcceptance}</strong></p>
     </div>
 
     <div className="policies-section">

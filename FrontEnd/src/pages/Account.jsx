@@ -3,11 +3,14 @@ import { useNavigate, Link } from "react-router-dom";
 import axios from "axios";
 import { useAuth } from "../AuthContext";
 import { useStrings } from "../LanguageContext";
+import TermsGate from "../components/TermsGate";
 import "../Account.css";
 
-const API_BOOKS = `${process.env.REACT_APP_API_URL}/api/books`;
-const API_AUTH = `${process.env.REACT_APP_API_URL}/api/auth`;
-const UPLOAD_API = `${process.env.REACT_APP_API_URL}/api/upload`;
+const API = process.env.REACT_APP_API_URL;
+const API_BOOKS = `${API}/api/books`;
+const API_AUTH = `${API}/api/auth`;
+const UPLOAD_API = `${API}/api/upload`;
+const API_GALLERIES = `${API}/api/galleries`;
 
 function Account() {
   const { user } = useAuth();
@@ -17,9 +20,12 @@ function Account() {
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [galleries, setGalleries] = useState([]);
   const [galleryImages, setGalleryImages] = useState([]);
   const [uploadingGallery, setUploadingGallery] = useState(false);
   const [galleryMsg, setGalleryMsg] = useState("");
+  const [newGalleryTitle, setNewGalleryTitle] = useState("");
+  const [selectedGalleryId, setSelectedGalleryId] = useState(null);
   const galleryInputRef = useRef(null);
 
   useEffect(() => {
@@ -28,16 +34,18 @@ function Account() {
       try {
         setLoading(true);
         setError("");
-        const [booksRes, profileRes] = await Promise.all([
+        const [booksRes, profileRes, galleriesRes] = await Promise.all([
           axios.get(`${API_BOOKS}/user/${user.userId}`),
           axios.get(`${API_AUTH}/user/${user.userId}`),
+          axios.get(`${API_GALLERIES}/user/${user.userId}`),
         ]);
         setBooks(Array.isArray(booksRes.data) ? booksRes.data : []);
         setProfile(profileRes.data);
-        // Load saved gallery images from localStorage
-        const savedGallery = localStorage.getItem(`gallery_${user.userId}`);
-        if (savedGallery) {
-          setGalleryImages(JSON.parse(savedGallery));
+        const gals = Array.isArray(galleriesRes.data) ? galleriesRes.data : [];
+        setGalleries(gals);
+        if (gals.length > 0) {
+          setSelectedGalleryId(gals[0].id);
+          setGalleryImages(gals[0].images || []);
         }
       } catch {
         setError(strings.account.error);
@@ -48,37 +56,71 @@ function Account() {
     fetchData();
   }, [user]);
 
+  const handleCreateGallery = async () => {
+    if (!newGalleryTitle.trim()) return;
+    try {
+      const res = await axios.post(API_GALLERIES, { title: newGalleryTitle.trim(), userId: user.userId });
+      setGalleries([res.data, ...galleries]);
+      setSelectedGalleryId(res.data.id);
+      setGalleryImages([]);
+      setNewGalleryTitle("");
+      setGalleryMsg("Gallery created!");
+    } catch {
+      setGalleryMsg("Failed to create gallery");
+    }
+  };
+
   const handleGalleryUpload = async (e) => {
     const files = Array.from(e.target.files);
-    if (!files.length) return;
+    if (!files.length || !selectedGalleryId) return;
     setUploadingGallery(true);
     setGalleryMsg("");
-    const uploaded = [];
+    let uploaded = 0;
     for (const file of files) {
       try {
         const formData = new FormData();
         formData.append("file", file);
-        const res = await axios.post(UPLOAD_API, formData);
-        const url = res.data.url.startsWith("http") ? res.data.url : `${process.env.REACT_APP_API_URL}${res.data.url}`;
-        uploaded.push({ url, name: file.name });
+        formData.append("userId", user.userId);
+        formData.append("caption", file.name);
+        const res = await axios.post(`${API_GALLERIES}/${selectedGalleryId}/images`, formData);
+        setGalleryImages(prev => [...prev, res.data]);
+        uploaded++;
       } catch {
         // skip failed uploads
       }
     }
-    if (uploaded.length > 0) {
-      const updated = [...galleryImages, ...uploaded];
-      setGalleryImages(updated);
-      localStorage.setItem(`gallery_${user.userId}`, JSON.stringify(updated));
-      setGalleryMsg(`${uploaded.length} image(s) uploaded!`);
+    if (uploaded > 0) {
+      setGalleryMsg(`${uploaded} image(s) uploaded!`);
     }
     setUploadingGallery(false);
     if (galleryInputRef.current) galleryInputRef.current.value = "";
   };
 
-  const removeGalleryImage = (index) => {
-    const updated = galleryImages.filter((_, i) => i !== index);
-    setGalleryImages(updated);
-    localStorage.setItem(`gallery_${user.userId}`, JSON.stringify(updated));
+  const removeGalleryImage = async (imageId) => {
+    try {
+      await axios.delete(`${API_GALLERIES}/images/${imageId}?userId=${user.userId}`);
+      setGalleryImages(galleryImages.filter(img => img.id !== imageId));
+    } catch { /* ignore */ }
+  };
+
+  const handleSelectGallery = (galleryId) => {
+    setSelectedGalleryId(galleryId);
+    const gal = galleries.find(g => g.id === galleryId);
+    setGalleryImages(gal?.images || []);
+  };
+
+  const handleDeleteGallery = async (galleryId) => {
+    if (!window.confirm("Delete this gallery?")) return;
+    try {
+      await axios.delete(`${API_GALLERIES}/${galleryId}?userId=${user.userId}`);
+      const updated = galleries.filter(g => g.id !== galleryId);
+      setGalleries(updated);
+      if (selectedGalleryId === galleryId) {
+        setSelectedGalleryId(updated[0]?.id || null);
+        setGalleryImages(updated[0]?.images || []);
+      }
+      setGalleryMsg("Gallery deleted!");
+    } catch { setGalleryMsg("Failed to delete gallery"); }
   };
 
   const userInterests = profile?.interests ? profile.interests.split(",").map(s => s.trim()) : [];
@@ -113,6 +155,7 @@ function Account() {
   };
 
   return (
+    <TermsGate userId={user.userId}>
     <div className="account-page">
       <div className="acct-nav-bar">
         <button className="bm-btn bm-btn-back" onClick={() => navigate(-1)}>
@@ -259,29 +302,75 @@ function Account() {
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
                 Gallery
               </h3>
-              <div className="acct-gallery-grid">
-                {galleryImages.map((img, i) => (
-                  <div key={i} className="acct-gallery-item">
-                    <img src={img.url} alt={img.name} className="acct-gallery-img" />
-                    <button className="acct-gallery-remove" onClick={() => removeGalleryImage(i)} title="Remove">&times;</button>
+
+              {/* Create new gallery */}
+              <div className="acct-gallery-create" style={{ display: "flex", gap: 8, marginBottom: 12 }}>
+                <input
+                  type="text"
+                  value={newGalleryTitle}
+                  onChange={(e) => setNewGalleryTitle(e.target.value)}
+                  placeholder="New gallery title..."
+                  className="acct-gallery-input"
+                  style={{ flex: 1, padding: "8px 12px", borderRadius: 6, border: "1px solid #d1d5db", fontSize: "0.88rem" }}
+                />
+                <button className="ss-btn ss-btn-primary ss-btn-sm" onClick={handleCreateGallery} disabled={!newGalleryTitle.trim()}>Create Gallery</button>
+              </div>
+
+              {/* Gallery tabs */}
+              {galleries.length > 0 && (
+                <div className="acct-gallery-tabs" style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 12 }}>
+                  {galleries.map(g => (
+                    <div key={g.id} style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                      <button
+                        className={`ss-btn ss-btn-sm ${selectedGalleryId === g.id ? "ss-btn-primary" : "ss-btn-outline"}`}
+                        onClick={() => handleSelectGallery(g.id)}
+                      >
+                        {g.title}
+                      </button>
+                      <button
+                        className="acct-gallery-remove"
+                        onClick={() => handleDeleteGallery(g.id)}
+                        title="Delete gallery"
+                        style={{ background: "none", border: "none", color: "#e74c3c", cursor: "pointer", fontSize: "1rem" }}
+                      >&times;</button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Gallery images */}
+              {selectedGalleryId && (
+                <>
+                  <div className="acct-gallery-grid">
+                    {galleryImages.map((img) => (
+                      <div key={img.id} className="acct-gallery-item">
+                        <img src={img.imageUrl} alt={img.caption || "Gallery photo"} className="acct-gallery-img" />
+                        <button className="acct-gallery-remove" onClick={() => removeGalleryImage(img.id)} title="Remove">&times;</button>
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
-              {galleryMsg && <p className="acct-gallery-msg">{galleryMsg}</p>}
-              <div className="acct-gallery-upload">
-                <label className="bm-btn bm-btn-create bm-btn-sm" style={{ cursor: "pointer" }}>
-                  {uploadingGallery ? "Uploading..." : "Upload Photos"}
-                  <input
-                    ref={galleryInputRef}
-                    type="file"
-                    accept="image/*"
-                    multiple
-                    onChange={handleGalleryUpload}
-                    disabled={uploadingGallery}
-                    style={{ display: "none" }}
-                  />
-                </label>
-              </div>
+                  {galleryMsg && <p className="acct-gallery-msg">{galleryMsg}</p>}
+                  <div className="acct-gallery-upload" style={{ marginTop: 8 }}>
+                    <label className="ss-btn ss-btn-secondary ss-btn-sm" style={{ cursor: "pointer" }}>
+                      {uploadingGallery ? "Uploading..." : "Upload Photos"}
+                      <input
+                        ref={galleryInputRef}
+                        type="file"
+                        accept="image/*"
+                        multiple
+                        onChange={handleGalleryUpload}
+                        disabled={uploadingGallery}
+                        style={{ display: "none" }}
+                      />
+                    </label>
+                    <Link to={`/gallery/${selectedGalleryId}`} className="ss-btn ss-btn-outline ss-btn-sm" style={{ marginLeft: 8 }}>
+                      View Gallery
+                    </Link>
+                  </div>
+                </>
+              )}
+
+              {galleries.length === 0 && <p className="acct-section-desc">Create your first gallery to start sharing photos!</p>}
             </div>
           )}
 
@@ -373,6 +462,7 @@ function Account() {
         </div>
       )}
     </div>
+    </TermsGate>
   );
 }
 
