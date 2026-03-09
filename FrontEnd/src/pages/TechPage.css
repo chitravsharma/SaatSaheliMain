@@ -18,12 +18,12 @@
 .tech-hero h1 {
     font-size: 2rem;
     font-weight: 700;
-    color: #1a1a2e;
+    color: #e0e0e8;
     margin: 0 0 0.5rem;
 }
 
 .tech-hero-desc {
-    color: #666;
+    color: #9ca3af;
     font-size: 1.05rem;
     margin: 0;
 }
@@ -33,7 +33,7 @@
     display: flex;
     gap: 0.5rem;
     margin-bottom: 1.5rem;
-    border-bottom: 2px solid #eee;
+    border-bottom: 2px solid #3a3a5c;
     padding-bottom: 0.5rem;
     flex-wrap: wrap;
 }
@@ -44,22 +44,22 @@
     gap: 0.4rem;
     padding: 0.6rem 1.2rem;
     border: none;
-    background: transparent;
+    background: #2a2a4a;
     font-size: 0.95rem;
     cursor: pointer;
     border-radius: 6px 6px 0 0;
-    color: #666;
+    color: #9ca3af;
     transition: all 0.2s;
 }
 
 .tech-tab.active {
-    background: #0f3460;
+    background: #6366f1;
     color: #fff;
 }
 
 .tech-tab:hover:not(.active) {
-    background: #eef2ff;
-    color: #0f3460;
+    background: #3a3a5c;
+    color: #c4b5fd;
 }
 
 .tech-tab-icon {
@@ -77,12 +77,12 @@
 
 .tech-content-header h2 {
     font-size: 1.4rem;
-    color: #1a1a2e;
+    color: #e0e0e8;
     margin: 0 0 0.5rem;
 }
 
 .tech-content-desc {
-    color: #888;
+    color: #9ca3af;
     font-size: 0.95rem;
     margin: 0;
 }
@@ -90,10 +90,10 @@
 .tech-placeholder {
     text-align: center;
     padding: 3rem 1rem;
-    color: #999;
-    background: #f9fafb;
+    color: #9ca3af;
+    background: #2a2a4a;
     border-radius: 12px;
-    border: 2px dashed #e5e7eb;
+    border: 2px dashed #3a3a5c;
 }
 
 .tech-placeholder p {
@@ -108,7 +108,7 @@
 }
 
 .tech-footer-link a {
-    color: #0f3460;
+    color: #c4b5fd;
     font-weight: 600;
     text-decoration: underline;
 }

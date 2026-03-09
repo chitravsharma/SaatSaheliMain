@@ -1,11 +1,11 @@
-/* ── Admin Manual — Navy & Gold Book-like Theme ── */
+/* ── Admin Manual — Dark Navy & Gold Book-like Theme ── */
 
 .admin-manual-page {
   max-width: 780px;
   margin: 40px auto 80px;
   padding: 0 28px;
   font-family: 'Georgia', 'Times New Roman', 'Garamond', serif;
-  color: #1a1a2e;
+  color: #e0e0e8;
 }
 
 /* Back Button */
@@ -14,8 +14,8 @@
   align-items: center;
   gap: 6px;
   background: none;
-  border: 2px solid #0f3460;
-  color: #0f3460;
+  border: 2px solid #6366f1;
+  color: #c4b5fd;
   font-family: inherit;
   font-size: 0.95rem;
   font-weight: 600;
@@ -27,7 +27,7 @@
 }
 
 .admin-manual-back:hover {
-  background: #0f3460;
+  background: #6366f1;
   color: #fff;
 }
 
@@ -40,14 +40,14 @@
 .admin-manual-hero h1 {
   font-size: 2.6rem;
   font-weight: 700;
-  color: #0f3460;
+  color: #c4b5fd;
   margin-bottom: 8px;
   letter-spacing: 0.5px;
 }
 
 .admin-manual-subtitle {
   font-size: 1.1rem;
-  color: #555;
+  color: #9ca3af;
   font-style: italic;
   margin: 0 0 12px;
 }
@@ -55,7 +55,7 @@
 .admin-manual-divider {
   width: 80px;
   height: 4px;
-  background: linear-gradient(90deg, #0f3460, #d4a017);
+  background: linear-gradient(90deg, #6366f1, #d4a017);
   border: none;
   border-radius: 2px;
   margin: 16px auto 0;
@@ -63,18 +63,18 @@
 
 /* Table of Contents */
 .admin-manual-toc {
-  background: linear-gradient(145deg, #fdf8ed, #fef9f0);
+  background: linear-gradient(145deg, #2a2a4a, #2e2e50);
   border: 2px solid #d4a017;
   border-radius: 14px;
   padding: 28px 36px;
   margin-bottom: 36px;
-  box-shadow: 0 4px 20px rgba(212, 160, 23, 0.1);
+  box-shadow: 0 4px 20px rgba(99, 102, 241, 0.1);
 }
 
 .admin-manual-toc h2 {
   font-size: 1.3rem;
   font-weight: 700;
-  color: #0f3460;
+  color: #c4b5fd;
   margin: 0 0 16px;
   text-align: center;
   text-transform: uppercase;
@@ -103,9 +103,9 @@
 }
 
 .admin-manual-toc a {
-  color: #0f3460;
+  color: #c4b5fd;
   text-decoration: none;
-  border-bottom: 1px dotted #0f3460;
+  border-bottom: 1px dotted #c4b5fd;
   transition: color 0.2s, border-color 0.2s;
 }
 
@@ -116,19 +116,19 @@
 
 /* Sections */
 .admin-manual-section {
-  background: linear-gradient(145deg, #ffffff, #fafbff);
-  border: 1px solid #e0e4ef;
-  border-left: 5px solid #0f3460;
+  background: linear-gradient(145deg, #222240, #262648);
+  border: 1px solid #3a3a5c;
+  border-left: 5px solid #6366f1;
   border-radius: 12px;
   padding: 30px 34px;
   margin-bottom: 28px;
-  box-shadow: 0 3px 18px rgba(15, 52, 96, 0.06);
+  box-shadow: 0 3px 18px rgba(99, 102, 241, 0.06);
 }
 
 .admin-manual-section h2 {
   font-size: 1.4rem;
   font-weight: 700;
-  color: #0f3460;
+  color: #c4b5fd;
   margin: 0 0 16px;
   padding-bottom: 8px;
   border-bottom: 2px solid #d4a017;
@@ -144,7 +144,7 @@
 .admin-manual-section p {
   font-size: 1.02rem;
   line-height: 1.8;
-  color: #2d2d44;
+  color: #d1d5db;
   margin: 0 0 12px;
 }
 
@@ -156,13 +156,13 @@
 .admin-manual-section li {
   font-size: 1rem;
   line-height: 1.8;
-  color: #2d2d44;
+  color: #d1d5db;
   margin-bottom: 8px;
 }
 
 .admin-manual-section code {
-  background: #f0ece3;
-  color: #0f3460;
+  background: #2a2a4a;
+  color: #c4b5fd;
   padding: 2px 7px;
   border-radius: 4px;
   font-size: 0.92em;
@@ -171,18 +171,18 @@
 
 /* Note/Callout */
 .admin-manual-note {
-  background: linear-gradient(135deg, #fdf8ed, #fef4dc);
+  background: linear-gradient(135deg, #2a2a4a, #332e40);
   border: 1px solid #d4a017;
   border-radius: 8px;
   padding: 16px 20px;
   margin-top: 16px;
   font-size: 0.95rem;
   line-height: 1.7;
-  color: #3d3520;
+  color: #d1d5db;
 }
 
 .admin-manual-note strong {
-  color: #0f3460;
+  color: #c4b5fd;
 }
 
 /* Chat Room Grid */
@@ -194,7 +194,7 @@
 }
 
 .admin-manual-chat-room {
-  background: #0f3460;
+  background: #6366f1;
   color: #d4a017;
   text-align: center;
   padding: 14px 10px;
@@ -202,7 +202,7 @@
   font-weight: 700;
   font-size: 1rem;
   letter-spacing: 0.5px;
-  box-shadow: 0 2px 8px rgba(15, 52, 96, 0.2);
+  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.2);
 }
 
 /* Footer */
@@ -210,7 +210,7 @@
   text-align: center;
   margin-top: 36px;
   padding-top: 20px;
-  border-top: 1px solid #e0e4ef;
+  border-top: 1px solid #3a3a5c;
   font-size: 0.88rem;
   color: #9ca3af;
   font-style: italic;

@@ -48,7 +48,7 @@
 
 .card-box {
   padding: 0;
-  background-color: #ffffff;
+  background-color: #222240;
   border: 1px solid #3a3a5c;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
   border-radius: 4px;
@@ -56,9 +56,9 @@
 
 /* Book page specific styling for clean print-like look */
 .flipbook-page {
-  background: #fffef9;
-  border: 1px solid #c8c4b8;
-  box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.02), 0 2px 8px rgba(0, 0, 0, 0.1);
+  background: #222240;
+  border: 1px solid #3a3a5c;
+  box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.05), 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
 .center-container {
@@ -324,7 +324,7 @@
 }
 .flipbook-fullscreen-overlay .flipbook-zoom-btn {
   background: #a78bfa;
-  color: #1a1a2e;
+  color: #e0e0e8;
 }
 .flipbook-fullscreen-btn {
   background: #2d2d4e;
@@ -347,7 +347,7 @@
 }
 .flipbook-fullscreen-overlay .flipbook-fullscreen-btn {
   background: #a78bfa;
-  color: #1a1a2e;
+  color: #e0e0e8;
 }
 
 /* High contrast mode */
@@ -531,7 +531,7 @@
     border: none !important;
     box-shadow: none !important;
     margin: 0.75in;
-    background: #fff !important;
+    background: #222240 !important;
   }
 
   .flipbook-zoom-wrapper {

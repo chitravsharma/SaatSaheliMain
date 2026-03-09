@@ -30,34 +30,34 @@
 }
 
 .contact-intro {
-  background: linear-gradient(145deg, #ffffff, #f8f9ff);
-  border: 1px solid #e8e8f0;
+  background: linear-gradient(145deg, #222240, #2a2a4a);
+  border: 1px solid #3a3a5c;
   border-radius: 16px;
   padding: 28px 32px;
-  box-shadow: 0 4px 24px rgba(99, 102, 241, 0.08);
+  box-shadow: 0 4px 24px rgba(99, 102, 241, 0.12);
   margin-bottom: 28px;
   text-align: center;
 }
 
 .contact-intro h2 {
   font-size: 1.3rem;
-  color: #6d28d9;
+  color: #c4b5fd;
   margin: 0 0 12px;
 }
 
 .contact-intro p {
   font-size: 1.05rem;
   line-height: 1.7;
-  color: #374151;
+  color: #d1d5db;
   margin: 0;
 }
 
 .contact-form-card {
-  background: linear-gradient(145deg, #ffffff, #f8f9ff);
-  border: 1px solid #e8e8f0;
+  background: linear-gradient(145deg, #222240, #2a2a4a);
+  border: 1px solid #3a3a5c;
   border-radius: 16px;
   padding: 32px;
-  box-shadow: 0 4px 24px rgba(99, 102, 241, 0.08);
+  box-shadow: 0 4px 24px rgba(99, 102, 241, 0.12);
 }
 
 .contact-form {
@@ -75,7 +75,7 @@
 .contact-field label {
   font-size: 0.85rem;
   font-weight: 600;
-  color: #4b5563;
+  color: #9ca3af;
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
@@ -83,20 +83,20 @@
 .contact-field input,
 .contact-field textarea {
   padding: 12px 14px;
-  border: 1px solid #d1d5db;
+  border: 1px solid #4a4a6e;
   border-radius: 10px;
   font-size: 1rem;
   font-family: inherit;
-  color: #1f2937;
-  background: #fff;
+  color: #e0e0e8;
+  background: #1a1a2e;
   transition: border-color 0.2s, box-shadow 0.2s;
 }
 
 .contact-field input:focus,
 .contact-field textarea:focus {
   outline: none;
-  border-color: #6366f1;
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+  border-color: #a78bfa;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.25);
 }
 
 .contact-field textarea {
@@ -126,7 +126,7 @@
   text-align: center;
   margin-top: 28px;
   font-size: 0.95rem;
-  color: #6b7280;
+  color: #9ca3af;
 }
 
 .contact-email a {
@@ -142,7 +142,7 @@
 .contact-sent {
   text-align: center;
   padding: 20px;
-  color: #059669;
+  color: #34d399;
   font-size: 1.1rem;
   font-weight: 600;
 }

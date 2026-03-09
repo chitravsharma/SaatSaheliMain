@@ -158,21 +158,21 @@
 }
 
 .auth-error {
-  background-color: #fef2f2;
-  color: #991b1b;
+  background-color: rgba(153, 27, 27, 0.15);
+  color: #fca5a5;
   padding: 12px 16px;
   border-radius: 8px;
-  border-left: 4px solid #991b1b;
+  border-left: 4px solid #f87171;
   font-weight: 500;
   font-size: 0.875rem;
 }
 
 .auth-success {
-  background-color: #d1e7dd;
-  color: #0a3622;
+  background-color: rgba(10, 54, 34, 0.25);
+  color: #86efac;
   padding: 12px 16px;
   border-radius: 8px;
-  border-left: 4px solid #0a3622;
+  border-left: 4px solid #4ade80;
   font-weight: 500;
   font-size: 0.875rem;
 }
@@ -197,7 +197,7 @@
 }
 
 .auth-switch button:hover {
-  color: #0a254a;
+  color: #c4b5fd;
 }
 
 .auth-switch button:focus-visible {
@@ -291,7 +291,7 @@
 }
 
 .auth-terms-label a:hover {
-  color: #0a254a;
+  color: #c4b5fd;
 }
 
 /* Responsive */
