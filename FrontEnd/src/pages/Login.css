@@ -224,6 +224,42 @@
   font-style: italic;
 }
 
+/* Plan selector */
+.auth-plan-select {
+  padding: 12px 14px;
+  border: 2px solid #4a4a6e;
+  border-radius: 8px;
+  font-size: 1rem;
+  color: #e0e0e8;
+  background-color: #1a1a2e;
+  min-height: 44px;
+  box-sizing: border-box;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+
+.auth-plan-select:focus {
+  outline: none;
+  border-color: #6366f1;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+}
+
+.auth-plan-select option {
+  background-color: #1a1a2e;
+  color: #e0e0e8;
+}
+
+.auth-plan-link {
+  font-size: 0.8rem;
+  color: #a78bfa;
+  text-decoration: underline;
+  margin-top: 4px;
+}
+
+.auth-plan-link:hover {
+  color: #c4b5fd;
+}
+
 /* Terms checkbox */
 .auth-terms {
   margin-top: 4px;

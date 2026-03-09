@@ -34,6 +34,7 @@ export default function Login() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState("Free");
 
   const saveUserAndRedirect = (data) => {
     const userData = {
@@ -119,6 +120,7 @@ export default function Login() {
         password: password,
         phoneNumber: phoneNumber.trim(),
         provider: "email",
+        plan: selectedPlan,
       });
       saveUserAndRedirect(res.data);
     } catch (err) {
@@ -309,6 +311,22 @@ export default function Login() {
                     onChange={(e) => setPhoneNumber(e.target.value)}
                     autoComplete="tel"
                   />
+                </div>
+
+                <div className="auth-field">
+                  <label htmlFor="signup-plan">Registration Plan</label>
+                  <select
+                    id="signup-plan"
+                    value={selectedPlan}
+                    onChange={(e) => setSelectedPlan(e.target.value)}
+                    className="auth-plan-select"
+                  >
+                    <option value="Free">Free (Starter)</option>
+                    <option value="Premium">Premium — $5-$9/mo</option>
+                    <option value="Gold">Gold Member — $15-$20/mo</option>
+                    <option value="Creator">Creator / Pro — $29-$49/mo</option>
+                  </select>
+                  <a href="/pricing" target="_blank" rel="noopener noreferrer" className="auth-plan-link">View plan details</a>
                 </div>
 
                 <div className="auth-field">

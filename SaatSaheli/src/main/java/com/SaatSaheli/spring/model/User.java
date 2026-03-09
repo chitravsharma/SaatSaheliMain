@@ -50,6 +50,9 @@ public class User {
     @Column(columnDefinition = "TEXT")
     private String fields; // comma-separated: "Art,Music,Writing,Tech,Creativity,Community"
 
+    @Column(name = "plan")
+    private String plan; // "Free", "Premium", "Gold", "Creator"
+
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     @Column(name = "created_date")
     private LocalDateTime createdDate;
@@ -105,6 +108,9 @@ public class User {
 
     public String getFields() { return fields; }
     public void setFields(String fields) { this.fields = fields; }
+
+    public String getPlan() { return plan; }
+    public void setPlan(String plan) { this.plan = plan; }
 
     public LocalDateTime getCreatedDate() { return createdDate; }
     public void setCreatedDate(LocalDateTime createdDate) { this.createdDate = createdDate; }

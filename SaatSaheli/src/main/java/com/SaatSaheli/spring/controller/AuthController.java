@@ -66,6 +66,8 @@ public class AuthController {
             }
             user.setGender(getStr(body, "gender"));
             user.setRole("USER");
+            String plan = getStr(body, "plan");
+            user.setPlan(plan.isEmpty() ? "Free" : plan);
             user.setCreatedDate(now);
             user.setModifiedDate(now);
             user = userRepo.save(user);
@@ -240,6 +242,7 @@ public class AuthController {
             if (updated.getBio() != null) user.setBio(updated.getBio());
             if (updated.getInterests() != null) user.setInterests(updated.getInterests());
             if (updated.getFields() != null) user.setFields(updated.getFields());
+            if (updated.getPlan() != null) user.setPlan(updated.getPlan());
             user.setModifiedDate(LocalDateTime.now());
             user = userRepo.save(user);
             return ResponseEntity.ok(user);
@@ -258,6 +261,7 @@ public class AuthController {
         response.put("role", user.getRole());
         response.put("status", login.getStatus());
         response.put("provider", login.getProvider());
+        response.put("plan", user.getPlan());
         response.put("lastLoginDate", login.getLastLoginDate());
         return response;
     }
