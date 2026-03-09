@@ -4,15 +4,15 @@
   padding: 24px;
   font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
   line-height: 1.6;
-  color: #1a1a2e;
+  color: #e0e0e8;
 }
 
 .profile-page h1 {
-  color: #1a1a2e;
+  color: #e0e0e8;
   font-size: 1.75rem;
   font-weight: 700;
   margin-bottom: 24px;
-  border-bottom: 3px solid #0f3460;
+  border-bottom: 3px solid #6366f1;
   padding-bottom: 8px;
 }
 
@@ -20,6 +20,10 @@
   display: flex;
   flex-direction: column;
   gap: 20px;
+  background: #222240;
+  border: 2px solid #3a3a5c;
+  border-radius: 16px;
+  padding: 28px;
 }
 
 .profile-field {
@@ -30,31 +34,42 @@
 
 .profile-field label {
   font-weight: 600;
-  color: #0f3460;
+  color: #c4b5fd;
   font-size: 0.9rem;
 }
 
 .profile-field input[type="text"],
 .profile-field textarea {
   padding: 10px 12px;
-  border: 2px solid #e5e7eb;
+  border: 2px solid #4a4a6e;
   border-radius: 8px;
   font-size: 0.95rem;
   font-family: inherit;
-  color: #1a1a2e;
+  color: #e0e0e8;
+  background-color: #1a1a2e;
   transition: border-color 0.2s;
+}
+
+.profile-field input[type="text"]::placeholder,
+.profile-field textarea::placeholder {
+  color: #7c7c9a;
 }
 
 .profile-field input[type="text"]:focus,
 .profile-field textarea:focus {
   outline: none;
-  border-color: #0f3460;
-  box-shadow: 0 0 0 3px rgba(15, 52, 96, 0.1);
+  border-color: #6366f1;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
 }
 
 .profile-field textarea {
   resize: vertical;
   min-height: 100px;
+}
+
+.profile-field input[type="file"] {
+  color: #c4b5fd;
+  font-size: 0.9rem;
 }
 
 .profile-image-section {
@@ -69,11 +84,11 @@
   height: 80px;
   border-radius: 50%;
   object-fit: cover;
-  border: 3px solid #e5e7eb;
+  border: 3px solid #4a4a6e;
 }
 
 .profile-uploading {
-  color: #4b5563;
+  color: #a78bfa;
   font-size: 0.85rem;
   font-style: italic;
 }
@@ -92,22 +107,22 @@
 }
 
 .profile-msg-success {
-  background: #ecfdf5;
-  color: #065f46;
-  border: 1px solid #a7f3d0;
+  background: #1a3a2a;
+  color: #6ee7b7;
+  border: 1px solid #34d399;
 }
 
 .profile-msg-error {
-  background: #fef2f2;
-  color: #b91c1c;
-  border: 1px solid #fecaca;
+  background: #3a1a1a;
+  color: #fca5a5;
+  border: 1px solid #f87171;
 }
 
 .profile-loading,
 .profile-login-prompt {
   text-align: center;
   padding: 60px 20px;
-  color: #4b5563;
+  color: #9ca3af;
   font-size: 1rem;
 }
 
@@ -122,23 +137,25 @@
   align-items: center;
   gap: 6px;
   padding: 6px 14px;
-  border: 2px solid #e5e7eb;
+  border: 2px solid #4a4a6e;
   border-radius: 20px;
   font-size: 0.9rem;
+  color: #c4b5fd;
   cursor: pointer;
   transition: all 0.2s;
   user-select: none;
 }
 .profile-checkbox-label:hover {
-  border-color: #0f3460;
+  border-color: #6366f1;
+  background: rgba(99, 102, 241, 0.1);
 }
 .profile-checkbox-label input[type="checkbox"] {
   display: none;
 }
 .profile-checkbox-label.checked {
-  background: #0f3460;
+  background: linear-gradient(135deg, #6366f1, #a855f7);
   color: #ffffff;
-  border-color: #0f3460;
+  border-color: #6366f1;
 }
 
 @media (max-width: 768px) {
@@ -149,6 +166,10 @@
 
   .profile-page h1 {
     font-size: 1.35rem;
+  }
+
+  .profile-form {
+    padding: 16px;
   }
 
   .profile-actions {
