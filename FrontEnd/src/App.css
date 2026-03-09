@@ -1,12 +1,12 @@
-/* App - Contemporary theme with ADA/WCAG 2.1 AA compliance */
+/* App - Dark artistic creative theme */
 
 .App {
   text-align: left;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  background-color: #f8fafc;
-  color: #1a1a2e;
+  background-color: #1a1a2e;
+  color: #e0e0e8;
 }
 
 .App-logo {
@@ -26,31 +26,31 @@
 }
 
 .App-header {
-  background-color: #0f3460;
+  background-color: #0d0d1a;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   font-size: calc(10px + 2vmin);
-  color: white;
+  color: #e0e0e8;
 }
 
 .page {
-  background-color: #ffffff;
-  border: 2px solid #e5e7eb;
+  background-color: #222240;
+  border: 2px solid #3a3a5c;
   padding: 24px;
   font-size: 1.125rem;
   text-align: center;
   border-radius: 12px;
-  color: #1a1a2e;
+  color: #e0e0e8;
 }
 
 .card-box {
   padding: 0;
   background-color: #ffffff;
-  border: 1px solid #d1d5db;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  border: 1px solid #3a3a5c;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
   border-radius: 4px;
 }
 
@@ -71,11 +71,11 @@
 }
 
 .App-link {
-  color: #0f3460;
+  color: #a78bfa;
   font-weight: 600;
 }
 .App-link:focus-visible {
-  outline: 3px solid #0f3460;
+  outline: 3px solid #a78bfa;
   outline-offset: 2px;
 }
 
@@ -111,16 +111,16 @@
 }
 
 .flipbook-arrow {
-  background: #0f3460;
+  background: linear-gradient(135deg, #6366f1, #a855f7);
   color: #ffffff;
-  border: 2px solid #0f3460;
+  border: 2px solid #6366f1;
   padding: 6px 12px;
   font-size: 1.75rem;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background 0.2s, color 0.2s, transform 0.15s;
+  transition: background 0.2s, color 0.2s, transform 0.15s, box-shadow 0.2s;
   flex-shrink: 0;
   line-height: 1;
   border-radius: 8px;
@@ -128,23 +128,24 @@
   min-height: 36px;
 }
 .flipbook-arrow:hover:not(:disabled) {
-  background: #0a254a;
-  border-color: #0a254a;
+  background: linear-gradient(135deg, #4f46e5, #9333ea);
+  border-color: #4f46e5;
   transform: scale(1.08);
+  box-shadow: 0 4px 16px rgba(99, 102, 241, 0.4);
 }
 .flipbook-arrow:focus-visible {
-  outline: 3px solid #6366f1;
+  outline: 3px solid #a78bfa;
   outline-offset: 2px;
 }
 .flipbook-arrow:disabled {
   opacity: 0.3;
   cursor: not-allowed;
-  background: #9ca3af;
-  border-color: #9ca3af;
+  background: #4b5563;
+  border-color: #4b5563;
 }
 
 .flipbook-page-indicator {
-  color: #4b5563;
+  color: #c4b5fd;
   font-size: 0.875rem;
   font-weight: 600;
   min-width: 60px;
@@ -159,9 +160,9 @@
 }
 
 .flipbook-zoom-btn {
-  background: #0f3460;
-  color: #ffffff;
-  border: 2px solid transparent;
+  background: #2d2d4e;
+  color: #c4b5fd;
+  border: 2px solid #4a4a6e;
   border-radius: 6px;
   width: 36px;
   height: 36px;
@@ -174,10 +175,11 @@
   line-height: 1;
 }
 .flipbook-zoom-btn:hover:not(:disabled) {
-  background: #0a254a;
+  background: #3d3d60;
+  border-color: #6366f1;
 }
 .flipbook-zoom-btn:focus-visible {
-  outline: 3px solid #0f3460;
+  outline: 3px solid #a78bfa;
   outline-offset: 2px;
 }
 .flipbook-zoom-btn:disabled {
@@ -186,7 +188,7 @@
 }
 
 .flipbook-zoom-label {
-  color: #4b5563;
+  color: #c4b5fd;
   font-size: 0.85rem;
   font-weight: 600;
   min-width: 48px;
@@ -197,10 +199,10 @@
   padding: 2px 4px;
 }
 .flipbook-zoom-label:hover {
-  background: #e5e7eb;
+  background: #2d2d4e;
 }
 .flipbook-zoom-label:focus-visible {
-  outline: 3px solid #0f3460;
+  outline: 3px solid #a78bfa;
   outline-offset: 2px;
 }
 
@@ -321,13 +323,13 @@
   color: #e0e7ef;
 }
 .flipbook-fullscreen-overlay .flipbook-zoom-btn {
-  background: #d4a017;
+  background: #a78bfa;
   color: #1a1a2e;
 }
 .flipbook-fullscreen-btn {
-  background: #0f3460;
-  color: #ffffff;
-  border: 2px solid transparent;
+  background: #2d2d4e;
+  color: #c4b5fd;
+  border: 2px solid #4a4a6e;
   border-radius: 6px;
   width: 36px;
   height: 36px;
@@ -340,10 +342,11 @@
   margin-left: 8px;
 }
 .flipbook-fullscreen-btn:hover {
-  background: #0a254a;
+  background: #3d3d60;
+  border-color: #6366f1;
 }
 .flipbook-fullscreen-overlay .flipbook-fullscreen-btn {
-  background: #d4a017;
+  background: #a78bfa;
   color: #1a1a2e;
 }
 
@@ -366,8 +369,8 @@
   content: "";
   width: 48px;
   height: 48px;
-  border: 4px solid #e5e7eb;
-  border-top-color: #0f3460;
+  border: 4px solid #2d2d4e;
+  border-top-color: #a78bfa;
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
@@ -404,35 +407,35 @@
   line-height: 1.2;
 }
 .ss-btn:focus-visible {
-  outline: 3px solid #d4a017;
+  outline: 3px solid #a78bfa;
   outline-offset: 2px;
 }
 
 .ss-btn-primary {
-  background: #0f3460;
+  background: linear-gradient(135deg, #6366f1, #a855f7);
   color: #ffffff;
 }
 .ss-btn-primary:hover {
-  background: #0a254a;
+  background: linear-gradient(135deg, #4f46e5, #9333ea);
   transform: translateY(-1px);
 }
 
 .ss-btn-secondary {
-  background: #d4a017;
-  color: #1a1a2e;
+  background: linear-gradient(135deg, #ec4899, #f43f5e);
+  color: #ffffff;
 }
 .ss-btn-secondary:hover {
-  background: #b8890f;
+  background: linear-gradient(135deg, #db2777, #e11d48);
   transform: translateY(-1px);
 }
 
 .ss-btn-outline {
   background: transparent;
-  color: #0f3460;
-  border-color: #0f3460;
+  color: #c4b5fd;
+  border-color: #6366f1;
 }
 .ss-btn-outline:hover {
-  background: #0f3460;
+  background: #6366f1;
   color: #ffffff;
   transform: translateY(-1px);
 }
@@ -466,7 +469,7 @@
   background: none;
   border: none;
   cursor: pointer;
-  color: #6b7280;
+  color: #9ca3af;
   font-size: 0.88rem;
   padding: 6px 10px;
   border-radius: 6px;
@@ -474,11 +477,11 @@
   font-family: 'Segoe UI', system-ui, sans-serif;
 }
 .ss-btn-icon:hover {
-  background: #f0f4ff;
-  color: #0f3460;
+  background: rgba(99, 102, 241, 0.15);
+  color: #c4b5fd;
 }
 .ss-btn-icon.active {
-  color: #0f3460;
+  color: #a78bfa;
 }
 
 /* Small social icons (for cards) */
@@ -489,7 +492,7 @@
   background: none;
   border: none;
   cursor: pointer;
-  color: #9ca3af;
+  color: #7c7c9a;
   font-size: 0.75rem;
   padding: 3px 6px;
   border-radius: 4px;
@@ -498,10 +501,10 @@
   text-decoration: none;
 }
 .ss-btn-icon-sm:hover {
-  color: #0f3460;
+  color: #c4b5fd;
 }
 .ss-btn-icon-sm.active {
-  color: #0f3460;
+  color: #a78bfa;
 }
 
 /* Reduced motion for buttons */

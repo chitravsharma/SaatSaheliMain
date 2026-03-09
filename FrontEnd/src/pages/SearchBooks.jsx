@@ -22,7 +22,6 @@ function SearchBooks() {
   const handleSearch = async () => {
     setLoading(true);
     setSearched(true);
-    setSelectedBook(null);
     try {
       const params = new URLSearchParams();
       if (searchId.trim()) params.append("id", searchId.trim());

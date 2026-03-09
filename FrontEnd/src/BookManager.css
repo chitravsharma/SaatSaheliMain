@@ -7,20 +7,20 @@
   padding: 24px;
   font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
   line-height: 1.6;
-  color: #1a1a2e;
+  color: #e0e0e8;
 }
 
 .book-manager h1 {
-  color: #1a1a2e;
+  color: #c4b5fd;
   font-size: 1.75rem;
   font-weight: 700;
   margin-bottom: 24px;
-  border-bottom: 3px solid #0f3460;
+  border-bottom: 3px solid #6366f1;
   padding-bottom: 8px;
 }
 
 .book-manager h3 {
-  color: #1a1a2e;
+  color: #e0e0e8;
   font-size: 1.1rem;
   font-weight: 600;
 }

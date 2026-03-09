@@ -3,6 +3,7 @@
   margin: 60px auto;
   padding: 0 24px;
   font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  color: #e0e0e8;
 }
 
 .about-hero {
@@ -30,17 +31,17 @@
 }
 
 .about-card {
-  background: linear-gradient(145deg, #ffffff, #f8f9ff);
-  border: 1px solid #e8e8f0;
+  background: linear-gradient(145deg, #222240, #1a1a2e);
+  border: 1px solid #3a3a5c;
   border-radius: 16px;
   padding: 36px 32px;
-  box-shadow: 0 4px 24px rgba(99, 102, 241, 0.08);
+  box-shadow: 0 4px 24px rgba(99, 102, 241, 0.1);
 }
 
 .about-card p {
   font-size: 1.15rem;
   line-height: 1.8;
-  color: #374151;
+  color: #c0c0d0;
   margin: 0;
 }
 
@@ -53,8 +54,8 @@
 }
 
 .about-tag-link {
-  background: linear-gradient(135deg, #ede9fe, #fce7f3);
-  color: #6d28d9;
+  background: rgba(99, 102, 241, 0.12);
+  color: #c4b5fd;
   font-size: 0.85rem;
   font-weight: 600;
   padding: 6px 16px;
@@ -69,7 +70,9 @@
 
 .about-tag-link:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(109, 40, 217, 0.15);
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+  background: #6366f1;
+  color: #ffffff;
 }
 
 .about-tag-icon {

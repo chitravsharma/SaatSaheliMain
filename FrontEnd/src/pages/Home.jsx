@@ -143,15 +143,6 @@ function Home() {
         <div className="home-actions-bar">
           <Link to="/Login" className="ss-btn ss-btn-primary">Log In</Link>
           <Link to="/Login" className="ss-btn ss-btn-secondary">Create Account</Link>
-          <Link to="/manual" className="ss-btn ss-btn-outline">Help</Link>
-        </div>
-      )}
-      {user && (
-        <div className="home-actions-bar">
-          <Link to="/account" className="ss-btn ss-btn-primary">My Account</Link>
-          <Link to="/books" className="ss-btn ss-btn-secondary">My Books</Link>
-          <Link to="/chat" className="ss-btn ss-btn-secondary">Chat</Link>
-          <Link to="/manual" className="ss-btn ss-btn-outline">Help</Link>
         </div>
       )}
 
