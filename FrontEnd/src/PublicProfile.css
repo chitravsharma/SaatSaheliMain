@@ -1,0 +1,275 @@
+.pub-profile-nav {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.pub-profile-page {
+  max-width: 720px;
+  margin: 24px auto;
+  padding: 24px;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.6;
+  color: #1a1a2e;
+}
+
+.pub-profile-header {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  background: linear-gradient(135deg, #f0f4ff 0%, #fafbff 100%);
+  border: 1px solid #dde4f0;
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+.pub-profile-avatar {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid #0f3460;
+  flex-shrink: 0;
+}
+
+.pub-profile-info h1 {
+  color: #0f3460;
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 0 0 4px 0;
+}
+
+.pub-profile-headline {
+  color: #4b5563;
+  font-style: italic;
+  font-size: 1rem;
+  margin: 0 0 4px 0;
+}
+
+.pub-profile-location {
+  color: #6b7280;
+  font-size: 0.9rem;
+  margin: 0 0 4px 0;
+}
+
+.pub-profile-member {
+  color: #9ca3af;
+  font-size: 0.8rem;
+  margin: 0;
+}
+
+.pub-profile-bio {
+  background: #f8fafc;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 24px;
+  font-size: 0.95rem;
+  color: #374151;
+}
+
+.pub-profile-bio p {
+  margin: 0;
+  white-space: pre-wrap;
+}
+
+/* ── Interests & Fields tags ── */
+.pub-profile-tags-section {
+  margin-bottom: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.pub-profile-tag-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.pub-profile-tag-label {
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #0f3460;
+  margin: 0;
+}
+
+.pub-profile-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.pub-profile-tag {
+  display: inline-block;
+  padding: 5px 14px;
+  background: #0f3460;
+  color: #ffffff;
+  border-radius: 20px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.pub-profile-tag-field {
+  background: transparent;
+  color: #0f3460;
+  border: 2px solid #0f3460;
+}
+
+/* ── Section headings ── */
+.pub-profile-page h2 {
+  color: #0f3460;
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin-bottom: 16px;
+  border-bottom: 2px solid #dde4f0;
+  padding-bottom: 6px;
+}
+
+/* ── Published Books ── */
+.pub-profile-books {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 16px;
+  margin-bottom: 32px;
+}
+
+.pub-profile-book-card {
+  background: #ffffff;
+  border: 1px solid #dde4f0;
+  border-radius: 10px;
+  text-decoration: none;
+  text-align: center;
+  transition: box-shadow 0.2s, transform 0.15s;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.pub-profile-book-card:hover {
+  box-shadow: 0 6px 20px rgba(15, 52, 96, 0.15);
+  transform: translateY(-2px);
+}
+
+.pub-profile-book-card:focus-visible {
+  outline: 2px solid #0f3460;
+  outline-offset: 2px;
+}
+
+.pub-book-cover {
+  background: linear-gradient(135deg, #0f3460 0%, #1a5276 50%, #2471a3 100%);
+  aspect-ratio: 3 / 4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px;
+}
+
+.pub-book-cover-title {
+  color: #ffffff;
+  font-size: 0.85rem;
+  font-weight: 700;
+  line-height: 1.3;
+  word-break: break-word;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+.pub-profile-book-title {
+  padding: 8px 10px 4px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #1a1a2e;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pub-book-category {
+  padding: 0 10px 8px;
+  font-size: 0.7rem;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* ── Gallery ── */
+.pub-profile-gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 12px;
+  margin-bottom: 32px;
+}
+
+.pub-gallery-item {
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid #e5e7eb;
+  aspect-ratio: 1;
+  transition: box-shadow 0.2s;
+}
+
+.pub-gallery-item:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+}
+
+.pub-gallery-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* ── States ── */
+.pub-profile-no-books {
+  color: #4b5563;
+  text-align: center;
+  padding: 40px 20px;
+}
+
+.pub-profile-loading,
+.pub-profile-not-found {
+  text-align: center;
+  padding: 60px 20px;
+  color: #4b5563;
+  font-size: 1rem;
+}
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+  .pub-profile-page {
+    padding: 12px;
+    margin: 8px;
+  }
+
+  .pub-profile-header {
+    flex-direction: column;
+    text-align: center;
+    padding: 16px;
+  }
+
+  .pub-profile-avatar {
+    width: 80px;
+    height: 80px;
+  }
+
+  .pub-profile-books {
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  }
+
+  .pub-profile-gallery {
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  }
+}
+
+/* High contrast mode */
+@media (forced-colors: active) {
+  .pub-profile-book-card {
+    border: 2px solid ButtonText;
+  }
+  .pub-profile-tag {
+    border: 2px solid ButtonText;
+  }
+}
