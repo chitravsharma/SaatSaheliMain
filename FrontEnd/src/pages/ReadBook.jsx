@@ -41,9 +41,15 @@ function ReadBook() {
           user ? axios.get(`${API}/api/social/favorite?targetType=BOOK&targetId=${bookId}&userId=${user.userId}`) : Promise.resolve({ data: { favorited: false } }),
           axios.get(`${API}/api/social/comments?targetType=BOOK&targetId=${bookId}`),
         ]);
-        setLiked(likeRes.data.liked);
+        // For anonymous users, restore like/fav state from localStorage
+        if (!user) {
+          setLiked(localStorage.getItem(`anon_like_BOOK_${bookId}`) === "true");
+          setFavorited(localStorage.getItem(`anon_fav_BOOK_${bookId}`) === "true");
+        } else {
+          setLiked(likeRes.data.liked);
+          setFavorited(favRes.data.favorited);
+        }
         setLikeCount(likeRes.data.count);
-        setFavorited(favRes.data.favorited);
         setComments(commentsRes.data || []);
       } catch { /* ignore */ }
     };
@@ -51,7 +57,14 @@ function ReadBook() {
   }, [bookId, user]);
 
   const handleLike = async () => {
-    if (!user) return navigate("/Login");
+    if (!user) {
+      // Anonymous like — toggle in localStorage
+      const key = `anon_like_BOOK_${bookId}`;
+      const wasLiked = localStorage.getItem(key) === "true";
+      localStorage.setItem(key, wasLiked ? "false" : "true");
+      setLiked(!wasLiked);
+      return;
+    }
     try {
       const res = await axios.post(`${API}/api/social/like`, { userId: user.userId, targetType: "BOOK", targetId: Number(bookId) });
       setLiked(res.data.liked);
@@ -60,7 +73,14 @@ function ReadBook() {
   };
 
   const handleFavorite = async () => {
-    if (!user) return navigate("/Login");
+    if (!user) {
+      // Anonymous favorite — toggle in localStorage
+      const key = `anon_fav_BOOK_${bookId}`;
+      const wasFav = localStorage.getItem(key) === "true";
+      localStorage.setItem(key, wasFav ? "false" : "true");
+      setFavorited(!wasFav);
+      return;
+    }
     try {
       const res = await axios.post(`${API}/api/social/favorite`, { userId: user.userId, targetType: "BOOK", targetId: Number(bookId) });
       setFavorited(res.data.favorited);
@@ -126,18 +146,23 @@ function ReadBook() {
       {showComments && (
         <div className="rb-comments">
           <h3 className="rb-comments-heading">Comments ({comments.length})</h3>
-          <form onSubmit={handleAddComment} className="rb-comment-form">
-            <input
-              ref={commentInputRef}
-              type="text"
-              value={newComment}
-              onChange={(e) => setNewComment(e.target.value)}
-              placeholder={user ? "Write a comment..." : "Log in to comment"}
-              disabled={!user}
-              className="rb-comment-input"
-            />
-            <button type="submit" className="ss-btn ss-btn-primary ss-btn-sm" disabled={!user || !newComment.trim()}>Post</button>
-          </form>
+          {user ? (
+            <form onSubmit={handleAddComment} className="rb-comment-form">
+              <input
+                ref={commentInputRef}
+                type="text"
+                value={newComment}
+                onChange={(e) => setNewComment(e.target.value)}
+                placeholder="Write a comment..."
+                className="rb-comment-input"
+              />
+              <button type="submit" className="ss-btn ss-btn-primary ss-btn-sm" disabled={!newComment.trim()}>Post</button>
+            </form>
+          ) : (
+            <p className="rb-login-prompt">
+              <Link to="/Login">Log in</Link> to post a comment.
+            </p>
+          )}
           <div className="rb-comment-list">
             {comments.map((c) => (
               <div key={c.id} className="rb-comment-item">

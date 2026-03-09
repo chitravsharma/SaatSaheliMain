@@ -178,6 +178,17 @@
   outline-offset: 2px;
 }
 
+/* Register button - highlighted */
+.nav-link-register {
+  background: #d4a017;
+  color: #1a1a2e;
+  border-radius: 8px;
+}
+.nav-link-register:hover {
+  background: #c49415;
+  color: #1a1a2e;
+}
+
 .welcome-msg {
   color: #d4a017;
   font-weight: 600;

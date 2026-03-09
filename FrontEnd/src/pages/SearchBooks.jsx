@@ -1,7 +1,6 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
-import FlipBook from "../FlipBook";
 import { useStrings } from "../LanguageContext";
 import "../BookManager.css";
 
@@ -9,6 +8,7 @@ const API = `${process.env.REACT_APP_API_URL}/api/books`;
 
 function SearchBooks() {
   const strings = useStrings();
+  const navigate = useNavigate();
   const [searchId, setSearchId] = useState("");
   const [searchTitle, setSearchTitle] = useState("");
   const [searchAuthor, setSearchAuthor] = useState("");
@@ -16,7 +16,6 @@ function SearchBooks() {
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
-  const [selectedBook, setSelectedBook] = useState(null);
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [searchCategory, setSearchCategory] = useState("");
 
@@ -49,11 +48,10 @@ function SearchBooks() {
     setSearchCategory("");
     setResults([]);
     setSearched(false);
-    setSelectedBook(null);
   };
 
   const handleSelectBook = (book) => {
-    setSelectedBook(book);
+    navigate(`/read/${book.id}`);
   };
 
   return (
@@ -133,7 +131,7 @@ function SearchBooks() {
         )}
       </div>
 
-      {searched && !selectedBook && (
+      {searched && (
         <div className="bm-search-results-table">
           <h3>{strings.searchBooks.resultsHeading(results.length)}</h3>
           {results.length === 0 ? (
@@ -175,41 +173,6 @@ function SearchBooks() {
               </tbody>
             </table>
           )}
-        </div>
-      )}
-
-      {searched && selectedBook && (
-        <div className="bm-split-view">
-          <aside className="bm-split-sidebar">
-            <h4>{strings.searchBooks.booksHeading(results.length)}</h4>
-            <ul className="bm-split-list">
-              {results.map((book) => (
-                <li
-                  key={book.id}
-                  className={`bm-split-item ${book.id === selectedBook.id ? "bm-split-active" : ""}`}
-                >
-                  <button className="bm-split-link" onClick={() => handleSelectBook(book)}>
-                    <span className="bm-split-num">{book.id}</span>
-                    <span className="bm-split-title">{book.title}</span>
-                  </button>
-                </li>
-              ))}
-            </ul>
-            <button className="bm-btn bm-btn-back bm-btn-sm" onClick={() => setSelectedBook(null)} style={{ marginTop: "10px" }}>
-              {strings.searchBooks.backToTable}
-            </button>
-          </aside>
-          <div className="bm-split-reader">
-            <h2>{selectedBook.title}</h2>
-            {selectedBook.authorName && (
-              <p className="bm-date">
-                <Link to={`/profile/${selectedBook.userId}`} className="bm-author-link">
-                  {strings.searchBooks.byAuthor(selectedBook.authorName)}
-                </Link>
-              </p>
-            )}
-            <FlipBook bookId={selectedBook.id} />
-          </div>
         </div>
       )}
     </div>

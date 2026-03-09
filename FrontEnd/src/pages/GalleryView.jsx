@@ -48,9 +48,14 @@ function GalleryView() {
           user ? axios.get(`${API}/api/social/favorite?targetType=GALLERY&targetId=${galleryId}&userId=${user.userId}`) : Promise.resolve({ data: { favorited: false } }),
           axios.get(`${API}/api/social/comments?targetType=GALLERY&targetId=${galleryId}`),
         ]);
-        setLiked(likeRes.data.liked);
+        if (!user) {
+          setLiked(localStorage.getItem(`anon_like_GALLERY_${galleryId}`) === "true");
+          setFavorited(localStorage.getItem(`anon_fav_GALLERY_${galleryId}`) === "true");
+        } else {
+          setLiked(likeRes.data.liked);
+          setFavorited(favRes.data.favorited);
+        }
         setLikeCount(likeRes.data.count);
-        setFavorited(favRes.data.favorited);
         setComments(commentsRes.data || []);
       } catch { /* ignore */ }
     };
@@ -58,7 +63,13 @@ function GalleryView() {
   }, [galleryId, user]);
 
   const handleLike = async () => {
-    if (!user) return navigate("/Login");
+    if (!user) {
+      const key = `anon_like_GALLERY_${galleryId}`;
+      const wasLiked = localStorage.getItem(key) === "true";
+      localStorage.setItem(key, wasLiked ? "false" : "true");
+      setLiked(!wasLiked);
+      return;
+    }
     try {
       const res = await axios.post(`${API}/api/social/like`, { userId: user.userId, targetType: "GALLERY", targetId: Number(galleryId) });
       setLiked(res.data.liked);
@@ -67,7 +78,13 @@ function GalleryView() {
   };
 
   const handleFavorite = async () => {
-    if (!user) return navigate("/Login");
+    if (!user) {
+      const key = `anon_fav_GALLERY_${galleryId}`;
+      const wasFav = localStorage.getItem(key) === "true";
+      localStorage.setItem(key, wasFav ? "false" : "true");
+      setFavorited(!wasFav);
+      return;
+    }
     try {
       const res = await axios.post(`${API}/api/social/favorite`, { userId: user.userId, targetType: "GALLERY", targetId: Number(galleryId) });
       setFavorited(res.data.favorited);
@@ -160,18 +177,23 @@ function GalleryView() {
       {showComments && (
         <div className="gv-comments">
           <h3 className="gv-comments-heading">Comments ({comments.length})</h3>
-          <form onSubmit={handleAddComment} className="gv-comment-form">
-            <input
-              ref={commentInputRef}
-              type="text"
-              value={newComment}
-              onChange={(e) => setNewComment(e.target.value)}
-              placeholder={user ? "Write a comment..." : "Log in to comment"}
-              disabled={!user}
-              className="gv-comment-input"
-            />
-            <button type="submit" className="ss-btn ss-btn-primary" disabled={!user || !newComment.trim()}>Post</button>
-          </form>
+          {user ? (
+            <form onSubmit={handleAddComment} className="gv-comment-form">
+              <input
+                ref={commentInputRef}
+                type="text"
+                value={newComment}
+                onChange={(e) => setNewComment(e.target.value)}
+                placeholder="Write a comment..."
+                className="gv-comment-input"
+              />
+              <button type="submit" className="ss-btn ss-btn-primary" disabled={!newComment.trim()}>Post</button>
+            </form>
+          ) : (
+            <p className="gv-login-prompt">
+              <Link to="/Login">Log in</Link> to post a comment.
+            </p>
+          )}
           <div className="gv-comment-list">
             {comments.map((c) => (
               <div key={c.id} className="gv-comment-item">

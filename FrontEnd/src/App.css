@@ -111,29 +111,36 @@
 }
 
 .flipbook-arrow {
-  background: none;
-  color: #0f3460;
-  border: none;
-  padding: 4px;
+  background: #0f3460;
+  color: #ffffff;
+  border: 2px solid #0f3460;
+  padding: 6px 12px;
   font-size: 1.75rem;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: color 0.2s;
+  transition: background 0.2s, color 0.2s, transform 0.15s;
   flex-shrink: 0;
   line-height: 1;
+  border-radius: 8px;
+  min-width: 40px;
+  min-height: 36px;
 }
 .flipbook-arrow:hover:not(:disabled) {
-  color: #0a254a;
+  background: #0a254a;
+  border-color: #0a254a;
+  transform: scale(1.08);
 }
 .flipbook-arrow:focus-visible {
-  outline: 3px solid #0f3460;
+  outline: 3px solid #6366f1;
   outline-offset: 2px;
 }
 .flipbook-arrow:disabled {
   opacity: 0.3;
   cursor: not-allowed;
+  background: #9ca3af;
+  border-color: #9ca3af;
 }
 
 .flipbook-page-indicator {
@@ -249,11 +256,14 @@
   }
 
   .flipbook-arrow-row {
-    gap: 8px;
+    gap: 6px;
   }
 
   .flipbook-arrow {
     font-size: 1.4rem;
+    padding: 4px 8px;
+    min-width: 34px;
+    min-height: 30px;
   }
 
   .flipbook-page-indicator {

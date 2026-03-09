@@ -50,7 +50,23 @@ function Home() {
 
   // Fetch user's likes and favorites
   useEffect(() => {
-    if (!user) return;
+    if (!user) {
+      // Load anonymous likes/favorites from localStorage
+      const likeMap = {};
+      const favMap = {};
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        if (k.startsWith("anon_like_") && localStorage.getItem(k) === "true") {
+          likeMap[k.replace("anon_like_", "")] = true;
+        }
+        if (k.startsWith("anon_fav_") && localStorage.getItem(k) === "true") {
+          favMap[k.replace("anon_fav_", "")] = true;
+        }
+      }
+      setUserLikes(likeMap);
+      setUserFavorites(favMap);
+      return;
+    }
     const fetchUserSocial = async () => {
       try {
         const [bookFavs, galleryFavs] = await Promise.all([
@@ -67,7 +83,14 @@ function Home() {
   }, [user]);
 
   const handleLike = async (targetType, targetId) => {
-    if (!user) return navigate("/Login");
+    if (!user) {
+      const anonKey = `anon_like_${targetType}_${targetId}`;
+      const wasLiked = localStorage.getItem(anonKey) === "true";
+      localStorage.setItem(anonKey, wasLiked ? "false" : "true");
+      const key = `${targetType}_${targetId}`;
+      setUserLikes(prev => ({ ...prev, [key]: !wasLiked }));
+      return;
+    }
     try {
       const res = await axios.post(`${API}/api/social/like`, { userId: user.userId, targetType, targetId });
       const key = `${targetType}_${targetId}`;
@@ -81,7 +104,14 @@ function Home() {
   };
 
   const handleFavorite = async (targetType, targetId) => {
-    if (!user) return navigate("/Login");
+    if (!user) {
+      const anonKey = `anon_fav_${targetType}_${targetId}`;
+      const wasFav = localStorage.getItem(anonKey) === "true";
+      localStorage.setItem(anonKey, wasFav ? "false" : "true");
+      const key = `${targetType}_${targetId}`;
+      setUserFavorites(prev => ({ ...prev, [key]: !wasFav }));
+      return;
+    }
     try {
       const res = await axios.post(`${API}/api/social/favorite`, { userId: user.userId, targetType, targetId });
       const key = `${targetType}_${targetId}`;

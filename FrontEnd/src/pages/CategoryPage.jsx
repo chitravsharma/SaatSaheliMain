@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import axios from "axios";
-import FlipBook from "../FlipBook";
 import { useAuth } from "../AuthContext";
 import { useStrings } from "../LanguageContext";
 import "./CategoryPage.css";
@@ -21,6 +20,7 @@ function CategoryPage() {
     const { category } = useParams();
     const { user } = useAuth();
     const strings = useStrings();
+    const navigate = useNavigate();
     const s = strings.categoryPage || {};
     const catKey = category.toLowerCase();
     const title = category.charAt(0).toUpperCase() + category.slice(1);
@@ -28,14 +28,13 @@ function CategoryPage() {
 
     const userId = user?.userId || null;
 
-    const [view, setView] = useState("browse"); // browse | create | mybooks | reading
+    const [view, setView] = useState("browse"); // browse | create | mybooks
     const [publishedBooks, setPublishedBooks] = useState([]);
     const [myBooks, setMyBooks] = useState([]);
     const [loading, setLoading] = useState(true);
     const [newTitle, setNewTitle] = useState("");
     const [creating, setCreating] = useState(false);
     const [message, setMessage] = useState("");
-    const [readingBookId, setReadingBookId] = useState(null);
 
     const showMessage = (msg) => {
         setMessage(msg);
@@ -56,7 +55,6 @@ function CategoryPage() {
         };
         fetchPublished();
         setView("browse");
-        setReadingBookId(null);
     }, [catKey]);
 
     // Fetch my books for this category
@@ -115,32 +113,6 @@ function CategoryPage() {
         }
     };
 
-    // Reading view
-    if (readingBookId) {
-        const currentIndex = publishedBooks.findIndex((b) => b.id === readingBookId);
-        const hasPrev = currentIndex > 0;
-        const hasNext = currentIndex < publishedBooks.length - 1;
-
-        return (
-            <div className="cat-page">
-                <div className="cat-reader-nav">
-                    <button className="cat-btn cat-btn-back" onClick={() => setReadingBookId(null)}>
-                        {s.backToBrowse || "Back"}
-                    </button>
-                    <button className="cat-btn cat-btn-back" disabled={!hasPrev}
-                        onClick={() => hasPrev && setReadingBookId(publishedBooks[currentIndex - 1].id)}>
-                        {strings.readBook.prevBook}
-                    </button>
-                    <button className="cat-btn cat-btn-back" disabled={!hasNext}
-                        onClick={() => hasNext && setReadingBookId(publishedBooks[currentIndex + 1].id)}>
-                        {strings.readBook.nextBook}
-                    </button>
-                </div>
-                <FlipBook bookId={readingBookId} />
-            </div>
-        );
-    }
-
     return (
         <div className="cat-page">
             <div className="cat-hero">
@@ -193,7 +165,7 @@ function CategoryPage() {
                                 <button
                                     key={book.id}
                                     className="cat-book-card"
-                                    onClick={() => setReadingBookId(book.id)}
+                                    onClick={() => navigate(`/read/${book.id}`)}
                                 >
                                     <div className="cat-book-cover">
                                         <span className="cat-book-icon">{icon}</span>

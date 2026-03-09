@@ -1329,3 +1329,16 @@
   text-align: center;
   padding: 12px;
 }
+
+.rb-login-prompt {
+  font-size: 0.9rem;
+  color: #6b7280;
+  text-align: center;
+  padding: 12px;
+}
+
+.rb-login-prompt a {
+  color: #6366f1;
+  font-weight: 600;
+  text-decoration: underline;
+}
