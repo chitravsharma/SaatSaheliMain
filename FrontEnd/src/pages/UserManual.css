@@ -36,7 +36,7 @@
   box-shadow: 0 2px 20px rgba(99, 102, 241, 0.06);
   margin-top: 24px;
   font-family: "Georgia", "Times New Roman", serif;
-  color: #e0e0e8;
+  color: #f0f0f8;
   line-height: 1.75;
 }
 
@@ -50,7 +50,7 @@
 
 .manual-title-block h1 {
   font-size: 2.2rem;
-  color: #c4b5fd;
+  color: #d4c5ff;
   margin: 0 0 8px 0;
   font-weight: 700;
   letter-spacing: 0.5px;
@@ -58,7 +58,7 @@
 
 .manual-title-block .manual-subtitle {
   font-size: 1.05rem;
-  color: #9ca3af;
+  color: #b0b8c4;
   font-style: italic;
   margin: 0;
 }
@@ -74,7 +74,7 @@
 
 .manual-toc h2 {
   font-size: 1.25rem;
-  color: #c4b5fd;
+  color: #d4c5ff;
   margin: 0 0 16px 0;
   padding-bottom: 10px;
   border-bottom: 1px solid #d4a017;
@@ -91,7 +91,7 @@
 }
 
 .manual-toc a {
-  color: #c4b5fd;
+  color: #d4c5ff;
   text-decoration: none;
   transition: color 0.2s;
 }
@@ -109,7 +109,7 @@
 
 .manual-section h2 {
   font-size: 1.55rem;
-  color: #c4b5fd;
+  color: #d4c5ff;
   margin: 0 0 6px 0;
   padding-bottom: 8px;
   border-bottom: 2px solid #d4a017;
@@ -117,7 +117,7 @@
 
 .manual-section h3 {
   font-size: 1.15rem;
-  color: #c4b5fd;
+  color: #d4c5ff;
   margin: 20px 0 8px 0;
 }
 
@@ -138,7 +138,7 @@
 }
 
 .manual-section strong {
-  color: #c4b5fd;
+  color: #d4c5ff;
 }
 
 /* ── Tip / Note callout ── */
@@ -149,7 +149,7 @@
   border-left: 4px solid #d4a017;
   border-radius: 0 4px 4px 0;
   font-size: 0.95rem;
-  color: #d1d5db;
+  color: #e2e6ea;
 }
 
 .manual-tip::before {
@@ -184,7 +184,7 @@
   padding-top: 24px;
   border-top: 2px solid #d4a017;
   font-size: 0.9rem;
-  color: #9ca3af;
+  color: #b0b8c4;
   font-style: italic;
 }
 

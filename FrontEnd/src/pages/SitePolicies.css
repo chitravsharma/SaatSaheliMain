@@ -13,7 +13,7 @@
 .policies-hero h1 {
   font-size: 2.4rem;
   font-weight: 700;
-  color: #c4b5fd;
+  color: #d4c5ff;
   margin-bottom: 8px;
 }
 
@@ -38,7 +38,7 @@
 .policies-section h2 {
   font-size: 1.2rem;
   font-weight: 700;
-  color: #c4b5fd;
+  color: #d4c5ff;
   margin: 0 0 12px;
 }
 
@@ -46,7 +46,7 @@
 .policies-section li {
   font-size: 1rem;
   line-height: 1.7;
-  color: #d1d5db;
+  color: #e2e6ea;
 }
 
 .policies-section ul {
@@ -62,7 +62,7 @@
   text-align: center;
   margin-top: 28px;
   font-size: 0.85rem;
-  color: #9ca3af;
+  color: #b0b8c4;
 }
 
 @media (max-width: 600px) {

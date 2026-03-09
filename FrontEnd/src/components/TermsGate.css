@@ -26,7 +26,7 @@
 .terms-gate-modal h2 {
   font-size: 1.4rem;
   font-weight: 700;
-  color: #c4b5fd;
+  color: #d4c5ff;
   margin: 0;
   padding: 20px 24px 12px;
   border-bottom: 2px solid #3a3a5c;
@@ -39,11 +39,11 @@
   flex: 1;
   font-size: 0.92rem;
   line-height: 1.7;
-  color: #e0e0e8;
+  color: #f0f0f8;
 }
 
 .terms-gate-body h3 {
-  color: #c4b5fd;
+  color: #d4c5ff;
   font-size: 1rem;
   font-weight: 700;
   margin: 16px 0 8px;
@@ -59,7 +59,7 @@
 }
 
 .terms-gate-body a {
-  color: #c4b5fd;
+  color: #d4c5ff;
   font-weight: 600;
 }
 
@@ -70,7 +70,7 @@
   padding: 12px 24px;
   font-size: 0.9rem;
   font-weight: 600;
-  color: #c4b5fd;
+  color: #d4c5ff;
   cursor: pointer;
   border-top: 1px solid #3a3a5c;
 }

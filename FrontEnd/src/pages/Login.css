@@ -7,7 +7,7 @@
   padding: 32px;
   font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
   line-height: 1.6;
-  color: #e0e0e8;
+  color: #f0f0f8;
 }
 
 .auth-card {
@@ -19,7 +19,7 @@
 }
 
 .auth-card h1 {
-  color: #e0e0e8;
+  color: #f0f0f8;
   font-size: 1.5rem;
   font-weight: 700;
   margin: 0 0 8px 0;
@@ -27,7 +27,7 @@
 }
 
 .auth-card h2 {
-  color: #e0e0e8;
+  color: #f0f0f8;
   font-size: 1.25rem;
   font-weight: 700;
   margin: 0 0 24px 0;
@@ -37,7 +37,7 @@
 }
 
 .auth-subtitle {
-  color: #9ca3af;
+  color: #b0b8c4;
   font-size: 0.9rem;
   text-align: center;
   margin: 0 0 24px 0;
@@ -58,7 +58,7 @@
 .auth-field label {
   font-size: 0.875rem;
   font-weight: 600;
-  color: #c4b5fd;
+  color: #d4c5ff;
 }
 
 .auth-field input {
@@ -66,7 +66,7 @@
   border: 2px solid #4a4a6e;
   border-radius: 8px;
   font-size: 1rem;
-  color: #e0e0e8;
+  color: #f0f0f8;
   background-color: #1a1a2e;
   transition: border-color 0.2s;
   min-height: 44px;
@@ -74,7 +74,7 @@
 }
 
 .auth-field input::placeholder {
-  color: #7c7c9a;
+  color: #9090b0;
 }
 
 .auth-field input:focus {
@@ -129,7 +129,7 @@
 
 .auth-btn-secondary {
   background-color: transparent;
-  color: #c4b5fd;
+  color: #d4c5ff;
   border-color: #6366f1;
 }
 
@@ -141,7 +141,7 @@
   display: flex;
   align-items: center;
   margin: 20px 0;
-  color: #7c7c9a;
+  color: #9090b0;
   font-size: 0.85rem;
 }
 
@@ -181,13 +181,13 @@
   text-align: center;
   margin-top: 20px;
   font-size: 0.9rem;
-  color: #9ca3af;
+  color: #b0b8c4;
 }
 
 .auth-switch button {
   background: none;
   border: none;
-  color: #a78bfa;
+  color: #b89fff;
   font-weight: 600;
   cursor: pointer;
   font-size: 0.9rem;
@@ -197,7 +197,7 @@
 }
 
 .auth-switch button:hover {
-  color: #c4b5fd;
+  color: #d4c5ff;
 }
 
 .auth-switch button:focus-visible {
@@ -211,7 +211,7 @@
 }
 
 .auth-welcome p {
-  color: #9ca3af;
+  color: #b0b8c4;
   margin: 4px 0 0 0;
   font-size: 0.9rem;
 }
@@ -230,7 +230,7 @@
   border: 2px solid #4a4a6e;
   border-radius: 8px;
   font-size: 1rem;
-  color: #e0e0e8;
+  color: #f0f0f8;
   background-color: #1a1a2e;
   min-height: 44px;
   box-sizing: border-box;
@@ -246,18 +246,18 @@
 
 .auth-plan-select option {
   background-color: #1a1a2e;
-  color: #e0e0e8;
+  color: #f0f0f8;
 }
 
 .auth-plan-link {
   font-size: 0.8rem;
-  color: #a78bfa;
+  color: #b89fff;
   text-decoration: underline;
   margin-top: 4px;
 }
 
 .auth-plan-link:hover {
-  color: #c4b5fd;
+  color: #d4c5ff;
 }
 
 /* Terms checkbox */
@@ -270,7 +270,7 @@
   align-items: flex-start;
   gap: 8px;
   font-size: 0.85rem;
-  color: #9ca3af;
+  color: #b0b8c4;
   cursor: pointer;
   line-height: 1.4;
 }
@@ -285,13 +285,13 @@
 }
 
 .auth-terms-label a {
-  color: #a78bfa;
+  color: #b89fff;
   font-weight: 600;
   text-decoration: underline;
 }
 
 .auth-terms-label a:hover {
-  color: #c4b5fd;
+  color: #d4c5ff;
 }
 
 /* Responsive */

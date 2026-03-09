@@ -64,7 +64,7 @@
 }
 
 .header-site-name {
-  color: #c4b5fd;
+  color: #d4c5ff;
   font-size: 1.5rem;
   font-weight: 700;
   letter-spacing: 0.03em;
@@ -171,7 +171,7 @@
 }
 .nav-link:hover {
   background-color: rgba(99, 102, 241, 0.15);
-  color: #c4b5fd;
+  color: #d4c5ff;
 }
 .nav-link:focus-visible {
   outline: 3px solid #a78bfa;
@@ -190,7 +190,7 @@
 }
 
 .welcome-msg {
-  color: #a78bfa;
+  color: #b89fff;
   font-weight: 600;
   font-size: 0.875rem;
   padding: 0 12px;
@@ -200,7 +200,7 @@
 /* Language selector */
 .header-lang-select {
   background: rgba(99, 102, 241, 0.15);
-  color: #e0e0e8;
+  color: #f0f0f8;
   border: 2px solid #a78bfa;
   border-radius: 8px;
   padding: 6px 10px;
@@ -217,7 +217,7 @@
 }
 .header-lang-select option {
   background: #0d0d1a;
-  color: #e0e0e8;
+  color: #f0f0f8;
 }
 .header-lang-select:focus-visible {
   outline: 3px solid #a78bfa;
@@ -232,7 +232,7 @@
 }
 .header-user-btn {
   background: rgba(99, 102, 241, 0.15);
-  color: #e0e0e8;
+  color: #f0f0f8;
   border: 2px solid #a78bfa;
   border-radius: 8px;
   padding: 8px 16px;
@@ -272,7 +272,7 @@
 .header-user-item {
   display: block;
   padding: 12px 18px;
-  color: #e0e0e8;
+  color: #f0f0f8;
   text-decoration: none;
   font-size: 0.9rem;
   font-weight: 500;
@@ -280,7 +280,7 @@
 }
 .header-user-item:hover {
   background-color: rgba(99, 102, 241, 0.15);
-  color: #c4b5fd;
+  color: #d4c5ff;
 }
 .header-user-item:focus-visible {
   outline: 3px solid #a78bfa;

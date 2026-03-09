@@ -4,11 +4,11 @@
   padding: 24px;
   font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
   line-height: 1.6;
-  color: #e0e0e8;
+  color: #f0f0f8;
 }
 
 .profile-page h1 {
-  color: #e0e0e8;
+  color: #f0f0f8;
   font-size: 1.75rem;
   font-weight: 700;
   margin-bottom: 24px;
@@ -34,7 +34,7 @@
 
 .profile-field label {
   font-weight: 600;
-  color: #c4b5fd;
+  color: #d4c5ff;
   font-size: 0.9rem;
 }
 
@@ -45,7 +45,7 @@
   border-radius: 8px;
   font-size: 0.95rem;
   font-family: inherit;
-  color: #e0e0e8;
+  color: #f0f0f8;
   background-color: #1a1a2e;
   transition: border-color 0.2s;
 }
@@ -68,7 +68,7 @@
 }
 
 .profile-field input[type="file"] {
-  color: #c4b5fd;
+  color: #d4c5ff;
   font-size: 0.9rem;
 }
 
@@ -122,7 +122,7 @@
 .profile-login-prompt {
   text-align: center;
   padding: 60px 20px;
-  color: #9ca3af;
+  color: #b0b8c4;
   font-size: 1rem;
 }
 
@@ -140,7 +140,7 @@
   border: 2px solid #4a4a6e;
   border-radius: 20px;
   font-size: 0.9rem;
-  color: #c4b5fd;
+  color: #d4c5ff;
   cursor: pointer;
   transition: all 0.2s;
   user-select: none;

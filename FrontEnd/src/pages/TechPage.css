@@ -18,12 +18,12 @@
 .tech-hero h1 {
     font-size: 2rem;
     font-weight: 700;
-    color: #e0e0e8;
+    color: #f0f0f8;
     margin: 0 0 0.5rem;
 }
 
 .tech-hero-desc {
-    color: #9ca3af;
+    color: #b0b8c4;
     font-size: 1.05rem;
     margin: 0;
 }
@@ -48,7 +48,7 @@
     font-size: 0.95rem;
     cursor: pointer;
     border-radius: 6px 6px 0 0;
-    color: #9ca3af;
+    color: #b0b8c4;
     transition: all 0.2s;
 }
 
@@ -59,7 +59,7 @@
 
 .tech-tab:hover:not(.active) {
     background: #3a3a5c;
-    color: #c4b5fd;
+    color: #d4c5ff;
 }
 
 .tech-tab-icon {
@@ -77,12 +77,12 @@
 
 .tech-content-header h2 {
     font-size: 1.4rem;
-    color: #e0e0e8;
+    color: #f0f0f8;
     margin: 0 0 0.5rem;
 }
 
 .tech-content-desc {
-    color: #9ca3af;
+    color: #b0b8c4;
     font-size: 0.95rem;
     margin: 0;
 }
@@ -90,7 +90,7 @@
 .tech-placeholder {
     text-align: center;
     padding: 3rem 1rem;
-    color: #9ca3af;
+    color: #b0b8c4;
     background: #2a2a4a;
     border-radius: 12px;
     border: 2px dashed #3a3a5c;
@@ -108,7 +108,7 @@
 }
 
 .tech-footer-link a {
-    color: #c4b5fd;
+    color: #d4c5ff;
     font-weight: 600;
     text-decoration: underline;
 }

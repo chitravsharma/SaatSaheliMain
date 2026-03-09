@@ -41,14 +41,14 @@
 
 .contact-intro h2 {
   font-size: 1.3rem;
-  color: #c4b5fd;
+  color: #d4c5ff;
   margin: 0 0 12px;
 }
 
 .contact-intro p {
   font-size: 1.05rem;
   line-height: 1.7;
-  color: #d1d5db;
+  color: #e2e6ea;
   margin: 0;
 }
 
@@ -75,7 +75,7 @@
 .contact-field label {
   font-size: 0.85rem;
   font-weight: 600;
-  color: #9ca3af;
+  color: #b0b8c4;
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
@@ -87,7 +87,7 @@
   border-radius: 10px;
   font-size: 1rem;
   font-family: inherit;
-  color: #e0e0e8;
+  color: #f0f0f8;
   background: #1a1a2e;
   transition: border-color 0.2s, box-shadow 0.2s;
 }
@@ -126,7 +126,7 @@
   text-align: center;
   margin-top: 28px;
   font-size: 0.95rem;
-  color: #9ca3af;
+  color: #b0b8c4;
 }
 
 .contact-email a {

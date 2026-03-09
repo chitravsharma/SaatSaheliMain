@@ -7,11 +7,11 @@
   padding: 24px;
   font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
   line-height: 1.6;
-  color: #e0e0e8;
+  color: #f0f0f8;
 }
 
 .book-manager h1 {
-  color: #c4b5fd;
+  color: #d4c5ff;
   font-size: 1.75rem;
   font-weight: 700;
   margin-bottom: 24px;
@@ -20,7 +20,7 @@
 }
 
 .book-manager h3 {
-  color: #e0e0e8;
+  color: #f0f0f8;
   font-size: 1.1rem;
   font-weight: 600;
 }
@@ -170,12 +170,12 @@
   width: 100%;
   max-width: 420px;
   box-sizing: border-box;
-  color: #e0e0e8;
+  color: #f0f0f8;
   background-color: #1a1a2e;
   transition: border-color 0.2s;
 }
 .bm-input::placeholder {
-  color: #7c7c9a;
+  color: #9090b0;
 }
 .bm-input:focus {
   outline: none;
@@ -213,7 +213,7 @@
 }
 .bm-book-info h3 {
   margin: 0 0 6px 0;
-  color: #e0e0e8;
+  color: #f0f0f8;
 }
 .bm-book-actions {
   display: flex;
@@ -244,7 +244,7 @@
 }
 
 .bm-date {
-  color: #9ca3af;
+  color: #b0b8c4;
   font-size: 0.8rem;
   margin: 4px 0 0 0;
 }
@@ -284,7 +284,7 @@
 }
 .bm-add-page h3 {
   margin-top: 0;
-  color: #c4b5fd;
+  color: #d4c5ff;
 }
 .bm-page-form {
   display: flex;
@@ -319,17 +319,17 @@
 }
 .bm-page-num {
   font-weight: 700;
-  color: #c4b5fd;
+  color: #d4c5ff;
   min-width: 36px;
   font-size: 1rem;
 }
 .bm-page-content {
   flex: 1;
-  color: #e0e0e8;
+  color: #f0f0f8;
   font-size: 0.95rem;
 }
 .bm-page-format {
-  color: #9ca3af;
+  color: #b0b8c4;
   font-size: 0.8rem;
   font-style: italic;
   background: #2a2a4a;
@@ -397,7 +397,7 @@
 .bm-upload-label {
   display: block;
   font-weight: 600;
-  color: #c4b5fd;
+  color: #d4c5ff;
   margin-bottom: 8px;
   font-size: 0.85rem;
 }
@@ -461,7 +461,7 @@
 .bm-format-label {
   display: block;
   font-weight: 600;
-  color: #c4b5fd;
+  color: #d4c5ff;
   margin-bottom: 8px;
   font-size: 0.85rem;
 }
@@ -476,7 +476,7 @@
   border: 2px solid #4a4a6e;
   border-radius: 6px;
   font-size: 0.875rem;
-  color: #e0e0e8;
+  color: #f0f0f8;
   background: #1a1a2e;
   min-height: 38px;
   cursor: pointer;
@@ -507,7 +507,7 @@
 }
 .bm-color-label {
   font-size: 0.8rem;
-  color: #9ca3af;
+  color: #b0b8c4;
   font-family: monospace;
 }
 .bm-format-preview {
@@ -525,7 +525,7 @@
 }
 .ple-label-bar {
   font-size: 0.75rem;
-  color: #9ca3af;
+  color: #b0b8c4;
   margin-bottom: 6px;
   font-style: italic;
 }
@@ -619,7 +619,7 @@
 .bm-results-table td {
   padding: 6px 12px;
   border-bottom: 1px solid #3a3a5c;
-  color: #e0e0e8;
+  color: #f0f0f8;
   font-size: 0.8rem;
 }
 .bm-results-table tr:hover td {
@@ -628,7 +628,7 @@
 .bm-table-link {
   background: none;
   border: none;
-  color: #c4b5fd;
+  color: #d4c5ff;
   font-weight: 600;
   font-size: 0.8rem;
   cursor: pointer;
@@ -673,7 +673,7 @@
 .bm-split-sidebar h4 {
   margin: 0 0 8px 0;
   font-size: 0.8rem;
-  color: #9ca3af;
+  color: #b0b8c4;
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
@@ -697,7 +697,7 @@
   cursor: pointer;
   text-align: left;
   font-size: 0.75rem;
-  color: #e0e0e8;
+  color: #f0f0f8;
   transition: background 0.15s;
 }
 .bm-split-link:hover {
@@ -725,7 +725,7 @@
 .bm-split-reader h2 {
   margin: 0 0 4px 0;
   font-size: 1.2rem;
-  color: #e0e0e8;
+  color: #f0f0f8;
 }
 
 /* Reader navigation bar above the book */
@@ -811,7 +811,7 @@
 
 .bm-btn-book-item {
   background: #2a2a4a;
-  color: #e0e0e8;
+  color: #f0f0f8;
   border: 1px solid #3a3a5c;
   border-radius: 6px;
   padding: 8px 10px;
@@ -852,7 +852,7 @@
 }
 
 .bm-published-heading {
-  color: #e0e0e8;
+  color: #f0f0f8;
   font-size: 1.25rem;
   font-weight: 600;
   margin-top: 32px;
@@ -868,17 +868,17 @@
 
 /* Public books browser */
 .bm-public-hint {
-  color: #9ca3af;
+  color: #b0b8c4;
   font-size: 0.875rem;
   margin-bottom: 20px;
 }
 .bm-public-hint a {
-  color: #c4b5fd;
+  color: #d4c5ff;
   font-weight: 600;
   text-decoration: underline;
 }
 .bm-public-hint a:hover {
-  color: #e0e0e8;
+  color: #f0f0f8;
 }
 
 .bm-public-grid {
@@ -932,19 +932,19 @@
 }
 
 .bm-public-author {
-  color: #9ca3af;
+  color: #b0b8c4;
   font-size: 0.6rem;
   padding: 0 4px;
 }
 
 .bm-author-link {
-  color: #c4b5fd;
+  color: #d4c5ff;
   text-decoration: none;
   font-weight: 600;
 }
 .bm-author-link:hover {
   text-decoration: underline;
-  color: #e0e0e8;
+  color: #f0f0f8;
 }
 .bm-author-link:focus-visible {
   outline: 2px solid #a78bfa;
@@ -952,7 +952,7 @@
 }
 
 .bm-public-read {
-  color: #c4b5fd;
+  color: #d4c5ff;
   font-size: 0.65rem;
   font-weight: 700;
   padding: 4px 4px 6px;
@@ -983,14 +983,14 @@
 }
 .bm-doc-filename {
   font-size: 0.875rem;
-  color: #e0e0e8;
+  color: #f0f0f8;
   font-weight: 500;
   word-break: break-all;
 }
 
 /* Hint text for document upload */
 .bm-doc-hint {
-  color: #9ca3af;
+  color: #b0b8c4;
   font-size: 0.8rem;
   max-width: 420px;
   text-align: center;
@@ -1190,7 +1190,7 @@
   background: #2a2a4a;
   border: 1px solid #3a3a5c;
   cursor: pointer;
-  color: #c4b5fd;
+  color: #d4c5ff;
   padding: 6px 12px;
   border-radius: 6px;
   display: flex;
@@ -1218,13 +1218,13 @@
 .rb-book-title {
   font-size: 1.4rem;
   font-weight: 700;
-  color: #c4b5fd;
+  color: #d4c5ff;
   margin: 0 0 4px 0;
   font-family: 'Georgia', 'Times New Roman', serif;
 }
 
 .rb-book-author {
-  color: #9ca3af;
+  color: #b0b8c4;
   font-size: 0.9rem;
   text-decoration: none;
 }
@@ -1251,7 +1251,7 @@
 .rb-comments-heading {
   font-size: 1.1rem;
   font-weight: 600;
-  color: #c4b5fd;
+  color: #d4c5ff;
   margin: 0 0 12px 0;
 }
 
@@ -1266,7 +1266,7 @@
   padding: 10px 14px;
   border: 1px solid #4a4a6e;
   background-color: #1a1a2e;
-  color: #e0e0e8;
+  color: #f0f0f8;
   border-radius: 8px;
   font-size: 0.9rem;
   font-family: inherit;
@@ -1300,12 +1300,12 @@
 .rb-comment-author {
   font-weight: 600;
   font-size: 0.85rem;
-  color: #c4b5fd;
+  color: #d4c5ff;
 }
 
 .rb-comment-date {
   font-size: 0.75rem;
-  color: #9ca3af;
+  color: #b0b8c4;
 }
 
 .rb-comment-delete {
@@ -1321,12 +1321,12 @@
 .rb-comment-text {
   margin: 0;
   font-size: 0.88rem;
-  color: #d1d5db;
+  color: #e2e6ea;
   line-height: 1.4;
 }
 
 .rb-no-comments {
-  color: #9ca3af;
+  color: #b0b8c4;
   font-size: 0.85rem;
   text-align: center;
   padding: 12px;
@@ -1334,7 +1334,7 @@
 
 .rb-login-prompt {
   font-size: 0.9rem;
-  color: #9ca3af;
+  color: #b0b8c4;
   text-align: center;
   padding: 12px;
 }

@@ -8,7 +8,7 @@
     background: none;
     border: none;
     font-size: 1.4rem;
-    color: #c4b5fd;
+    color: #d4c5ff;
     cursor: pointer;
     padding: 4px 8px;
     border-radius: 6px;
@@ -50,7 +50,7 @@
     margin: 0;
     font-size: 1.1rem;
     border-bottom: 1px solid #3a3a5c;
-    color: #e0e0e8;
+    color: #f0f0f8;
 }
 
 .chat-room-list {
@@ -70,7 +70,7 @@
     cursor: pointer;
     transition: background 0.15s;
     border-bottom: 1px solid #3a3a5c;
-    color: #e0e0e8;
+    color: #f0f0f8;
 }
 
 .chat-room-item:hover {
@@ -104,7 +104,7 @@
 
 .room-desc {
     font-size: 0.75rem;
-    color: #9ca3af;
+    color: #b0b8c4;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -133,7 +133,7 @@
 .chat-header h3 {
     margin: 0;
     font-size: 1.1rem;
-    color: #e0e0e8;
+    color: #f0f0f8;
 }
 
 .chat-messages {
@@ -151,7 +151,7 @@
     align-items: center;
     justify-content: center;
     flex: 1;
-    color: #9ca3af;
+    color: #b0b8c4;
     font-size: 1rem;
 }
 
@@ -174,7 +174,7 @@
 .chat-msg-sender {
     font-size: 0.75rem;
     font-weight: 600;
-    color: #c4b5fd;
+    color: #d4c5ff;
     margin-bottom: 0.15rem;
     padding-left: 0.5rem;
 }
@@ -193,7 +193,7 @@
 
 .chat-msg-other .chat-msg-bubble {
     background: #2a2a4a;
-    color: #e0e0e8;
+    color: #f0f0f8;
     border-bottom-left-radius: 4px;
 }
 
@@ -227,7 +227,7 @@
 }
 
 .chat-msg-own .chat-msg-delete { color: rgba(255, 255, 255, 0.7); }
-.chat-msg-other .chat-msg-delete { color: #9ca3af; }
+.chat-msg-other .chat-msg-delete { color: #b0b8c4; }
 
 .chat-msg:hover .chat-msg-delete {
     opacity: 1;
@@ -250,11 +250,11 @@
     outline: none;
     transition: border-color 0.2s;
     background: #1a1a2e;
-    color: #e0e0e8;
+    color: #f0f0f8;
 }
 
 .chat-input-bar input:focus {
-    border-color: #a78bfa;
+    border-color: #b89fff;
 }
 
 .chat-input-bar button {

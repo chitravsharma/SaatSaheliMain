@@ -6,7 +6,7 @@
   padding: 0 24px;
   font-family: 'Georgia', 'Times New Roman', serif;
   line-height: 1.6;
-  color: #e0e0e8;
+  color: #f0f0f8;
 }
 
 /* ── Action buttons bar ── */
@@ -32,7 +32,7 @@
   align-items: center;
   gap: 6px;
   background: rgba(99, 102, 241, 0.12);
-  color: #c4b5fd;
+  color: #d4c5ff;
   font-size: 0.88rem;
   font-weight: 600;
   padding: 8px 18px;
@@ -64,7 +64,7 @@
 .home-section-heading {
   font-size: 1.5rem;
   font-weight: 700;
-  color: #c4b5fd;
+  color: #d4c5ff;
   margin: 0 0 4px 0;
   font-family: 'Georgia', 'Times New Roman', serif;
 }
@@ -78,7 +78,7 @@
 
 .home-empty {
   text-align: center;
-  color: #7c7c9a;
+  color: #9090b0;
   padding: 40px 20px;
   font-size: 1rem;
 }
@@ -167,7 +167,7 @@
 .home-gallery-title {
   font-size: 0.85rem;
   font-weight: 600;
-  color: #e0e0e8;
+  color: #f0f0f8;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -176,7 +176,7 @@
 
 .home-gallery-author {
   font-size: 0.72rem;
-  color: #7c7c9a;
+  color: #9090b0;
   font-style: italic;
 }
 
@@ -190,7 +190,7 @@
 .home-category-title {
   font-size: 1.15rem;
   font-weight: 700;
-  color: #e0e0e8;
+  color: #f0f0f8;
   margin: 0 0 12px 0;
   display: flex;
   align-items: center;
@@ -273,7 +273,7 @@
 .home-book-title {
   font-size: 0.82rem;
   font-weight: 600;
-  color: #e0e0e8;
+  color: #f0f0f8;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -282,7 +282,7 @@
 
 .home-book-author {
   font-size: 0.72rem;
-  color: #7c7c9a;
+  color: #9090b0;
   font-style: italic;
   overflow: hidden;
   text-overflow: ellipsis;

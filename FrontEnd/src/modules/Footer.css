@@ -2,7 +2,7 @@
 
 .site-footer {
   background-color: #0d0d1a;
-  color: #c4b5fd;
+  color: #d4c5ff;
   padding: 20px 24px;
   text-align: center;
   border-top: 3px solid #6366f1;
@@ -29,7 +29,7 @@
   transition: color 0.2s;
 }
 .footer-link:hover {
-  color: #a78bfa;
+  color: #b89fff;
   text-decoration: underline;
 }
 .footer-link:focus-visible {

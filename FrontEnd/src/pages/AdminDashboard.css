@@ -7,7 +7,7 @@
 .admin-dashboard h1 {
     font-size: 1.8rem;
     margin-bottom: 1rem;
-    color: #e0e0e8;
+    color: #f0f0f8;
 }
 
 .admin-message {
@@ -35,7 +35,7 @@
     font-size: 1rem;
     cursor: pointer;
     border-radius: 6px 6px 0 0;
-    color: #9ca3af;
+    color: #b0b8c4;
     transition: all 0.2s;
 }
 
@@ -72,7 +72,7 @@
 
 .stat-label {
     font-size: 0.9rem;
-    color: #9ca3af;
+    color: #b0b8c4;
     margin-top: 0.25rem;
 }
 
@@ -91,7 +91,7 @@
     padding: 0.75rem 0.6rem;
     text-align: left;
     border-bottom: 1px solid #3a3a5c;
-    color: #e0e0e8;
+    color: #f0f0f8;
 }
 
 .admin-table th {
@@ -115,7 +115,7 @@
     border-radius: 6px;
     font-size: 0.85rem;
     background: #1a1a2e;
-    color: #e0e0e8;
+    color: #f0f0f8;
 }
 
 .role-badge {

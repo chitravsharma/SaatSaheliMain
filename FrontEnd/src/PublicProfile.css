@@ -10,7 +10,7 @@
   padding: 24px;
   font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
   line-height: 1.6;
-  color: #e0e0e8;
+  color: #f0f0f8;
 }
 
 .pub-profile-header {
@@ -34,27 +34,27 @@
 }
 
 .pub-profile-info h1 {
-  color: #e0e0e8;
+  color: #f0f0f8;
   font-size: 1.5rem;
   font-weight: 700;
   margin: 0 0 4px 0;
 }
 
 .pub-profile-headline {
-  color: #a78bfa;
+  color: #b89fff;
   font-style: italic;
   font-size: 1rem;
   margin: 0 0 4px 0;
 }
 
 .pub-profile-location {
-  color: #9ca3af;
+  color: #b0b8c4;
   font-size: 0.9rem;
   margin: 0 0 4px 0;
 }
 
 .pub-profile-member {
-  color: #7c7c9a;
+  color: #9090b0;
   font-size: 0.8rem;
   margin: 0;
 }
@@ -66,7 +66,7 @@
   padding: 16px;
   margin-bottom: 24px;
   font-size: 0.95rem;
-  color: #d1d5db;
+  color: #e2e6ea;
 }
 
 .pub-profile-bio p {
@@ -93,7 +93,7 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: #c4b5fd;
+  color: #d4c5ff;
   margin: 0;
 }
 
@@ -116,13 +116,13 @@
 
 .pub-profile-tag-field {
   background: transparent;
-  color: #c4b5fd;
+  color: #d4c5ff;
   border: 2px solid #6366f1;
 }
 
 /* ── Section headings ── */
 .pub-profile-page h2 {
-  color: #c4b5fd;
+  color: #d4c5ff;
   font-size: 1.25rem;
   font-weight: 700;
   margin-bottom: 16px;
@@ -182,7 +182,7 @@
   padding: 8px 10px 4px;
   font-size: 0.85rem;
   font-weight: 600;
-  color: #e0e0e8;
+  color: #f0f0f8;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -191,7 +191,7 @@
 .pub-book-category {
   padding: 0 10px 8px;
   font-size: 0.7rem;
-  color: #9ca3af;
+  color: #b0b8c4;
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
@@ -224,7 +224,7 @@
 
 /* ── States ── */
 .pub-profile-no-books {
-  color: #9ca3af;
+  color: #b0b8c4;
   text-align: center;
   padding: 40px 20px;
 }
@@ -233,7 +233,7 @@
 .pub-profile-not-found {
   text-align: center;
   padding: 60px 20px;
-  color: #9ca3af;
+  color: #b0b8c4;
   font-size: 1rem;
 }
 
