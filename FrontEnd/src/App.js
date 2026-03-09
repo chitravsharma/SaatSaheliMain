@@ -40,6 +40,7 @@ function App() {
       <main id="main-content">
         <Routes>
           <Route path="/Login" element={<Login />} />
+          <Route path="/register" element={<Login />} />
           <Route path="/" element={<Home />} />
           <Route path="/contacts" element={<Contacts />} />
           <Route path="/about" element={<About />} />

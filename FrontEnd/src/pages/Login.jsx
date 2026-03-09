@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams, useLocation } from "react-router-dom";
 import { GoogleLogin, GoogleOAuthProvider } from "@react-oauth/google";
 import axios from "axios";
 import { useAuth } from "../AuthContext";
@@ -11,9 +11,13 @@ const GOOGLE_CLIENT_ID = process.env.REACT_APP_GOOGLE_CLIENT_ID;
 
 export default function Login() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const [searchParams] = useSearchParams();
   const { login: authLogin } = useAuth();
   const strings = useStrings();
-  const [mode, setMode] = useState("login"); // "login" | "signup"
+  const isRegisterPath = location.pathname.toLowerCase() === "/register";
+  const initialMode = (isRegisterPath || searchParams.get("mode") === "signup") ? "signup" : "login";
+  const [mode, setMode] = useState(initialMode); // "login" | "signup"
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);

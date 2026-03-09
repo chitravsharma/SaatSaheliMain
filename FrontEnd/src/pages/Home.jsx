@@ -142,7 +142,7 @@ function Home() {
       {!user && (
         <div className="home-actions-bar">
           <Link to="/Login" className="ss-btn ss-btn-primary">Log In</Link>
-          <Link to="/Login" className="ss-btn ss-btn-secondary">Create Account</Link>
+          <Link to="/Login?mode=signup" className="ss-btn ss-btn-secondary">Create Account</Link>
         </div>
       )}
 
