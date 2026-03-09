@@ -4,6 +4,9 @@ WORKDIR /app/frontend
 COPY FrontEnd/package.json FrontEnd/package-lock.json ./
 RUN npm ci
 COPY FrontEnd/ ./
+# Override homepage so assets are served from root "/" on Render (not /SaatSaheliMain/)
+RUN sed -i 's|"homepage":.*|"homepage": "/",|' package.json
+ENV PUBLIC_URL=/
 ENV REACT_APP_API_URL=""
 ENV REACT_APP_GOOGLE_CLIENT_ID=48927390752-qq6q50a1pfo5uajai4072ehnoifs0s7t.apps.googleusercontent.com
 RUN npm run build
