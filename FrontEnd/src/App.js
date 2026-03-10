@@ -4,6 +4,7 @@ import React from "react";
 
 import Header from './modules/Header';
 import Footer from './modules/Footer';
+import ServerWakeUp from './components/ServerWakeUp';
 import { Routes, Route, useLocation } from 'react-router-dom';
 import Home from './pages/Home';
 import About from './pages/About';
@@ -35,6 +36,7 @@ function BookManagerWrapper() {
 
 function App() {
   return (
+    <ServerWakeUp>
     <div className="App">
       <Header />
       <main id="main-content">
@@ -64,6 +66,7 @@ function App() {
       </main>
       <Footer />
     </div>
+    </ServerWakeUp>
   );
 }
 
