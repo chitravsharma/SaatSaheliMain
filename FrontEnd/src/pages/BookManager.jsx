@@ -3,6 +3,7 @@ import { useLocation, Link } from "react-router-dom";
 import axios from "axios";
 import FlipBook from "../FlipBook";
 import PageLayoutEditor from "../PageLayoutEditor";
+import CoverPageDesigner from "../components/CoverPageDesigner";
 import { useAuth } from "../AuthContext";
 import { useStrings } from "../LanguageContext";
 import TermsGate from "../components/TermsGate";
@@ -190,6 +191,9 @@ function BookManager() {
   const [editGenerating1, setEditGenerating1] = useState(false);
   const [editGenerating2, setEditGenerating2] = useState(false);
   const [imageStyle, setImageStyle] = useState("general");
+
+  // Cover/Back page designer state
+  const [coverDesignData, setCoverDesignData] = useState({});
 
   // Open book for editing when navigated from Account page
   useEffect(() => {
@@ -384,13 +388,16 @@ function BookManager() {
       return;
     }
     try {
-      const formatJson = buildFormatJson(formatFontFamily, formatFontSize, formatColor, pageLayout);
+      const isCoverOrBack = pageNumber === "1" || pageNumber === "99";
+      const formatJson = isCoverOrBack
+        ? JSON.stringify({ fontFamily: "sans-serif", fontSize: "16px", color: "#1a1a2e", coverDesign: coverDesignData, layout: {} })
+        : buildFormatJson(formatFontFamily, formatFontSize, formatColor, pageLayout);
       await axios.post(`${API}/${selectedBook.id}/page?userId=${userId}`, {
         pageNumber: parseInt(pageNumber),
         content: pageContent,
         format: formatJson,
         imageUrl: pageImageUrl,
-        imageUrl2: pageImageUrl2,
+        imageUrl2: isCoverOrBack ? "" : pageImageUrl2,
       });
       showMessage(strings.bookManager.msgPageAdded);
       setPageContent("");
@@ -401,6 +408,7 @@ function BookManager() {
       setFormatFontSize("16px");
       setFormatColor("#1a1a2e");
       setPageLayout({});
+      setCoverDesignData({});
       await fetchBookPages(selectedBook.id);
     } catch (err) {
       showMessage(strings.bookManager.msgAddPageFailed);
@@ -869,31 +877,49 @@ function BookManager() {
               <div className="bm-page-form-grid">
                 <div className="bm-form-row">
                   <input type="number" placeholder={strings.bookManager.placeholderPageNumber} value={pageNumber}
-                    onChange={(e) => setPageNumber(e.target.value)} className="bm-input bm-input-small" />
+                    onChange={(e) => { setPageNumber(e.target.value); setCoverDesignData({}); }} className="bm-input bm-input-small" />
                   <textarea placeholder={strings.bookManager.placeholderContent} value={pageContent}
                     onChange={(e) => setPageContent(e.target.value)} className="bm-input bm-textarea" rows={3} />
                 </div>
 
-                {renderFormatToolbar(
-                  formatFontFamily, setFormatFontFamily,
-                  formatFontSize, setFormatFontSize,
-                  formatColor, setFormatColor
+                {/* Show Cover/Back Page Designer for page 1 or 99 */}
+                {(pageNumber === "1" || pageNumber === "99") && (
+                  <CoverPageDesigner
+                    type={pageNumber === "1" ? "cover" : "back"}
+                    bookTitle={selectedBook?.title}
+                    authorName={selectedBook?.authorName}
+                    imageUrl={pageImageUrl}
+                    onImageChange={setPageImageUrl}
+                    onDesignDataChange={(d) => setCoverDesignData(d)}
+                    initialData={coverDesignData}
+                  />
                 )}
 
-                <div className="bm-upload-row">
-                  {renderImageUpload(strings.bookManager.image1Label, pageImageUrl, setPageImageUrl, uploading1, setUploading1, "add-img1", pageContent, generating1, setGenerating1)}
-                  {renderImageUpload(strings.bookManager.image2Label, pageImageUrl2, setPageImageUrl2, uploading2, setUploading2, "add-img2", pageContent, generating2, setGenerating2)}
-                </div>
+                {/* Show regular page editor for non-cover/back pages */}
+                {pageNumber !== "1" && pageNumber !== "99" && (
+                  <>
+                    {renderFormatToolbar(
+                      formatFontFamily, setFormatFontFamily,
+                      formatFontSize, setFormatFontSize,
+                      formatColor, setFormatColor
+                    )}
 
-                {(pageImageUrl || pageImageUrl2) && (
-                  <PageLayoutEditor
-                    imageUrl={pageImageUrl}
-                    imageUrl2={pageImageUrl2}
-                    content={pageContent}
-                    textStyle={{ fontFamily: formatFontFamily, fontSize: formatFontSize, color: formatColor }}
-                    layout={pageLayout}
-                    onLayoutChange={setPageLayout}
-                  />
+                    <div className="bm-upload-row">
+                      {renderImageUpload(strings.bookManager.image1Label, pageImageUrl, setPageImageUrl, uploading1, setUploading1, "add-img1", pageContent, generating1, setGenerating1)}
+                      {renderImageUpload(strings.bookManager.image2Label, pageImageUrl2, setPageImageUrl2, uploading2, setUploading2, "add-img2", pageContent, generating2, setGenerating2)}
+                    </div>
+
+                    {(pageImageUrl || pageImageUrl2) && (
+                      <PageLayoutEditor
+                        imageUrl={pageImageUrl}
+                        imageUrl2={pageImageUrl2}
+                        content={pageContent}
+                        textStyle={{ fontFamily: formatFontFamily, fontSize: formatFontSize, color: formatColor }}
+                        layout={pageLayout}
+                        onLayoutChange={setPageLayout}
+                      />
+                    )}
+                  </>
                 )}
 
                 <button className="bm-btn bm-btn-create" onClick={handleAddPage}>{strings.bookManager.addPage}</button>
@@ -916,49 +942,71 @@ function BookManager() {
                           className="bm-input bm-textarea" placeholder={strings.bookManager.placeholderEditContent} rows={3} />
                       </div>
 
-                      {renderFormatToolbar(
-                        editingPage._fontFamily,
-                        (val) => updateEditFormat("_fontFamily", val),
-                        editingPage._fontSize,
-                        (val) => updateEditFormat("_fontSize", val),
-                        editingPage._color,
-                        (val) => updateEditFormat("_color", val)
-                      )}
-
-                      <div className="bm-upload-row">
-                        {renderImageUpload(
-                          strings.bookManager.image1Label,
-                          editingPage.imageUrl,
-                          (url) => setEditingPage((p) => ({ ...p, imageUrl: url })),
-                          editUploading1,
-                          setEditUploading1,
-                          "edit-img1",
-                          editingPage.content,
-                          editGenerating1,
-                          setEditGenerating1
-                        )}
-                        {renderImageUpload(
-                          strings.bookManager.image2Label,
-                          editingPage.imageUrl2,
-                          (url) => setEditingPage((p) => ({ ...p, imageUrl2: url })),
-                          editUploading2,
-                          setEditUploading2,
-                          "edit-img2",
-                          editingPage.content,
-                          editGenerating2,
-                          setEditGenerating2
-                        )}
-                      </div>
-
-                      {(editingPage.imageUrl || editingPage.imageUrl2) && (
-                        <PageLayoutEditor
+                      {/* Show Cover/Back Page Designer for page 1 or 99 */}
+                      {(editingPage.pageNumber === 1 || editingPage.pageNumber === 99) ? (
+                        <CoverPageDesigner
+                          type={editingPage.pageNumber === 1 ? "cover" : "back"}
+                          bookTitle={selectedBook?.title}
+                          authorName={selectedBook?.authorName}
                           imageUrl={editingPage.imageUrl}
-                          imageUrl2={editingPage.imageUrl2}
-                          content={editingPage.content}
-                          textStyle={{ fontFamily: editingPage._fontFamily, fontSize: editingPage._fontSize, color: editingPage._color }}
-                          layout={editingPage._layout}
-                          onLayoutChange={(l) => updateEditFormat("_layout", l)}
+                          onImageChange={(url) => setEditingPage((p) => ({ ...p, imageUrl: url }))}
+                          onDesignDataChange={(d) => {
+                            setEditingPage((p) => ({
+                              ...p,
+                              format: JSON.stringify({ ...JSON.parse(p.format || "{}"), coverDesign: d }),
+                            }));
+                          }}
+                          initialData={(() => {
+                            try { return JSON.parse(editingPage.format || "{}").coverDesign || {}; } catch { return {}; }
+                          })()}
                         />
+                      ) : (
+                        <>
+                          {renderFormatToolbar(
+                            editingPage._fontFamily,
+                            (val) => updateEditFormat("_fontFamily", val),
+                            editingPage._fontSize,
+                            (val) => updateEditFormat("_fontSize", val),
+                            editingPage._color,
+                            (val) => updateEditFormat("_color", val)
+                          )}
+
+                          <div className="bm-upload-row">
+                            {renderImageUpload(
+                              strings.bookManager.image1Label,
+                              editingPage.imageUrl,
+                              (url) => setEditingPage((p) => ({ ...p, imageUrl: url })),
+                              editUploading1,
+                              setEditUploading1,
+                              "edit-img1",
+                              editingPage.content,
+                              editGenerating1,
+                              setEditGenerating1
+                            )}
+                            {renderImageUpload(
+                              strings.bookManager.image2Label,
+                              editingPage.imageUrl2,
+                              (url) => setEditingPage((p) => ({ ...p, imageUrl2: url })),
+                              editUploading2,
+                              setEditUploading2,
+                              "edit-img2",
+                              editingPage.content,
+                              editGenerating2,
+                              setEditGenerating2
+                            )}
+                          </div>
+
+                          {(editingPage.imageUrl || editingPage.imageUrl2) && (
+                            <PageLayoutEditor
+                              imageUrl={editingPage.imageUrl}
+                              imageUrl2={editingPage.imageUrl2}
+                              content={editingPage.content}
+                              textStyle={{ fontFamily: editingPage._fontFamily, fontSize: editingPage._fontSize, color: editingPage._color }}
+                              layout={editingPage._layout}
+                              onLayoutChange={(l) => updateEditFormat("_layout", l)}
+                            />
+                          )}
+                        </>
                       )}
 
                       <div className="bm-page-actions">
@@ -969,6 +1017,8 @@ function BookManager() {
                   ) : (
                     <div className="bm-page-display">
                       <span className="bm-page-num">#{page.pageNumber}</span>
+                      {page.pageNumber === 1 && <span className="bm-page-type-badge bm-badge-cover">Cover</span>}
+                      {page.pageNumber === 99 && <span className="bm-page-type-badge bm-badge-back">Back</span>}
                       <span className="bm-page-content">{page.content || strings.bookManager.emptyPage}</span>
                       {page.imageUrl && (
                         <img src={resolveImageUrl(page.imageUrl)} alt={strings.bookManager.image1Alt} className="bm-page-thumb" />

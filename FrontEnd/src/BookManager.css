@@ -1171,6 +1171,26 @@
   }
 }
 
+/* Cover/Back page badges */
+.bm-page-type-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  vertical-align: middle;
+}
+.bm-badge-cover {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: #0f1923;
+}
+.bm-badge-back {
+  background: linear-gradient(135deg, #8b5cf6, #6d28d9);
+  color: #ffffff;
+}
+
 /* ── ReadBook ── */
 
 .rb-top-bar {
