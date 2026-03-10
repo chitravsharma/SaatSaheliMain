@@ -963,13 +963,14 @@ function BookManager() {
                           imageUrl={editingPage.imageUrl}
                           onImageChange={(url) => setEditingPage((p) => ({ ...p, imageUrl: url }))}
                           onDesignDataChange={(d) => {
-                            setEditingPage((p) => ({
-                              ...p,
-                              format: JSON.stringify({ ...JSON.parse(p.format || "{}"), coverDesign: d }),
-                            }));
+                            setEditingPage((p) => {
+                              let existing = {};
+                              try { existing = JSON.parse(p.format || "{}"); } catch { /* not JSON */ }
+                              return { ...p, format: JSON.stringify({ ...existing, coverDesign: d }) };
+                            });
                           }}
                           initialData={(() => {
-                            try { return JSON.parse(editingPage.format || "{}").coverDesign || {}; } catch { return {}; }
+                            try { return JSON.parse(editingPage.format).coverDesign || {}; } catch { return {}; }
                           })()}
                         />
                       ) : (
