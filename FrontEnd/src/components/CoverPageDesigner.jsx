@@ -63,39 +63,12 @@ function CoverPageDesigner({ type, bookTitle, authorName, imageUrl, onImageChang
     setExpandedSections((prev) => ({ ...prev, [section]: !prev[section] }));
   };
 
+  // AI prompt uses ONLY scene + custom prompt — other fields are page metadata for user to adjust later
   const buildAIPrompt = () => {
     const parts = [];
-    const title = data.title || bookTitle || "";
-    const author = data.author || authorName || "";
-
-    if (isCover) {
-      parts.push("Book cover design");
-      if (title) parts.push(`for "${title}"`);
-      if (data.subtitle) parts.push(`subtitle: "${data.subtitle}"`);
-      if (author) parts.push(`by ${author}`);
-      if (data.genre) parts.push(`genre: ${data.genre}`);
-      if (data.audience) parts.push(`for ${data.audience} audience`);
-      if (data.coverStyle) parts.push(`${data.coverStyle} style`);
-      if (data.illustrationStyle) parts.push(`${data.illustrationStyle} illustration`);
-      if (data.colorTheme) parts.push(`${data.colorTheme} color palette`);
-      if (data.scene) parts.push(`scene: ${data.scene}`);
-      if (data.backgroundType) parts.push(`${data.backgroundType} background`);
-      if (data.titleFontStyle) parts.push(`${data.titleFontStyle} title font`);
-      if (data.tagline) parts.push(`tagline: "${data.tagline}"`);
-    } else {
-      parts.push("Book back cover design");
-      if (title) parts.push(`for "${title}"`);
-      if (author) parts.push(`by ${author}`);
-      if (data.coverStyle) parts.push(`${data.coverStyle} style`);
-      if (data.colorTheme) parts.push(`${data.colorTheme} color palette`);
-      if (data.backgroundType) parts.push(`${data.backgroundType} background`);
-      if (data.blurb) parts.push(`with blurb text area`);
-      if (data.tagline) parts.push(`tagline: "${data.tagline}"`);
-    }
-
+    if (data.scene) parts.push(data.scene);
     if (data.customPrompt) parts.push(data.customPrompt);
-
-    return parts.join(", ") || (isCover ? "Professional book cover design" : "Professional book back cover design");
+    return parts.join(", ") || (isCover ? "Book cover design" : "Book back cover design");
   };
 
   const handleGenerate = async () => {
@@ -103,7 +76,7 @@ function CoverPageDesigner({ type, bookTitle, authorName, imageUrl, onImageChang
     setMessage("");
     try {
       const prompt = buildAIPrompt();
-      const res = await axios.post(GENERATE_API, { prompt, style: data.illustrationStyle?.toLowerCase() || "general" }, { timeout: 90000 });
+      const res = await axios.post(GENERATE_API, { prompt, style: "general" }, { timeout: 90000 });
       if (onImageChange) onImageChange(res.data.url);
       setMessage("Cover image generated!");
     } catch (err) {
@@ -174,7 +147,7 @@ function CoverPageDesigner({ type, bookTitle, authorName, imageUrl, onImageChang
       <h3 className="cpd-heading">
         {isCover ? "Design Cover Page" : "Design Back Page"}
       </h3>
-      <p className="cpd-hint">All fields are optional. Fill in what you need and generate your {isCover ? "cover" : "back page"}.</p>
+      <p className="cpd-hint">All fields are optional. The AI image is generated from the Scene and Custom Prompt only. Other fields (title, author, style, etc.) are saved as page data for you to adjust and align on the final {isCover ? "cover" : "back page"}.</p>
 
       {/* Book Information */}
       {renderSection("book", "Book Information", "\uD83D\uDCD6", (
@@ -237,7 +210,9 @@ function CoverPageDesigner({ type, bookTitle, authorName, imageUrl, onImageChang
           )}
           <div className="cpd-prompt-preview">
             <label className="cpd-label">Generated Prompt Preview:</label>
-            <p className="cpd-prompt-text">{buildAIPrompt()}</p>
+            <p className="cpd-prompt-text">
+              {[data.scene, data.customPrompt].filter(Boolean).join(", ") || "Enter a scene or custom prompt above..."}
+            </p>
           </div>
         </>
       ))}
