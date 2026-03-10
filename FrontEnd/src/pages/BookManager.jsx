@@ -195,6 +195,18 @@ function BookManager() {
   // Cover/Back page designer state
   const [coverDesignData, setCoverDesignData] = useState({});
 
+  // Helper: detect if a page number is the back page (last page in the book)
+  const getBackPageNumber = () => {
+    if (pages.length === 0) return 50;
+    return pages[pages.length - 1]?.pageNumber || 50;
+  };
+  const isCoverPage = (num) => parseInt(num) === 1;
+  const isBackPage = (num) => {
+    const n = parseInt(num);
+    return n === getBackPageNumber() || n === 50 || n === 99;
+  };
+  const isCoverOrBack = (num) => isCoverPage(num) || isBackPage(num);
+
   // Open book for editing when navigated from Account page
   useEffect(() => {
     const editBookId = location.state?.editBookId;
@@ -388,8 +400,8 @@ function BookManager() {
       return;
     }
     try {
-      const isCoverOrBack = pageNumber === "1" || pageNumber === "99";
-      const formatJson = isCoverOrBack
+      const isSpecialPage = isCoverOrBack(pageNumber);
+      const formatJson = isSpecialPage
         ? JSON.stringify({ fontFamily: "sans-serif", fontSize: "16px", color: "#1a1a2e", coverDesign: coverDesignData, layout: {} })
         : buildFormatJson(formatFontFamily, formatFontSize, formatColor, pageLayout);
       await axios.post(`${API}/${selectedBook.id}/page?userId=${userId}`, {
@@ -397,7 +409,7 @@ function BookManager() {
         content: pageContent,
         format: formatJson,
         imageUrl: pageImageUrl,
-        imageUrl2: isCoverOrBack ? "" : pageImageUrl2,
+        imageUrl2: isSpecialPage ? "" : pageImageUrl2,
       });
       showMessage(strings.bookManager.msgPageAdded);
       setPageContent("");
@@ -882,10 +894,10 @@ function BookManager() {
                     onChange={(e) => setPageContent(e.target.value)} className="bm-input bm-textarea" rows={3} />
                 </div>
 
-                {/* Show Cover/Back Page Designer for page 1 or 99 */}
-                {(pageNumber === "1" || pageNumber === "99") && (
+                {/* Show Cover/Back Page Designer for cover or back page */}
+                {pageNumber && isCoverOrBack(pageNumber) && (
                   <CoverPageDesigner
-                    type={pageNumber === "1" ? "cover" : "back"}
+                    type={isCoverPage(pageNumber) ? "cover" : "back"}
                     bookTitle={selectedBook?.title}
                     authorName={selectedBook?.authorName}
                     imageUrl={pageImageUrl}
@@ -896,7 +908,7 @@ function BookManager() {
                 )}
 
                 {/* Show regular page editor for non-cover/back pages */}
-                {pageNumber !== "1" && pageNumber !== "99" && (
+                {(!pageNumber || !isCoverOrBack(pageNumber)) && (
                   <>
                     {renderFormatToolbar(
                       formatFontFamily, setFormatFontFamily,
@@ -942,10 +954,10 @@ function BookManager() {
                           className="bm-input bm-textarea" placeholder={strings.bookManager.placeholderEditContent} rows={3} />
                       </div>
 
-                      {/* Show Cover/Back Page Designer for page 1 or 99 */}
-                      {(editingPage.pageNumber === 1 || editingPage.pageNumber === 99) ? (
+                      {/* Show Cover/Back Page Designer for cover or back page */}
+                      {isCoverOrBack(editingPage.pageNumber) ? (
                         <CoverPageDesigner
-                          type={editingPage.pageNumber === 1 ? "cover" : "back"}
+                          type={isCoverPage(editingPage.pageNumber) ? "cover" : "back"}
                           bookTitle={selectedBook?.title}
                           authorName={selectedBook?.authorName}
                           imageUrl={editingPage.imageUrl}
@@ -1018,7 +1030,7 @@ function BookManager() {
                     <div className="bm-page-display">
                       <span className="bm-page-num">#{page.pageNumber}</span>
                       {page.pageNumber === 1 && <span className="bm-page-type-badge bm-badge-cover">Cover</span>}
-                      {page.pageNumber === 99 && <span className="bm-page-type-badge bm-badge-back">Back</span>}
+                      {page.pageNumber === getBackPageNumber() && page.pageNumber !== 1 && <span className="bm-page-type-badge bm-badge-back">Back</span>}
                       <span className="bm-page-content">{page.content || strings.bookManager.emptyPage}</span>
                       {page.imageUrl && (
                         <img src={resolveImageUrl(page.imageUrl)} alt={strings.bookManager.image1Alt} className="bm-page-thumb" />

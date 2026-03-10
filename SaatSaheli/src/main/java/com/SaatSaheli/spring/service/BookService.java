@@ -97,7 +97,7 @@ public class BookService {
 
         Page back = new Page();
         back.setBookId(book.getId());
-        back.setPageNumber(99);
+        back.setPageNumber(50);
         back.setContent("The End");
         back.setFormat("italic");
         back.setCreatedDate(now);
@@ -130,7 +130,29 @@ public class BookService {
     }
 
     public Book publishBook(Long id, Long requestUserId) {
+        // Renumber back page to be right after the last content page
+        renumberBackPage(id);
         return updateBook(id, null, "PUBLISHED", requestUserId);
+    }
+
+    /**
+     * Finds the back page (highest page number) and renumbers it
+     * to be sequentially after the last content page.
+     */
+    private void renumberBackPage(Long bookId) {
+        List<Page> pages = pageRepo.findByBookIdOrderByPageNumberAsc(bookId);
+        if (pages.size() < 2) return;
+
+        Page lastPage = pages.get(pages.size() - 1);
+        Page secondLast = pages.get(pages.size() - 2);
+
+        // Only renumber if there's a gap (back page number > secondLast + 1)
+        int expectedNumber = secondLast.getPageNumber() + 1;
+        if (lastPage.getPageNumber() > expectedNumber) {
+            lastPage.setPageNumber(expectedNumber);
+            lastPage.setModifiedDate(LocalDateTime.now());
+            pageRepo.save(lastPage);
+        }
     }
 
     public Book saveDraft(Long id, Long requestUserId) {
@@ -317,10 +339,10 @@ public class BookService {
             pageRepo.save(page);
         }
 
-        // Back page
+        // Back page — placed right after the last content page
         Page back = new Page();
         back.setBookId(book.getId());
-        back.setPageNumber(99);
+        back.setPageNumber(pageTexts.size() + 2);
         back.setContent("The End");
         back.setFormat("italic");
         back.setCreatedDate(now);
@@ -365,10 +387,10 @@ public class BookService {
             pageRepo.save(page);
         }
 
-        // Back page
+        // Back page — placed right after the last content page
         Page back = new Page();
         back.setBookId(book.getId());
-        back.setPageNumber(99);
+        back.setPageNumber(imageUrls.size() + 2);
         back.setContent("The End");
         back.setFormat("italic");
         back.setCreatedDate(now);
