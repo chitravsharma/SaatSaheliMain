@@ -1,12 +1,12 @@
-/* App - Dark artistic creative theme */
+/* App - Classic navy + gold theme */
 
 .App {
   text-align: left;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  background-color: #1a1a2e;
-  color: #f0f0f8;
+  background-color: #0f1923;
+  color: #f0f4f8;
 }
 
 .App-logo {
@@ -26,38 +26,38 @@
 }
 
 .App-header {
-  background-color: #0d0d1a;
+  background-color: #0c1520;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   font-size: calc(10px + 2vmin);
-  color: #f0f0f8;
+  color: #f0f4f8;
 }
 
 .page {
-  background-color: #222240;
-  border: 2px solid #3a3a5c;
+  background-color: #162a3a;
+  border: 2px solid #2a4a6b;
   padding: 24px;
   font-size: 1.125rem;
   text-align: center;
   border-radius: 12px;
-  color: #f0f0f8;
+  color: #f0f4f8;
 }
 
 .card-box {
   padding: 0;
-  background-color: #222240;
-  border: 1px solid #3a3a5c;
+  background-color: #162a3a;
+  border: 1px solid #2a4a6b;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
   border-radius: 4px;
 }
 
 /* Book page specific styling for clean print-like look */
 .flipbook-page {
-  background: #222240;
-  border: 1px solid #3a3a5c;
+  background: #162a3a;
+  border: 1px solid #2a4a6b;
   box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.05), 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
@@ -71,11 +71,11 @@
 }
 
 .App-link {
-  color: #b89fff;
+  color: #f59e0b;
   font-weight: 600;
 }
 .App-link:focus-visible {
-  outline: 3px solid #a78bfa;
+  outline: 3px solid #f59e0b;
   outline-offset: 2px;
 }
 
@@ -111,9 +111,9 @@
 }
 
 .flipbook-arrow {
-  background: linear-gradient(135deg, #6366f1, #a855f7);
+  background: linear-gradient(135deg, #2563eb, #60a5fa);
   color: #ffffff;
-  border: 2px solid #6366f1;
+  border: 2px solid #2563eb;
   padding: 6px 12px;
   font-size: 1.75rem;
   cursor: pointer;
@@ -128,13 +128,13 @@
   min-height: 36px;
 }
 .flipbook-arrow:hover:not(:disabled) {
-  background: linear-gradient(135deg, #4f46e5, #9333ea);
-  border-color: #4f46e5;
+  background: linear-gradient(135deg, #1d4ed8, #3b82f6);
+  border-color: #1d4ed8;
   transform: scale(1.08);
-  box-shadow: 0 4px 16px rgba(99, 102, 241, 0.4);
+  box-shadow: 0 4px 16px rgba(37, 99, 235, 0.4);
 }
 .flipbook-arrow:focus-visible {
-  outline: 3px solid #a78bfa;
+  outline: 3px solid #f59e0b;
   outline-offset: 2px;
 }
 .flipbook-arrow:disabled {
@@ -145,7 +145,7 @@
 }
 
 .flipbook-page-indicator {
-  color: #d4c5ff;
+  color: #fbbf24;
   font-size: 0.875rem;
   font-weight: 600;
   min-width: 60px;
@@ -160,9 +160,9 @@
 }
 
 .flipbook-zoom-btn {
-  background: #2d2d4e;
-  color: #d4c5ff;
-  border: 2px solid #4a4a6e;
+  background: #1e3a52;
+  color: #fbbf24;
+  border: 2px solid #3a5a7b;
   border-radius: 6px;
   width: 36px;
   height: 36px;
@@ -175,11 +175,11 @@
   line-height: 1;
 }
 .flipbook-zoom-btn:hover:not(:disabled) {
-  background: #3d3d60;
-  border-color: #6366f1;
+  background: #2a4a6b;
+  border-color: #2563eb;
 }
 .flipbook-zoom-btn:focus-visible {
-  outline: 3px solid #a78bfa;
+  outline: 3px solid #f59e0b;
   outline-offset: 2px;
 }
 .flipbook-zoom-btn:disabled {
@@ -188,7 +188,7 @@
 }
 
 .flipbook-zoom-label {
-  color: #d4c5ff;
+  color: #fbbf24;
   font-size: 0.85rem;
   font-weight: 600;
   min-width: 48px;
@@ -199,10 +199,10 @@
   padding: 2px 4px;
 }
 .flipbook-zoom-label:hover {
-  background: #2d2d4e;
+  background: #1e3a52;
 }
 .flipbook-zoom-label:focus-visible {
-  outline: 3px solid #a78bfa;
+  outline: 3px solid #f59e0b;
   outline-offset: 2px;
 }
 
@@ -288,7 +288,7 @@
 /* Copyright notice */
 .flipbook-copyright {
   text-align: center;
-  color: #b0b8c4;
+  color: #94a3b8;
   font-size: 0.72rem;
   margin-top: 8px;
   font-family: 'Segoe UI', system-ui, sans-serif;
@@ -305,7 +305,7 @@
   width: 100vw;
   height: 100vh;
   z-index: 9999;
-  background: #1a1a2e;
+  background: #0f1923;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -323,13 +323,13 @@
   color: #e0e7ef;
 }
 .flipbook-fullscreen-overlay .flipbook-zoom-btn {
-  background: #a78bfa;
-  color: #f0f0f8;
+  background: #f59e0b;
+  color: #f0f4f8;
 }
 .flipbook-fullscreen-btn {
-  background: #2d2d4e;
-  color: #d4c5ff;
-  border: 2px solid #4a4a6e;
+  background: #1e3a52;
+  color: #fbbf24;
+  border: 2px solid #3a5a7b;
   border-radius: 6px;
   width: 36px;
   height: 36px;
@@ -342,12 +342,12 @@
   margin-left: 8px;
 }
 .flipbook-fullscreen-btn:hover {
-  background: #3d3d60;
-  border-color: #6366f1;
+  background: #2a4a6b;
+  border-color: #2563eb;
 }
 .flipbook-fullscreen-overlay .flipbook-fullscreen-btn {
-  background: #a78bfa;
-  color: #f0f0f8;
+  background: #f59e0b;
+  color: #f0f4f8;
 }
 
 /* High contrast mode */
@@ -369,8 +369,8 @@
   content: "";
   width: 48px;
   height: 48px;
-  border: 4px solid #2d2d4e;
-  border-top-color: #b89fff;
+  border: 4px solid #1e3a52;
+  border-top-color: #f59e0b;
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
@@ -394,12 +394,13 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 10px 28px;
+  padding: 8px 22px;
   border-radius: 6px;
-  font-size: 0.95rem;
+  font-size: 0.88rem;
   font-weight: 600;
+  color: #f0f4f8;
   text-decoration: none;
-  min-height: 44px;
+  min-height: 38px;
   border: 2px solid transparent;
   cursor: pointer;
   transition: background-color 0.2s, transform 0.15s;
@@ -407,16 +408,16 @@
   line-height: 1.2;
 }
 .ss-btn:focus-visible {
-  outline: 3px solid #a78bfa;
+  outline: 3px solid #f59e0b;
   outline-offset: 2px;
 }
 
 .ss-btn-primary {
-  background: linear-gradient(135deg, #6366f1, #a855f7);
+  background: linear-gradient(135deg, #2563eb, #60a5fa);
   color: #ffffff;
 }
 .ss-btn-primary:hover {
-  background: linear-gradient(135deg, #4f46e5, #9333ea);
+  background: linear-gradient(135deg, #1d4ed8, #3b82f6);
   transform: translateY(-1px);
 }
 
@@ -431,11 +432,11 @@
 
 .ss-btn-outline {
   background: transparent;
-  color: #d4c5ff;
-  border-color: #6366f1;
+  color: #fbbf24;
+  border-color: #2563eb;
 }
 .ss-btn-outline:hover {
-  background: #6366f1;
+  background: #2563eb;
   color: #ffffff;
   transform: translateY(-1px);
 }
@@ -450,9 +451,9 @@
 }
 
 .ss-btn-sm {
-  padding: 6px 16px;
-  font-size: 0.82rem;
-  min-height: 36px;
+  padding: 5px 14px;
+  font-size: 0.8rem;
+  min-height: 32px;
 }
 
 .ss-btn:disabled {
@@ -469,7 +470,7 @@
   background: none;
   border: none;
   cursor: pointer;
-  color: #b0b8c4;
+  color: #94a3b8;
   font-size: 0.88rem;
   padding: 6px 10px;
   border-radius: 6px;
@@ -477,11 +478,11 @@
   font-family: 'Segoe UI', system-ui, sans-serif;
 }
 .ss-btn-icon:hover {
-  background: rgba(99, 102, 241, 0.15);
-  color: #d4c5ff;
+  background: rgba(37, 99, 235, 0.15);
+  color: #fbbf24;
 }
 .ss-btn-icon.active {
-  color: #b89fff;
+  color: #f59e0b;
 }
 
 /* Small social icons (for cards) */
@@ -492,7 +493,7 @@
   background: none;
   border: none;
   cursor: pointer;
-  color: #9090b0;
+  color: #64748b;
   font-size: 0.75rem;
   padding: 3px 6px;
   border-radius: 4px;
@@ -501,10 +502,10 @@
   text-decoration: none;
 }
 .ss-btn-icon-sm:hover {
-  color: #d4c5ff;
+  color: #fbbf24;
 }
 .ss-btn-icon-sm.active {
-  color: #b89fff;
+  color: #f59e0b;
 }
 
 /* Reduced motion for buttons */
@@ -531,7 +532,7 @@
     border: none !important;
     box-shadow: none !important;
     margin: 0.75in;
-    background: #222240 !important;
+    background: #162a3a !important;
   }
 
   .flipbook-zoom-wrapper {

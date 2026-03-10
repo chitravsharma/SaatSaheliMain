@@ -5,7 +5,7 @@
   margin: 40px auto 80px;
   padding: 0 28px;
   font-family: 'Georgia', 'Times New Roman', 'Garamond', serif;
-  color: #f0f0f8;
+  color: #f0f4f8;
 }
 
 /* Back Button */
@@ -14,8 +14,8 @@
   align-items: center;
   gap: 6px;
   background: none;
-  border: 2px solid #6366f1;
-  color: #d4c5ff;
+  border: 2px solid #2563eb;
+  color: #fbbf24;
   font-family: inherit;
   font-size: 0.95rem;
   font-weight: 600;
@@ -27,7 +27,7 @@
 }
 
 .admin-manual-back:hover {
-  background: #6366f1;
+  background: #2563eb;
   color: #fff;
 }
 
@@ -40,14 +40,14 @@
 .admin-manual-hero h1 {
   font-size: 2.6rem;
   font-weight: 700;
-  color: #d4c5ff;
+  color: #fbbf24;
   margin-bottom: 8px;
   letter-spacing: 0.5px;
 }
 
 .admin-manual-subtitle {
   font-size: 1.1rem;
-  color: #b0b8c4;
+  color: #94a3b8;
   font-style: italic;
   margin: 0 0 12px;
 }
@@ -55,7 +55,7 @@
 .admin-manual-divider {
   width: 80px;
   height: 4px;
-  background: linear-gradient(90deg, #6366f1, #d4a017);
+  background: linear-gradient(90deg, #2563eb, #d4a017);
   border: none;
   border-radius: 2px;
   margin: 16px auto 0;
@@ -63,18 +63,18 @@
 
 /* Table of Contents */
 .admin-manual-toc {
-  background: linear-gradient(145deg, #2a2a4a, #2e2e50);
+  background: linear-gradient(145deg, #1e3a52, #1e3a52);
   border: 2px solid #d4a017;
   border-radius: 14px;
   padding: 28px 36px;
   margin-bottom: 36px;
-  box-shadow: 0 4px 20px rgba(99, 102, 241, 0.1);
+  box-shadow: 0 4px 20px rgba(37, 99, 235, 0.1);
 }
 
 .admin-manual-toc h2 {
   font-size: 1.3rem;
   font-weight: 700;
-  color: #d4c5ff;
+  color: #fbbf24;
   margin: 0 0 16px;
   text-align: center;
   text-transform: uppercase;
@@ -103,9 +103,9 @@
 }
 
 .admin-manual-toc a {
-  color: #d4c5ff;
+  color: #fbbf24;
   text-decoration: none;
-  border-bottom: 1px dotted #c4b5fd;
+  border-bottom: 1px dotted #fbbf24;
   transition: color 0.2s, border-color 0.2s;
 }
 
@@ -116,19 +116,19 @@
 
 /* Sections */
 .admin-manual-section {
-  background: linear-gradient(145deg, #222240, #262648);
-  border: 1px solid #3a3a5c;
-  border-left: 5px solid #6366f1;
+  background: linear-gradient(145deg, #162a3a, #162a3a);
+  border: 1px solid #2a4a6b;
+  border-left: 5px solid #2563eb;
   border-radius: 12px;
   padding: 30px 34px;
   margin-bottom: 28px;
-  box-shadow: 0 3px 18px rgba(99, 102, 241, 0.06);
+  box-shadow: 0 3px 18px rgba(37, 99, 235, 0.06);
 }
 
 .admin-manual-section h2 {
   font-size: 1.4rem;
   font-weight: 700;
-  color: #d4c5ff;
+  color: #fbbf24;
   margin: 0 0 16px;
   padding-bottom: 8px;
   border-bottom: 2px solid #d4a017;
@@ -144,7 +144,7 @@
 .admin-manual-section p {
   font-size: 1.02rem;
   line-height: 1.8;
-  color: #e2e6ea;
+  color: #e2e8f0;
   margin: 0 0 12px;
 }
 
@@ -156,13 +156,13 @@
 .admin-manual-section li {
   font-size: 1rem;
   line-height: 1.8;
-  color: #e2e6ea;
+  color: #e2e8f0;
   margin-bottom: 8px;
 }
 
 .admin-manual-section code {
-  background: #2a2a4a;
-  color: #d4c5ff;
+  background: #1e3a52;
+  color: #fbbf24;
   padding: 2px 7px;
   border-radius: 4px;
   font-size: 0.92em;
@@ -171,18 +171,18 @@
 
 /* Note/Callout */
 .admin-manual-note {
-  background: linear-gradient(135deg, #2a2a4a, #332e40);
+  background: linear-gradient(135deg, #1e3a52, #1e3a52);
   border: 1px solid #d4a017;
   border-radius: 8px;
   padding: 16px 20px;
   margin-top: 16px;
   font-size: 0.95rem;
   line-height: 1.7;
-  color: #e2e6ea;
+  color: #e2e8f0;
 }
 
 .admin-manual-note strong {
-  color: #d4c5ff;
+  color: #fbbf24;
 }
 
 /* Chat Room Grid */
@@ -194,7 +194,7 @@
 }
 
 .admin-manual-chat-room {
-  background: #6366f1;
+  background: #2563eb;
   color: #d4a017;
   text-align: center;
   padding: 14px 10px;
@@ -202,7 +202,7 @@
   font-weight: 700;
   font-size: 1rem;
   letter-spacing: 0.5px;
-  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.2);
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.2);
 }
 
 /* Footer */
@@ -210,9 +210,9 @@
   text-align: center;
   margin-top: 36px;
   padding-top: 20px;
-  border-top: 1px solid #3a3a5c;
+  border-top: 1px solid #2a4a6b;
   font-size: 0.88rem;
-  color: #b0b8c4;
+  color: #94a3b8;
   font-style: italic;
 }
 

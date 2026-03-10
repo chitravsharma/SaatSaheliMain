@@ -13,7 +13,7 @@
 .contact-hero h1 {
   font-size: 2.4rem;
   font-weight: 700;
-  background: linear-gradient(135deg, #6366f1, #a855f7, #ec4899);
+  background: linear-gradient(135deg, #2563eb, #60a5fa, #f59e0b);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -23,41 +23,41 @@
 .contact-divider {
   width: 60px;
   height: 4px;
-  background: linear-gradient(90deg, #6366f1, #a855f7);
+  background: linear-gradient(90deg, #2563eb, #60a5fa);
   border: none;
   border-radius: 2px;
   margin: 16px auto 32px;
 }
 
 .contact-intro {
-  background: linear-gradient(145deg, #222240, #2a2a4a);
-  border: 1px solid #3a3a5c;
+  background: linear-gradient(145deg, #162a3a, #1e3a52);
+  border: 1px solid #2a4a6b;
   border-radius: 16px;
   padding: 28px 32px;
-  box-shadow: 0 4px 24px rgba(99, 102, 241, 0.12);
+  box-shadow: 0 4px 24px rgba(37, 99, 235, 0.12);
   margin-bottom: 28px;
   text-align: center;
 }
 
 .contact-intro h2 {
   font-size: 1.3rem;
-  color: #d4c5ff;
+  color: #fbbf24;
   margin: 0 0 12px;
 }
 
 .contact-intro p {
   font-size: 1.05rem;
   line-height: 1.7;
-  color: #e2e6ea;
+  color: #e2e8f0;
   margin: 0;
 }
 
 .contact-form-card {
-  background: linear-gradient(145deg, #222240, #2a2a4a);
-  border: 1px solid #3a3a5c;
+  background: linear-gradient(145deg, #162a3a, #1e3a52);
+  border: 1px solid #2a4a6b;
   border-radius: 16px;
   padding: 32px;
-  box-shadow: 0 4px 24px rgba(99, 102, 241, 0.12);
+  box-shadow: 0 4px 24px rgba(37, 99, 235, 0.12);
 }
 
 .contact-form {
@@ -75,7 +75,7 @@
 .contact-field label {
   font-size: 0.85rem;
   font-weight: 600;
-  color: #b0b8c4;
+  color: #94a3b8;
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
@@ -83,20 +83,20 @@
 .contact-field input,
 .contact-field textarea {
   padding: 12px 14px;
-  border: 1px solid #4a4a6e;
+  border: 1px solid #3a5a7b;
   border-radius: 10px;
   font-size: 1rem;
   font-family: inherit;
-  color: #f0f0f8;
-  background: #1a1a2e;
+  color: #f0f4f8;
+  background: #0f1923;
   transition: border-color 0.2s, box-shadow 0.2s;
 }
 
 .contact-field input:focus,
 .contact-field textarea:focus {
   outline: none;
-  border-color: #a78bfa;
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.25);
+  border-color: #f59e0b;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.25);
 }
 
 .contact-field textarea {
@@ -107,7 +107,7 @@
 .contact-submit {
   align-self: flex-start;
   padding: 12px 32px;
-  background: linear-gradient(135deg, #6366f1, #a855f7);
+  background: linear-gradient(135deg, #2563eb, #60a5fa);
   color: #fff;
   font-size: 1rem;
   font-weight: 600;
@@ -126,11 +126,11 @@
   text-align: center;
   margin-top: 28px;
   font-size: 0.95rem;
-  color: #b0b8c4;
+  color: #94a3b8;
 }
 
 .contact-email a {
-  color: #6366f1;
+  color: #2563eb;
   font-weight: 600;
   text-decoration: none;
 }

@@ -3,7 +3,7 @@
   margin: 60px auto;
   padding: 0 24px;
   font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-  color: #e0e0e8;
+  color: #e2e8f0;
 }
 
 .about-hero {
@@ -14,7 +14,7 @@
 .about-hero h1 {
   font-size: 2.4rem;
   font-weight: 700;
-  background: linear-gradient(135deg, #6366f1, #a855f7, #ec4899);
+  background: linear-gradient(135deg, #2563eb, #60a5fa, #f59e0b);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -24,24 +24,24 @@
 .about-divider {
   width: 60px;
   height: 4px;
-  background: linear-gradient(90deg, #6366f1, #a855f7);
+  background: linear-gradient(90deg, #2563eb, #60a5fa);
   border: none;
   border-radius: 2px;
   margin: 16px auto 32px;
 }
 
 .about-card {
-  background: linear-gradient(145deg, #222240, #1a1a2e);
-  border: 1px solid #3a3a5c;
+  background: linear-gradient(145deg, #162a3a, #0f1923);
+  border: 1px solid #2a4a6b;
   border-radius: 16px;
   padding: 36px 32px;
-  box-shadow: 0 4px 24px rgba(99, 102, 241, 0.1);
+  box-shadow: 0 4px 24px rgba(37, 99, 235, 0.1);
 }
 
 .about-card p {
   font-size: 1.15rem;
   line-height: 1.8;
-  color: #c0c0d0;
+  color: #c4b5a0;
   margin: 0;
 }
 
@@ -54,8 +54,8 @@
 }
 
 .about-tag-link {
-  background: rgba(99, 102, 241, 0.12);
-  color: #c4b5fd;
+  background: rgba(37, 99, 235, 0.12);
+  color: #fbbf24;
   font-size: 0.85rem;
   font-weight: 600;
   padding: 6px 16px;
@@ -70,8 +70,8 @@
 
 .about-tag-link:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
-  background: #6366f1;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+  background: #2563eb;
   color: #ffffff;
 }
 

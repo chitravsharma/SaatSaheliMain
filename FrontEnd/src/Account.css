@@ -12,19 +12,19 @@
   padding: 0 24px;
   font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
   line-height: 1.6;
-  color: #f0f0f8;
+  color: #f0f4f8;
 }
 
 .account-page h1 {
   font-size: 1.85rem;
   font-weight: 800;
-  color: #f0f0f8;
+  color: #f0f4f8;
   margin-bottom: 28px;
   letter-spacing: -0.02em;
 }
 
 .account-page h2 {
-  color: #d4c5ff;
+  color: #fbbf24;
   font-size: 1.2rem;
   font-weight: 600;
   margin-bottom: 16px;
@@ -32,12 +32,12 @@
 
 /* ── Profile Card ── */
 .acct-profile-card {
-  background: #222240;
-  border: 2px solid #3a3a5c;
+  background: #162a3a;
+  border: 2px solid #2a4a6b;
   border-radius: 16px;
   padding: 28px;
   margin-bottom: 36px;
-  box-shadow: 0 2px 12px rgba(99, 102, 241, 0.1);
+  box-shadow: 0 2px 12px rgba(37, 99, 235, 0.1);
 }
 
 .acct-profile-top {
@@ -56,22 +56,22 @@
   height: 90px;
   border-radius: 50%;
   object-fit: cover;
-  border: 3px solid #6366f1;
-  box-shadow: 0 4px 14px rgba(99, 102, 241, 0.2);
+  border: 3px solid #2563eb;
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.2);
 }
 
 .acct-avatar-placeholder {
   width: 90px;
   height: 90px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #6366f1, #a855f7);
+  background: linear-gradient(135deg, #2563eb, #60a5fa);
   color: #ffffff;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 2.2rem;
   font-weight: 700;
-  box-shadow: 0 4px 14px rgba(99, 102, 241, 0.2);
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.2);
 }
 
 .acct-profile-details {
@@ -82,14 +82,14 @@
 .acct-display-name {
   font-size: 1.5rem;
   font-weight: 700;
-  color: #f0f0f8;
+  color: #f0f4f8;
   margin: 0 0 4px 0;
   letter-spacing: -0.01em;
 }
 
 .acct-headline {
   font-size: 0.95rem;
-  color: #a78bfa;
+  color: #f59e0b;
   font-style: italic;
   margin: 0 0 10px 0;
   line-height: 1.5;
@@ -107,7 +107,7 @@
   align-items: center;
   gap: 6px;
   font-size: 0.85rem;
-  color: #b0b8c4;
+  color: #94a3b8;
 }
 
 .acct-meta-item svg {
@@ -118,7 +118,7 @@
 .acct-bio-section {
   margin-top: 20px;
   padding-top: 18px;
-  border-top: 1px solid #3a3a5c;
+  border-top: 1px solid #2a4a6b;
   text-align: left;
 }
 
@@ -127,13 +127,13 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: #d4c5ff;
+  color: #fbbf24;
   margin: 0 0 8px 0;
 }
 
 .acct-bio-text {
   font-size: 0.93rem;
-  color: #e2e6ea;
+  color: #e2e8f0;
   line-height: 1.7;
   margin: 0;
   white-space: pre-wrap;
@@ -143,7 +143,7 @@
 .acct-tags-section {
   margin-top: 20px;
   padding-top: 18px;
-  border-top: 1px solid #3a3a5c;
+  border-top: 1px solid #2a4a6b;
   text-align: left;
 }
 
@@ -157,7 +157,7 @@
 .acct-tag {
   display: inline-block;
   padding: 5px 14px;
-  background: linear-gradient(135deg, #6366f1, #a855f7);
+  background: linear-gradient(135deg, #2563eb, #60a5fa);
   color: #ffffff;
   border-radius: 20px;
   font-size: 0.82rem;
@@ -167,8 +167,8 @@
 
 .acct-tag-field {
   background: transparent;
-  color: #d4c5ff;
-  border: 2px solid #6366f1;
+  color: #fbbf24;
+  border: 2px solid #2563eb;
 }
 
 /* ── Profile Actions ── */
@@ -177,54 +177,54 @@
   gap: 10px;
   margin-top: 20px;
   padding-top: 18px;
-  border-top: 1px solid #3a3a5c;
+  border-top: 1px solid #2a4a6b;
 }
 
 .acct-profile-link {
   display: inline-flex;
   align-items: center;
-  padding: 9px 22px;
-  background: linear-gradient(135deg, #6366f1, #a855f7);
+  padding: 7px 18px;
+  background: linear-gradient(135deg, #2563eb, #60a5fa);
   color: #ffffff;
   border-radius: 10px;
   text-decoration: none;
   font-weight: 600;
   font-size: 0.85rem;
   transition: all 0.2s ease;
-  box-shadow: 0 2px 6px rgba(99, 102, 241, 0.2);
+  box-shadow: 0 2px 6px rgba(37, 99, 235, 0.2);
 }
 
 .acct-profile-link:hover {
-  background: linear-gradient(135deg, #4f46e5, #9333ea);
+  background: linear-gradient(135deg, #1d4ed8, #3b82f6);
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
 }
 
 .acct-profile-link:focus-visible {
-  outline: 2px solid #a78bfa;
+  outline: 2px solid #f59e0b;
   outline-offset: 2px;
 }
 
 .acct-profile-link-secondary {
   background: transparent;
-  color: #d4c5ff;
-  border: 2px solid #6366f1;
+  color: #fbbf24;
+  border: 2px solid #2563eb;
   box-shadow: none;
 }
 
 .acct-profile-link-secondary:hover {
-  background: rgba(99, 102, 241, 0.15);
-  color: #f0f0f8;
+  background: rgba(37, 99, 235, 0.15);
+  color: #f0f4f8;
 }
 
 /* ── Books Section ── */
 .account-page > h2 {
   font-size: 1.3rem;
   font-weight: 700;
-  color: #d4c5ff;
+  color: #fbbf24;
   margin-bottom: 16px;
   padding-bottom: 8px;
-  border-bottom: 2px solid #3a3a5c;
+  border-bottom: 2px solid #2a4a6b;
 }
 
 .acct-books-table {
@@ -234,11 +234,11 @@
   font-size: 0.875rem;
   border-radius: 12px;
   overflow: hidden;
-  box-shadow: 0 1px 8px rgba(99, 102, 241, 0.1);
+  box-shadow: 0 1px 8px rgba(37, 99, 235, 0.1);
 }
 
 .acct-books-table th {
-  background: linear-gradient(135deg, #6366f1, #4f46e5);
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
   color: #ffffff;
   padding: 12px 16px;
   text-align: left;
@@ -250,9 +250,9 @@
 
 .acct-books-table td {
   padding: 12px 16px;
-  border-bottom: 1px solid #3a3a5c;
-  color: #f0f0f8;
-  background: #222240;
+  border-bottom: 1px solid #2a4a6b;
+  color: #f0f4f8;
+  background: #162a3a;
 }
 
 .acct-books-table tr:last-child td {
@@ -260,12 +260,12 @@
 }
 
 .acct-books-table tr:hover td {
-  background: #2a2a4a;
+  background: #1e3a52;
 }
 
 /* Book title link */
 .acct-book-link {
-  color: #a78bfa;
+  color: #f59e0b;
   font-weight: 600;
   text-decoration: none;
   transition: color 0.15s;
@@ -273,11 +273,11 @@
 
 .acct-book-link:hover {
   text-decoration: underline;
-  color: #d4c5ff;
+  color: #fbbf24;
 }
 
 .acct-book-link:focus-visible {
-  outline: 2px solid #a78bfa;
+  outline: 2px solid #f59e0b;
   outline-offset: 2px;
 }
 
@@ -291,11 +291,11 @@
 .acct-error {
   text-align: center;
   padding: 48px 20px;
-  color: #b0b8c4;
+  color: #94a3b8;
   font-size: 0.95rem;
-  background: #222240;
+  background: #162a3a;
   border-radius: 12px;
-  border: 1px dashed #3a3a5c;
+  border: 1px dashed #2a4a6b;
 }
 
 .acct-error {
@@ -307,7 +307,7 @@
 .acct-login-prompt {
   text-align: center;
   padding: 60px 20px;
-  color: #b0b8c4;
+  color: #94a3b8;
   font-size: 1rem;
 }
 
@@ -385,24 +385,24 @@
 .acct-interests-sections > h2 {
   font-size: 1.3rem;
   font-weight: 700;
-  color: #d4c5ff;
+  color: #fbbf24;
   margin-bottom: 16px;
   padding-bottom: 8px;
-  border-bottom: 2px solid #3a3a5c;
+  border-bottom: 2px solid #2a4a6b;
 }
 
 .acct-section-card {
-  background: #222240;
-  border: 1px solid #3a3a5c;
+  background: #162a3a;
+  border: 1px solid #2a4a6b;
   border-radius: 12px;
   padding: 20px 24px;
   margin-bottom: 16px;
-  box-shadow: 0 1px 6px rgba(99, 102, 241, 0.08);
+  box-shadow: 0 1px 6px rgba(37, 99, 235, 0.08);
   transition: box-shadow 0.2s;
 }
 
 .acct-section-card:hover {
-  box-shadow: 0 3px 12px rgba(99, 102, 241, 0.15);
+  box-shadow: 0 3px 12px rgba(37, 99, 235, 0.15);
 }
 
 .acct-section-title {
@@ -411,30 +411,30 @@
   gap: 8px;
   font-size: 1.1rem;
   font-weight: 700;
-  color: #f0f0f8;
+  color: #f0f4f8;
   margin: 0 0 10px 0;
 }
 
 .acct-section-title svg {
   flex-shrink: 0;
-  color: #a78bfa;
+  color: #f59e0b;
 }
 
 .acct-section-desc {
   font-size: 0.9rem;
-  color: #b0b8c4;
+  color: #94a3b8;
   margin: 0;
   line-height: 1.6;
 }
 
 .acct-section-desc a {
-  color: #a78bfa;
+  color: #f59e0b;
   font-weight: 600;
   text-decoration: underline;
 }
 
 .acct-section-desc a:hover {
-  color: #d4c5ff;
+  color: #fbbf24;
 }
 
 /* ── Gallery ── */
@@ -449,7 +449,7 @@
   position: relative;
   border-radius: 8px;
   overflow: hidden;
-  border: 1px solid #3a3a5c;
+  border: 1px solid #2a4a6b;
   aspect-ratio: 1;
 }
 
@@ -487,7 +487,7 @@
 }
 
 .acct-gallery-upload input[type="file"] {
-  color: #d4c5ff;
+  color: #fbbf24;
 }
 
 .acct-gallery-msg {
@@ -498,8 +498,8 @@
 }
 
 .acct-no-interests {
-  background: #222240;
-  border: 1px dashed #4a4a6e;
+  background: #162a3a;
+  border: 1px dashed #3a5a7b;
   border-radius: 12px;
   padding: 24px;
   margin-top: 24px;
@@ -507,12 +507,12 @@
 }
 
 .acct-no-interests p {
-  color: #b0b8c4;
+  color: #94a3b8;
   margin: 0;
 }
 
 .acct-no-interests a {
-  color: #a78bfa;
+  color: #f59e0b;
   font-weight: 600;
   text-decoration: underline;
 }

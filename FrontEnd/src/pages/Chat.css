@@ -8,7 +8,7 @@
     background: none;
     border: none;
     font-size: 1.4rem;
-    color: #d4c5ff;
+    color: #fbbf24;
     cursor: pointer;
     padding: 4px 8px;
     border-radius: 6px;
@@ -17,11 +17,11 @@
 }
 
 .chat-back-arrow:hover {
-    background: rgba(99, 102, 241, 0.15);
+    background: rgba(37, 99, 235, 0.15);
 }
 
 .chat-back-arrow:focus-visible {
-    outline: 2px solid #a78bfa;
+    outline: 2px solid #f59e0b;
     outline-offset: 2px;
 }
 
@@ -30,17 +30,17 @@
     height: calc(100vh - 180px);
     max-width: 1200px;
     margin: 0 auto;
-    border: 1px solid #3a3a5c;
+    border: 1px solid #2a4a6b;
     border-radius: 12px;
     overflow: hidden;
-    background: #222240;
+    background: #162a3a;
 }
 
 .chat-sidebar {
     width: 280px;
     min-width: 240px;
-    border-right: 1px solid #3a3a5c;
-    background: #2a2a4a;
+    border-right: 1px solid #2a4a6b;
+    background: #1e3a52;
     display: flex;
     flex-direction: column;
 }
@@ -49,8 +49,8 @@
     padding: 1rem 1.2rem;
     margin: 0;
     font-size: 1.1rem;
-    border-bottom: 1px solid #3a3a5c;
-    color: #f0f0f8;
+    border-bottom: 1px solid #2a4a6b;
+    color: #f0f4f8;
 }
 
 .chat-room-list {
@@ -69,16 +69,16 @@
     text-align: left;
     cursor: pointer;
     transition: background 0.15s;
-    border-bottom: 1px solid #3a3a5c;
-    color: #f0f0f8;
+    border-bottom: 1px solid #2a4a6b;
+    color: #f0f4f8;
 }
 
 .chat-room-item:hover {
-    background: #3a3a5c;
+    background: #2a4a6b;
 }
 
 .chat-room-item.active {
-    background: #7c3aed;
+    background: #2563eb;
     color: #fff;
 }
 
@@ -104,7 +104,7 @@
 
 .room-desc {
     font-size: 0.75rem;
-    color: #b0b8c4;
+    color: #94a3b8;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -122,8 +122,8 @@
     align-items: center;
     gap: 0.5rem;
     padding: 0.8rem 1.2rem;
-    border-bottom: 1px solid #3a3a5c;
-    background: #2a2a4a;
+    border-bottom: 1px solid #2a4a6b;
+    background: #1e3a52;
 }
 
 .chat-header-icon {
@@ -133,7 +133,7 @@
 .chat-header h3 {
     margin: 0;
     font-size: 1.1rem;
-    color: #f0f0f8;
+    color: #f0f4f8;
 }
 
 .chat-messages {
@@ -151,7 +151,7 @@
     align-items: center;
     justify-content: center;
     flex: 1;
-    color: #b0b8c4;
+    color: #94a3b8;
     font-size: 1rem;
 }
 
@@ -174,7 +174,7 @@
 .chat-msg-sender {
     font-size: 0.75rem;
     font-weight: 600;
-    color: #d4c5ff;
+    color: #fbbf24;
     margin-bottom: 0.15rem;
     padding-left: 0.5rem;
 }
@@ -186,14 +186,14 @@
 }
 
 .chat-msg-own .chat-msg-bubble {
-    background: #6366f1;
+    background: #2563eb;
     color: #fff;
     border-bottom-right-radius: 4px;
 }
 
 .chat-msg-other .chat-msg-bubble {
-    background: #2a2a4a;
-    color: #f0f0f8;
+    background: #1e3a52;
+    color: #f0f4f8;
     border-bottom-left-radius: 4px;
 }
 
@@ -227,7 +227,7 @@
 }
 
 .chat-msg-own .chat-msg-delete { color: rgba(255, 255, 255, 0.7); }
-.chat-msg-other .chat-msg-delete { color: #b0b8c4; }
+.chat-msg-other .chat-msg-delete { color: #94a3b8; }
 
 .chat-msg:hover .chat-msg-delete {
     opacity: 1;
@@ -237,29 +237,29 @@
     display: flex;
     gap: 0.5rem;
     padding: 0.8rem 1.2rem;
-    border-top: 1px solid #3a3a5c;
-    background: #2a2a4a;
+    border-top: 1px solid #2a4a6b;
+    background: #1e3a52;
 }
 
 .chat-input-bar input {
     flex: 1;
     padding: 0.7rem 1rem;
-    border: 1px solid #4a4a6e;
+    border: 1px solid #3a5a7b;
     border-radius: 24px;
     font-size: 0.95rem;
     outline: none;
     transition: border-color 0.2s;
-    background: #1a1a2e;
-    color: #f0f0f8;
+    background: #0f1923;
+    color: #f0f4f8;
 }
 
 .chat-input-bar input:focus {
-    border-color: #b89fff;
+    border-color: #f59e0b;
 }
 
 .chat-input-bar button {
     padding: 0.7rem 1.5rem;
-    background: #6366f1;
+    background: #2563eb;
     color: #fff;
     border: none;
     border-radius: 24px;
@@ -269,12 +269,12 @@
 }
 
 .chat-input-bar button:disabled {
-    background: #4a4a6e;
+    background: #3a5a7b;
     cursor: not-allowed;
 }
 
 .chat-input-bar button:hover:not(:disabled) {
-    background: #5558e6;
+    background: #1d4ed8;
 }
 
 @media (max-width: 700px) {
@@ -289,7 +289,7 @@
         min-width: unset;
         max-height: 180px;
         border-right: none;
-        border-bottom: 1px solid #3a3a5c;
+        border-bottom: 1px solid #2a4a6b;
     }
 
     .chat-room-list {
@@ -303,7 +303,7 @@
         min-width: 100px;
         text-align: center;
         border-bottom: none;
-        border-right: 1px solid #3a3a5c;
+        border-right: 1px solid #2a4a6b;
         padding: 0.6rem;
     }
 

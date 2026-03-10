@@ -2,10 +2,10 @@
 /* Navy (#0f3460) on white = 10.9:1 contrast ratio */
 
 .site-header {
-  background-color: #0d0d1a;
+  background-color: #0c1520;
   padding: 0;
-  border-bottom: 3px solid #6366f1;
-  box-shadow: 0 2px 12px rgba(99, 102, 241, 0.15);
+  border-bottom: 3px solid #2563eb;
+  box-shadow: 0 2px 12px rgba(37, 99, 235, 0.15);
 }
 
 /* Skip link for keyboard navigation - ADA requirement */
@@ -13,8 +13,8 @@
   position: absolute;
   top: -50px;
   left: 16px;
-  background: #a78bfa;
-  color: #0d0d1a;
+  background: #f59e0b;
+  color: #0c1520;
   padding: 10px 16px;
   border-radius: 0 0 8px 8px;
   font-weight: 600;
@@ -64,7 +64,7 @@
 }
 
 .header-site-name {
-  color: #d4c5ff;
+  color: #fbbf24;
   font-size: 1.5rem;
   font-weight: 700;
   letter-spacing: 0.03em;
@@ -83,7 +83,7 @@
 .hamburger-btn {
   display: none;
   background: none;
-  border: 2px solid #a78bfa;
+  border: 2px solid #f59e0b;
   border-radius: 8px;
   padding: 8px;
   cursor: pointer;
@@ -93,7 +93,7 @@
   justify-content: center;
 }
 .hamburger-btn:focus-visible {
-  outline: 3px solid #a78bfa;
+  outline: 3px solid #f59e0b;
   outline-offset: 2px;
 }
 
@@ -170,27 +170,27 @@
   letter-spacing: 0.02em;
 }
 .nav-link:hover {
-  background-color: rgba(99, 102, 241, 0.15);
-  color: #d4c5ff;
+  background-color: rgba(37, 99, 235, 0.15);
+  color: #fbbf24;
 }
 .nav-link:focus-visible {
-  outline: 3px solid #a78bfa;
+  outline: 3px solid #f59e0b;
   outline-offset: 2px;
 }
 
 /* Register button - highlighted */
 .nav-link-register {
-  background: linear-gradient(135deg, #6366f1, #a855f7);
+  background: linear-gradient(135deg, #2563eb, #60a5fa);
   color: #ffffff;
   border-radius: 8px;
 }
 .nav-link-register:hover {
-  background: linear-gradient(135deg, #4f46e5, #9333ea);
+  background: linear-gradient(135deg, #1d4ed8, #3b82f6);
   color: #ffffff;
 }
 
 .welcome-msg {
-  color: #b89fff;
+  color: #f59e0b;
   font-weight: 600;
   font-size: 0.875rem;
   padding: 0 12px;
@@ -199,9 +199,9 @@
 
 /* Language selector */
 .header-lang-select {
-  background: rgba(99, 102, 241, 0.15);
-  color: #f0f0f8;
-  border: 2px solid #a78bfa;
+  background: rgba(37, 99, 235, 0.15);
+  color: #f0f4f8;
+  border: 2px solid #f59e0b;
   border-radius: 8px;
   padding: 6px 10px;
   font-size: 0.875rem;
@@ -216,11 +216,11 @@
   padding-right: 24px;
 }
 .header-lang-select option {
-  background: #0d0d1a;
-  color: #f0f0f8;
+  background: #0c1520;
+  color: #f0f4f8;
 }
 .header-lang-select:focus-visible {
-  outline: 3px solid #a78bfa;
+  outline: 3px solid #f59e0b;
   outline-offset: 2px;
 }
 
@@ -231,9 +231,9 @@
   align-items: center;
 }
 .header-user-btn {
-  background: rgba(99, 102, 241, 0.15);
-  color: #f0f0f8;
-  border: 2px solid #a78bfa;
+  background: rgba(37, 99, 235, 0.15);
+  color: #f0f4f8;
+  border: 2px solid #f59e0b;
   border-radius: 8px;
   padding: 8px 16px;
   font-size: 0.9375rem;
@@ -253,7 +253,7 @@
   background: rgba(255, 255, 255, 0.25);
 }
 .header-user-btn:focus-visible {
-  outline: 3px solid #a78bfa;
+  outline: 3px solid #f59e0b;
   outline-offset: 2px;
 }
 .header-user-dropdown {
@@ -261,8 +261,8 @@
   top: 100%;
   right: 0;
   margin-top: 6px;
-  background: #1a1a2e;
-  border: 2px solid #3a3a5c;
+  background: #0f1923;
+  border: 2px solid #2a4a6b;
   border-radius: 10px;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
   min-width: 160px;
@@ -272,18 +272,18 @@
 .header-user-item {
   display: block;
   padding: 12px 18px;
-  color: #f0f0f8;
+  color: #f0f4f8;
   text-decoration: none;
   font-size: 0.9rem;
   font-weight: 500;
   transition: background-color 0.15s;
 }
 .header-user-item:hover {
-  background-color: rgba(99, 102, 241, 0.15);
-  color: #d4c5ff;
+  background-color: rgba(37, 99, 235, 0.15);
+  color: #fbbf24;
 }
 .header-user-item:focus-visible {
-  outline: 3px solid #a78bfa;
+  outline: 3px solid #f59e0b;
   outline-offset: -3px;
 }
 

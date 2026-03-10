@@ -4,15 +4,15 @@
   padding: 24px;
   font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
   line-height: 1.6;
-  color: #f0f0f8;
+  color: #f0f4f8;
 }
 
 .profile-page h1 {
-  color: #f0f0f8;
+  color: #f0f4f8;
   font-size: 1.75rem;
   font-weight: 700;
   margin-bottom: 24px;
-  border-bottom: 3px solid #6366f1;
+  border-bottom: 3px solid #2563eb;
   padding-bottom: 8px;
 }
 
@@ -20,8 +20,8 @@
   display: flex;
   flex-direction: column;
   gap: 20px;
-  background: #222240;
-  border: 2px solid #3a3a5c;
+  background: #162a3a;
+  border: 2px solid #2a4a6b;
   border-radius: 16px;
   padding: 28px;
 }
@@ -34,32 +34,32 @@
 
 .profile-field label {
   font-weight: 600;
-  color: #d4c5ff;
+  color: #fbbf24;
   font-size: 0.9rem;
 }
 
 .profile-field input[type="text"],
 .profile-field textarea {
   padding: 10px 12px;
-  border: 2px solid #4a4a6e;
+  border: 2px solid #3a5a7b;
   border-radius: 8px;
   font-size: 0.95rem;
   font-family: inherit;
-  color: #f0f0f8;
-  background-color: #1a1a2e;
+  color: #f0f4f8;
+  background-color: #0f1923;
   transition: border-color 0.2s;
 }
 
 .profile-field input[type="text"]::placeholder,
 .profile-field textarea::placeholder {
-  color: #7c7c9a;
+  color: #64748b;
 }
 
 .profile-field input[type="text"]:focus,
 .profile-field textarea:focus {
   outline: none;
-  border-color: #6366f1;
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
 }
 
 .profile-field textarea {
@@ -68,7 +68,7 @@
 }
 
 .profile-field input[type="file"] {
-  color: #d4c5ff;
+  color: #fbbf24;
   font-size: 0.9rem;
 }
 
@@ -84,11 +84,11 @@
   height: 80px;
   border-radius: 50%;
   object-fit: cover;
-  border: 3px solid #4a4a6e;
+  border: 3px solid #3a5a7b;
 }
 
 .profile-uploading {
-  color: #a78bfa;
+  color: #f59e0b;
   font-size: 0.85rem;
   font-style: italic;
 }
@@ -122,7 +122,7 @@
 .profile-login-prompt {
   text-align: center;
   padding: 60px 20px;
-  color: #b0b8c4;
+  color: #94a3b8;
   font-size: 1rem;
 }
 
@@ -137,25 +137,25 @@
   align-items: center;
   gap: 6px;
   padding: 6px 14px;
-  border: 2px solid #4a4a6e;
+  border: 2px solid #3a5a7b;
   border-radius: 20px;
   font-size: 0.9rem;
-  color: #d4c5ff;
+  color: #fbbf24;
   cursor: pointer;
   transition: all 0.2s;
   user-select: none;
 }
 .profile-checkbox-label:hover {
-  border-color: #6366f1;
-  background: rgba(99, 102, 241, 0.1);
+  border-color: #2563eb;
+  background: rgba(37, 99, 235, 0.1);
 }
 .profile-checkbox-label input[type="checkbox"] {
   display: none;
 }
 .profile-checkbox-label.checked {
-  background: linear-gradient(135deg, #6366f1, #a855f7);
+  background: linear-gradient(135deg, #2563eb, #60a5fa);
   color: #ffffff;
-  border-color: #6366f1;
+  border-color: #2563eb;
 }
 
 @media (max-width: 768px) {

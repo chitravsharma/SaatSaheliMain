@@ -311,7 +311,7 @@ function Account() {
                   onChange={(e) => setNewGalleryTitle(e.target.value)}
                   placeholder="New gallery title..."
                   className="acct-gallery-input"
-                  style={{ flex: 1, padding: "8px 12px", borderRadius: 6, border: "1px solid #4a4a6e", fontSize: "0.88rem", background: "#1a1a2e", color: "#f0f0f8" }}
+                  style={{ flex: 1, padding: "8px 12px", borderRadius: 6, border: "1px solid #3a5a7b", fontSize: "0.88rem", background: "#0f1923", color: "#f0f4f8" }}
                 />
                 <button className="ss-btn ss-btn-primary ss-btn-sm" onClick={handleCreateGallery} disabled={!newGalleryTitle.trim()}>Create Gallery</button>
               </div>

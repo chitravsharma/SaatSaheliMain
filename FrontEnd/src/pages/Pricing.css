@@ -13,7 +13,7 @@
 .pricing-hero h1 {
   font-size: 2.4rem;
   font-weight: 700;
-  background: linear-gradient(135deg, #6366f1, #a855f7, #ec4899);
+  background: linear-gradient(135deg, #2563eb, #60a5fa, #f59e0b);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -35,8 +35,8 @@
 }
 
 .pricing-card {
-  background: #222240;
-  border: 2px solid #3a3a5c;
+  background: #162a3a;
+  border: 2px solid #2a4a6b;
   border-radius: 16px;
   padding: 28px 24px;
   position: relative;
@@ -49,8 +49,8 @@
 }
 
 .pricing-card-highlight {
-  border-color: #6366f1;
-  box-shadow: 0 8px 28px rgba(99, 102, 241, 0.15);
+  border-color: #2563eb;
+  box-shadow: 0 8px 28px rgba(37, 99, 235, 0.15);
 }
 
 .pricing-badge {
@@ -58,7 +58,7 @@
   top: -12px;
   left: 50%;
   transform: translateX(-50%);
-  background: linear-gradient(135deg, #6366f1, #a855f7);
+  background: linear-gradient(135deg, #2563eb, #60a5fa);
   color: white;
   font-size: 0.75rem;
   font-weight: 700;
@@ -71,7 +71,7 @@
 .pricing-plan-name {
   font-size: 1.35rem;
   font-weight: 700;
-  color: #e0e0e8;
+  color: #e2e8f0;
   margin: 0 0 4px;
 }
 
@@ -89,7 +89,7 @@
 .pricing-amount {
   font-size: 2rem;
   font-weight: 800;
-  color: #c4b5fd;
+  color: #fbbf24;
 }
 
 .pricing-period {
@@ -121,7 +121,7 @@
 .pricing-bonus li,
 .pricing-limitations li {
   font-size: 0.88rem;
-  color: #c0c0d0;
+  color: #c4b5a0;
   padding: 4px 0;
   line-height: 1.4;
   display: flex;
@@ -153,10 +153,10 @@
   display: block;
   width: 100%;
   padding: 12px 16px;
-  border: 2px solid #6366f1;
+  border: 2px solid #2563eb;
   border-radius: 10px;
   background: transparent;
-  color: #c4b5fd;
+  color: #fbbf24;
   font-size: 0.95rem;
   font-weight: 700;
   cursor: pointer;
@@ -166,18 +166,18 @@
 }
 
 .pricing-btn:hover {
-  background: #6366f1;
+  background: #2563eb;
   color: #ffffff;
 }
 
 .pricing-btn-highlight {
-  background: linear-gradient(135deg, #6366f1, #a855f7);
-  border-color: #6366f1;
+  background: linear-gradient(135deg, #2563eb, #60a5fa);
+  border-color: #2563eb;
   color: #ffffff;
 }
 
 .pricing-btn-highlight:hover {
-  background: linear-gradient(135deg, #4f46e5, #9333ea);
+  background: linear-gradient(135deg, #1d4ed8, #3b82f6);
 }
 
 @media (max-width: 1024px) {

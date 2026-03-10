@@ -27,7 +27,7 @@
   color: #d4a017;
 }
 .dropdown-toggle:focus-visible {
-  outline: 3px solid #a78bfa;
+  outline: 3px solid #f59e0b;
   outline-offset: 2px;
 }
 
@@ -36,11 +36,11 @@
   right: 0;
   top: 100%;
   margin-top: 4px;
-  background-color: #222240;
+  background-color: #162a3a;
   min-width: 180px;
-  box-shadow: 0 4px 16px rgba(99, 102, 241, 0.15);
+  box-shadow: 0 4px 16px rgba(37, 99, 235, 0.15);
   border-radius: 8px;
-  border: 2px solid #3a3a5c;
+  border: 2px solid #2a4a6b;
   z-index: 100;
   list-style-type: none;
   padding: 6px 0;
@@ -52,7 +52,7 @@
   text-decoration: none;
   display: block;
   cursor: pointer;
-  color: #f0f0f8;
+  color: #f0f4f8;
   font-size: 0.9375rem;
   font-weight: 500;
   min-height: 44px;
@@ -61,11 +61,11 @@
   transition: background-color 0.15s;
 }
 .dropdown-menu li:hover {
-  background-color: #2a2a4a;
-  color: #d4c5ff;
+  background-color: #1e3a52;
+  color: #fbbf24;
 }
 .dropdown-menu li:focus-visible {
-  outline: 3px solid #a78bfa;
+  outline: 3px solid #f59e0b;
   outline-offset: -3px;
 }
 

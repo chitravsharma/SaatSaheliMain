@@ -13,23 +13,23 @@
 }
 
 .terms-gate-modal {
-  background: #222240;
+  background: #162a3a;
   border-radius: 12px;
   max-width: 600px;
   width: 100%;
   max-height: 80vh;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 8px 32px rgba(99, 102, 241, 0.2);
+  box-shadow: 0 8px 32px rgba(37, 99, 235, 0.2);
 }
 
 .terms-gate-modal h2 {
   font-size: 1.4rem;
   font-weight: 700;
-  color: #d4c5ff;
+  color: #fbbf24;
   margin: 0;
   padding: 20px 24px 12px;
-  border-bottom: 2px solid #3a3a5c;
+  border-bottom: 2px solid #2a4a6b;
   font-family: 'Georgia', 'Times New Roman', serif;
 }
 
@@ -39,11 +39,11 @@
   flex: 1;
   font-size: 0.92rem;
   line-height: 1.7;
-  color: #f0f0f8;
+  color: #f0f4f8;
 }
 
 .terms-gate-body h3 {
-  color: #d4c5ff;
+  color: #fbbf24;
   font-size: 1rem;
   font-weight: 700;
   margin: 16px 0 8px;
@@ -59,7 +59,7 @@
 }
 
 .terms-gate-body a {
-  color: #d4c5ff;
+  color: #fbbf24;
   font-weight: 600;
 }
 
@@ -70,22 +70,22 @@
   padding: 12px 24px;
   font-size: 0.9rem;
   font-weight: 600;
-  color: #d4c5ff;
+  color: #fbbf24;
   cursor: pointer;
-  border-top: 1px solid #3a3a5c;
+  border-top: 1px solid #2a4a6b;
 }
 
 .terms-gate-checkbox input[type="checkbox"] {
   width: 18px;
   height: 18px;
-  accent-color: #6366f1;
+  accent-color: #2563eb;
   cursor: pointer;
 }
 
 .terms-gate-accept {
   margin: 0 24px 20px;
   padding: 12px 24px;
-  background: #6366f1;
+  background: #2563eb;
   color: #ffffff;
   border: none;
   border-radius: 6px;
@@ -96,7 +96,7 @@
 }
 
 .terms-gate-accept:hover:not(:disabled) {
-  background: #4f46e5;
+  background: #1d4ed8;
 }
 
 .terms-gate-accept:disabled {
@@ -105,7 +105,7 @@
 }
 
 .terms-gate-accept:focus-visible {
-  outline: 3px solid #a78bfa;
+  outline: 3px solid #f59e0b;
   outline-offset: 2px;
 }
 

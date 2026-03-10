@@ -50,7 +50,7 @@ const SitePolicies = () => {
       <h2>{strings.sitePolicies.contactHeading}</h2>
       <p>
         {strings.sitePolicies.contactBody}{' '}
-        <a href={`mailto:${strings.sitePolicies.contactEmail}`} style={{ color: '#6366f1', fontWeight: 600 }}>
+        <a href={`mailto:${strings.sitePolicies.contactEmail}`} style={{ color: '#f59e0b', fontWeight: 600 }}>
           {strings.sitePolicies.contactEmail}
         </a>.
       </p>

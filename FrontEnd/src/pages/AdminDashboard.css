@@ -7,7 +7,7 @@
 .admin-dashboard h1 {
     font-size: 1.8rem;
     margin-bottom: 1rem;
-    color: #f0f0f8;
+    color: #f0f4f8;
 }
 
 .admin-message {
@@ -24,7 +24,7 @@
     display: flex;
     gap: 0.5rem;
     margin-bottom: 1.5rem;
-    border-bottom: 2px solid #3a3a5c;
+    border-bottom: 2px solid #2a4a6b;
     padding-bottom: 0.5rem;
 }
 
@@ -35,18 +35,18 @@
     font-size: 1rem;
     cursor: pointer;
     border-radius: 6px 6px 0 0;
-    color: #b0b8c4;
+    color: #94a3b8;
     transition: all 0.2s;
 }
 
 .admin-tabs button.active {
-    background: #7c3aed;
+    background: #2563eb;
     color: #fff;
 }
 
 .admin-tabs button:hover:not(.active) {
-    background: #2a2a4a;
-    color: #7c3aed;
+    background: #1e3a52;
+    color: #2563eb;
 }
 
 .admin-stats-grid {
@@ -56,23 +56,23 @@
 }
 
 .stat-card {
-    background: #222240;
-    border: 1px solid #3a3a5c;
+    background: #162a3a;
+    border: 1px solid #2a4a6b;
     border-radius: 12px;
     padding: 1.5rem;
     text-align: center;
-    box-shadow: 0 1px 3px rgba(99, 102, 241, 0.06);
+    box-shadow: 0 1px 3px rgba(37, 99, 235, 0.06);
 }
 
 .stat-value {
     font-size: 2rem;
     font-weight: 700;
-    color: #7c3aed;
+    color: #2563eb;
 }
 
 .stat-label {
     font-size: 0.9rem;
-    color: #b0b8c4;
+    color: #94a3b8;
     margin-top: 0.25rem;
 }
 
@@ -90,32 +90,32 @@
 .admin-table td {
     padding: 0.75rem 0.6rem;
     text-align: left;
-    border-bottom: 1px solid #3a3a5c;
-    color: #f0f0f8;
+    border-bottom: 1px solid #2a4a6b;
+    color: #f0f4f8;
 }
 
 .admin-table th {
-    background: linear-gradient(135deg, #6366f1, #4f46e5);
+    background: linear-gradient(135deg, #2563eb, #1d4ed8);
     font-weight: 600;
     color: #fff;
     white-space: nowrap;
 }
 
 .admin-table tr {
-    background: #222240;
+    background: #162a3a;
 }
 
 .admin-table tr:hover {
-    background: #2a2a4a;
+    background: #1e3a52;
 }
 
 .admin-table select {
     padding: 0.3rem 0.5rem;
-    border: 1px solid #4a4a6e;
+    border: 1px solid #3a5a7b;
     border-radius: 6px;
     font-size: 0.85rem;
-    background: #1a1a2e;
-    color: #f0f0f8;
+    background: #0f1923;
+    color: #f0f4f8;
 }
 
 .role-badge {
@@ -126,7 +126,7 @@
     font-weight: 600;
 }
 
-.role-badge.role-user { background: #2a2a5a; color: #a5b4fc; }
+.role-badge.role-user { background: #2a2518; color: #f59e0b; }
 .role-badge.role-admin { background: #3a3020; color: #fbbf24; }
 .role-badge.role-super_admin { background: #3a2030; color: #f9a8d4; }
 
