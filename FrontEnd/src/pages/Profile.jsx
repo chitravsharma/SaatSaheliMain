@@ -101,7 +101,7 @@ function Profile() {
         interests: interests.join(","),
         fields: fields.join(","),
       });
-      setMessage(s.saved);
+      navigate(`/profile/${user.userId}`);
     } catch {
       setError(s.saveFailed);
     } finally {

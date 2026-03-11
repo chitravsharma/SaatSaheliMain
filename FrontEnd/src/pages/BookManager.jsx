@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useLocation, Link } from "react-router-dom";
+import { useLocation, Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import FlipBook from "../FlipBook";
 import PageLayoutEditor from "../PageLayoutEditor";
@@ -136,6 +136,7 @@ function BookManager() {
   const { user } = useAuth();
   const strings = useStrings();
   const location = useLocation();
+  const bmNavigate = useNavigate();
   const userId = user?.userId || 1;
   const [view, setView] = useState("menu");
   const [books, setBooks] = useState([]);
@@ -614,6 +615,10 @@ function BookManager() {
             <button className="bm-btn bm-btn-all" onClick={() => { setReadingBookId(null); fetchBooks(); setView("allbooks"); }}>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
               {strings.bookManager.allMyBooks}
+            </button>
+            <button className="bm-btn bm-btn-edit" onClick={() => bmNavigate("/articles")}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+              My Articles
             </button>
           </div>
 

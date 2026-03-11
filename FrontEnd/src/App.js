@@ -26,6 +26,7 @@ import UserManual from './pages/UserManual';
 import AdminManual from './pages/AdminManual';
 import GalleryView from './pages/GalleryView';
 import Pricing from './pages/Pricing';
+import Articles from './pages/Articles';
 import ProtectedRoute from './components/ProtectedRoute';
 
 
@@ -57,6 +58,7 @@ function App() {
           <Route path="/category/:category" element={<CategoryPage />} />
           <Route path="/admin" element={<ProtectedRoute requiredRole="ADMIN"><AdminDashboard /></ProtectedRoute>} />
           <Route path="/chat" element={<ProtectedRoute><Chat /></ProtectedRoute>} />
+          <Route path="/articles" element={<ProtectedRoute><Articles /></ProtectedRoute>} />
           <Route path="/gallery/:galleryId" element={<GalleryView />} />
           <Route path="/pricing" element={<Pricing />} />
           <Route path="/manual" element={<UserManual />} />
