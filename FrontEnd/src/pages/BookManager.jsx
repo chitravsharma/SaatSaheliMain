@@ -133,7 +133,8 @@ const DEFAULT_FORMAT = {
 };
 
 function BookManager() {
-  const { user } = useAuth();
+  const { user, isSuperAdmin, isPremiumOrAbove } = useAuth();
+  const canCustomizeCover = isSuperAdmin || isPremiumOrAbove;
   const strings = useStrings();
   const location = useLocation();
   const bmNavigate = useNavigate();
@@ -899,8 +900,8 @@ function BookManager() {
                     onChange={(e) => setPageContent(e.target.value)} className="bm-input bm-textarea" rows={3} />
                 </div>
 
-                {/* Show Cover/Back Page Designer for cover or back page */}
-                {pageNumber && isCoverOrBack(pageNumber) && (
+                {/* Show Cover/Back Page Designer for cover or back page (Premium+ or Super Admin) */}
+                {pageNumber && isCoverOrBack(pageNumber) && canCustomizeCover && (
                   <CoverPageDesigner
                     type={isCoverPage(pageNumber) ? "cover" : "back"}
                     bookTitle={selectedBook?.title}
@@ -910,6 +911,12 @@ function BookManager() {
                     onDesignDataChange={(d) => setCoverDesignData(d)}
                     initialData={coverDesignData}
                   />
+                )}
+                {pageNumber && isCoverOrBack(pageNumber) && !canCustomizeCover && (
+                  <div className="bm-upgrade-notice" style={{ padding: "16px", background: "rgba(37,99,235,0.1)", borderRadius: "8px", border: "1px solid #2a4a6b", marginTop: "8px", color: "#94a3b8", fontSize: "0.9rem" }}>
+                    <strong style={{ color: "#fbbf24" }}>Cover Page Customization</strong> is available for Premium plan and above.{" "}
+                    <a href="/pricing" style={{ color: "#f59e0b", textDecoration: "underline" }}>Upgrade your plan</a> to unlock this feature.
+                  </div>
                 )}
 
                 {/* Show regular page editor for non-cover/back pages */}
@@ -959,8 +966,8 @@ function BookManager() {
                           className="bm-input bm-textarea" placeholder={strings.bookManager.placeholderEditContent} rows={3} />
                       </div>
 
-                      {/* Show Cover/Back Page Designer for cover or back page */}
-                      {isCoverOrBack(editingPage.pageNumber) ? (
+                      {/* Show Cover/Back Page Designer for cover or back page (Premium+ or Super Admin) */}
+                      {isCoverOrBack(editingPage.pageNumber) && canCustomizeCover ? (
                         <CoverPageDesigner
                           type={isCoverPage(editingPage.pageNumber) ? "cover" : "back"}
                           bookTitle={selectedBook?.title}
@@ -978,6 +985,11 @@ function BookManager() {
                             try { return JSON.parse(editingPage.format).coverDesign || {}; } catch { return {}; }
                           })()}
                         />
+                      ) : isCoverOrBack(editingPage.pageNumber) && !canCustomizeCover ? (
+                        <div className="bm-upgrade-notice" style={{ padding: "16px", background: "rgba(37,99,235,0.1)", borderRadius: "8px", border: "1px solid #2a4a6b", marginTop: "8px", color: "#94a3b8", fontSize: "0.9rem" }}>
+                          <strong style={{ color: "#fbbf24" }}>Cover Page Customization</strong> is available for Premium plan and above.{" "}
+                          <a href="/pricing" style={{ color: "#f59e0b", textDecoration: "underline" }}>Upgrade your plan</a> to unlock this feature.
+                        </div>
                       ) : (
                         <>
                           {renderFormatToolbar(
@@ -1038,11 +1050,32 @@ function BookManager() {
                       {page.pageNumber === 1 && <span className="bm-page-type-badge bm-badge-cover">Cover</span>}
                       {page.pageNumber === getBackPageNumber() && page.pageNumber !== 1 && <span className="bm-page-type-badge bm-badge-back">Back</span>}
                       <span className="bm-page-content">{page.content || strings.bookManager.emptyPage}</span>
-                      {page.imageUrl && (
-                        <img src={resolveImageUrl(page.imageUrl)} alt={strings.bookManager.image1Alt} className="bm-page-thumb" />
-                      )}
-                      {page.imageUrl2 && (
-                        <img src={resolveImageUrl(page.imageUrl2)} alt={strings.bookManager.image2Alt} className="bm-page-thumb" />
+                      {isCoverOrBack(page.pageNumber) && page.imageUrl ? (() => {
+                        let cd = {};
+                        try { cd = JSON.parse(page.format)?.coverDesign || {}; } catch { /* ignore */ }
+                        const scale = cd.imageScale || 100;
+                        return (
+                          <div className="bm-cover-preview" style={{ position: "relative", width: "180px", height: "240px", overflow: "hidden", borderRadius: "8px", border: "1px solid #2a4a6b" }}>
+                            <img src={resolveImageUrl(page.imageUrl)} alt={strings.bookManager.image1Alt}
+                              style={{ width: `${scale}%`, height: `${scale}%`, objectFit: "cover", position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)" }} />
+                            {(cd.title || cd.author) && (
+                              <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", padding: "12px", textAlign: "center", color: "#fff", textShadow: "0 1px 4px rgba(0,0,0,0.7)" }}>
+                                {cd.title && <span style={{ fontSize: "0.9rem", fontWeight: 700 }}>{cd.title}</span>}
+                                {cd.subtitle && <span style={{ fontSize: "0.65rem", marginTop: "2px" }}>{cd.subtitle}</span>}
+                                {cd.author && <span style={{ fontSize: "0.7rem", marginTop: "auto" }}>{cd.author}</span>}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })() : (
+                        <>
+                          {page.imageUrl && (
+                            <img src={resolveImageUrl(page.imageUrl)} alt={strings.bookManager.image1Alt} className="bm-page-thumb" />
+                          )}
+                          {page.imageUrl2 && (
+                            <img src={resolveImageUrl(page.imageUrl2)} alt={strings.bookManager.image2Alt} className="bm-page-thumb" />
+                          )}
+                        </>
                       )}
                       <div className="bm-page-actions">
                         <button className="bm-btn bm-btn-edit" onClick={() => startEditingPage(page)}>{strings.common.edit}</button>

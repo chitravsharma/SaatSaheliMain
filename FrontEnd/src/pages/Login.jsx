@@ -44,6 +44,7 @@ export default function Login() {
       email: data.email,
       role: data.role,
       provider: data.provider,
+      plan: data.plan || "Free",
     };
     authLogin(userData);
     navigate("/");

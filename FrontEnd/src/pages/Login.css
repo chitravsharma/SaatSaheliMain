@@ -16,6 +16,8 @@
   border-radius: 16px;
   padding: 32px;
   box-shadow: 0 2px 12px rgba(37, 99, 235, 0.1);
+  max-height: 85vh;
+  overflow-y: auto;
 }
 
 .auth-card h1 {
@@ -263,7 +265,11 @@
 
 /* Terms checkbox */
 .auth-terms {
-  margin-top: 4px;
+  margin-top: 8px;
+  padding: 12px 14px;
+  background-color: rgba(37, 99, 235, 0.08);
+  border: 1px solid #2a4a6b;
+  border-radius: 8px;
 }
 
 .auth-terms-label {
@@ -271,7 +277,7 @@
   align-items: flex-start;
   gap: 8px;
   font-size: 0.85rem;
-  color: #94a3b8;
+  color: #e2e8f0;
   cursor: pointer;
   line-height: 1.4;
 }

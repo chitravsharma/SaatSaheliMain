@@ -83,9 +83,11 @@ export function AuthProvider({ children }) {
     const role = (user?.role || "").toUpperCase();
     const isAdmin = role === "ADMIN" || role === "SUPER_ADMIN";
     const isSuperAdmin = role === "SUPER_ADMIN";
+    const userPlan = (user?.plan || "Free");
+    const isPremiumOrAbove = ["Premium", "Gold", "Creator"].includes(userPlan);
 
     return (
-        <AuthContext.Provider value={{ user, login, logout, isAdmin, isSuperAdmin }}>
+        <AuthContext.Provider value={{ user, login, logout, isAdmin, isSuperAdmin, userPlan, isPremiumOrAbove }}>
             {children}
         </AuthContext.Provider>
     );

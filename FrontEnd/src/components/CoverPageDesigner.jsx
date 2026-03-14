@@ -11,7 +11,7 @@ const GENRES = [
   "Biography", "History", "Cooking", "Art", "Travel",
 ];
 
-const AUDIENCES = ["Kids", "Young Adult", "Adults"];
+const AUDIENCES = ["All", "Kids", "Young Adult", "Adults"];
 
 const COVER_STYLES = [
   "Minimalist", "Dark", "Bright", "Magical", "Vintage", "Cute", "Professional",
