@@ -1050,24 +1050,12 @@ function BookManager() {
                       {page.pageNumber === 1 && <span className="bm-page-type-badge bm-badge-cover">Cover</span>}
                       {page.pageNumber === getBackPageNumber() && page.pageNumber !== 1 && <span className="bm-page-type-badge bm-badge-back">Back</span>}
                       <span className="bm-page-content">{page.content || strings.bookManager.emptyPage}</span>
-                      {isCoverOrBack(page.pageNumber) && page.imageUrl ? (() => {
-                        let cd = {};
-                        try { cd = JSON.parse(page.format)?.coverDesign || {}; } catch { /* ignore */ }
-                        const scale = cd.imageScale || 100;
-                        return (
-                          <div className="bm-cover-preview" style={{ position: "relative", width: "180px", height: "240px", overflow: "hidden", borderRadius: "8px", border: "1px solid #2a4a6b" }}>
-                            <img src={resolveImageUrl(page.imageUrl)} alt={strings.bookManager.image1Alt}
-                              style={{ width: `${scale}%`, height: `${scale}%`, objectFit: "cover", position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)" }} />
-                            {(cd.title || cd.author) && (
-                              <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", padding: "12px", textAlign: "center", color: "#fff", textShadow: "0 1px 4px rgba(0,0,0,0.7)" }}>
-                                {cd.title && <span style={{ fontSize: "0.9rem", fontWeight: 700 }}>{cd.title}</span>}
-                                {cd.subtitle && <span style={{ fontSize: "0.65rem", marginTop: "2px" }}>{cd.subtitle}</span>}
-                                {cd.author && <span style={{ fontSize: "0.7rem", marginTop: "auto" }}>{cd.author}</span>}
-                              </div>
-                            )}
-                          </div>
-                        );
-                      })() : (
+                      {isCoverOrBack(page.pageNumber) && page.imageUrl ? (
+                        <div className="bm-cover-preview" style={{ position: "relative", width: "180px", height: "240px", overflow: "hidden", borderRadius: "8px", border: "1px solid #2a4a6b" }}>
+                          <img src={resolveImageUrl(page.imageUrl)} alt={strings.bookManager.image1Alt}
+                            style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                        </div>
+                      ) : (
                         <>
                           {page.imageUrl && (
                             <img src={resolveImageUrl(page.imageUrl)} alt={strings.bookManager.image1Alt} className="bm-page-thumb" />

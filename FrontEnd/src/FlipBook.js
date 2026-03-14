@@ -18,18 +18,18 @@ function resolveImageUrl(url) {
   return url;
 }
 
-// Parse JSON format string into text style + layout
+// Parse JSON format string into text style + layout + coverDesign
 function parseFormat(formatStr) {
-  if (!formatStr) return { style: {}, layout: {} };
+  if (!formatStr) return { style: {}, layout: {}, coverDesign: null };
   try {
     const parsed = JSON.parse(formatStr);
     const style = {};
     if (parsed.fontFamily) style.fontFamily = parsed.fontFamily;
     if (parsed.fontSize) style.fontSize = parsed.fontSize;
     if (parsed.color) style.color = parsed.color;
-    return { style, layout: parsed.layout || {} };
+    return { style, layout: parsed.layout || {}, coverDesign: parsed.coverDesign || null };
   } catch {
-    return { style: {}, layout: {} };
+    return { style: {}, layout: {}, coverDesign: null };
   }
 }
 
@@ -301,7 +301,7 @@ function FlipBook({ bookId }) {
             onFlip={onFlip}
           >
           {pages.map((page, index) => {
-            const { style: textStyle, layout } = parseFormat(page.format);
+            const { style: textStyle, layout, coverDesign } = parseFormat(page.format);
             const img1Src = resolveImageUrl(page.imageUrl);
             const img2Src = resolveImageUrl(page.imageUrl2);
             const hasLayout = img1Src || img2Src;
@@ -310,12 +310,17 @@ function FlipBook({ bookId }) {
             const textLayout = layout.text || { x: 10, y: 10, width: DESKTOP_W - 20, height: 40 };
 
             const pageNum = page.pageNumber;
+            const isFirstPage = index === 0;
+            const isLastPage = index === pages.length - 1;
+            const isCoverOrBack = isFirstPage || isLastPage || coverDesign != null;
+
             const pageNumStyle = {
               position: "absolute",
               right: 10,
               fontSize: "0.7rem",
-              color: "#6b7280",
+              color: isCoverOrBack ? "rgba(255,255,255,0.5)" : "#6b7280",
               pointerEvents: "none",
+              zIndex: 2,
             };
 
             // Text-only page margins (print-friendly: ~1 inch = 72px equivalent)
@@ -337,6 +342,26 @@ function FlipBook({ bookId }) {
               overflow: "hidden",
               textAlign: "left",
             };
+
+            // Cover/back pages: render image as full page
+            if (isCoverOrBack && img1Src) {
+              return (
+                <div key={index} className="card-box flipbook-page" style={{ position: "relative", overflow: "hidden", padding: 0 }}>
+                  <img
+                    src={img1Src}
+                    alt={isFirstPage ? "Cover" : isLastPage ? "Back Cover" : strings.flipBook.pageImageAlt(pageNum, 1)}
+                    style={{
+                      position: "absolute",
+                      top: 0,
+                      left: 0,
+                      width: "100%",
+                      height: "100%",
+                      objectFit: "cover",
+                    }}
+                  />
+                </div>
+              );
+            }
 
             return (
               <div key={index} className="card-box flipbook-page" style={{ position: "relative", overflow: "hidden" }}>
