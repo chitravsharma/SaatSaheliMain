@@ -1,0 +1,275 @@
+.pub-profile-nav {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.pub-profile-page {
+  max-width: 720px;
+  margin: 24px auto;
+  padding: 24px;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.6;
+  color: #f0f4f8;
+}
+
+.pub-profile-header {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  background: #162a3a;
+  border: 2px solid #2a4a6b;
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+.pub-profile-avatar {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid #2563eb;
+  flex-shrink: 0;
+}
+
+.pub-profile-info h1 {
+  color: #f0f4f8;
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 0 0 4px 0;
+}
+
+.pub-profile-headline {
+  color: #f59e0b;
+  font-style: italic;
+  font-size: 1rem;
+  margin: 0 0 4px 0;
+}
+
+.pub-profile-location {
+  color: #94a3b8;
+  font-size: 0.9rem;
+  margin: 0 0 4px 0;
+}
+
+.pub-profile-member {
+  color: #64748b;
+  font-size: 0.8rem;
+  margin: 0;
+}
+
+.pub-profile-bio {
+  background: #162a3a;
+  border: 1px solid #2a4a6b;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 24px;
+  font-size: 0.95rem;
+  color: #e2e8f0;
+}
+
+.pub-profile-bio p {
+  margin: 0;
+  white-space: pre-wrap;
+}
+
+/* ── Interests & Fields tags ── */
+.pub-profile-tags-section {
+  margin-bottom: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.pub-profile-tag-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.pub-profile-tag-label {
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #fbbf24;
+  margin: 0;
+}
+
+.pub-profile-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.pub-profile-tag {
+  display: inline-block;
+  padding: 5px 14px;
+  background: linear-gradient(135deg, #2563eb, #60a5fa);
+  color: #ffffff;
+  border-radius: 20px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.pub-profile-tag-field {
+  background: transparent;
+  color: #fbbf24;
+  border: 2px solid #2563eb;
+}
+
+/* ── Section headings ── */
+.pub-profile-page h2 {
+  color: #fbbf24;
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin-bottom: 16px;
+  border-bottom: 2px solid #2a4a6b;
+  padding-bottom: 6px;
+}
+
+/* ── Published Books ── */
+.pub-profile-books {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 16px;
+  margin-bottom: 32px;
+}
+
+.pub-profile-book-card {
+  background: #162a3a;
+  border: 1px solid #2a4a6b;
+  border-radius: 10px;
+  text-decoration: none;
+  text-align: center;
+  transition: box-shadow 0.2s, transform 0.15s;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.pub-profile-book-card:hover {
+  box-shadow: 0 6px 20px rgba(37, 99, 235, 0.2);
+  transform: translateY(-2px);
+}
+
+.pub-profile-book-card:focus-visible {
+  outline: 2px solid #f59e0b;
+  outline-offset: 2px;
+}
+
+.pub-book-cover {
+  background: linear-gradient(135deg, #0c1520 0%, #2563eb 50%, #60a5fa 100%);
+  aspect-ratio: 3 / 4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px;
+}
+
+.pub-book-cover-title {
+  color: #ffffff;
+  font-size: 0.85rem;
+  font-weight: 700;
+  line-height: 1.3;
+  word-break: break-word;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+.pub-profile-book-title {
+  padding: 8px 10px 4px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #f0f4f8;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pub-book-category {
+  padding: 0 10px 8px;
+  font-size: 0.7rem;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* ── Gallery ── */
+.pub-profile-gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 12px;
+  margin-bottom: 32px;
+}
+
+.pub-gallery-item {
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid #2a4a6b;
+  aspect-ratio: 1;
+  transition: box-shadow 0.2s;
+}
+
+.pub-gallery-item:hover {
+  box-shadow: 0 4px 16px rgba(37, 99, 235, 0.2);
+}
+
+.pub-gallery-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* ── States ── */
+.pub-profile-no-books {
+  color: #94a3b8;
+  text-align: center;
+  padding: 40px 20px;
+}
+
+.pub-profile-loading,
+.pub-profile-not-found {
+  text-align: center;
+  padding: 60px 20px;
+  color: #94a3b8;
+  font-size: 1rem;
+}
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+  .pub-profile-page {
+    padding: 12px;
+    margin: 8px;
+  }
+
+  .pub-profile-header {
+    flex-direction: column;
+    text-align: center;
+    padding: 16px;
+  }
+
+  .pub-profile-avatar {
+    width: 80px;
+    height: 80px;
+  }
+
+  .pub-profile-books {
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  }
+
+  .pub-profile-gallery {
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  }
+}
+
+/* High contrast mode */
+@media (forced-colors: active) {
+  .pub-profile-book-card {
+    border: 2px solid ButtonText;
+  }
+  .pub-profile-tag {
+    border: 2px solid ButtonText;
+  }
+}

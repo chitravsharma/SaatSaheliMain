@@ -1,0 +1,94 @@
+.about-page {
+  max-width: 720px;
+  margin: 60px auto;
+  padding: 0 24px;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  color: #e2e8f0;
+}
+
+.about-hero {
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+.about-hero h1 {
+  font-size: 2.4rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #2563eb, #60a5fa, #f59e0b);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+}
+
+.about-divider {
+  width: 60px;
+  height: 4px;
+  background: linear-gradient(90deg, #2563eb, #60a5fa);
+  border: none;
+  border-radius: 2px;
+  margin: 16px auto 32px;
+}
+
+.about-card {
+  background: linear-gradient(145deg, #162a3a, #0f1923);
+  border: 1px solid #2a4a6b;
+  border-radius: 16px;
+  padding: 36px 32px;
+  box-shadow: 0 4px 24px rgba(37, 99, 235, 0.1);
+}
+
+.about-card p {
+  font-size: 1.15rem;
+  line-height: 1.8;
+  color: #c4b5a0;
+  margin: 0;
+}
+
+.about-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+  margin-top: 32px;
+}
+
+.about-tag-link {
+  background: rgba(37, 99, 235, 0.12);
+  color: #fbbf24;
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 6px 16px;
+  border-radius: 20px;
+  letter-spacing: 0.3px;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+
+.about-tag-link:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+  background: #2563eb;
+  color: #ffffff;
+}
+
+.about-tag-icon {
+  font-size: 1rem;
+}
+
+@media (max-width: 600px) {
+  .about-hero h1 {
+    font-size: 1.8rem;
+  }
+
+  .about-card {
+    padding: 24px 20px;
+  }
+
+  .about-card p {
+    font-size: 1.05rem;
+  }
+}

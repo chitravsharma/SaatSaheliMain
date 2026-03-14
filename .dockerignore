@@ -1,0 +1,33 @@
+# Environment and secrets
+.env
+*.env
+SaatSaheli/.env
+
+# Dependencies (rebuilt in container)
+FrontEnd/node_modules
+SaatSaheli/target
+
+# Git
+.git
+.gitignore
+
+# IDE
+.idea
+.vscode
+*.iml
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Uploads (ephemeral locally)
+SaatSaheli/uploads
+
+# Docs
+README.md
+*.md
+
+# Google credentials file (use env var in cloud)
+*.json
+!FrontEnd/package.json
+!FrontEnd/package-lock.json

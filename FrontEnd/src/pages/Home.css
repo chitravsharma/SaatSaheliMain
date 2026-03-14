@@ -1,0 +1,355 @@
+/* Home page - Dark artistic theme */
+
+.home-container {
+  max-width: 960px;
+  margin: 24px auto;
+  padding: 0 24px;
+  font-family: 'Georgia', 'Times New Roman', serif;
+  line-height: 1.6;
+  color: #f0f4f8;
+}
+
+/* ── Action buttons bar ── */
+.home-actions-bar {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-bottom: 28px;
+}
+
+/* ── Category tags ── */
+.home-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+  margin-bottom: 32px;
+}
+
+.home-tag-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(37, 99, 235, 0.12);
+  color: #fbbf24;
+  font-size: 0.88rem;
+  font-weight: 600;
+  padding: 8px 18px;
+  border-radius: 20px;
+  text-decoration: none;
+  border: 1px solid rgba(37, 99, 235, 0.3);
+  transition: background-color 0.2s, transform 0.15s;
+  font-family: 'Segoe UI', system-ui, sans-serif;
+}
+.home-tag-link:hover {
+  background: #2563eb;
+  color: #ffffff;
+  transform: translateY(-1px);
+}
+.home-tag-link:focus-visible {
+  outline: 3px solid #f59e0b;
+  outline-offset: 2px;
+}
+
+.home-tag-icon {
+  font-size: 1.1rem;
+}
+
+/* ── Section ── */
+.home-section {
+  margin-bottom: 36px;
+}
+
+.home-section-heading {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #fbbf24;
+  margin: 0 0 4px 0;
+  font-family: 'Georgia', 'Times New Roman', serif;
+}
+
+.home-section-divider {
+  border: none;
+  height: 3px;
+  background: linear-gradient(90deg, #2563eb, #60a5fa, transparent);
+  margin: 0 0 24px 0;
+}
+
+.home-empty {
+  text-align: center;
+  color: #64748b;
+  padding: 40px 20px;
+  font-size: 1rem;
+}
+
+/* ── Gallery cards row (horizontal scroll) ── */
+.home-gallery-row {
+  display: flex;
+  gap: 16px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+}
+.home-gallery-row::-webkit-scrollbar {
+  height: 4px;
+}
+.home-gallery-row::-webkit-scrollbar-thumb {
+  background: #3a5a7b;
+  border-radius: 4px;
+}
+
+.home-gallery-card {
+  background: #162a3a;
+  border: 1px solid #2a4a6b;
+  border-radius: 10px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: box-shadow 0.2s, transform 0.15s;
+  min-width: 200px;
+  max-width: 220px;
+  flex-shrink: 0;
+  scroll-snap-align: start;
+}
+.home-gallery-card:hover {
+  box-shadow: 0 6px 24px rgba(37, 99, 235, 0.25);
+  transform: translateY(-2px);
+  border-color: #2563eb;
+}
+
+.home-gallery-link {
+  text-decoration: none;
+  color: inherit;
+}
+
+.home-gallery-cover {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  background: linear-gradient(135deg, #1e3a52 0%, #0f1923 100%);
+  overflow: hidden;
+}
+
+.home-gallery-cover-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.home-gallery-cover-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.home-gallery-count {
+  position: absolute;
+  bottom: 6px;
+  right: 8px;
+  background: rgba(0,0,0,0.6);
+  color: #fff;
+  font-size: 0.72rem;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-family: 'Segoe UI', system-ui, sans-serif;
+}
+
+.home-gallery-info {
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.home-gallery-title {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #f0f4f8;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: 'Segoe UI', system-ui, sans-serif;
+}
+
+.home-gallery-author {
+  font-size: 0.72rem;
+  color: #64748b;
+  font-style: italic;
+}
+
+/* ── Category groups ── */
+.home-categories {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+.home-category-title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #f0f4f8;
+  margin: 0 0 12px 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: 'Georgia', 'Times New Roman', serif;
+}
+
+.home-category-icon {
+  font-size: 1.3rem;
+}
+
+/* ── Book cards row (horizontal scroll) ── */
+.home-books-row {
+  display: flex;
+  gap: 16px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+}
+.home-books-row::-webkit-scrollbar {
+  height: 4px;
+}
+.home-books-row::-webkit-scrollbar-thumb {
+  background: #3a5a7b;
+  border-radius: 4px;
+}
+
+.home-book-card {
+  background: #162a3a;
+  border: 1px solid #2a4a6b;
+  border-radius: 10px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: box-shadow 0.2s, transform 0.15s;
+  min-width: 155px;
+  max-width: 170px;
+  flex-shrink: 0;
+  scroll-snap-align: start;
+}
+.home-book-card:hover {
+  box-shadow: 0 6px 24px rgba(37, 99, 235, 0.25);
+  transform: translateY(-2px);
+  border-color: #2563eb;
+}
+
+.home-book-link {
+  text-decoration: none;
+  color: inherit;
+}
+
+.home-book-cover {
+  background: linear-gradient(135deg, #0c1520, #2563eb, #60a5fa);
+  aspect-ratio: 3 / 4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px;
+}
+
+.home-book-cover-title {
+  color: #ffffff;
+  font-size: 0.82rem;
+  font-weight: 700;
+  line-height: 1.3;
+  word-break: break-word;
+  text-align: center;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  font-family: 'Georgia', 'Times New Roman', serif;
+}
+
+.home-book-info {
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.home-book-title {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #f0f4f8;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: 'Segoe UI', system-ui, sans-serif;
+}
+
+.home-book-author {
+  font-size: 0.72rem;
+  color: #64748b;
+  font-style: italic;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ── Card social actions (like/comment/favorite) ── */
+.home-card-social {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  padding: 4px 10px 8px;
+  border-top: 1px solid #1e3a52;
+}
+
+/* ── Responsive ── */
+@media (max-width: 600px) {
+  .home-container {
+    margin: 12px auto;
+    padding: 0 12px;
+  }
+
+  .home-actions-bar {
+    gap: 8px;
+  }
+
+  .home-tag-link {
+    font-size: 0.8rem;
+    padding: 6px 14px;
+  }
+
+  .home-section-heading {
+    font-size: 1.25rem;
+  }
+
+  .home-book-card {
+    min-width: 130px;
+    max-width: 145px;
+  }
+
+  .home-gallery-card {
+    min-width: 170px;
+    max-width: 190px;
+  }
+}
+
+/* High contrast mode */
+@media (forced-colors: active) {
+  .home-book-card,
+  .home-gallery-card {
+    border: 2px solid ButtonText;
+  }
+  .home-tag-link {
+    border: 2px solid ButtonText;
+  }
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .home-book-card,
+  .home-gallery-card,
+  .home-tag-link {
+    transition: none;
+  }
+  .home-book-card:hover,
+  .home-gallery-card:hover,
+  .home-tag-link:hover {
+    transform: none;
+  }
+}
