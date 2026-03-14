@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useCallback } from "react";
 import axios from "axios";
 import "./CoverPageDesigner.css";
 
@@ -45,11 +45,16 @@ const COVER_SIZES = [
   { label: "A5 (5.8x8.3 in)", value: "a5" },
 ];
 
+// Canvas dimensions for the composite cover image
+const CANVAS_W = 600;
+const CANVAS_H = 900;
+
 function CoverPageDesigner({ type, bookTitle, authorName, imageUrl, onImageChange, onDesignDataChange, initialData }) {
   const isCover = type === "cover";
   const [data, setData] = useState(initialData || {});
   const [generating, setGenerating] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
   const [expandedSections, setExpandedSections] = useState({ book: true, visual: false, typography: false, publishing: false, ai: false });
   const [showCustomizer, setShowCustomizer] = useState(false);
@@ -57,6 +62,7 @@ function CoverPageDesigner({ type, bookTitle, authorName, imageUrl, onImageChang
   const [authorPhotoUrl, setAuthorPhotoUrl] = useState(initialData?.authorPhotoUrl || "");
   const [uploadingAuthorPhoto, setUploadingAuthorPhoto] = useState(false);
   const customizerRef = useRef(null);
+  const canvasRef = useRef(null);
 
   const update = (key, value) => {
     const updated = { ...data, [key]: value };
@@ -126,7 +132,6 @@ function CoverPageDesigner({ type, bookTitle, authorName, imageUrl, onImageChang
   };
 
   const handleSaveAndCustomize = () => {
-    // Save design data with imageScale
     const updated = { ...data, imageScale, authorPhotoUrl };
     setData(updated);
     if (onDesignDataChange) onDesignDataChange(updated);
@@ -140,6 +145,295 @@ function CoverPageDesigner({ type, bookTitle, authorName, imageUrl, onImageChang
     const match = url.match(/\/file\/d\/([^/]+)\//);
     if (match) return `https://drive.google.com/thumbnail?id=${match[1]}&sz=w400`;
     return url;
+  };
+
+  // Get canvas-compatible font family
+  const getCanvasFont = useCallback(() => {
+    const map = {
+      "Elegant": "Georgia, serif",
+      "Bold": "Arial Black, sans-serif",
+      "Handwritten": "Brush Script MT, cursive",
+      "Classic serif": "Times New Roman, serif",
+      "Modern sans serif": "Helvetica Neue, sans-serif",
+    };
+    return map[data.titleFontStyle] || "Georgia, serif";
+  }, [data.titleFontStyle]);
+
+  // Load an image as a promise
+  const loadImage = (src) => {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.crossOrigin = "anonymous";
+      img.onload = () => resolve(img);
+      img.onerror = () => reject(new Error("Failed to load image: " + src));
+      img.src = src;
+    });
+  };
+
+  // Word-wrap text for canvas
+  const wrapText = (ctx, text, maxWidth) => {
+    const words = text.split(" ");
+    const lines = [];
+    let currentLine = "";
+    for (const word of words) {
+      const testLine = currentLine ? currentLine + " " + word : word;
+      if (ctx.measureText(testLine).width > maxWidth && currentLine) {
+        lines.push(currentLine);
+        currentLine = word;
+      } else {
+        currentLine = testLine;
+      }
+    }
+    if (currentLine) lines.push(currentLine);
+    return lines;
+  };
+
+  // Render the cover/back page onto a canvas and upload as image
+  const handleSaveCoverAsImage = async () => {
+    if (!imageUrl) return;
+    setSaving(true);
+    setMessage("");
+
+    try {
+      const canvas = canvasRef.current || document.createElement("canvas");
+      canvas.width = CANVAS_W;
+      canvas.height = CANVAS_H;
+      const ctx = canvas.getContext("2d");
+
+      // Load and draw background image
+      const resolvedUrl = resolveUrl(imageUrl);
+      const bgImg = await loadImage(resolvedUrl);
+
+      // Draw image scaled to cover the canvas
+      const scale = (imageScale || 100) / 100;
+      const imgW = CANVAS_W * scale;
+      const imgH = CANVAS_H * scale;
+      const offsetX = (CANVAS_W - imgW) / 2;
+      const offsetY = (CANVAS_H - imgH) / 2;
+      ctx.drawImage(bgImg, offsetX, offsetY, imgW, imgH);
+
+      const fontFamily = getCanvasFont();
+      const titleText = data.title || bookTitle || "";
+      const subtitleText = data.subtitle || "";
+      const authorText = data.author || authorName || "";
+      const taglineText = data.tagline || "";
+      const seriesText = data.series || "";
+      const alignment = (data.textAlignment || "Center").toLowerCase();
+
+      // Draw text shadow helper
+      const drawTextWithShadow = (text, x, y, fontSize, bold) => {
+        ctx.font = `${bold ? "bold " : ""}${fontSize}px ${fontFamily}`;
+        // Shadow
+        ctx.fillStyle = "rgba(0,0,0,0.7)";
+        ctx.fillText(text, x + 2, y + 2);
+        // Main text
+        ctx.fillStyle = "#ffffff";
+        ctx.fillText(text, x, y);
+      };
+
+      if (isCover) {
+        // --- FRONT COVER LAYOUT ---
+        ctx.textAlign = "center";
+        const centerX = CANVAS_W / 2;
+
+        // Determine vertical position based on alignment
+        let startY;
+        if (alignment === "top") {
+          startY = 80;
+        } else if (alignment === "bottom") {
+          startY = CANVAS_H - 300;
+        } else {
+          // center
+          startY = CANVAS_H * 0.25;
+        }
+
+        let currentY = startY;
+
+        // Series
+        if (seriesText) {
+          drawTextWithShadow(seriesText, centerX, currentY, 18, false);
+          currentY += 35;
+        }
+
+        // Title
+        if (titleText) {
+          const titleLines = wrapText(
+            (() => { ctx.font = `bold 42px ${fontFamily}`; return ctx; })(),
+            titleText,
+            CANVAS_W - 80
+          );
+          for (const line of titleLines) {
+            drawTextWithShadow(line, centerX, currentY, 42, true);
+            currentY += 52;
+          }
+          currentY += 10;
+        }
+
+        // Subtitle
+        if (subtitleText) {
+          const subLines = wrapText(
+            (() => { ctx.font = `24px ${fontFamily}`; return ctx; })(),
+            subtitleText,
+            CANVAS_W - 80
+          );
+          for (const line of subLines) {
+            drawTextWithShadow(line, centerX, currentY, 24, false);
+            currentY += 32;
+          }
+          currentY += 10;
+        }
+
+        // Tagline
+        if (taglineText) {
+          const tagLines = wrapText(
+            (() => { ctx.font = `italic 20px ${fontFamily}`; return ctx; })(),
+            taglineText,
+            CANVAS_W - 80
+          );
+          ctx.font = `italic 20px ${fontFamily}`;
+          for (const line of tagLines) {
+            ctx.fillStyle = "rgba(0,0,0,0.7)";
+            ctx.fillText(line, centerX + 2, currentY + 2);
+            ctx.fillStyle = "#ffffff";
+            ctx.fillText(line, centerX, currentY);
+            currentY += 28;
+          }
+        }
+
+        // Author name at bottom
+        if (authorText) {
+          const authorFontSize = data.authorNameSize === "Large" ? 28 : data.authorNameSize === "Small" ? 18 : 22;
+          const authorY = CANVAS_H - 60;
+          drawTextWithShadow(authorText, centerX, authorY, authorFontSize, true);
+        }
+      } else {
+        // --- BACK COVER LAYOUT ---
+        ctx.textAlign = "center";
+        const centerX = CANVAS_W / 2;
+        const blurbText = data.blurb || "";
+        const authorBioText = data.authorBio || "";
+        const isbnText = data.isbn || "";
+        const publisherText = data.publisher || "";
+        const priceText = data.price || "";
+
+        let currentY = 70;
+
+        // Title
+        if (titleText) {
+          drawTextWithShadow(titleText, centerX, currentY, 30, true);
+          currentY += 50;
+        }
+
+        // Blurb
+        if (blurbText) {
+          ctx.textAlign = "left";
+          const blurbLines = wrapText(
+            (() => { ctx.font = `18px ${fontFamily}`; return ctx; })(),
+            blurbText,
+            CANVAS_W - 100
+          );
+          for (const line of blurbLines) {
+            drawTextWithShadow(line, 50, currentY, 18, false);
+            currentY += 26;
+          }
+          currentY += 20;
+          ctx.textAlign = "center";
+        }
+
+        // Author bio
+        if (authorBioText) {
+          // Draw author photo if available
+          if (authorPhotoUrl) {
+            try {
+              const photoImg = await loadImage(resolveUrl(authorPhotoUrl));
+              const photoSize = 70;
+              const photoX = centerX - photoSize / 2;
+              // Draw circular photo
+              ctx.save();
+              ctx.beginPath();
+              ctx.arc(photoX + photoSize / 2, currentY + photoSize / 2, photoSize / 2, 0, Math.PI * 2);
+              ctx.clip();
+              ctx.drawImage(photoImg, photoX, currentY, photoSize, photoSize);
+              ctx.restore();
+              // White border
+              ctx.strokeStyle = "#ffffff";
+              ctx.lineWidth = 2;
+              ctx.beginPath();
+              ctx.arc(photoX + photoSize / 2, currentY + photoSize / 2, photoSize / 2, 0, Math.PI * 2);
+              ctx.stroke();
+              currentY += photoSize + 15;
+            } catch {
+              // skip photo if load fails
+            }
+          }
+
+          ctx.textAlign = "left";
+          const bioLines = wrapText(
+            (() => { ctx.font = `italic 16px ${fontFamily}`; return ctx; })(),
+            authorBioText,
+            CANVAS_W - 100
+          );
+          ctx.font = `italic 16px ${fontFamily}`;
+          for (const line of bioLines) {
+            ctx.fillStyle = "rgba(0,0,0,0.7)";
+            ctx.fillText(line, 52, currentY + 2);
+            ctx.fillStyle = "#ffffff";
+            ctx.fillText(line, 50, currentY);
+            currentY += 24;
+          }
+          currentY += 15;
+          ctx.textAlign = "center";
+        }
+
+        // Tagline
+        if (taglineText) {
+          ctx.font = `italic 18px ${fontFamily}`;
+          ctx.fillStyle = "rgba(0,0,0,0.7)";
+          ctx.fillText(taglineText, centerX + 2, currentY + 2);
+          ctx.fillStyle = "#ffffff";
+          ctx.fillText(taglineText, centerX, currentY);
+          currentY += 30;
+        }
+
+        // Author name
+        if (authorText) {
+          const authorFontSize = data.authorNameSize === "Large" ? 24 : data.authorNameSize === "Small" ? 16 : 20;
+          drawTextWithShadow(authorText, centerX, currentY, authorFontSize, true);
+        }
+
+        // Bottom row: publisher, ISBN, price
+        const bottomY = CANVAS_H - 40;
+        ctx.textAlign = "center";
+        const bottomParts = [];
+        if (publisherText) bottomParts.push(publisherText);
+        if (isbnText) bottomParts.push("ISBN: " + isbnText);
+        if (priceText) bottomParts.push(priceText);
+        if (bottomParts.length > 0) {
+          drawTextWithShadow(bottomParts.join("  |  "), centerX, bottomY, 14, false);
+        }
+      }
+
+      // Convert canvas to blob and upload
+      const blob = await new Promise((resolve) => canvas.toBlob(resolve, "image/png"));
+      const formData = new FormData();
+      formData.append("file", blob, `${isCover ? "cover" : "backpage"}-${Date.now()}.png`);
+      const res = await axios.post(UPLOAD_API, formData, { headers: { "Content-Type": "multipart/form-data" } });
+
+      // Save the composite image as the page image
+      if (onImageChange) onImageChange(res.data.url);
+
+      // Save design data
+      const updated = { ...data, imageScale, authorPhotoUrl, savedAsImage: true };
+      setData(updated);
+      if (onDesignDataChange) onDesignDataChange(updated);
+
+      setMessage(`${isCover ? "Cover" : "Back"} page saved as image!`);
+    } catch (err) {
+      console.error("Save cover as image failed:", err);
+      setMessage(`Save failed: ${err.message}. If the image is from an external source, try uploading your own image first.`);
+    } finally {
+      setSaving(false);
+    }
   };
 
   const renderSelect = (label, key, options, placeholder) => (
@@ -180,7 +474,7 @@ function CoverPageDesigner({ type, bookTitle, authorName, imageUrl, onImageChang
     </div>
   );
 
-  // Get font family based on titleFontStyle
+  // Get font family based on titleFontStyle (for CSS preview)
   const getFontFamily = () => {
     const map = {
       "Elegant": "'Georgia', serif",
@@ -220,7 +514,7 @@ function CoverPageDesigner({ type, bookTitle, authorName, imageUrl, onImageChang
           {isCover ? "Customize Cover Page" : "Customize Back Page"}
         </h3>
         <p className="cpd-hint">
-          Adjust the image size and see your text overlaid on the {isCover ? "cover" : "back page"}.
+          Adjust the image size and see your text overlaid on the {isCover ? "cover" : "back page"}. Click "Save as {isCover ? "Cover" : "Back"} Page Image" to composite and save.
         </p>
 
         {/* Image Scale Control */}
@@ -320,14 +614,30 @@ function CoverPageDesigner({ type, bookTitle, authorName, imageUrl, onImageChang
           </div>
         </div>
 
+        {/* Hidden canvas for compositing */}
+        <canvas ref={canvasRef} style={{ display: "none" }} />
+
+        {/* Save as Image button */}
+        <button
+          type="button"
+          className="cpd-btn cpd-btn-customize"
+          onClick={handleSaveCoverAsImage}
+          disabled={saving}
+          style={{ marginTop: "12px", width: "100%", background: saving ? "#555" : "" }}
+        >
+          {saving ? "Saving..." : `Save as ${isCover ? "Cover" : "Back"} Page Image`}
+        </button>
+
         <button
           type="button"
           className="cpd-btn cpd-btn-generate"
           onClick={() => setShowCustomizer(false)}
-          style={{ marginTop: "12px" }}
+          style={{ marginTop: "8px" }}
         >
           Back to Design Form
         </button>
+
+        {message && <p className="cpd-message">{message}</p>}
       </div>
     );
   };
