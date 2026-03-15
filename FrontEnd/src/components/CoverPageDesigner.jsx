@@ -66,9 +66,14 @@ function CoverPageDesigner({ type, bookTitle, authorName, imageUrl, onImageChang
   const customizerRef = useRef(null);
   const canvasRef = useRef(null);
 
-  // Draggable text position state (percentage-based for responsiveness)
+  // Draggable position state (percentage-based for responsiveness)
   const [textPos, setTextPos] = useState(initialData?.textPos || { x: 50, y: isCover ? 30 : 10 });
   const [authorPos, setAuthorPos] = useState(initialData?.authorPos || { x: 50, y: 90 });
+  const [photoPos, setPhotoPos] = useState(initialData?.photoPos || { x: 50, y: 55 }); // author photo position (back page)
+
+  // Text color options
+  const [textColor, setTextColor] = useState(initialData?.textColor || "#ffffff");
+  const [shadowColor, setShadowColor] = useState(initialData?.shadowColor || "#000000");
   const dragRef = useRef(null);
   const previewRef = useRef(null);
 
@@ -140,7 +145,7 @@ function CoverPageDesigner({ type, bookTitle, authorName, imageUrl, onImageChang
   };
 
   const handleSaveAndCustomize = () => {
-    const updated = { ...data, imageScale, authorPhotoUrl, textPos, authorPos };
+    const updated = { ...data, imageScale, authorPhotoUrl, textPos, authorPos, photoPos, textColor, shadowColor };
     setData(updated);
     if (onDesignDataChange) onDesignDataChange(updated);
     setBgImageUrl(imageUrl); // save original background before any composite
@@ -231,14 +236,16 @@ function CoverPageDesigner({ type, bookTitle, authorName, imageUrl, onImageChang
       const seriesText = data.series || "";
       const alignment = (data.textAlignment || "Center").toLowerCase();
 
-      // Draw text shadow helper
+      // Draw text shadow helper — uses user-chosen colors
+      const userTextColor = textColor || "#ffffff";
+      const userShadowColor = shadowColor || "#000000";
       const drawTextWithShadow = (text, x, y, fontSize, bold) => {
         ctx.font = `${bold ? "bold " : ""}${fontSize}px ${fontFamily}`;
         // Shadow
-        ctx.fillStyle = "rgba(0,0,0,0.7)";
+        ctx.fillStyle = userShadowColor + "b3"; // ~70% opacity
         ctx.fillText(text, x + 2, y + 2);
         // Main text
-        ctx.fillStyle = "#ffffff";
+        ctx.fillStyle = userTextColor;
         ctx.fillText(text, x, y);
       };
 
@@ -294,9 +301,9 @@ function CoverPageDesigner({ type, bookTitle, authorName, imageUrl, onImageChang
           );
           ctx.font = `italic 20px ${fontFamily}`;
           for (const line of tagLines) {
-            ctx.fillStyle = "rgba(0,0,0,0.7)";
+            ctx.fillStyle = userShadowColor + "b3";
             ctx.fillText(line, centerX + 2, currentY + 2);
-            ctx.fillStyle = "#ffffff";
+            ctx.fillStyle = userTextColor;
             ctx.fillText(line, centerX, currentY);
             currentY += 28;
           }
@@ -343,33 +350,43 @@ function CoverPageDesigner({ type, bookTitle, authorName, imageUrl, onImageChang
           ctx.textAlign = "center";
         }
 
+        // Author photo — drawn at draggable position (independent of text), rectangular
+        if (authorPhotoUrl) {
+          try {
+            const photoImg = await loadImage(resolveUrl(authorPhotoUrl));
+            const photoSize = 80;
+            const photoCX = (photoPos.x / 100) * CANVAS_W;
+            const photoCY = (photoPos.y / 100) * CANVAS_H;
+            const photoX = photoCX - photoSize / 2;
+            const photoY = photoCY - photoSize / 2;
+            // Draw rectangular photo with rounded corners
+            const radius = 6;
+            ctx.save();
+            ctx.beginPath();
+            ctx.moveTo(photoX + radius, photoY);
+            ctx.lineTo(photoX + photoSize - radius, photoY);
+            ctx.quadraticCurveTo(photoX + photoSize, photoY, photoX + photoSize, photoY + radius);
+            ctx.lineTo(photoX + photoSize, photoY + photoSize - radius);
+            ctx.quadraticCurveTo(photoX + photoSize, photoY + photoSize, photoX + photoSize - radius, photoY + photoSize);
+            ctx.lineTo(photoX + radius, photoY + photoSize);
+            ctx.quadraticCurveTo(photoX, photoY + photoSize, photoX, photoY + photoSize - radius);
+            ctx.lineTo(photoX, photoY + radius);
+            ctx.quadraticCurveTo(photoX, photoY, photoX + radius, photoY);
+            ctx.closePath();
+            ctx.clip();
+            ctx.drawImage(photoImg, photoX, photoY, photoSize, photoSize);
+            ctx.restore();
+            // Border
+            ctx.strokeStyle = userTextColor;
+            ctx.lineWidth = 2;
+            ctx.strokeRect(photoX, photoY, photoSize, photoSize);
+          } catch {
+            // skip photo if load fails
+          }
+        }
+
         // Author bio
         if (authorBioText) {
-          // Draw author photo if available
-          if (authorPhotoUrl) {
-            try {
-              const photoImg = await loadImage(resolveUrl(authorPhotoUrl));
-              const photoSize = 70;
-              const photoX = centerX - photoSize / 2;
-              // Draw circular photo
-              ctx.save();
-              ctx.beginPath();
-              ctx.arc(photoX + photoSize / 2, currentY + photoSize / 2, photoSize / 2, 0, Math.PI * 2);
-              ctx.clip();
-              ctx.drawImage(photoImg, photoX, currentY, photoSize, photoSize);
-              ctx.restore();
-              // White border
-              ctx.strokeStyle = "#ffffff";
-              ctx.lineWidth = 2;
-              ctx.beginPath();
-              ctx.arc(photoX + photoSize / 2, currentY + photoSize / 2, photoSize / 2, 0, Math.PI * 2);
-              ctx.stroke();
-              currentY += photoSize + 15;
-            } catch {
-              // skip photo if load fails
-            }
-          }
-
           ctx.textAlign = "left";
           const bioLines = wrapText(
             (() => { ctx.font = `italic 16px ${fontFamily}`; return ctx; })(),
@@ -378,9 +395,9 @@ function CoverPageDesigner({ type, bookTitle, authorName, imageUrl, onImageChang
           );
           ctx.font = `italic 16px ${fontFamily}`;
           for (const line of bioLines) {
-            ctx.fillStyle = "rgba(0,0,0,0.7)";
+            ctx.fillStyle = userShadowColor + "b3";
             ctx.fillText(line, 52, currentY + 2);
-            ctx.fillStyle = "#ffffff";
+            ctx.fillStyle = userTextColor;
             ctx.fillText(line, 50, currentY);
             currentY += 24;
           }
@@ -391,9 +408,9 @@ function CoverPageDesigner({ type, bookTitle, authorName, imageUrl, onImageChang
         // Tagline
         if (taglineText) {
           ctx.font = `italic 18px ${fontFamily}`;
-          ctx.fillStyle = "rgba(0,0,0,0.7)";
+          ctx.fillStyle = userShadowColor + "b3";
           ctx.fillText(taglineText, centerX + 2, currentY + 2);
-          ctx.fillStyle = "#ffffff";
+          ctx.fillStyle = userTextColor;
           ctx.fillText(taglineText, centerX, currentY);
           currentY += 30;
         }
@@ -425,8 +442,8 @@ function CoverPageDesigner({ type, bookTitle, authorName, imageUrl, onImageChang
       // Save the composite image as the page image
       if (onImageChange) onImageChange(res.data.url);
 
-      // Save design data with positions
-      const updated = { ...data, imageScale, authorPhotoUrl, textPos, authorPos, savedAsImage: true };
+      // Save design data with positions and colors
+      const updated = { ...data, imageScale, authorPhotoUrl, textPos, authorPos, photoPos, textColor, shadowColor, savedAsImage: true };
       setData(updated);
       if (onDesignDataChange) onDesignDataChange(updated);
       setSavedComposite(true); // mark as saved to hide text overlay in preview
@@ -501,7 +518,7 @@ function CoverPageDesigner({ type, bookTitle, authorName, imageUrl, onImageChang
       target,
       startX: clientX,
       startY: clientY,
-      startPos: target === "author" ? { ...authorPos } : { ...textPos },
+      startPos: target === "author" ? { ...authorPos } : target === "photo" ? { ...photoPos } : { ...textPos },
       rect,
     };
 
@@ -515,6 +532,8 @@ function CoverPageDesigner({ type, bookTitle, authorName, imageUrl, onImageChang
       const newY = Math.max(5, Math.min(95, dragRef.current.startPos.y + dy));
       if (dragRef.current.target === "author") {
         setAuthorPos({ x: newX, y: newY });
+      } else if (dragRef.current.target === "photo") {
+        setPhotoPos({ x: newX, y: newY });
       } else {
         setTextPos({ x: newX, y: newY });
       }
@@ -626,6 +645,55 @@ function CoverPageDesigner({ type, bookTitle, authorName, imageUrl, onImageChang
               </div>
             </div>
 
+            {/* Text Color Controls */}
+            <div className="cpd-color-controls">
+              <div className="cpd-color-field">
+                <label className="cpd-label">Text Color</label>
+                <div className="cpd-color-row">
+                  <input
+                    type="color"
+                    value={textColor}
+                    onChange={(e) => setTextColor(e.target.value)}
+                    className="cpd-color-input"
+                  />
+                  <span className="cpd-color-hex">{textColor}</span>
+                  {/* Quick presets */}
+                  {["#ffffff", "#000000", "#fbbf24", "#f43f5e", "#22d3ee", "#a3e635"].map((c) => (
+                    <button
+                      key={c}
+                      type="button"
+                      className={`cpd-color-swatch ${textColor === c ? "cpd-swatch-active" : ""}`}
+                      style={{ background: c }}
+                      onClick={() => setTextColor(c)}
+                      title={c}
+                    />
+                  ))}
+                </div>
+              </div>
+              <div className="cpd-color-field">
+                <label className="cpd-label">Shadow Color</label>
+                <div className="cpd-color-row">
+                  <input
+                    type="color"
+                    value={shadowColor}
+                    onChange={(e) => setShadowColor(e.target.value)}
+                    className="cpd-color-input"
+                  />
+                  <span className="cpd-color-hex">{shadowColor}</span>
+                  {["#000000", "#ffffff", "#1e293b", "#7c3aed", "#0f172a", "#4a044e"].map((c) => (
+                    <button
+                      key={c}
+                      type="button"
+                      className={`cpd-color-swatch ${shadowColor === c ? "cpd-swatch-active" : ""}`}
+                      style={{ background: c }}
+                      onClick={() => setShadowColor(c)}
+                      title={c}
+                    />
+                  ))}
+                </div>
+              </div>
+            </div>
+
             {/* Visual Preview with Draggable Text */}
             <div className="cpd-visual-preview">
               <div
@@ -666,31 +734,33 @@ function CoverPageDesigner({ type, bookTitle, authorName, imageUrl, onImageChang
                   onTouchStart={(e) => handleDragStart(e, "title")}
                 >
                   <div className="cpd-drag-hint">Drag to move</div>
-                  {isCover ? (
-                    <>
-                      {seriesText && <span className="cpd-overlay-series" style={{ fontFamily }}>{seriesText}</span>}
-                      <span className="cpd-overlay-title" style={{ fontFamily, display: "block" }}>{titleText}</span>
-                      {subtitleText && <span className="cpd-overlay-subtitle" style={{ fontFamily, display: "block" }}>{subtitleText}</span>}
-                      {taglineText && <span className="cpd-overlay-tagline" style={{ fontFamily, display: "block" }}>{taglineText}</span>}
-                    </>
-                  ) : (
-                    <>
-                      <span className="cpd-overlay-back-title" style={{ fontFamily, display: "block" }}>{titleText}</span>
-                      {blurbText && <p className="cpd-overlay-blurb" style={{ textAlign: "left" }}>{blurbText}</p>}
-                      {authorBioText && (
-                        <div className="cpd-overlay-bio-section">
-                          {authorPhotoUrl && <img src={resolveUrl(authorPhotoUrl)} alt="Author" className="cpd-overlay-author-photo" />}
-                          <p className="cpd-overlay-bio">{authorBioText}</p>
+                  {(() => {
+                    const tc = textColor || "#ffffff";
+                    const sc = shadowColor || "#000000";
+                    const ts = `0 2px 8px ${sc}, 0 0 20px ${sc}66`;
+                    return isCover ? (
+                      <>
+                        {seriesText && <span className="cpd-overlay-series" style={{ fontFamily, color: tc, textShadow: ts }}>{seriesText}</span>}
+                        <span className="cpd-overlay-title" style={{ fontFamily, display: "block", color: tc, textShadow: ts }}>{titleText}</span>
+                        {subtitleText && <span className="cpd-overlay-subtitle" style={{ fontFamily, display: "block", color: tc, textShadow: ts }}>{subtitleText}</span>}
+                        {taglineText && <span className="cpd-overlay-tagline" style={{ fontFamily, display: "block", color: tc, textShadow: ts }}>{taglineText}</span>}
+                      </>
+                    ) : (
+                      <>
+                        <span className="cpd-overlay-back-title" style={{ fontFamily, display: "block", color: tc, textShadow: ts }}>{titleText}</span>
+                        {blurbText && <p className="cpd-overlay-blurb" style={{ textAlign: "left", color: tc, textShadow: ts }}>{blurbText}</p>}
+                        {authorBioText && (
+                          <p className="cpd-overlay-bio" style={{ color: tc, textShadow: ts, textAlign: "left" }}>{authorBioText}</p>
+                        )}
+                        {taglineText && <span className="cpd-overlay-tagline" style={{ display: "block", color: tc, textShadow: ts }}>{taglineText}</span>}
+                        <div className="cpd-overlay-bottom-row">
+                          {publisherText && <span className="cpd-overlay-publisher" style={{ color: tc, textShadow: ts }}>{publisherText}</span>}
+                          {isbnText && <span className="cpd-overlay-isbn" style={{ color: tc, textShadow: ts }}>ISBN: {isbnText}</span>}
+                          {priceText && <span className="cpd-overlay-price" style={{ color: tc, textShadow: ts }}>{priceText}</span>}
                         </div>
-                      )}
-                      {taglineText && <span className="cpd-overlay-tagline" style={{ display: "block" }}>{taglineText}</span>}
-                      <div className="cpd-overlay-bottom-row">
-                        {publisherText && <span className="cpd-overlay-publisher">{publisherText}</span>}
-                        {isbnText && <span className="cpd-overlay-isbn">ISBN: {isbnText}</span>}
-                        {priceText && <span className="cpd-overlay-price">{priceText}</span>}
-                      </div>
-                    </>
-                  )}
+                      </>
+                    );
+                  })()}
                 </div>
 
                 {/* Draggable Author Name Block */}
@@ -710,10 +780,40 @@ function CoverPageDesigner({ type, bookTitle, authorName, imageUrl, onImageChang
                   onTouchStart={(e) => handleDragStart(e, "author")}
                 >
                   <div className="cpd-drag-hint">Drag</div>
-                  <span className="cpd-overlay-author" style={{ fontFamily, fontSize: authorSize }}>
+                  <span className="cpd-overlay-author" style={{
+                    fontFamily,
+                    fontSize: authorSize,
+                    color: textColor || "#ffffff",
+                    textShadow: `0 2px 8px ${shadowColor || "#000000"}, 0 0 20px ${shadowColor || "#000000"}66`,
+                  }}>
                     {authorText}
                   </span>
                 </div>
+
+                {/* Draggable Author Photo (back page only) */}
+                {!isCover && authorPhotoUrl && (
+                  <div
+                    className="cpd-draggable-photo"
+                    style={{
+                      position: "absolute",
+                      left: `${photoPos.x}%`,
+                      top: `${photoPos.y}%`,
+                      transform: "translate(-50%, -50%)",
+                      zIndex: 4,
+                      cursor: "grab",
+                      pointerEvents: "auto",
+                    }}
+                    onMouseDown={(e) => handleDragStart(e, "photo")}
+                    onTouchStart={(e) => handleDragStart(e, "photo")}
+                  >
+                    <div className="cpd-drag-hint">Drag photo</div>
+                    <img
+                      src={resolveUrl(authorPhotoUrl)}
+                      alt="Author"
+                      className="cpd-draggable-photo-img"
+                    />
+                  </div>
+                )}
               </div>
             </div>
 
@@ -813,7 +913,7 @@ function CoverPageDesigner({ type, bookTitle, authorName, imageUrl, onImageChang
             <label className="cpd-label">Author Photo</label>
             {authorPhotoUrl ? (
               <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                <img src={resolveUrl(authorPhotoUrl)} alt="Author" style={{ width: "60px", height: "60px", borderRadius: "50%", objectFit: "cover", border: "2px solid #2a4a6b" }} />
+                <img src={resolveUrl(authorPhotoUrl)} alt="Author" style={{ width: "60px", height: "60px", borderRadius: "6px", objectFit: "cover", border: "2px solid #2a4a6b" }} />
                 <button type="button" className="cpd-remove-btn" onClick={() => { setAuthorPhotoUrl(""); update("authorPhotoUrl", ""); }}>Remove</button>
               </div>
             ) : (

@@ -209,8 +209,11 @@
 /* Zoom scroll container - scrollable when zoomed */
 .flipbook-zoom-scroll {
   overflow: auto;
-  max-height: 80vh;
+  max-height: calc(100vh - 100px);
   max-width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
 }
 
 /* Zoom wrapper */

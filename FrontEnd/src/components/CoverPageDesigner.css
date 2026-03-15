@@ -436,6 +436,71 @@
   font-size: 0.7rem;
 }
 
+/* Text color controls */
+.cpd-color-controls {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+  padding: 12px;
+  background: #0f1923;
+  border: 1px solid #1e3a52;
+  border-radius: 8px;
+}
+
+.cpd-color-field {
+  flex: 1;
+  min-width: 140px;
+}
+
+.cpd-color-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
+
+.cpd-color-input {
+  width: 32px;
+  height: 32px;
+  border: 2px solid #3a5a7b;
+  border-radius: 6px;
+  padding: 1px;
+  cursor: pointer;
+  background: none;
+}
+.cpd-color-input:focus {
+  outline: none;
+  border-color: #2563eb;
+}
+
+.cpd-color-hex {
+  font-size: 0.72rem;
+  color: #94a3b8;
+  font-family: monospace;
+  min-width: 55px;
+}
+
+.cpd-color-swatch {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 2px solid #3a5a7b;
+  cursor: pointer;
+  padding: 0;
+  transition: transform 0.15s, border-color 0.15s;
+}
+.cpd-color-swatch:hover {
+  transform: scale(1.2);
+  border-color: #f0f4f8;
+}
+.cpd-swatch-active {
+  border-color: #fbbf24;
+  box-shadow: 0 0 0 2px #fbbf24;
+  transform: scale(1.15);
+}
+
 /* Draggable text blocks */
 .cpd-draggable-text {
   border: 2px dashed rgba(255, 255, 255, 0.4);
@@ -459,6 +524,44 @@
   letter-spacing: 0.08em;
   text-align: center;
   margin-bottom: 2px;
+  pointer-events: none;
+}
+
+/* Draggable author photo */
+.cpd-draggable-photo {
+  border: 2px dashed rgba(255, 255, 255, 0.4);
+  border-radius: 6px;
+  padding: 4px;
+  transition: border-color 0.15s;
+  user-select: none;
+  -webkit-user-select: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.cpd-draggable-photo:hover {
+  border-color: rgba(255, 255, 255, 0.8);
+}
+.cpd-draggable-photo:active {
+  cursor: grabbing;
+  border-color: #fbbf24;
+}
+.cpd-draggable-photo .cpd-drag-hint {
+  position: absolute;
+  top: -14px;
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  background: rgba(0, 0, 0, 0.6);
+  padding: 1px 6px;
+  border-radius: 3px;
+}
+.cpd-draggable-photo-img {
+  width: 70px;
+  height: 70px;
+  border-radius: 6px;
+  object-fit: cover;
+  border: 2px solid rgba(255, 255, 255, 0.7);
   pointer-events: none;
 }
 

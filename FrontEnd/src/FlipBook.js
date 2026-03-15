@@ -46,6 +46,7 @@ function usePageSize() {
   useEffect(() => {
     const update = () => {
       const vw = window.innerWidth;
+      const vh = window.innerHeight;
       if (vw < 500) {
         const w = Math.min(vw - 32, 360);
         setSize({ w, h: Math.round(w * ASPECT_RATIO), isMobile: true });
@@ -53,7 +54,21 @@ function usePageSize() {
         const w = Math.min(vw - 48, 480);
         setSize({ w, h: Math.round(w * ASPECT_RATIO), isMobile: true });
       } else {
-        setSize({ w: DESKTOP_W, h: DESKTOP_H, isMobile: false });
+        // Fit page to available viewport: reserve ~120px for toolbar/nav
+        const availH = vh - 120;
+        const availW = vw - 80;
+        // Calculate size that fits within available space while maintaining aspect ratio
+        let h = Math.min(availH, DESKTOP_H);
+        let w = Math.round(h / ASPECT_RATIO);
+        // If too wide, constrain by width instead
+        if (w > availW) {
+          w = availW;
+          h = Math.round(w * ASPECT_RATIO);
+        }
+        // Ensure minimum size
+        w = Math.max(w, 400);
+        h = Math.max(h, Math.round(400 * ASPECT_RATIO));
+        setSize({ w, h, isMobile: false });
       }
     };
     update();
