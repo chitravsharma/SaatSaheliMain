@@ -37,8 +37,9 @@ function CategoryPage() {
 
     const userId = user?.userId || null;
 
-    const [view, setView] = useState("browse"); // browse | create | mybooks
+    const [view, setView] = useState("browse"); // browse | create | mybooks | allbooks
     const [publishedBooks, setPublishedBooks] = useState([]);
+    const [allBooks, setAllBooks] = useState([]);
     const [myBooks, setMyBooks] = useState([]);
     const [loading, setLoading] = useState(true);
     const [newTitle, setNewTitle] = useState("");
@@ -65,6 +66,18 @@ function CategoryPage() {
         fetchPublished();
         setView("browse");
     }, [catKey]);
+
+    // Fetch all published books (across all categories)
+    const fetchAllBooks = async () => {
+        setLoading(true);
+        try {
+            const res = await axios.get(`${API}/search?status=PUBLISHED`);
+            setAllBooks(Array.isArray(res.data) ? res.data : []);
+        } catch {
+            setAllBooks([]);
+        }
+        setLoading(false);
+    };
 
     // Fetch my books for this category
     const fetchMyBooks = async () => {
@@ -139,6 +152,9 @@ function CategoryPage() {
                 <button className={view === "browse" ? "active" : ""} onClick={() => setView("browse")}>
                     {s.tabBrowse || "Browse"}
                 </button>
+                <button className={view === "allbooks" ? "active" : ""} onClick={() => { setView("allbooks"); fetchAllBooks(); }}>
+                    Books
+                </button>
                 {user && (
                     <>
                         <button className={view === "create" ? "active" : ""} onClick={() => setView("create")}>
@@ -188,6 +204,48 @@ function CategoryPage() {
                                     </div>
                                     {book.authorName && (
                                         <span className="cat-book-author">{book.authorName}</span>
+                                    )}
+                                    <span className="cat-book-read">{strings.publicBooks.readButton}</span>
+                                </button>
+                            ))}
+                        </div>
+                    )}
+                </div>
+            )}
+
+            {/* All published books */}
+            {view === "allbooks" && (
+                <div className="cat-section">
+                    <h2 className="cat-section-heading">All Published Books</h2>
+                    {loading ? (
+                        <p className="cat-loading">{strings.common.loading}</p>
+                    ) : allBooks.length === 0 ? (
+                        <div className="cat-empty">
+                            <p>No published books yet.</p>
+                        </div>
+                    ) : (
+                        <div className="cat-book-grid">
+                            {allBooks.map((book) => (
+                                <button
+                                    key={book.id}
+                                    className="cat-book-card"
+                                    onClick={() => navigate(`/read/${book.id}`)}
+                                >
+                                    <div className="cat-book-cover">
+                                        {book.coverImageUrl ? (
+                                            <img src={resolveImageUrl(book.coverImageUrl)} alt={book.title} className="cat-book-cover-img" />
+                                        ) : (
+                                            <>
+                                                <span className="cat-book-icon">{categoryIcons[book.category?.toLowerCase()] || "\uD83D\uDCDA"}</span>
+                                                <span className="cat-book-title">{book.title}</span>
+                                            </>
+                                        )}
+                                    </div>
+                                    {book.authorName && (
+                                        <span className="cat-book-author">{book.authorName}</span>
+                                    )}
+                                    {book.category && (
+                                        <span className="cat-book-category">{book.category}</span>
                                     )}
                                     <span className="cat-book-read">{strings.publicBooks.readButton}</span>
                                 </button>
