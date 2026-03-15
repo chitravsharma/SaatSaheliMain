@@ -43,6 +43,9 @@ public class Book {
     @Transient
     private int commentCount;
 
+    @Transient
+    private String coverImageUrl; // cover page image URL, enriched from page 1
+
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
@@ -75,6 +78,9 @@ public class Book {
 
     public int getCommentCount() { return commentCount; }
     public void setCommentCount(int commentCount) { this.commentCount = commentCount; }
+
+    public String getCoverImageUrl() { return coverImageUrl; }
+    public void setCoverImageUrl(String coverImageUrl) { this.coverImageUrl = coverImageUrl; }
 
     @Override
     public String toString() {

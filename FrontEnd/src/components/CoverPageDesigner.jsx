@@ -61,8 +61,16 @@ function CoverPageDesigner({ type, bookTitle, authorName, imageUrl, onImageChang
   const [imageScale, setImageScale] = useState(initialData?.imageScale || 100);
   const [authorPhotoUrl, setAuthorPhotoUrl] = useState(initialData?.authorPhotoUrl || "");
   const [uploadingAuthorPhoto, setUploadingAuthorPhoto] = useState(false);
+  const [savedComposite, setSavedComposite] = useState(false); // true after saving composite image
+  const [bgImageUrl, setBgImageUrl] = useState(""); // original background image before composite
   const customizerRef = useRef(null);
   const canvasRef = useRef(null);
+
+  // Draggable text position state (percentage-based for responsiveness)
+  const [textPos, setTextPos] = useState(initialData?.textPos || { x: 50, y: isCover ? 30 : 10 });
+  const [authorPos, setAuthorPos] = useState(initialData?.authorPos || { x: 50, y: 90 });
+  const dragRef = useRef(null);
+  const previewRef = useRef(null);
 
   const update = (key, value) => {
     const updated = { ...data, [key]: value };
@@ -132,9 +140,11 @@ function CoverPageDesigner({ type, bookTitle, authorName, imageUrl, onImageChang
   };
 
   const handleSaveAndCustomize = () => {
-    const updated = { ...data, imageScale, authorPhotoUrl };
+    const updated = { ...data, imageScale, authorPhotoUrl, textPos, authorPos };
     setData(updated);
     if (onDesignDataChange) onDesignDataChange(updated);
+    setBgImageUrl(imageUrl); // save original background before any composite
+    setSavedComposite(false); // reset saved state when entering customizer
     setShowCustomizer(true);
     setTimeout(() => customizerRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
   };
@@ -190,7 +200,8 @@ function CoverPageDesigner({ type, bookTitle, authorName, imageUrl, onImageChang
 
   // Render the cover/back page onto a canvas and upload as image
   const handleSaveCoverAsImage = async () => {
-    if (!imageUrl) return;
+    const sourceImage = bgImageUrl || imageUrl; // use original bg, not a previously saved composite
+    if (!sourceImage) return;
     setSaving(true);
     setMessage("");
 
@@ -201,7 +212,7 @@ function CoverPageDesigner({ type, bookTitle, authorName, imageUrl, onImageChang
       const ctx = canvas.getContext("2d");
 
       // Load and draw background image
-      const resolvedUrl = resolveUrl(imageUrl);
+      const resolvedUrl = resolveUrl(sourceImage);
       const bgImg = await loadImage(resolvedUrl);
 
       // Draw image scaled to cover the canvas
@@ -234,18 +245,9 @@ function CoverPageDesigner({ type, bookTitle, authorName, imageUrl, onImageChang
       if (isCover) {
         // --- FRONT COVER LAYOUT ---
         ctx.textAlign = "center";
-        const centerX = CANVAS_W / 2;
-
-        // Determine vertical position based on alignment
-        let startY;
-        if (alignment === "top") {
-          startY = 80;
-        } else if (alignment === "bottom") {
-          startY = CANVAS_H - 300;
-        } else {
-          // center
-          startY = CANVAS_H * 0.25;
-        }
+        // Use draggable text position (percentage to pixel)
+        const centerX = (textPos.x / 100) * CANVAS_W;
+        const startY = (textPos.y / 100) * CANVAS_H;
 
         let currentY = startY;
 
@@ -300,23 +302,24 @@ function CoverPageDesigner({ type, bookTitle, authorName, imageUrl, onImageChang
           }
         }
 
-        // Author name at bottom
+        // Author name at draggable position
         if (authorText) {
           const authorFontSize = data.authorNameSize === "Large" ? 28 : data.authorNameSize === "Small" ? 18 : 22;
-          const authorY = CANVAS_H - 60;
-          drawTextWithShadow(authorText, centerX, authorY, authorFontSize, true);
+          const authorX = (authorPos.x / 100) * CANVAS_W;
+          const authorY = (authorPos.y / 100) * CANVAS_H;
+          drawTextWithShadow(authorText, authorX, authorY, authorFontSize, true);
         }
       } else {
         // --- BACK COVER LAYOUT ---
         ctx.textAlign = "center";
-        const centerX = CANVAS_W / 2;
+        const centerX = (textPos.x / 100) * CANVAS_W;
         const blurbText = data.blurb || "";
         const authorBioText = data.authorBio || "";
         const isbnText = data.isbn || "";
         const publisherText = data.publisher || "";
         const priceText = data.price || "";
 
-        let currentY = 70;
+        let currentY = (textPos.y / 100) * CANVAS_H;
 
         // Title
         if (titleText) {
@@ -422,10 +425,11 @@ function CoverPageDesigner({ type, bookTitle, authorName, imageUrl, onImageChang
       // Save the composite image as the page image
       if (onImageChange) onImageChange(res.data.url);
 
-      // Save design data
-      const updated = { ...data, imageScale, authorPhotoUrl, savedAsImage: true };
+      // Save design data with positions
+      const updated = { ...data, imageScale, authorPhotoUrl, textPos, authorPos, savedAsImage: true };
       setData(updated);
       if (onDesignDataChange) onDesignDataChange(updated);
+      setSavedComposite(true); // mark as saved to hide text overlay in preview
 
       setMessage(`${isCover ? "Cover" : "Back"} page saved as image!`);
     } catch (err) {
@@ -486,6 +490,48 @@ function CoverPageDesigner({ type, bookTitle, authorName, imageUrl, onImageChang
     return map[data.titleFontStyle] || "'Georgia', serif";
   };
 
+  // Drag handlers for text positioning
+  const handleDragStart = (e, target) => {
+    e.preventDefault();
+    const rect = previewRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    dragRef.current = {
+      target,
+      startX: clientX,
+      startY: clientY,
+      startPos: target === "author" ? { ...authorPos } : { ...textPos },
+      rect,
+    };
+
+    const handleMove = (ev) => {
+      if (!dragRef.current) return;
+      const cx = ev.touches ? ev.touches[0].clientX : ev.clientX;
+      const cy = ev.touches ? ev.touches[0].clientY : ev.clientY;
+      const dx = ((cx - dragRef.current.startX) / dragRef.current.rect.width) * 100;
+      const dy = ((cy - dragRef.current.startY) / dragRef.current.rect.height) * 100;
+      const newX = Math.max(5, Math.min(95, dragRef.current.startPos.x + dx));
+      const newY = Math.max(5, Math.min(95, dragRef.current.startPos.y + dy));
+      if (dragRef.current.target === "author") {
+        setAuthorPos({ x: newX, y: newY });
+      } else {
+        setTextPos({ x: newX, y: newY });
+      }
+    };
+    const handleEnd = () => {
+      dragRef.current = null;
+      document.removeEventListener("mousemove", handleMove);
+      document.removeEventListener("mouseup", handleEnd);
+      document.removeEventListener("touchmove", handleMove);
+      document.removeEventListener("touchend", handleEnd);
+    };
+    document.addEventListener("mousemove", handleMove);
+    document.addEventListener("mouseup", handleEnd);
+    document.addEventListener("touchmove", handleMove, { passive: false });
+    document.addEventListener("touchend", handleEnd);
+  };
+
   // Render the visual customizer preview
   const renderCustomizer = () => {
     if (!imageUrl) return null;
@@ -495,9 +541,6 @@ function CoverPageDesigner({ type, bookTitle, authorName, imageUrl, onImageChang
     const authorText = data.author || authorName || "Author Name";
     const taglineText = data.tagline || "";
     const seriesText = data.series || "";
-    const alignment = (data.textAlignment || "Center").toLowerCase();
-
-    const textAlign = alignment === "top" ? "flex-start" : alignment === "bottom" ? "flex-end" : "center";
     const fontFamily = getFontFamily();
     const authorSize = data.authorNameSize === "Large" ? "1.1rem" : data.authorNameSize === "Small" ? "0.7rem" : "0.85rem";
 
@@ -508,136 +551,198 @@ function CoverPageDesigner({ type, bookTitle, authorName, imageUrl, onImageChang
     const publisherText = data.publisher || "";
     const priceText = data.price || "";
 
+    // Use original background image for preview (not the composite)
+    const previewImageUrl = bgImageUrl || imageUrl;
+
     return (
       <div className="cpd-customizer" ref={customizerRef}>
         <h3 className="cpd-heading">
-          {isCover ? "Customize Cover Page" : "Customize Back Page"}
+          {savedComposite ? `${isCover ? "Cover" : "Back"} Page Saved!` : `Customize ${isCover ? "Cover" : "Back"} Page`}
         </h3>
-        <p className="cpd-hint">
-          Adjust the image size and see your text overlaid on the {isCover ? "cover" : "back page"}. Click "Save as {isCover ? "Cover" : "Back"} Page Image" to composite and save.
-        </p>
 
-        {/* Image Scale Control */}
-        <div className="cpd-scale-control">
-          <label className="cpd-label">Image Size: {imageScale}%</label>
-          <input
-            type="range"
-            min="50"
-            max="150"
-            value={imageScale}
-            onChange={(e) => {
-              const val = parseInt(e.target.value);
-              setImageScale(val);
-              update("imageScale", val);
-            }}
-            className="cpd-range"
-          />
-          <div className="cpd-scale-buttons">
-            <button type="button" className="cpd-scale-btn" onClick={() => { setImageScale(100); update("imageScale", 100); }}>
-              Fit Page
-            </button>
-            <button type="button" className="cpd-scale-btn" onClick={() => { setImageScale(150); update("imageScale", 150); }}>
-              Full Page
-            </button>
-          </div>
-        </div>
-
-        {/* Visual Preview */}
-        <div className="cpd-visual-preview">
-          <div
-            className="cpd-cover-canvas"
-            style={{ overflow: "hidden" }}
-          >
-            <img
-              src={resolveUrl(imageUrl)}
-              alt={isCover ? "Cover" : "Back page"}
-              className="cpd-canvas-img"
-              style={{
-                width: `${imageScale}%`,
-                height: `${imageScale}%`,
-                objectFit: "cover",
-                position: "absolute",
-                top: "50%",
-                left: "50%",
-                transform: "translate(-50%, -50%)",
-              }}
-            />
-
-            {/* Text Overlay */}
-            {isCover ? (
-              <div className="cpd-text-overlay" style={{ justifyContent: textAlign }}>
-                {seriesText && (
-                  <span className="cpd-overlay-series" style={{ fontFamily }}>{seriesText}</span>
-                )}
-                <span className="cpd-overlay-title" style={{ fontFamily }}>
-                  {titleText}
-                </span>
-                {subtitleText && (
-                  <span className="cpd-overlay-subtitle" style={{ fontFamily }}>{subtitleText}</span>
-                )}
-                {taglineText && (
-                  <span className="cpd-overlay-tagline" style={{ fontFamily }}>{taglineText}</span>
-                )}
-                <span className="cpd-overlay-author" style={{ fontFamily, fontSize: authorSize }}>
-                  {authorText}
-                </span>
+        {savedComposite ? (
+          <>
+            <p className="cpd-hint">Your {isCover ? "cover" : "back"} page has been saved as an image. Here is the final result:</p>
+            {/* Show saved composite without text overlay */}
+            <div className="cpd-visual-preview">
+              <div className="cpd-cover-canvas">
+                <img
+                  src={resolveUrl(imageUrl)}
+                  alt={`Saved ${isCover ? "cover" : "back"} page`}
+                  style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                />
               </div>
-            ) : (
-              <div className="cpd-text-overlay cpd-back-overlay">
-                <span className="cpd-overlay-back-title" style={{ fontFamily }}>
-                  {titleText}
-                </span>
-                {blurbText && (
-                  <p className="cpd-overlay-blurb">{blurbText}</p>
-                )}
-                {authorBioText && (
-                  <div className="cpd-overlay-bio-section">
-                    {authorPhotoUrl && (
-                      <img src={resolveUrl(authorPhotoUrl)} alt="Author" className="cpd-overlay-author-photo" />
-                    )}
-                    <p className="cpd-overlay-bio">{authorBioText}</p>
-                  </div>
-                )}
-                {taglineText && (
-                  <span className="cpd-overlay-tagline">{taglineText}</span>
-                )}
-                <span className="cpd-overlay-author" style={{ fontSize: authorSize }}>
-                  {authorText}
-                </span>
-                <div className="cpd-overlay-bottom-row">
-                  {publisherText && <span className="cpd-overlay-publisher">{publisherText}</span>}
-                  {isbnText && <span className="cpd-overlay-isbn">ISBN: {isbnText}</span>}
-                  {priceText && <span className="cpd-overlay-price">{priceText}</span>}
+            </div>
+            <button
+              type="button"
+              className="cpd-btn cpd-btn-customize"
+              onClick={() => {
+                setSavedComposite(false);
+                // Restore the original background for re-editing
+                if (bgImageUrl) onImageChange(bgImageUrl);
+              }}
+              style={{ marginTop: "12px", width: "100%" }}
+            >
+              Edit Again
+            </button>
+            <button
+              type="button"
+              className="cpd-btn cpd-btn-generate"
+              onClick={() => setShowCustomizer(false)}
+              style={{ marginTop: "8px" }}
+            >
+              Back to Design Form
+            </button>
+            {message && <p className="cpd-message">{message}</p>}
+          </>
+        ) : (
+          <>
+            <p className="cpd-hint">
+              Drag the text blocks to position them. Adjust image size, then click "Save as {isCover ? "Cover" : "Back"} Page Image" to save.
+            </p>
+
+            {/* Image Scale Control */}
+            <div className="cpd-scale-control">
+              <label className="cpd-label">Image Size: {imageScale}%</label>
+              <input
+                type="range"
+                min="50"
+                max="150"
+                value={imageScale}
+                onChange={(e) => {
+                  const val = parseInt(e.target.value);
+                  setImageScale(val);
+                  update("imageScale", val);
+                }}
+                className="cpd-range"
+              />
+              <div className="cpd-scale-buttons">
+                <button type="button" className="cpd-scale-btn" onClick={() => { setImageScale(100); update("imageScale", 100); }}>
+                  Fit Page
+                </button>
+                <button type="button" className="cpd-scale-btn" onClick={() => { setImageScale(150); update("imageScale", 150); }}>
+                  Full Page
+                </button>
+              </div>
+            </div>
+
+            {/* Visual Preview with Draggable Text */}
+            <div className="cpd-visual-preview">
+              <div
+                className="cpd-cover-canvas"
+                ref={previewRef}
+                style={{ overflow: "hidden", cursor: "default" }}
+              >
+                <img
+                  src={resolveUrl(previewImageUrl)}
+                  alt={isCover ? "Cover" : "Back page"}
+                  className="cpd-canvas-img"
+                  style={{
+                    width: `${imageScale}%`,
+                    height: `${imageScale}%`,
+                    objectFit: "cover",
+                    position: "absolute",
+                    top: "50%",
+                    left: "50%",
+                    transform: "translate(-50%, -50%)",
+                  }}
+                />
+
+                {/* Draggable Title/Content Block */}
+                <div
+                  className="cpd-draggable-text"
+                  style={{
+                    position: "absolute",
+                    left: `${textPos.x}%`,
+                    top: `${textPos.y}%`,
+                    transform: "translate(-50%, 0)",
+                    zIndex: 3,
+                    cursor: "grab",
+                    textAlign: "center",
+                    maxWidth: "85%",
+                    pointerEvents: "auto",
+                  }}
+                  onMouseDown={(e) => handleDragStart(e, "title")}
+                  onTouchStart={(e) => handleDragStart(e, "title")}
+                >
+                  <div className="cpd-drag-hint">Drag to move</div>
+                  {isCover ? (
+                    <>
+                      {seriesText && <span className="cpd-overlay-series" style={{ fontFamily }}>{seriesText}</span>}
+                      <span className="cpd-overlay-title" style={{ fontFamily, display: "block" }}>{titleText}</span>
+                      {subtitleText && <span className="cpd-overlay-subtitle" style={{ fontFamily, display: "block" }}>{subtitleText}</span>}
+                      {taglineText && <span className="cpd-overlay-tagline" style={{ fontFamily, display: "block" }}>{taglineText}</span>}
+                    </>
+                  ) : (
+                    <>
+                      <span className="cpd-overlay-back-title" style={{ fontFamily, display: "block" }}>{titleText}</span>
+                      {blurbText && <p className="cpd-overlay-blurb" style={{ textAlign: "left" }}>{blurbText}</p>}
+                      {authorBioText && (
+                        <div className="cpd-overlay-bio-section">
+                          {authorPhotoUrl && <img src={resolveUrl(authorPhotoUrl)} alt="Author" className="cpd-overlay-author-photo" />}
+                          <p className="cpd-overlay-bio">{authorBioText}</p>
+                        </div>
+                      )}
+                      {taglineText && <span className="cpd-overlay-tagline" style={{ display: "block" }}>{taglineText}</span>}
+                      <div className="cpd-overlay-bottom-row">
+                        {publisherText && <span className="cpd-overlay-publisher">{publisherText}</span>}
+                        {isbnText && <span className="cpd-overlay-isbn">ISBN: {isbnText}</span>}
+                        {priceText && <span className="cpd-overlay-price">{priceText}</span>}
+                      </div>
+                    </>
+                  )}
+                </div>
+
+                {/* Draggable Author Name Block */}
+                <div
+                  className="cpd-draggable-text"
+                  style={{
+                    position: "absolute",
+                    left: `${authorPos.x}%`,
+                    top: `${authorPos.y}%`,
+                    transform: "translate(-50%, 0)",
+                    zIndex: 3,
+                    cursor: "grab",
+                    textAlign: "center",
+                    pointerEvents: "auto",
+                  }}
+                  onMouseDown={(e) => handleDragStart(e, "author")}
+                  onTouchStart={(e) => handleDragStart(e, "author")}
+                >
+                  <div className="cpd-drag-hint">Drag</div>
+                  <span className="cpd-overlay-author" style={{ fontFamily, fontSize: authorSize }}>
+                    {authorText}
+                  </span>
                 </div>
               </div>
-            )}
-          </div>
-        </div>
+            </div>
 
-        {/* Hidden canvas for compositing */}
-        <canvas ref={canvasRef} style={{ display: "none" }} />
+            {/* Hidden canvas for compositing */}
+            <canvas ref={canvasRef} style={{ display: "none" }} />
 
-        {/* Save as Image button */}
-        <button
-          type="button"
-          className="cpd-btn cpd-btn-customize"
-          onClick={handleSaveCoverAsImage}
-          disabled={saving}
-          style={{ marginTop: "12px", width: "100%", background: saving ? "#555" : "" }}
-        >
-          {saving ? "Saving..." : `Save as ${isCover ? "Cover" : "Back"} Page Image`}
-        </button>
+            {/* Save as Image button */}
+            <button
+              type="button"
+              className="cpd-btn cpd-btn-customize"
+              onClick={handleSaveCoverAsImage}
+              disabled={saving}
+              style={{ marginTop: "12px", width: "100%", background: saving ? "#555" : "" }}
+            >
+              {saving ? "Saving..." : `Save as ${isCover ? "Cover" : "Back"} Page Image`}
+            </button>
 
-        <button
-          type="button"
-          className="cpd-btn cpd-btn-generate"
-          onClick={() => setShowCustomizer(false)}
-          style={{ marginTop: "8px" }}
-        >
-          Back to Design Form
-        </button>
+            <button
+              type="button"
+              className="cpd-btn cpd-btn-generate"
+              onClick={() => setShowCustomizer(false)}
+              style={{ marginTop: "8px" }}
+            >
+              Back to Design Form
+            </button>
 
-        {message && <p className="cpd-message">{message}</p>}
+            {message && <p className="cpd-message">{message}</p>}
+          </>
+        )}
       </div>
     );
   };

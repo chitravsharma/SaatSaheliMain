@@ -5,7 +5,16 @@ import { useAuth } from "../AuthContext";
 import { useStrings } from "../LanguageContext";
 import "./CategoryPage.css";
 
-const API = `${process.env.REACT_APP_API_URL}/api/books`;
+const BASE_API = process.env.REACT_APP_API_URL;
+const API = `${BASE_API}/api/books`;
+
+function resolveImageUrl(url) {
+  if (!url) return null;
+  if (url.startsWith("/uploads/")) return `${BASE_API}${url}`;
+  const match = url.match(/\/file\/d\/([^/]+)\//);
+  if (match) return `https://drive.google.com/thumbnail?id=${match[1]}&sz=w200`;
+  return url;
+}
 
 const categoryIcons = {
     art: "\uD83C\uDFA8",
@@ -168,8 +177,14 @@ function CategoryPage() {
                                     onClick={() => navigate(`/read/${book.id}`)}
                                 >
                                     <div className="cat-book-cover">
-                                        <span className="cat-book-icon">{icon}</span>
-                                        <span className="cat-book-title">{book.title}</span>
+                                        {book.coverImageUrl ? (
+                                            <img src={resolveImageUrl(book.coverImageUrl)} alt={book.title} className="cat-book-cover-img" />
+                                        ) : (
+                                            <>
+                                                <span className="cat-book-icon">{icon}</span>
+                                                <span className="cat-book-title">{book.title}</span>
+                                            </>
+                                        )}
                                     </div>
                                     {book.authorName && (
                                         <span className="cat-book-author">{book.authorName}</span>

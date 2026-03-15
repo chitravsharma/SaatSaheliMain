@@ -283,6 +283,16 @@
     font-size: 0.75rem;
     min-width: 40px;
   }
+
+  .flipbook-tts-controls {
+    margin-left: 0;
+    margin-top: 4px;
+  }
+  .flipbook-tts-btn {
+    font-size: 0.65rem;
+    padding: 3px 8px;
+    min-height: 28px;
+  }
 }
 
 /* Copyright notice */
@@ -348,6 +358,48 @@
 .flipbook-fullscreen-overlay .flipbook-fullscreen-btn {
   background: #f59e0b;
   color: #f0f4f8;
+}
+
+/* TTS Controls */
+.flipbook-tts-controls {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  margin-left: 8px;
+}
+.flipbook-tts-btn {
+  background: #1e3a52;
+  color: #f0f4f8;
+  border: 2px solid #3a5a7b;
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+  min-height: 32px;
+  transition: background 0.2s, border-color 0.2s;
+  font-family: 'Segoe UI', system-ui, sans-serif;
+}
+.flipbook-tts-btn:hover {
+  background: #2a4a6b;
+  border-color: #2563eb;
+}
+.flipbook-tts-active {
+  background: #059669;
+  border-color: #059669;
+  color: #ffffff;
+}
+.flipbook-tts-podcast {
+  background: #7c3aed;
+  border-color: #7c3aed;
+  color: #ffffff;
+}
+.flipbook-tts-podcast:hover {
+  background: #6d28d9;
 }
 
 /* High contrast mode */
@@ -589,7 +641,8 @@
 @media print {
   .site-header, .site-footer, .flipbook-toolbar,
   .flipbook-zoom-controls, .flipbook-fullscreen-btn,
-  .flipbook-arrow-row, .bm-reader-nav, .chat-back-arrow {
+  .flipbook-arrow-row, .bm-reader-nav, .chat-back-arrow,
+  .flipbook-tts-controls {
     display: none !important;
   }
 

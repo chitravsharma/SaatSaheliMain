@@ -7,6 +7,14 @@ import "./Home.css";
 
 const API = process.env.REACT_APP_API_URL;
 
+function resolveImageUrl(url) {
+  if (!url) return null;
+  if (url.startsWith("/uploads/")) return `${API}${url}`;
+  const match = url.match(/\/file\/d\/([^/]+)\//);
+  if (match) return `https://drive.google.com/thumbnail?id=${match[1]}&sz=w200`;
+  return url;
+}
+
 function Home() {
   const strings = useStrings();
   const { user } = useAuth();
@@ -239,7 +247,15 @@ function Home() {
                         <div key={book.id} className="home-book-card">
                           <Link to={`/read/${book.id}`} className="home-book-link">
                             <div className="home-book-cover">
-                              <span className="home-book-cover-title">{book.title}</span>
+                              {book.coverImageUrl ? (
+                                <img
+                                  src={resolveImageUrl(book.coverImageUrl)}
+                                  alt={book.title}
+                                  className="home-book-cover-img"
+                                />
+                              ) : (
+                                <span className="home-book-cover-title">{book.title}</span>
+                              )}
                             </div>
                             <div className="home-book-info">
                               <span className="home-book-title">{book.title}</span>

@@ -78,9 +78,13 @@ function FlipBook({ bookId }) {
   const [zoomIndex, setZoomIndex] = useState(DEFAULT_ZOOM_INDEX);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [pinchZoom, setPinchZoom] = useState(1);
+  const [ttsPlaying, setTtsPlaying] = useState(false);
+  const [ttsPaused, setTtsPaused] = useState(false);
+  const [ttsReadAll, setTtsReadAll] = useState(false); // podcast mode - read all pages
   const flipBookRef = useRef(null);
   const pinchRef = useRef({ startDist: 0, startZoom: 1 });
   const fullscreenRef = useRef(null);
+  const ttsPageRef = useRef(0); // track which page TTS is reading for podcast mode
   const pageSize = usePageSize();
 
   const zoomLevel = ZOOM_LEVELS[zoomIndex] * pinchZoom;
@@ -199,6 +203,90 @@ function FlipBook({ bookId }) {
     setZoomIndex(DEFAULT_ZOOM_INDEX);
   }, []);
 
+  // Text-to-Speech functions
+  const getPageText = useCallback((pageIndex) => {
+    if (pageIndex < 0 || pageIndex >= pages.length) return "";
+    const page = pages[pageIndex];
+    return page.content || "";
+  }, [pages]);
+
+  const stopTts = useCallback(() => {
+    window.speechSynthesis?.cancel();
+    setTtsPlaying(false);
+    setTtsPaused(false);
+    setTtsReadAll(false);
+  }, []);
+
+  const speakPage = useCallback((pageIndex, readAll) => {
+    if (!window.speechSynthesis) return;
+    window.speechSynthesis.cancel();
+    const text = getPageText(pageIndex);
+    if (!text.trim()) {
+      // Skip empty pages in podcast mode
+      if (readAll && pageIndex < pages.length - 1) {
+        const next = pageIndex + 1;
+        ttsPageRef.current = next;
+        flipBookRef.current?.pageFlip()?.turnToPage(next);
+        setTimeout(() => speakPage(next, true), 500);
+        return;
+      }
+      setTtsPlaying(false);
+      setTtsReadAll(false);
+      return;
+    }
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.rate = 0.95;
+    utterance.pitch = 1;
+    utterance.onend = () => {
+      if (readAll && pageIndex < pages.length - 1) {
+        const next = pageIndex + 1;
+        ttsPageRef.current = next;
+        flipBookRef.current?.pageFlip()?.turnToPage(next);
+        setTimeout(() => speakPage(next, true), 500);
+      } else {
+        setTtsPlaying(false);
+        setTtsReadAll(false);
+      }
+    };
+    utterance.onerror = () => {
+      setTtsPlaying(false);
+      setTtsReadAll(false);
+    };
+    setTtsPlaying(true);
+    setTtsPaused(false);
+    window.speechSynthesis.speak(utterance);
+  }, [getPageText, pages.length]);
+
+  const handleTtsReadPage = useCallback(() => {
+    if (ttsPlaying && !ttsPaused) {
+      // Pause
+      window.speechSynthesis?.pause();
+      setTtsPaused(true);
+    } else if (ttsPlaying && ttsPaused) {
+      // Resume
+      window.speechSynthesis?.resume();
+      setTtsPaused(false);
+    } else {
+      // Start reading current page
+      speakPage(currentPage, false);
+    }
+  }, [ttsPlaying, ttsPaused, currentPage, speakPage]);
+
+  const handleTtsPodcast = useCallback(() => {
+    if (ttsReadAll) {
+      stopTts();
+      return;
+    }
+    setTtsReadAll(true);
+    ttsPageRef.current = currentPage;
+    speakPage(currentPage, true);
+  }, [ttsReadAll, currentPage, speakPage, stopTts]);
+
+  // Stop TTS when component unmounts
+  useEffect(() => {
+    return () => window.speechSynthesis?.cancel();
+  }, []);
+
   const totalPages = pages.length;
 
   const content = (
@@ -270,6 +358,34 @@ function FlipBook({ bookId }) {
             >
               +
             </button>
+          </div>
+          <div className="flipbook-tts-controls">
+            <button
+              className={`flipbook-tts-btn ${ttsPlaying && !ttsPaused ? "flipbook-tts-active" : ""}`}
+              onClick={handleTtsReadPage}
+              title={ttsPlaying ? (ttsPaused ? "Resume reading" : "Pause reading") : "Read this page aloud"}
+              aria-label={ttsPlaying ? (ttsPaused ? "Resume" : "Pause") : "Read aloud"}
+            >
+              {ttsPlaying && !ttsPaused ? "\u23F8" : "\u25B6"} {ttsPlaying ? (ttsPaused ? "Resume" : "Pause") : "Read"}
+            </button>
+            <button
+              className={`flipbook-tts-btn ${ttsReadAll ? "flipbook-tts-podcast" : ""}`}
+              onClick={handleTtsPodcast}
+              title={ttsReadAll ? "Stop podcast" : "Read aloud as podcast (all pages)"}
+              aria-label={ttsReadAll ? "Stop podcast" : "Podcast mode"}
+            >
+              {ttsReadAll ? "\u23F9 Stop" : "\u{1F399} Podcast"}
+            </button>
+            {ttsPlaying && (
+              <button
+                className="flipbook-tts-btn"
+                onClick={stopTts}
+                title="Stop reading"
+                aria-label="Stop"
+              >
+                &#x23F9;
+              </button>
+            )}
           </div>
           <button
             className="flipbook-fullscreen-btn"

@@ -90,7 +90,11 @@ function PublicBooks() {
               aria-label={`Read ${book.title}`}
             >
               <div className="bm-public-cover">
-                <span className="bm-public-cover-title">{book.title}</span>
+                {book.coverImageUrl ? (
+                  <img src={resolveImageUrl(book.coverImageUrl)} alt={book.title} className="bm-public-cover-img" />
+                ) : (
+                  <span className="bm-public-cover-title">{book.title}</span>
+                )}
               </div>
               {book.authorName && (
                 <Link
@@ -196,6 +200,9 @@ function BookManager() {
 
   // Cover/Back page designer state
   const [coverDesignData, setCoverDesignData] = useState({});
+
+  // Help & Support state
+  const [showHelp, setShowHelp] = useState(false);
 
   // Helper: detect if a page number is the back page (last page in the book)
   const getBackPageNumber = () => {
@@ -651,7 +658,11 @@ function BookManager() {
                     aria-label={`Read ${book.title}`}
                   >
                     <div className="bm-public-cover">
-                      <span className="bm-public-cover-title">{book.title}</span>
+                      {book.coverImageUrl ? (
+                        <img src={resolveImageUrl(book.coverImageUrl)} alt={book.title} className="bm-public-cover-img" />
+                      ) : (
+                        <span className="bm-public-cover-title">{book.title}</span>
+                      )}
                     </div>
                     {book.authorName && (
                       <span className="bm-public-author">{book.authorName}</span>
@@ -715,7 +726,38 @@ function BookManager() {
             {loading ? strings.bookManager.creating : strings.bookManager.createButton}
           </button>
           <button className="bm-btn bm-btn-back" onClick={() => setView("menu")}>{strings.common.back}</button>
+          <button className="bm-btn bm-btn-help" onClick={() => setShowHelp(!showHelp)} type="button">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            Help & Support
+          </button>
         </div>
+
+        {showHelp && (
+          <div className="bm-help-panel">
+            <h3>How to Create a Book</h3>
+            <ol>
+              <li><strong>Enter a title</strong> for your book and click "Create".</li>
+              <li><strong>Add pages</strong> with text, images, or AI-generated illustrations.</li>
+              <li><strong>Design your cover</strong> (page 1) and back page using the Cover Designer (Premium feature).</li>
+              <li><strong>Preview</strong> your book with the FlipBook viewer before publishing.</li>
+              <li><strong>Publish</strong> when ready to share with the community.</li>
+            </ol>
+            <h3>Cover & Back Page Tips</h3>
+            <ul>
+              <li>Generate or upload a background image for your cover.</li>
+              <li>Click "Save & Customize" to position text on the image.</li>
+              <li><strong>Drag text blocks</strong> to move them to the desired position.</li>
+              <li>Adjust image scale with the slider for the perfect fit.</li>
+              <li>Click "Save as Cover Page Image" to save the final composite.</li>
+            </ul>
+            <h3>Reading Features</h3>
+            <ul>
+              <li>Use the <strong>Read</strong> button to have a page read aloud.</li>
+              <li>Use <strong>Podcast</strong> mode to listen to the entire book continuously.</li>
+            </ul>
+            <p className="bm-help-contact">Need more help? Contact us at <strong>support@saatsaheli.com</strong></p>
+          </div>
+        )}
       </div>
     );
   }
@@ -887,7 +929,31 @@ function BookManager() {
               <button className="bm-btn bm-btn-create" onClick={handlePublish}>{strings.bookManager.publish}</button>
               <button className="bm-btn bm-btn-preview" onClick={() => setView("preview")}>{strings.bookManager.preview}</button>
               <button className="bm-btn bm-btn-delete" onClick={() => handleDeleteBook(selectedBook.id)}>{strings.bookManager.deleteBook}</button>
+              <button className="bm-btn bm-btn-help" onClick={() => setShowHelp(!showHelp)} type="button">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                Help
+              </button>
             </div>
+
+            {showHelp && (
+              <div className="bm-help-panel">
+                <h3>Book Editing Guide</h3>
+                <ul>
+                  <li><strong>Page 1</strong> is your Cover Page. Set its page number to 1 to use the Cover Designer.</li>
+                  <li>The <strong>last page</strong> is your Back Page. Design it with the Back Page Designer.</li>
+                  <li>Use <strong>Save & Customize</strong> to position text on cover/back page images.</li>
+                  <li><strong>Drag text blocks</strong> to reposition title, author name, etc. on the cover.</li>
+                  <li>Click <strong>Save as Cover/Back Page Image</strong> to save the final composite.</li>
+                  <li>Use <strong>Preview</strong> to see your book as readers will see it.</li>
+                </ul>
+                <h3>Reading & Audio</h3>
+                <ul>
+                  <li>In preview or read mode, use <strong>Read</strong> to hear the current page read aloud.</li>
+                  <li>Use <strong>Podcast</strong> mode to listen to the entire book continuously.</li>
+                </ul>
+                <p className="bm-help-contact">Questions? Contact <strong>support@saatsaheli.com</strong></p>
+              </div>
+            )}
 
             {/* Add page form */}
             <div className="bm-add-page">

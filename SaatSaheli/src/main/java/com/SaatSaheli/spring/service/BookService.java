@@ -112,7 +112,11 @@ public class BookService {
         Optional<Book> bookOpt = bookRepo.findById(id);
         if (bookOpt.isEmpty()) throw new RuntimeException("Book not found");
         Book book = bookOpt.get();
-        book.setPages(pageRepo.findByBookIdOrderByPageNumberAsc(id));
+        List<Page> pages = pageRepo.findByBookIdOrderByPageNumberAsc(id);
+        book.setPages(pages);
+        if (!pages.isEmpty() && pages.get(0).getImageUrl() != null && !pages.get(0).getImageUrl().isEmpty()) {
+            book.setCoverImageUrl(pages.get(0).getImageUrl());
+        }
         return book;
     }
 
@@ -203,6 +207,7 @@ public class BookService {
                 book.setAuthorName(name.trim());
             }
         }
+        enrichWithCoverImages(books);
         return books;
     }
 
@@ -213,6 +218,7 @@ public class BookService {
         for (Book book : books) {
             book.setPages(pageRepo.findByBookIdOrderByPageNumberAsc(book.getId()));
         }
+        enrichWithCoverImages(books);
         return books;
     }
 
@@ -233,6 +239,7 @@ public class BookService {
                 book.setAuthorName(name.trim());
             }
         }
+        enrichWithCoverImages(books);
         return books;
     }
 
@@ -303,6 +310,7 @@ public class BookService {
             }
             book.setPages(pageRepo.findByBookIdOrderByPageNumberAsc(book.getId()));
         }
+        enrichWithCoverImages(filtered);
 
         return filtered;
     }
@@ -399,6 +407,22 @@ public class BookService {
 
         book.setPages(pageRepo.findByBookIdOrderByPageNumberAsc(book.getId()));
         return book;
+    }
+
+    /** Enrich books with cover image URL from their first page (page 1) */
+    private void enrichWithCoverImages(List<Book> books) {
+        for (Book book : books) {
+            List<Page> pages = book.getPages();
+            if (pages == null || pages.isEmpty()) {
+                pages = pageRepo.findByBookIdOrderByPageNumberAsc(book.getId());
+            }
+            if (pages != null && !pages.isEmpty()) {
+                Page firstPage = pages.get(0);
+                if (firstPage.getImageUrl() != null && !firstPage.getImageUrl().isEmpty()) {
+                    book.setCoverImageUrl(firstPage.getImageUrl());
+                }
+            }
+        }
     }
 
     public List<Page> getPagesByBookId(Long bookId) {
