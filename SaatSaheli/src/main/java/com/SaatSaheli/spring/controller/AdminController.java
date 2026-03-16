@@ -3,6 +3,9 @@ package com.SaatSaheli.spring.controller;
 import com.SaatSaheli.spring.model.Book;
 import com.SaatSaheli.spring.model.Login;
 import com.SaatSaheli.spring.model.User;
+import com.SaatSaheli.spring.repository.ArticleRepository;
+import com.SaatSaheli.spring.repository.BookRepository;
+import com.SaatSaheli.spring.repository.GalleryRepository;
 import com.SaatSaheli.spring.repository.LoginRepository;
 import com.SaatSaheli.spring.repository.UserRepository;
 import com.SaatSaheli.spring.service.BookService;
@@ -30,6 +33,15 @@ public class AdminController {
     @Autowired
     private BookService bookService;
 
+    @Autowired
+    private BookRepository bookRepo;
+
+    @Autowired
+    private GalleryRepository galleryRepo;
+
+    @Autowired
+    private ArticleRepository articleRepo;
+
     /** GET /api/admin/users — List all users with login info */
     @GetMapping("/users")
     public ResponseEntity<?> listUsers(@RequestHeader("X-User-Id") String callerUserId) {
@@ -44,6 +56,18 @@ public class AdminController {
             Map<Long, Login> loginByUserId = logins.stream()
                     .collect(Collectors.toMap(Login::getUserId, l -> l, (a, b) -> a));
 
+            // Pre-compute content counts per user
+            Map<Long, Long> bookCounts = bookRepo.findAll().stream()
+                    .filter(b -> !"DELETED".equalsIgnoreCase(b.getStatus()))
+                    .filter(b -> b.getUserId() != null)
+                    .collect(Collectors.groupingBy(Book::getUserId, Collectors.counting()));
+            Map<Long, Long> galleryCounts = galleryRepo.findAll().stream()
+                    .filter(g -> g.getUserId() != null)
+                    .collect(Collectors.groupingBy(g -> g.getUserId(), Collectors.counting()));
+            Map<Long, Long> articleCounts = articleRepo.findAllByOrderByCreatedDateDesc().stream()
+                    .filter(a -> a.getUserId() != null)
+                    .collect(Collectors.groupingBy(a -> a.getUserId(), Collectors.counting()));
+
             List<Map<String, Object>> result = new ArrayList<>();
             for (User u : users) {
                 Map<String, Object> entry = new LinkedHashMap<>();
@@ -53,7 +77,18 @@ public class AdminController {
                 entry.put("lastName", u.getLastName());
                 entry.put("email", u.getEmail());
                 entry.put("role", u.getRole());
+                entry.put("plan", u.getPlan() != null ? u.getPlan() : "Free");
                 entry.put("createdDate", u.getCreatedDate());
+
+                // Activity counts
+                long books = bookCounts.getOrDefault(u.getId(), 0L);
+                long galleries = galleryCounts.getOrDefault(u.getId(), 0L);
+                long articles = articleCounts.getOrDefault(u.getId(), 0L);
+                entry.put("bookCount", books);
+                entry.put("galleryCount", galleries);
+                entry.put("articleCount", articles);
+                entry.put("userType", (books + galleries + articles) > 0 ? "Creator" : "Visitor");
+
                 Login login = loginByUserId.get(u.getId());
                 if (login != null) {
                     entry.put("loginId", login.getId());
@@ -176,6 +211,22 @@ public class AdminController {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(errorMap("Failed to delete book: " + e.getMessage()));
+        }
+    }
+
+    /** DELETE /api/admin/books/purge — Permanently delete all books with DELETED status (SUPER_ADMIN only) */
+    @DeleteMapping("/books/purge")
+    public ResponseEntity<?> purgeDeletedBooks(@RequestHeader("X-User-Id") String callerUserId) {
+        try {
+            User caller = verifyCaller(callerUserId, true);
+            if (caller == null) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorMap("Super Admin access required"));
+            }
+            int count = bookService.purgeDeletedBooks();
+            return ResponseEntity.ok(Map.of("message", "Permanently deleted " + count + " books", "count", count));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(errorMap("Failed to purge books: " + e.getMessage()));
         }
     }
 

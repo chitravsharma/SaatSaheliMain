@@ -8,15 +8,20 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 @Service
 public class CloudinaryService {
 
     private final Cloudinary cloudinary;
+
+    private static final Set<String> IMAGE_TYPES = Set.of(
+            "image/jpeg", "image/png", "image/gif", "image/webp", "image/bmp", "image/tiff");
 
     public CloudinaryService(
             @Value("${cloudinary.cloud-name}") String cloudName,
@@ -29,15 +34,39 @@ public class CloudinaryService {
                 "secure", true));
     }
 
+    /**
+     * Strip EXIF/GPS metadata from image bytes by re-encoding through ImageIO.
+     * Non-image content is returned as-is.
+     */
+    private byte[] stripExifMetadata(byte[] data, String contentType) {
+        if (contentType == null || !IMAGE_TYPES.contains(contentType.toLowerCase())) {
+            return data; // not an image — return unchanged
+        }
+        try {
+            BufferedImage img = ImageIO.read(new ByteArrayInputStream(data));
+            if (img == null) return data;
+            // Determine output format: keep PNG as PNG, everything else → JPEG
+            String fmt = contentType.contains("png") ? "png" : "jpg";
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            ImageIO.write(img, fmt, out);
+            return out.toByteArray();
+        } catch (IOException e) {
+            // If stripping fails, upload original rather than blocking
+            return data;
+        }
+    }
+
     public String uploadFile(MultipartFile file) throws IOException {
-        Map result = cloudinary.uploader().upload(file.getBytes(), ObjectUtils.asMap(
+        byte[] clean = stripExifMetadata(file.getBytes(), file.getContentType());
+        Map result = cloudinary.uploader().upload(clean, ObjectUtils.asMap(
                 "folder", "saatsaheli",
                 "resource_type", "auto"));
         return (String) result.get("secure_url");
     }
 
     public String uploadBytes(byte[] data, String filename, String mimeType) throws IOException {
-        Map result = cloudinary.uploader().upload(data, ObjectUtils.asMap(
+        byte[] clean = stripExifMetadata(data, mimeType);
+        Map result = cloudinary.uploader().upload(clean, ObjectUtils.asMap(
                 "folder", "saatsaheli",
                 "public_id", filename.replaceAll("\\.[^.]+$", ""),
                 "resource_type", "auto"));
@@ -45,6 +74,7 @@ public class CloudinaryService {
     }
 
     public String saveBufferedImage(BufferedImage image, String format) throws IOException {
+        // BufferedImage has no EXIF — already clean
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         ImageIO.write(image, format, baos);
         byte[] data = baos.toByteArray();

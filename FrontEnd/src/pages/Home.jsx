@@ -21,6 +21,7 @@ function Home() {
   const navigate = useNavigate();
   const [recentBooks, setRecentBooks] = useState([]);
   const [galleries, setGalleries] = useState([]);
+  const [recentArticles, setRecentArticles] = useState([]);
   const [bookCounts, setBookCounts] = useState({ likes: {}, comments: {} });
   const [galleryCounts, setGalleryCounts] = useState({ likes: {}, comments: {} });
   const [userLikes, setUserLikes] = useState({});
@@ -30,9 +31,10 @@ function Home() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [booksRes, galleriesRes, bookCountsRes, galleryCountsRes] = await Promise.all([
+        const [booksRes, galleriesRes, articlesRes, bookCountsRes, galleryCountsRes] = await Promise.all([
           axios.get(`${API}/api/books/search?status=PUBLISHED`),
           axios.get(`${API}/api/galleries`),
+          axios.get(`${API}/api/articles`).catch(() => ({ data: [] })),
           axios.get(`${API}/api/social/counts?targetType=BOOK`).catch(() => ({ data: { likes: {}, comments: {} } })),
           axios.get(`${API}/api/social/counts?targetType=GALLERY`).catch(() => ({ data: { likes: {}, comments: {} } })),
         ]);
@@ -44,6 +46,10 @@ function Home() {
         const gals = Array.isArray(galleriesRes.data) ? galleriesRes.data : [];
         gals.sort((a, b) => new Date(b.modifiedDate) - new Date(a.modifiedDate));
         setGalleries(gals.slice(0, 8));
+
+        const arts = Array.isArray(articlesRes.data) ? articlesRes.data : [];
+        arts.sort((a, b) => new Date(b.createdDate) - new Date(a.createdDate));
+        setRecentArticles(arts.slice(0, 6));
 
         setBookCounts(bookCountsRes.data || { likes: {}, comments: {} });
         setGalleryCounts(galleryCountsRes.data || { likes: {}, comments: {} });
@@ -214,6 +220,34 @@ function Home() {
                 </div>
               );
             })}
+          </div>
+        </div>
+      )}
+
+      {/* Blogs & Articles Section */}
+      {!loading && recentArticles.length > 0 && (
+        <div className="home-section">
+          <h2 className="home-section-heading">Blogs & Articles</h2>
+          <hr className="home-section-divider" />
+          <div className="home-articles-row">
+            {recentArticles.map((article) => (
+              <Link key={article.id} to="/articles" className="home-article-card">
+                {article.imageUrl && (
+                  <img src={resolveImageUrl(article.imageUrl)} alt={article.headline} className="home-article-img" />
+                )}
+                <div className="home-article-info">
+                  <span className={`home-article-type home-article-type-${(article.contentType || "article").toLowerCase()}`}>
+                    {article.contentType || "Article"}
+                  </span>
+                  <span className="home-article-title">{article.headline}</span>
+                  {article.authorName && <span className="home-article-author">by {article.authorName}</span>}
+                  <span className="home-article-date">{new Date(article.createdDate).toLocaleDateString()}</span>
+                </div>
+              </Link>
+            ))}
+          </div>
+          <div className="home-section-more">
+            <Link to="/articles" className="ss-btn ss-btn-outline">View All Blogs & Articles</Link>
           </div>
         </div>
       )}

@@ -26,6 +26,9 @@ public class Article {
 
     private String status; // PUBLISHED, DRAFT
 
+    @Column(name = "content_type")
+    private String contentType; // "Blog" or "Article"
+
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     @Column(name = "created_date")
     private LocalDateTime createdDate;
@@ -60,6 +63,9 @@ public class Article {
 
     public LocalDateTime getModifiedDate() { return modifiedDate; }
     public void setModifiedDate(LocalDateTime modifiedDate) { this.modifiedDate = modifiedDate; }
+
+    public String getContentType() { return contentType; }
+    public void setContentType(String contentType) { this.contentType = contentType; }
 
     public String getAuthorName() { return authorName; }
     public void setAuthorName(String authorName) { this.authorName = authorName; }

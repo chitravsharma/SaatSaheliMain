@@ -10,4 +10,6 @@ import java.util.List;
 public interface BookRepository extends JpaRepository<Book, Long> {
     List<Book> findByUserId(Long userId);
     List<Book> findByUserIdAndStatusIgnoreCase(Long userId, String status);
+    List<Book> findByStatusIgnoreCase(String status);
+    long countByUserId(Long userId);
 }

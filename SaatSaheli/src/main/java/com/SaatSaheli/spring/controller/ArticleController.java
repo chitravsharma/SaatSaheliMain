@@ -26,13 +26,15 @@ public class ArticleController {
             String headline = (String) body.get("headline");
             String content = (String) body.get("content");
             String imageUrl = (String) body.get("imageUrl");
+            String contentType = (String) body.get("contentType");
             if (userId == null) {
                 return ResponseEntity.badRequest().body(errorMap("userId is required"));
             }
             if (headline == null || headline.isEmpty()) {
                 return ResponseEntity.badRequest().body(errorMap("Headline is required"));
             }
-            Article article = articleService.createArticle(userId, headline, content, imageUrl);
+            String status = (String) body.get("status");
+            Article article = articleService.createArticle(userId, headline, content, imageUrl, contentType, status);
             return ResponseEntity.ok(article);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -47,7 +49,9 @@ public class ArticleController {
             String headline = (String) body.get("headline");
             String content = (String) body.get("content");
             String imageUrl = (String) body.get("imageUrl");
-            Article article = articleService.updateArticle(id, userId, headline, content, imageUrl);
+            String contentType = (String) body.get("contentType");
+            String status = (String) body.get("status");
+            Article article = articleService.updateArticle(id, userId, headline, content, imageUrl, contentType, status);
             return ResponseEntity.ok(article);
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorMap(e.getMessage()));

@@ -425,6 +425,27 @@ public class BookService {
         }
     }
 
+    /** Permanently delete all books with DELETED status and their pages */
+    @Transactional
+    public int purgeDeletedBooks() {
+        List<Book> deletedBooks = bookRepo.findByStatusIgnoreCase("DELETED");
+        int count = deletedBooks.size();
+        for (Book book : deletedBooks) {
+            List<Page> pages = pageRepo.findByBookIdOrderByPageNumberAsc(book.getId());
+            pageRepo.deleteAll(pages);
+            bookRepo.delete(book);
+        }
+        log.info("Permanently purged {} deleted books and their pages", count);
+        return count;
+    }
+
+    /** Count books created by a user (excluding DELETED) */
+    public long countBooksByUser(Long userId) {
+        return bookRepo.findByUserId(userId).stream()
+                .filter(b -> !"DELETED".equalsIgnoreCase(b.getStatus()))
+                .count();
+    }
+
     public List<Page> getPagesByBookId(Long bookId) {
         return pageRepo.findByBookIdOrderByPageNumberAsc(bookId);
     }

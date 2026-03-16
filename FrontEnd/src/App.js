@@ -28,6 +28,8 @@ import GalleryView from './pages/GalleryView';
 import Pricing from './pages/Pricing';
 import Articles from './pages/Articles';
 import ProtectedRoute from './components/ProtectedRoute';
+import DownloadProtection from './components/DownloadProtection';
+import Checkout from './pages/Checkout';
 
 
 function BookManagerWrapper() {
@@ -41,6 +43,7 @@ function App() {
     <div className="App">
       <Header />
       <main id="main-content">
+        <DownloadProtection>
         <Routes>
           <Route path="/Login" element={<Login />} />
           <Route path="/register" element={<Login />} />
@@ -58,13 +61,15 @@ function App() {
           <Route path="/category/:category" element={<CategoryPage />} />
           <Route path="/admin" element={<ProtectedRoute requiredRole="ADMIN"><AdminDashboard /></ProtectedRoute>} />
           <Route path="/chat" element={<ProtectedRoute><Chat /></ProtectedRoute>} />
-          <Route path="/articles" element={<ProtectedRoute><Articles /></ProtectedRoute>} />
+          <Route path="/articles" element={<Articles />} />
           <Route path="/gallery/:galleryId" element={<GalleryView />} />
           <Route path="/pricing" element={<Pricing />} />
+          <Route path="/checkout" element={<ProtectedRoute><Checkout /></ProtectedRoute>} />
           <Route path="/manual" element={<UserManual />} />
           <Route path="/admin-manual" element={<ProtectedRoute requiredRole="ADMIN"><AdminManual /></ProtectedRoute>} />
           <Route path="/logout" element={<Logout />} />
         </Routes>
+        </DownloadProtection>
       </main>
       <Footer />
     </div>

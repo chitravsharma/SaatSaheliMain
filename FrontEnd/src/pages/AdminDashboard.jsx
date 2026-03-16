@@ -86,6 +86,18 @@ const AdminDashboard = () => {
         }
     };
 
+    const purgeDeletedBooks = async () => {
+        if (!window.confirm("Permanently delete ALL books marked as deleted? This cannot be undone.")) return;
+        try {
+            const res = await axios.delete(`${API}/api/admin/books/purge`, { headers });
+            setMessage(`Purged ${res.data.count} deleted books permanently.`);
+            fetchBooks();
+            fetchStats();
+        } catch {
+            setMessage("Failed to purge deleted books");
+        }
+    };
+
     return (
         <div className="admin-dashboard">
             <h1>{s.heading || "Admin Dashboard"}</h1>
@@ -146,9 +158,11 @@ const AdminDashboard = () => {
                                     <th>{s.colName || "Name"}</th>
                                     <th>{s.colEmail || "Email"}</th>
                                     <th>{s.colRole || "Role"}</th>
+                                    <th>Plan</th>
+                                    <th>Type</th>
+                                    <th>Content</th>
                                     <th>{s.colStatus || "Status"}</th>
                                     <th>{s.colLastLogin || "Last Login"}</th>
-                                    <th>{s.colActions || "Actions"}</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -174,6 +188,22 @@ const AdminDashboard = () => {
                                             )}
                                         </td>
                                         <td>
+                                            <span className={`plan-badge plan-${(u.plan || "Free").toLowerCase()}`}>
+                                                {u.plan || "Free"}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <span className={`type-badge type-${(u.userType || "Visitor").toLowerCase()}`}>
+                                                {u.userType || "Visitor"}
+                                            </span>
+                                        </td>
+                                        <td className="admin-content-counts">
+                                            {u.bookCount > 0 && <span title="Books">B:{u.bookCount}</span>}
+                                            {u.galleryCount > 0 && <span title="Galleries">G:{u.galleryCount}</span>}
+                                            {u.articleCount > 0 && <span title="Articles">A:{u.articleCount}</span>}
+                                            {(u.bookCount || 0) + (u.galleryCount || 0) + (u.articleCount || 0) === 0 && "\u2014"}
+                                        </td>
+                                        <td>
                                             <select
                                                 value={u.status || "ACTIVE"}
                                                 onChange={(e) => changeStatus(u.id, e.target.value)}
@@ -185,7 +215,6 @@ const AdminDashboard = () => {
                                             </select>
                                         </td>
                                         <td>{u.lastLoginDate || "\u2014"}</td>
-                                        <td>\u2014</td>
                                     </tr>
                                 ))}
                             </tbody>
@@ -196,6 +225,16 @@ const AdminDashboard = () => {
 
             {tab === "books" && (
                 <div className="admin-table-wrap">
+                    {isSuperAdmin && (
+                        <div className="admin-purge-bar">
+                            <button className="admin-purge-btn" onClick={purgeDeletedBooks}>
+                                Permanently Delete All Removed Books
+                            </button>
+                            <span className="admin-purge-note">
+                                This will permanently remove all books with &quot;DELETED&quot; status and their pages.
+                            </span>
+                        </div>
+                    )}
                     {loading ? <p>{strings.common.loading}</p> : (
                         <table className="admin-table">
                             <thead>

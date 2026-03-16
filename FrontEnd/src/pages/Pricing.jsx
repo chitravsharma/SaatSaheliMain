@@ -1,14 +1,16 @@
-import React from "react";
-import { Link } from "react-router-dom";
+import React, { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../AuthContext";
 import "./Pricing.css";
 
 const plans = [
   {
+    key: "Free",
     name: "Free (Starter)",
     tagline: "Best for beginners trying the platform",
     price: "Free",
     priceNote: null,
+    monthlyPrice: 0,
     features: [
       "Create up to 10 books",
       "Maximum 50 pages per book",
@@ -26,13 +28,15 @@ const plans = [
     ],
     bonus: null,
     highlight: false,
-    cta: "Get Started Free",
+    cta: "Current Plan",
   },
   {
+    key: "Premium",
     name: "Premium",
     tagline: "Best for writers and regular creators",
-    price: "$5 - $9",
+    price: "$9",
     priceNote: "/ month",
+    monthlyPrice: 9,
     features: [
       "Create up to 25 books",
       "Maximum 250 pages per book",
@@ -51,10 +55,12 @@ const plans = [
     cta: "Upgrade to Premium",
   },
   {
+    key: "Gold",
     name: "Gold Member",
     tagline: "Best for professional authors & educators",
-    price: "$15 - $20",
+    price: "$19",
     priceNote: "/ month",
+    monthlyPrice: 19,
     features: [
       "Unlimited books",
       "Unlimited pages",
@@ -74,10 +80,12 @@ const plans = [
     cta: "Go Gold",
   },
   {
+    key: "Creator",
     name: "Creator / Pro",
     tagline: "Best for businesses, schools, or publishers",
-    price: "$29 - $49",
+    price: "$49",
     priceNote: "/ month",
+    monthlyPrice: 49,
     features: [
       "Everything in Gold",
       "Unlimited collaborators",
@@ -96,8 +104,33 @@ const plans = [
   },
 ];
 
+export { plans };
+
 export default function Pricing() {
-  const { user } = useAuth();
+  const { user, userPlan } = useAuth();
+  const navigate = useNavigate();
+  const [selectedPlan, setSelectedPlan] = useState(null);
+
+  const handleSelect = (plan) => {
+    if (plan.key === "Free") return;
+    if (!user) {
+      navigate("/Login");
+      return;
+    }
+    if (plan.key === userPlan) return; // already on this plan
+    setSelectedPlan(plan.key);
+    navigate(`/checkout?plan=${plan.key}`);
+  };
+
+  const getCtaLabel = (plan) => {
+    if (!user) return plan.cta;
+    if (plan.key === userPlan) return "Current Plan";
+    const planOrder = ["Free", "Premium", "Gold", "Creator"];
+    const currentIdx = planOrder.indexOf(userPlan);
+    const targetIdx = planOrder.indexOf(plan.key);
+    if (targetIdx < currentIdx) return "Downgrade";
+    return plan.cta;
+  };
 
   return (
     <div className="pricing-page">
@@ -107,60 +140,62 @@ export default function Pricing() {
       </div>
 
       <div className="pricing-grid">
-        {plans.map((plan) => (
-          <div key={plan.name} className={`pricing-card ${plan.highlight ? "pricing-card-highlight" : ""}`}>
-            {plan.highlight && <div className="pricing-badge">Most Popular</div>}
-            <h2 className="pricing-plan-name">{plan.name}</h2>
-            <p className="pricing-tagline">{plan.tagline}</p>
-            <div className="pricing-price">
-              <span className="pricing-amount">{plan.price}</span>
-              {plan.priceNote && <span className="pricing-period">{plan.priceNote}</span>}
-            </div>
+        {plans.map((plan) => {
+          const isCurrent = user && plan.key === userPlan;
+          return (
+            <div key={plan.name} className={`pricing-card ${plan.highlight ? "pricing-card-highlight" : ""} ${isCurrent ? "pricing-card-current" : ""} ${selectedPlan === plan.key ? "pricing-card-selected" : ""}`}>
+              {plan.highlight && <div className="pricing-badge">Most Popular</div>}
+              {isCurrent && <div className="pricing-badge pricing-badge-current">Your Plan</div>}
+              <h2 className="pricing-plan-name">{plan.name}</h2>
+              <p className="pricing-tagline">{plan.tagline}</p>
+              <div className="pricing-price">
+                <span className="pricing-amount">{plan.price}</span>
+                {plan.priceNote && <span className="pricing-period">{plan.priceNote}</span>}
+              </div>
 
-            <div className="pricing-features">
-              <h3>Features</h3>
-              <ul>
-                {plan.features.map((f, i) => (
-                  <li key={i}><span className="pricing-check">&#10003;</span> {f}</li>
-                ))}
-              </ul>
-            </div>
-
-            {plan.bonus && (
-              <div className="pricing-bonus">
-                <h3>Bonus</h3>
+              <div className="pricing-features">
+                <h3>Features</h3>
                 <ul>
-                  {plan.bonus.map((b, i) => (
-                    <li key={i}><span className="pricing-star">&#9733;</span> {b}</li>
+                  {plan.features.map((f, i) => (
+                    <li key={i}><span className="pricing-check">&#10003;</span> {f}</li>
                   ))}
                 </ul>
               </div>
-            )}
 
-            {plan.limitations && (
-              <div className="pricing-limitations">
-                <h3>Limitations</h3>
-                <ul>
-                  {plan.limitations.map((l, i) => (
-                    <li key={i}><span className="pricing-x">&#10007;</span> {l}</li>
-                  ))}
-                </ul>
-              </div>
-            )}
-
-            <div className="pricing-cta">
-              {user ? (
-                <button className={`pricing-btn ${plan.highlight ? "pricing-btn-highlight" : ""}`}>
-                  {plan.cta}
-                </button>
-              ) : (
-                <Link to="/Login" className={`pricing-btn ${plan.highlight ? "pricing-btn-highlight" : ""}`}>
-                  {plan.cta}
-                </Link>
+              {plan.bonus && (
+                <div className="pricing-bonus">
+                  <h3>Bonus</h3>
+                  <ul>
+                    {plan.bonus.map((b, i) => (
+                      <li key={i}><span className="pricing-star">&#9733;</span> {b}</li>
+                    ))}
+                  </ul>
+                </div>
               )}
+
+              {plan.limitations && (
+                <div className="pricing-limitations">
+                  <h3>Limitations</h3>
+                  <ul>
+                    {plan.limitations.map((l, i) => (
+                      <li key={i}><span className="pricing-x">&#10007;</span> {l}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              <div className="pricing-cta">
+                <button
+                  className={`pricing-btn ${plan.highlight ? "pricing-btn-highlight" : ""} ${isCurrent ? "pricing-btn-current" : ""}`}
+                  onClick={() => handleSelect(plan)}
+                  disabled={isCurrent}
+                >
+                  {getCtaLabel(plan)}
+                </button>
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );

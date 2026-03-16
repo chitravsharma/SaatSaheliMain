@@ -158,6 +158,80 @@
     color: #fff;
 }
 
+/* Plan badges */
+.plan-badge {
+    display: inline-block;
+    padding: 0.2rem 0.6rem;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+.plan-badge.plan-free { background: #1e293b; color: #94a3b8; }
+.plan-badge.plan-premium { background: #1e3a52; color: #60a5fa; }
+.plan-badge.plan-gold { background: #3a3020; color: #fbbf24; }
+.plan-badge.plan-creator { background: #2a1a3a; color: #c084fc; }
+
+/* User type badges */
+.type-badge {
+    display: inline-block;
+    padding: 0.2rem 0.6rem;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+.type-badge.type-creator { background: #1a3a2a; color: #6ee7b7; }
+.type-badge.type-visitor { background: #1e293b; color: #94a3b8; }
+
+/* Content counts */
+.admin-content-counts {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+.admin-content-counts span {
+    background: #1e293b;
+    padding: 2px 6px;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    color: #94a3b8;
+    white-space: nowrap;
+}
+
+/* Purge bar */
+.admin-purge-bar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+    padding: 12px 16px;
+    background: #2a1a1a;
+    border: 1px solid #7f1d1d;
+    border-radius: 8px;
+}
+
+.admin-purge-btn {
+    padding: 8px 16px;
+    border: 1px solid #ef4444;
+    background: #dc2626;
+    color: #fff;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.admin-purge-btn:hover {
+    background: #b91c1c;
+}
+
+.admin-purge-note {
+    font-size: 0.8rem;
+    color: #fca5a5;
+}
+
 @media (max-width: 700px) {
     .admin-stats-grid {
         grid-template-columns: repeat(2, 1fr);
