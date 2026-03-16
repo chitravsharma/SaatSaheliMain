@@ -98,6 +98,50 @@ const AdminDashboard = () => {
         }
     };
 
+    const archiveBook = async (bookId) => {
+        try {
+            await axios.put(`${API}/api/admin/books/${bookId}/archive`, {}, { headers });
+            setMessage("Book archived");
+            fetchBooks();
+            fetchStats();
+        } catch {
+            setMessage("Failed to archive book");
+        }
+    };
+
+    const recoverBook = async (bookId) => {
+        try {
+            await axios.put(`${API}/api/admin/books/${bookId}/recover`, {}, { headers });
+            setMessage("Book recovered to Draft");
+            fetchBooks();
+            fetchStats();
+        } catch {
+            setMessage("Failed to recover book");
+        }
+    };
+
+    const purgeBook = async (bookId) => {
+        if (!window.confirm("Permanently purge this book and all its pages? This cannot be undone.")) return;
+        try {
+            await axios.delete(`${API}/api/admin/books/${bookId}/purge`, { headers });
+            setMessage("Book permanently purged");
+            fetchBooks();
+            fetchStats();
+        } catch {
+            setMessage("Failed to purge book");
+        }
+    };
+
+    const handleBookAction = (bookId, action, status) => {
+        switch (action) {
+            case "archive": archiveBook(bookId); break;
+            case "delete": deleteBook(bookId); break;
+            case "recover": recoverBook(bookId); break;
+            case "purge": purgeBook(bookId); break;
+            default: break;
+        }
+    };
+
     return (
         <div className="admin-dashboard">
             <h1>{s.heading || "Admin Dashboard"}</h1>
@@ -260,12 +304,25 @@ const AdminDashboard = () => {
                                         </td>
                                         <td>{b.modifiedDate || "\u2014"}</td>
                                         <td>
-                                            <button
-                                                className="admin-delete-btn"
-                                                onClick={() => deleteBook(b.id)}
+                                            <select
+                                                className="admin-action-select"
+                                                value=""
+                                                onChange={(e) => { handleBookAction(b.id, e.target.value, b.status); e.target.value = ""; }}
                                             >
-                                                {strings.common.delete}
-                                            </button>
+                                                <option value="" disabled>Action...</option>
+                                                {b.status !== "ARCHIVED" && b.status !== "DELETED" && (
+                                                    <option value="archive">Archive</option>
+                                                )}
+                                                {b.status !== "DELETED" && (
+                                                    <option value="delete">Delete</option>
+                                                )}
+                                                {(b.status === "DELETED" || b.status === "ARCHIVED") && (
+                                                    <option value="recover">Recover</option>
+                                                )}
+                                                {isSuperAdmin && (
+                                                    <option value="purge">Purge</option>
+                                                )}
+                                            </select>
                                         </td>
                                     </tr>
                                 ))}

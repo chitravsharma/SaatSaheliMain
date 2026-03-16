@@ -176,6 +176,40 @@ public class BookService {
         }
     }
 
+    /** Archive a book (soft status change) */
+    public void archiveBook(Long id) {
+        Optional<Book> bookOpt = bookRepo.findById(id);
+        if (bookOpt.isPresent()) {
+            Book book = bookOpt.get();
+            book.setStatus("ARCHIVED");
+            book.setModifiedDate(LocalDateTime.now());
+            bookRepo.save(book);
+        }
+    }
+
+    /** Recover a deleted or archived book back to DRAFT */
+    public void recoverBook(Long id) {
+        Optional<Book> bookOpt = bookRepo.findById(id);
+        if (bookOpt.isPresent()) {
+            Book book = bookOpt.get();
+            book.setStatus("DRAFT");
+            book.setModifiedDate(LocalDateTime.now());
+            bookRepo.save(book);
+        }
+    }
+
+    /** Permanently purge a single book and its pages */
+    @Transactional
+    public void purgeBook(Long id) {
+        Optional<Book> bookOpt = bookRepo.findById(id);
+        if (bookOpt.isPresent()) {
+            List<Page> pages = pageRepo.findByBookIdOrderByPageNumberAsc(id);
+            pageRepo.deleteAll(pages);
+            bookRepo.delete(bookOpt.get());
+            log.info("Permanently purged book {} and {} pages", id, pages.size());
+        }
+    }
+
     /** Role-aware updateBook: admins skip ownership check */
     public Book updateBook(Long id, String title, String status, Long requestUserId, String requestUserRole) {
         if (RoleUtil.isAdmin(requestUserRole)) {

@@ -214,6 +214,60 @@ public class AdminController {
         }
     }
 
+    /** PUT /api/admin/books/{bookId}/archive — Archive a book */
+    @PutMapping("/books/{bookId}/archive")
+    public ResponseEntity<?> archiveBook(
+            @PathVariable Long bookId,
+            @RequestHeader("X-User-Id") String callerUserId) {
+        try {
+            User caller = verifyCaller(callerUserId, false);
+            if (caller == null) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorMap("Admin access required"));
+            }
+            bookService.archiveBook(bookId);
+            return ResponseEntity.ok(Map.of("message", "Book archived"));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(errorMap("Failed to archive book: " + e.getMessage()));
+        }
+    }
+
+    /** PUT /api/admin/books/{bookId}/recover — Recover a deleted/archived book back to DRAFT */
+    @PutMapping("/books/{bookId}/recover")
+    public ResponseEntity<?> recoverBook(
+            @PathVariable Long bookId,
+            @RequestHeader("X-User-Id") String callerUserId) {
+        try {
+            User caller = verifyCaller(callerUserId, false);
+            if (caller == null) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorMap("Admin access required"));
+            }
+            bookService.recoverBook(bookId);
+            return ResponseEntity.ok(Map.of("message", "Book recovered to DRAFT"));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(errorMap("Failed to recover book: " + e.getMessage()));
+        }
+    }
+
+    /** DELETE /api/admin/books/{bookId}/purge — Permanently purge a single book (SUPER_ADMIN only) */
+    @DeleteMapping("/books/{bookId}/purge")
+    public ResponseEntity<?> purgeSingleBook(
+            @PathVariable Long bookId,
+            @RequestHeader("X-User-Id") String callerUserId) {
+        try {
+            User caller = verifyCaller(callerUserId, true);
+            if (caller == null) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorMap("Super Admin access required"));
+            }
+            bookService.purgeBook(bookId);
+            return ResponseEntity.ok(Map.of("message", "Book permanently purged"));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(errorMap("Failed to purge book: " + e.getMessage()));
+        }
+    }
+
     /** DELETE /api/admin/books/purge — Permanently delete all books with DELETED status (SUPER_ADMIN only) */
     @DeleteMapping("/books/purge")
     public ResponseEntity<?> purgeDeletedBooks(@RequestHeader("X-User-Id") String callerUserId) {

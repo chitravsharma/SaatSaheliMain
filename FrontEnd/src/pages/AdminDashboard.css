@@ -141,6 +141,22 @@
 .status-badge.status-published { background: #1a3a2a; color: #6ee7b7; }
 .status-badge.status-draft { background: #3a3020; color: #fbbf24; }
 .status-badge.status-deleted { background: #3a1a1a; color: #fca5a5; }
+.status-badge.status-archived { background: #1e293b; color: #94a3b8; }
+
+.admin-action-select {
+    padding: 0.35rem 0.5rem;
+    border: 1px solid #3a5a7b;
+    border-radius: 6px;
+    font-size: 0.82rem;
+    background: #0f1923;
+    color: #f0f4f8;
+    cursor: pointer;
+    min-width: 100px;
+}
+
+.admin-action-select:hover {
+    border-color: #2563eb;
+}
 
 .admin-delete-btn {
     padding: 0.3rem 0.8rem;
