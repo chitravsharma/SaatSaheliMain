@@ -17,6 +17,9 @@ const AdminDashboard = () => {
     const [books, setBooks] = useState([]);
     const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState("");
+    const [userSearch, setUserSearch] = useState("");
+    const [resetPasswordUserId, setResetPasswordUserId] = useState(null);
+    const [resetNewPassword, setResetNewPassword] = useState("");
 
     const headers = { "X-User-Id": String(user?.userId || "") };
 
@@ -132,6 +135,60 @@ const AdminDashboard = () => {
         }
     };
 
+    const handleUserAction = async (userId, action) => {
+        switch (action) {
+            case "block":
+                changeStatus(userId, "BLOCKED");
+                break;
+            case "disable":
+                changeStatus(userId, "DISABLED");
+                break;
+            case "activate":
+                changeStatus(userId, "ACTIVE");
+                break;
+            case "delete":
+                if (!window.confirm("Mark this user as deleted?")) return;
+                changeStatus(userId, "DELETED");
+                break;
+            case "reset-password":
+                setResetPasswordUserId(userId);
+                setResetNewPassword("");
+                break;
+            default: break;
+        }
+    };
+
+    const handleAdminResetPassword = async () => {
+        if (!resetNewPassword || resetNewPassword.length < 6) {
+            setMessage("Password must be at least 6 characters");
+            return;
+        }
+        try {
+            await axios.put(`${API}/api/auth/admin-reset-password/${resetPasswordUserId}`, { newPassword: resetNewPassword }, { headers });
+            setMessage("Password reset successfully");
+            setResetPasswordUserId(null);
+            setResetNewPassword("");
+        } catch {
+            setMessage("Failed to reset password");
+        }
+    };
+
+    // Filter users by search
+    const filteredUsers = users.filter((u) => {
+        if (!userSearch.trim()) return true;
+        const q = userSearch.toLowerCase();
+        return (
+            (u.firstName || "").toLowerCase().includes(q) ||
+            (u.lastName || "").toLowerCase().includes(q) ||
+            (u.email || "").toLowerCase().includes(q) ||
+            (u.role || "").toLowerCase().includes(q) ||
+            (u.plan || "").toLowerCase().includes(q) ||
+            (u.userType || "").toLowerCase().includes(q) ||
+            (u.status || "").toLowerCase().includes(q) ||
+            String(u.id).includes(q)
+        );
+    });
+
     const handleBookAction = (bookId, action, status) => {
         switch (action) {
             case "archive": archiveBook(bookId); break;
@@ -194,6 +251,39 @@ const AdminDashboard = () => {
 
             {tab === "users" && (
                 <div className="admin-table-wrap">
+                    <div className="admin-search-bar">
+                        <input
+                            type="text"
+                            className="admin-search-input"
+                            placeholder="Search users by name, email, role, plan, status..."
+                            value={userSearch}
+                            onChange={(e) => setUserSearch(e.target.value)}
+                        />
+                        {userSearch && (
+                            <span className="admin-search-count">{filteredUsers.length} of {users.length} users</span>
+                        )}
+                    </div>
+
+                    {/* Password reset modal */}
+                    {resetPasswordUserId && (
+                        <div className="admin-reset-modal">
+                            <div className="admin-reset-card">
+                                <h3>Reset Password for User #{resetPasswordUserId}</h3>
+                                <input
+                                    type="password"
+                                    className="admin-search-input"
+                                    placeholder="Enter new password (min 6 chars)"
+                                    value={resetNewPassword}
+                                    onChange={(e) => setResetNewPassword(e.target.value)}
+                                />
+                                <div className="admin-reset-actions">
+                                    <button className="admin-purge-btn" style={{background: '#2563eb', borderColor: '#2563eb'}} onClick={handleAdminResetPassword}>Reset Password</button>
+                                    <button className="admin-delete-btn" onClick={() => setResetPasswordUserId(null)}>Cancel</button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
                     {loading ? <p>{strings.common.loading}</p> : (
                         <table className="admin-table">
                             <thead>
@@ -207,10 +297,11 @@ const AdminDashboard = () => {
                                     <th>Content</th>
                                     <th>{s.colStatus || "Status"}</th>
                                     <th>{s.colLastLogin || "Last Login"}</th>
+                                    <th>{s.colActions || "Actions"}</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                {users.map((u) => (
+                                {filteredUsers.map((u) => (
                                     <tr key={u.id}>
                                         <td>{u.id}</td>
                                         <td>{[u.firstName, u.lastName].filter(Boolean).join(" ") || "\u2014"}</td>
@@ -248,17 +339,25 @@ const AdminDashboard = () => {
                                             {(u.bookCount || 0) + (u.galleryCount || 0) + (u.articleCount || 0) === 0 && "\u2014"}
                                         </td>
                                         <td>
-                                            <select
-                                                value={u.status || "ACTIVE"}
-                                                onChange={(e) => changeStatus(u.id, e.target.value)}
-                                            >
-                                                <option value="ACTIVE">ACTIVE</option>
-                                                <option value="INACTIVE">INACTIVE</option>
-                                                <option value="BLOCKED">BLOCKED</option>
-                                                <option value="DISABLED">DISABLED</option>
-                                            </select>
+                                            <span className={`status-badge status-${(u.status || "ACTIVE").toLowerCase()}`}>
+                                                {u.status || "ACTIVE"}
+                                            </span>
                                         </td>
                                         <td>{u.lastLoginDate || "\u2014"}</td>
+                                        <td>
+                                            <select
+                                                className="admin-action-select"
+                                                value=""
+                                                onChange={(e) => { handleUserAction(u.id, e.target.value); e.target.value = ""; }}
+                                            >
+                                                <option value="" disabled>Action...</option>
+                                                {u.status !== "ACTIVE" && <option value="activate">Activate</option>}
+                                                {u.status !== "BLOCKED" && <option value="block">Block</option>}
+                                                {u.status !== "DISABLED" && <option value="disable">Disable</option>}
+                                                {u.status !== "DELETED" && <option value="delete">Delete</option>}
+                                                {isSuperAdmin && <option value="reset-password">Reset Password</option>}
+                                            </select>
+                                        </td>
                                     </tr>
                                 ))}
                             </tbody>

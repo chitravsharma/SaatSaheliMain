@@ -17,7 +17,7 @@ export default function Login() {
   const strings = useStrings();
   const isRegisterPath = location.pathname.toLowerCase() === "/register";
   const initialMode = (isRegisterPath || searchParams.get("mode") === "signup") ? "signup" : "login";
-  const [mode, setMode] = useState(initialMode); // "login" | "signup"
+  const [mode, setMode] = useState(initialMode); // "login" | "signup" | "forgot"
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
@@ -25,6 +25,12 @@ export default function Login() {
   // Login fields
   const [loginEmail, setLoginEmail] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
+
+  // Forgot password fields
+  const [forgotEmail, setForgotEmail] = useState("");
+  const [tempPassword, setTempPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmNewPassword, setConfirmNewPassword] = useState("");
 
   // Signup fields
   const [firstName, setFirstName] = useState("");
@@ -127,6 +133,60 @@ export default function Login() {
     } catch (err) {
       const msg = err.response?.data?.error || strings.login.errorSignupFailed;
       setError(msg);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleForgotPassword = async (e) => {
+    e.preventDefault();
+    setError("");
+    setSuccess("");
+    if (!forgotEmail.trim()) {
+      setError("Please enter your email address.");
+      return;
+    }
+    setLoading(true);
+    try {
+      const res = await axios.post(`${API_BASE}/forgot-password`, { email: forgotEmail.trim() });
+      if (res.data.tempPassword) {
+        setTempPassword(res.data.tempPassword);
+        setSuccess("A temporary password has been generated. Use it to set your new password below.");
+      } else {
+        setSuccess(res.data.message || "If an account exists, a reset link has been sent.");
+      }
+    } catch (err) {
+      setError(err.response?.data?.error || "Failed to process request.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleResetPassword = async (e) => {
+    e.preventDefault();
+    setError("");
+    if (!newPassword || newPassword.length < 6) {
+      setError("New password must be at least 6 characters.");
+      return;
+    }
+    if (newPassword !== confirmNewPassword) {
+      setError("Passwords do not match.");
+      return;
+    }
+    setLoading(true);
+    try {
+      await axios.post(`${API_BASE}/reset-password`, {
+        email: forgotEmail.trim(),
+        oldPassword: tempPassword,
+        newPassword,
+      });
+      setSuccess("Password reset successfully! You can now log in with your new password.");
+      setTempPassword("");
+      setNewPassword("");
+      setConfirmNewPassword("");
+      setTimeout(() => switchMode("login"), 2000);
+    } catch (err) {
+      setError(err.response?.data?.error || "Failed to reset password.");
     } finally {
       setLoading(false);
     }
@@ -247,10 +307,86 @@ export default function Login() {
                 />
               </div>
 
+              <div className="auth-forgot">
+                <button onClick={() => switchMode("forgot")}>
+                  Forgot Password?
+                </button>
+              </div>
+
               <div className="auth-switch">
                 {strings.login.noAccount}{" "}
                 <button onClick={() => switchMode("signup")}>
                   {strings.login.switchToSignup}
+                </button>
+              </div>
+            </>
+          )}
+
+          {mode === "forgot" && (
+            <>
+              <h2>Reset Password</h2>
+              {!tempPassword ? (
+                <form className="auth-form" onSubmit={handleForgotPassword}>
+                  {error && <div className="auth-error" role="alert">{error}</div>}
+                  {success && <div className="auth-success" role="status">{success}</div>}
+                  <p className="auth-forgot-info">Enter your email address and we'll send you a temporary password.</p>
+                  <div className="auth-field">
+                    <label htmlFor="forgot-email">Email</label>
+                    <input
+                      id="forgot-email"
+                      type="email"
+                      placeholder="you@example.com"
+                      value={forgotEmail}
+                      onChange={(e) => setForgotEmail(e.target.value)}
+                      required
+                      autoComplete="email"
+                    />
+                  </div>
+                  <button type="submit" className="auth-btn auth-btn-primary" disabled={loading}>
+                    {loading ? "Sending..." : "Send Reset Link"}
+                  </button>
+                </form>
+              ) : (
+                <form className="auth-form" onSubmit={handleResetPassword}>
+                  {error && <div className="auth-error" role="alert">{error}</div>}
+                  {success && <div className="auth-success" role="status">{success}</div>}
+                  <div className="auth-temp-password">
+                    <p>Your temporary password:</p>
+                    <code className="auth-temp-code">{tempPassword}</code>
+                  </div>
+                  <div className="auth-field">
+                    <label htmlFor="new-password">New Password</label>
+                    <input
+                      id="new-password"
+                      type="password"
+                      placeholder="Enter new password (min 6 chars)"
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      required
+                      minLength={6}
+                      autoComplete="new-password"
+                    />
+                  </div>
+                  <div className="auth-field">
+                    <label htmlFor="confirm-new-password">Confirm New Password</label>
+                    <input
+                      id="confirm-new-password"
+                      type="password"
+                      placeholder="Confirm new password"
+                      value={confirmNewPassword}
+                      onChange={(e) => setConfirmNewPassword(e.target.value)}
+                      required
+                      autoComplete="new-password"
+                    />
+                  </div>
+                  <button type="submit" className="auth-btn auth-btn-primary" disabled={loading}>
+                    {loading ? "Resetting..." : "Set New Password"}
+                  </button>
+                </form>
+              )}
+              <div className="auth-switch">
+                <button onClick={() => { switchMode("login"); setTempPassword(""); }}>
+                  Back to Login
                 </button>
               </div>
             </>

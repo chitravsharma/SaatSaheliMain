@@ -252,6 +252,138 @@ public class AuthController {
         }
     }
 
+    /**
+     * POST /api/auth/forgot-password
+     * Body: { email }
+     * Generates a temporary password and returns it (in production, send via email).
+     */
+    @PostMapping("/forgot-password")
+    public ResponseEntity<?> forgotPassword(@RequestBody Map<String, String> body) {
+        try {
+            String email = body.get("email");
+            if (email == null || email.isEmpty()) {
+                return ResponseEntity.badRequest().body(errorMap("Email is required"));
+            }
+
+            Optional<Login> loginOpt = loginRepo.findByEmailIgnoreCase(email);
+            if (loginOpt.isEmpty()) {
+                // Don't reveal whether account exists
+                return ResponseEntity.ok(Map.of("message", "If an account with that email exists, a password reset link has been sent."));
+            }
+
+            Login login = loginOpt.get();
+            if (!"email".equalsIgnoreCase(login.getProvider())) {
+                return ResponseEntity.ok(Map.of("message",
+                        "This account uses " + login.getProvider() + " login. Please sign in with " + login.getProvider() + " instead."));
+            }
+
+            // Generate a temporary password
+            String tempPassword = generateTempPassword();
+            login.setPassword(passwordEncoder.encode(tempPassword));
+            loginRepo.save(login);
+
+            // In production, send this via email. For now, return it in response.
+            Map<String, Object> response = new HashMap<>();
+            response.put("message", "A temporary password has been generated. Please check your email.");
+            response.put("tempPassword", tempPassword); // Remove this in production; send via email instead
+            response.put("email", email);
+            return ResponseEntity.ok(response);
+
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(errorMap("Failed to process password reset: " + e.getMessage()));
+        }
+    }
+
+    /**
+     * POST /api/auth/reset-password
+     * Body: { email, oldPassword, newPassword }
+     */
+    @PostMapping("/reset-password")
+    public ResponseEntity<?> resetPassword(@RequestBody Map<String, String> body) {
+        try {
+            String email = body.get("email");
+            String oldPassword = body.get("oldPassword");
+            String newPassword = body.get("newPassword");
+
+            if (email == null || newPassword == null || newPassword.length() < 6) {
+                return ResponseEntity.badRequest().body(errorMap("Email and new password (min 6 chars) are required"));
+            }
+
+            Optional<Login> loginOpt = loginRepo.findByEmailIgnoreCase(email);
+            if (loginOpt.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorMap("Account not found"));
+            }
+
+            Login login = loginOpt.get();
+            // Verify old password
+            if (oldPassword != null && !oldPassword.isEmpty() && !passwordEncoder.matches(oldPassword, login.getPassword())) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorMap("Current password is incorrect"));
+            }
+
+            login.setPassword(passwordEncoder.encode(newPassword));
+            loginRepo.save(login);
+
+            return ResponseEntity.ok(Map.of("message", "Password has been reset successfully"));
+
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(errorMap("Failed to reset password: " + e.getMessage()));
+        }
+    }
+
+    /**
+     * PUT /api/auth/admin-reset-password/{userId}
+     * SUPER_ADMIN can reset any user's password.
+     * Body: { newPassword }
+     */
+    @PutMapping("/admin-reset-password/{userId}")
+    public ResponseEntity<?> adminResetPassword(
+            @PathVariable Long userId,
+            @RequestBody Map<String, String> body,
+            @RequestHeader("X-User-Id") String callerUserId) {
+        try {
+            // Verify caller is SUPER_ADMIN
+            if (callerUserId == null || callerUserId.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorMap("Super Admin access required"));
+            }
+            Optional<User> callerOpt = userRepo.findById(Long.parseLong(callerUserId));
+            if (callerOpt.isEmpty() || !RoleUtil.isSuperAdmin(callerOpt.get().getRole())) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorMap("Super Admin access required"));
+            }
+
+            String newPassword = body.get("newPassword");
+            if (newPassword == null || newPassword.length() < 6) {
+                return ResponseEntity.badRequest().body(errorMap("New password must be at least 6 characters"));
+            }
+
+            Optional<Login> loginOpt = loginRepo.findByUserId(userId);
+            if (loginOpt.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorMap("Login not found for user"));
+            }
+
+            Login login = loginOpt.get();
+            login.setPassword(passwordEncoder.encode(newPassword));
+            loginRepo.save(login);
+
+            return ResponseEntity.ok(Map.of("message", "Password reset successfully for user " + userId));
+
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(errorMap("Failed to reset password: " + e.getMessage()));
+        }
+    }
+
+    private String generateTempPassword() {
+        String chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789";
+        StringBuilder sb = new StringBuilder();
+        java.util.Random rng = new java.security.SecureRandom();
+        for (int i = 0; i < 10; i++) {
+            sb.append(chars.charAt(rng.nextInt(chars.length())));
+        }
+        return sb.toString();
+    }
+
     private Map<String, Object> buildUserResponse(User user, Login login) {
         Map<String, Object> response = new HashMap<>();
         response.put("userId", user.getId());
