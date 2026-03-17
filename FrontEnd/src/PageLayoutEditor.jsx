@@ -4,7 +4,6 @@ import { useStrings } from "./LanguageContext";
 const PAGE_W = 400;
 const PAGE_H = 500;
 
-// Resolve image URL (supports local uploads and Drive URLs)
 function resolveImageUrl(url) {
   if (!url) return null;
   if (url.startsWith("/uploads/")) {
@@ -24,32 +23,43 @@ const defaultLayout = (key) => ({
   height: 120,
 });
 
-function DraggableImage({ src, layout, onChange, label }) {
+function getClientXY(e) {
+  if (e.touches && e.touches.length > 0) {
+    return { x: e.touches[0].clientX, y: e.touches[0].clientY };
+  }
+  return { x: e.clientX, y: e.clientY };
+}
+
+function DraggableItem({ children, layout, onChange, label, type }) {
   const ref = useRef(null);
   const [dragging, setDragging] = useState(false);
   const [resizing, setResizing] = useState(false);
   const startPos = useRef({ mx: 0, my: 0, x: 0, y: 0, w: 0, h: 0 });
 
-  const onMouseDownDrag = useCallback((e) => {
+  const onStartDrag = useCallback((e) => {
     e.preventDefault();
     e.stopPropagation();
+    const pos = getClientXY(e);
     setDragging(true);
-    startPos.current = { mx: e.clientX, my: e.clientY, x: layout.x, y: layout.y };
+    startPos.current = { mx: pos.x, my: pos.y, x: layout.x, y: layout.y };
   }, [layout]);
 
-  const onMouseDownResize = useCallback((e) => {
+  const onStartResize = useCallback((e) => {
     e.preventDefault();
     e.stopPropagation();
+    const pos = getClientXY(e);
     setResizing(true);
-    startPos.current = { mx: e.clientX, my: e.clientY, w: layout.width, h: layout.height };
+    startPos.current = { mx: pos.x, my: pos.y, w: layout.width, h: layout.height, x: layout.x, y: layout.y };
   }, [layout]);
 
   useEffect(() => {
     if (!dragging && !resizing) return;
+
     const onMove = (e) => {
+      const pos = getClientXY(e);
       if (dragging) {
-        const dx = e.clientX - startPos.current.mx;
-        const dy = e.clientY - startPos.current.my;
+        const dx = pos.x - startPos.current.mx;
+        const dy = pos.y - startPos.current.my;
         let nx = Math.round(startPos.current.x + dx);
         let ny = Math.round(startPos.current.y + dy);
         nx = Math.max(0, Math.min(PAGE_W - layout.width, nx));
@@ -57,8 +67,8 @@ function DraggableImage({ src, layout, onChange, label }) {
         onChange({ ...layout, x: nx, y: ny });
       }
       if (resizing) {
-        const dx = e.clientX - startPos.current.mx;
-        const dy = e.clientY - startPos.current.my;
+        const dx = pos.x - startPos.current.mx;
+        const dy = pos.y - startPos.current.my;
         let nw = Math.round(Math.max(40, startPos.current.w + dx));
         let nh = Math.round(Math.max(30, startPos.current.h + dy));
         nw = Math.min(PAGE_W - layout.x, nw);
@@ -66,19 +76,30 @@ function DraggableImage({ src, layout, onChange, label }) {
         onChange({ ...layout, width: nw, height: nh });
       }
     };
-    const onUp = () => { setDragging(false); setResizing(false); };
+    const onEnd = () => { setDragging(false); setResizing(false); };
+
+    // Mouse events
     window.addEventListener("mousemove", onMove);
-    window.addEventListener("mouseup", onUp);
+    window.addEventListener("mouseup", onEnd);
+    // Touch events
+    window.addEventListener("touchmove", onMove, { passive: false });
+    window.addEventListener("touchend", onEnd);
+    window.addEventListener("touchcancel", onEnd);
     return () => {
       window.removeEventListener("mousemove", onMove);
-      window.removeEventListener("mouseup", onUp);
+      window.removeEventListener("mouseup", onEnd);
+      window.removeEventListener("touchmove", onMove);
+      window.removeEventListener("touchend", onEnd);
+      window.removeEventListener("touchcancel", onEnd);
     };
   }, [dragging, resizing, layout, onChange]);
+
+  const isActive = dragging || resizing;
 
   return (
     <div
       ref={ref}
-      className="ple-draggable"
+      className={`ple-draggable ${isActive ? "ple-active" : ""} ple-type-${type}`}
       style={{
         position: "absolute",
         left: layout.x,
@@ -86,19 +107,20 @@ function DraggableImage({ src, layout, onChange, label }) {
         width: layout.width,
         height: layout.height,
         cursor: dragging ? "grabbing" : "grab",
+        zIndex: isActive ? 10 : 1,
       }}
-      onMouseDown={onMouseDownDrag}
+      onMouseDown={onStartDrag}
+      onTouchStart={onStartDrag}
     >
-      <img
-        src={src}
-        alt={label}
-        draggable={false}
-        style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: 4, display: "block" }}
-      />
+      {children}
       <div className="ple-label">{label}</div>
+      {isActive && (
+        <div className="ple-dimensions">{layout.width} x {layout.height}</div>
+      )}
       <div
         className="ple-resize-handle"
-        onMouseDown={onMouseDownResize}
+        onMouseDown={onStartResize}
+        onTouchStart={onStartResize}
       />
     </div>
   );
@@ -119,40 +141,67 @@ export default function PageLayoutEditor({ imageUrl, imageUrl2, content, textSty
 
   return (
     <div className="ple-container">
-      <div className="ple-label-bar">{strings.pageLayoutEditor.labelBar}</div>
+      <div className="ple-label-bar">
+        {strings.pageLayoutEditor.labelBar}
+        <span className="ple-hint"> — Drag to move, corner handle to resize</span>
+      </div>
       <div className="ple-canvas" style={{ width: PAGE_W, height: PAGE_H }}>
-        {/* Text layer */}
-        <div
-          className="ple-text"
-          style={{
-            position: "absolute",
-            left: textLayout.x,
-            top: textLayout.y,
-            width: textLayout.width,
-            ...textStyle,
-            pointerEvents: "none",
-            whiteSpace: "pre-wrap",
-            wordBreak: "break-word",
-          }}
-        >
-          {content || ""}
-        </div>
+        {/* Text layer — now draggable */}
+        {content && (
+          <DraggableItem
+            layout={textLayout}
+            onChange={(l) => update("text", l)}
+            label="Text"
+            type="text"
+          >
+            <div
+              style={{
+                width: "100%",
+                height: "100%",
+                ...textStyle,
+                whiteSpace: "pre-wrap",
+                wordBreak: "break-word",
+                overflow: "hidden",
+                fontSize: textStyle?.fontSize || "14px",
+                lineHeight: 1.4,
+                pointerEvents: "none",
+              }}
+            >
+              {content}
+            </div>
+          </DraggableItem>
+        )}
 
         {img1Src && (
-          <DraggableImage
-            src={img1Src}
+          <DraggableItem
             layout={img1Layout}
             onChange={(l) => update("image1", l)}
             label={strings.pageLayoutEditor.image1Label}
-          />
+            type="image"
+          >
+            <img
+              src={img1Src}
+              alt={strings.pageLayoutEditor.image1Label}
+              draggable={false}
+              style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: 4, display: "block" }}
+            />
+          </DraggableItem>
         )}
+
         {img2Src && (
-          <DraggableImage
-            src={img2Src}
+          <DraggableItem
             layout={img2Layout}
             onChange={(l) => update("image2", l)}
             label={strings.pageLayoutEditor.image2Label}
-          />
+            type="image"
+          >
+            <img
+              src={img2Src}
+              alt={strings.pageLayoutEditor.image2Label}
+              draggable={false}
+              style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: 4, display: "block" }}
+            />
+          </DraggableItem>
         )}
       </div>
     </div>

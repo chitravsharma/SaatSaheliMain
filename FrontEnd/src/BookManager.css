@@ -530,43 +530,83 @@
   margin-bottom: 6px;
   font-style: italic;
 }
+.ple-hint {
+  color: #60a5fa;
+}
 .ple-canvas {
   position: relative;
-  background: #162a3a;
+  background: #1a2a3a;
+  background-image:
+    linear-gradient(rgba(37, 99, 235, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(37, 99, 235, 0.05) 1px, transparent 1px);
+  background-size: 20px 20px;
   border: 2px solid #2563eb;
   border-radius: 6px;
   overflow: hidden;
   user-select: none;
+  touch-action: none;
 }
 .ple-draggable {
-  border: 2px dashed #0e6e7a;
+  border: 2px dashed rgba(14, 110, 122, 0.6);
   border-radius: 4px;
   box-sizing: border-box;
+  transition: border-color 0.15s, box-shadow 0.15s;
 }
 .ple-draggable:hover {
   border-color: #2563eb;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  box-shadow: 0 2px 12px rgba(37, 99, 235, 0.25);
+}
+.ple-draggable.ple-active {
+  border-color: #f59e0b;
+  border-style: solid;
+  box-shadow: 0 4px 16px rgba(245, 158, 11, 0.3);
+}
+.ple-type-text {
+  border-color: rgba(96, 165, 250, 0.4);
+}
+.ple-type-text:hover,
+.ple-type-text.ple-active {
+  border-color: #60a5fa;
 }
 .ple-label {
   position: absolute;
   top: 2px;
   left: 4px;
-  background: rgba(37, 99, 235, 0.8);
+  background: rgba(37, 99, 235, 0.85);
   color: #fff;
+  font-size: 0.6rem;
+  padding: 1px 6px;
+  border-radius: 3px;
+  pointer-events: none;
+  z-index: 5;
+}
+.ple-dimensions {
+  position: absolute;
+  bottom: 2px;
+  left: 4px;
+  background: rgba(0, 0, 0, 0.7);
+  color: #fbbf24;
   font-size: 0.6rem;
   padding: 1px 5px;
   border-radius: 3px;
   pointer-events: none;
+  font-family: monospace;
+  z-index: 5;
 }
 .ple-resize-handle {
   position: absolute;
-  right: 0;
-  bottom: 0;
-  width: 16px;
-  height: 16px;
+  right: -1px;
+  bottom: -1px;
+  width: 18px;
+  height: 18px;
   cursor: se-resize;
-  background: linear-gradient(135deg, transparent 50%, #2563eb 50%);
+  background: linear-gradient(135deg, transparent 40%, #2563eb 40%);
   border-radius: 0 0 2px 0;
+  z-index: 5;
+  touch-action: none;
+}
+.ple-resize-handle:hover {
+  background: linear-gradient(135deg, transparent 40%, #f59e0b 40%);
 }
 .ple-text {
   font-size: 14px;
