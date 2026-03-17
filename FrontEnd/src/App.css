@@ -226,32 +226,24 @@
   outline-offset: 2px;
 }
 
-/* Zoom scroll container - scrollable when zoomed */
+/* Zoom scroll container - always scrollable in both directions */
 .flipbook-zoom-scroll {
-  overflow: hidden;
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
   max-height: calc(100vh - 100px);
   max-width: 100vw;
-  display: flex;
-  justify-content: center;
-  align-items: flex-start;
-}
-
-/* When zoomed beyond 100%, enable scrollbars */
-.flipbook-zoom-scroll.flipbook-zoom-scrollable {
-  overflow: auto;
-  cursor: grab;
-}
-.flipbook-zoom-scroll.flipbook-zoom-scrollable:active {
-  cursor: grabbing;
+  display: block;
+  text-align: center;
 }
 
 /* Zoom wrapper */
 .flipbook-zoom-wrapper {
-  display: flex;
+  display: inline-flex;
   justify-content: center;
   transition: transform 0.2s ease;
-  transform-origin: top center;
-  min-width: fit-content;
+  transform-origin: top left;
+  min-width: max-content;
+  padding: 8px;
 }
 
 /* Center single pages (cover / last) in two-page spread mode */
@@ -390,10 +382,13 @@
   opacity: 1;
 }
 .flipbook-fullscreen-overlay .flipbook-zoom-scroll {
-  max-height: 100vh;
+  max-height: calc(100vh - 50px);
   max-width: 100vw;
-  height: 100%;
-  width: 100%;
+  height: calc(100vh - 50px);
+  width: 100vw;
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+  margin-top: 42px;
 }
 .flipbook-fullscreen-overlay .flipbook-copyright {
   display: none;

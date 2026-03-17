@@ -366,7 +366,7 @@ function FlipBook({ bookId }) {
           className="flipbook-zoom-wrapper"
           style={{
             transform: `scale(${zoomLevel})`,
-            touchAction: "none",
+            touchAction: zoomLevel > 1 ? "pan-x pan-y" : "manipulation",
           }}
         >
           <HTMLFlipBook
