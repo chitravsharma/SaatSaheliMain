@@ -152,14 +152,6 @@ function Home() {
 
   return (
     <div className="home-container">
-      {/* Hero actions */}
-      {!user && (
-        <div className="home-actions-bar">
-          <Link to="/Login" className="ss-btn ss-btn-primary">Log In</Link>
-          <Link to="/Login?mode=signup" className="ss-btn ss-btn-primary">Create Account</Link>
-        </div>
-      )}
-
       {/* Category tags */}
       <div className="home-tags">
         {strings.about.tags.map((tag) => (
