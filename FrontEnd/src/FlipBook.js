@@ -304,114 +304,64 @@ function FlipBook({ bookId }) {
 
   const totalPages = pages.length;
 
+  // Navigation arrows (shared between normal and fullscreen)
+  const navArrows = (
+    <div className="flipbook-arrow-row">
+      <button className="flipbook-arrow" onClick={handleFirst} disabled={currentPage === 0} aria-label={strings.flipBook.firstPage}>&#x23EE;</button>
+      <button className="flipbook-arrow" onClick={handlePrev} disabled={currentPage === 0} aria-label={strings.flipBook.prevPage}>&#8249;</button>
+      <span className="flipbook-page-indicator">{currentPage + 1} / {totalPages}</span>
+      <button className="flipbook-arrow" onClick={handleNext} disabled={currentPage >= totalPages - 1} aria-label={strings.flipBook.nextPage}>&#8250;</button>
+      <button className="flipbook-arrow" onClick={handleLast} disabled={currentPage >= totalPages - 1} aria-label={strings.flipBook.lastPage}>&#x23ED;</button>
+    </div>
+  );
+
+  const zoomControls = (
+    <div className="flipbook-zoom-controls">
+      <button className="flipbook-zoom-btn" onClick={handleZoomOut} disabled={zoomIndex === 0} aria-label={strings.flipBook.zoomOut}>&minus;</button>
+      <span className="flipbook-zoom-label" onDoubleClick={handleZoomReset} title={strings.flipBook.zoomReset} role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === "Enter") handleZoomReset(); }} aria-label={`${Math.round(zoomLevel * 100)}% - ${strings.flipBook.zoomReset}`}>{Math.round(zoomLevel * 100)}%</span>
+      <button className="flipbook-zoom-btn" onClick={handleZoomIn} disabled={zoomIndex === ZOOM_LEVELS.length - 1} aria-label={strings.flipBook.zoomIn}>+</button>
+    </div>
+  );
+
+  const ttsControls = (
+    <div className="flipbook-tts-controls">
+      <button className={`flipbook-tts-btn ${ttsPlaying && !ttsPaused ? "flipbook-tts-active" : ""}`} onClick={handleTtsReadPage} title={ttsPlaying ? (ttsPaused ? "Resume reading" : "Pause reading") : "Read this page aloud"}>
+        {ttsPlaying && !ttsPaused ? "\u23F8" : "\u25B6"} {ttsPlaying ? (ttsPaused ? "Resume" : "Pause") : "Read"}
+      </button>
+      <button className={`flipbook-tts-btn ${ttsReadAll ? "flipbook-tts-podcast" : ""}`} onClick={handleTtsPodcast} title={ttsReadAll ? "Stop podcast" : "Read aloud as podcast (all pages)"}>
+        {ttsReadAll ? "\u23F9 Stop" : "\u{1F399} Podcast"}
+      </button>
+      {ttsPlaying && (
+        <button className="flipbook-tts-btn" onClick={stopTts} title="Stop reading">&#x23F9;</button>
+      )}
+    </div>
+  );
+
+  const fullscreenBtn = (
+    <button className="flipbook-fullscreen-btn" onClick={toggleFullscreen} aria-label={isFullscreen ? strings.flipBook.exitFullscreen : strings.flipBook.fullscreen} title={isFullscreen ? strings.flipBook.exitFullscreen : strings.flipBook.fullscreen}>
+      {isFullscreen ? "\u2715" : "\u26F6"}
+    </button>
+  );
+
   const content = (
     <div className="center-container">
       <div className="flipbook-nav-wrapper">
-        <div className="flipbook-toolbar">
-          <div className="flipbook-arrow-row">
-            <button
-              className="flipbook-arrow"
-              onClick={handleFirst}
-              disabled={currentPage === 0}
-              aria-label={strings.flipBook.firstPage}
-            >
-              &#x23EE;
-            </button>
-            <button
-              className="flipbook-arrow"
-              onClick={handlePrev}
-              disabled={currentPage === 0}
-              aria-label={strings.flipBook.prevPage}
-            >
-              &#8249;
-            </button>
-            <span className="flipbook-page-indicator">
-              {currentPage + 1} / {totalPages}
-            </span>
-            <button
-              className="flipbook-arrow"
-              onClick={handleNext}
-              disabled={currentPage >= totalPages - 1}
-              aria-label={strings.flipBook.nextPage}
-            >
-              &#8250;
-            </button>
-            <button
-              className="flipbook-arrow"
-              onClick={handleLast}
-              disabled={currentPage >= totalPages - 1}
-              aria-label={strings.flipBook.lastPage}
-            >
-              &#x23ED;
-            </button>
+        {/* In fullscreen: minimal toolbar (just nav + exit). Normal: full toolbar */}
+        {isFullscreen ? (
+          <div className="flipbook-toolbar flipbook-toolbar-minimal">
+            {navArrows}
+            {zoomControls}
+            {fullscreenBtn}
           </div>
-          <div className="flipbook-zoom-controls">
-            <button
-              className="flipbook-zoom-btn"
-              onClick={handleZoomOut}
-              disabled={zoomIndex === 0}
-              aria-label={strings.flipBook.zoomOut}
-            >
-              &minus;
-            </button>
-            <span
-              className="flipbook-zoom-label"
-              onDoubleClick={handleZoomReset}
-              title={strings.flipBook.zoomReset}
-              role="button"
-              tabIndex={0}
-              onKeyDown={(e) => { if (e.key === "Enter") handleZoomReset(); }}
-              aria-label={`${Math.round(zoomLevel * 100)}% - ${strings.flipBook.zoomReset}`}
-            >
-              {Math.round(zoomLevel * 100)}%
-            </span>
-            <button
-              className="flipbook-zoom-btn"
-              onClick={handleZoomIn}
-              disabled={zoomIndex === ZOOM_LEVELS.length - 1}
-              aria-label={strings.flipBook.zoomIn}
-            >
-              +
-            </button>
+        ) : (
+          <div className="flipbook-toolbar">
+            {navArrows}
+            {zoomControls}
+            {ttsControls}
+            {fullscreenBtn}
           </div>
-          <div className="flipbook-tts-controls">
-            <button
-              className={`flipbook-tts-btn ${ttsPlaying && !ttsPaused ? "flipbook-tts-active" : ""}`}
-              onClick={handleTtsReadPage}
-              title={ttsPlaying ? (ttsPaused ? "Resume reading" : "Pause reading") : "Read this page aloud"}
-              aria-label={ttsPlaying ? (ttsPaused ? "Resume" : "Pause") : "Read aloud"}
-            >
-              {ttsPlaying && !ttsPaused ? "\u23F8" : "\u25B6"} {ttsPlaying ? (ttsPaused ? "Resume" : "Pause") : "Read"}
-            </button>
-            <button
-              className={`flipbook-tts-btn ${ttsReadAll ? "flipbook-tts-podcast" : ""}`}
-              onClick={handleTtsPodcast}
-              title={ttsReadAll ? "Stop podcast" : "Read aloud as podcast (all pages)"}
-              aria-label={ttsReadAll ? "Stop podcast" : "Podcast mode"}
-            >
-              {ttsReadAll ? "\u23F9 Stop" : "\u{1F399} Podcast"}
-            </button>
-            {ttsPlaying && (
-              <button
-                className="flipbook-tts-btn"
-                onClick={stopTts}
-                title="Stop reading"
-                aria-label="Stop"
-              >
-                &#x23F9;
-              </button>
-            )}
-          </div>
-          <button
-            className="flipbook-fullscreen-btn"
-            onClick={toggleFullscreen}
-            aria-label={isFullscreen ? strings.flipBook.exitFullscreen : strings.flipBook.fullscreen}
-            title={isFullscreen ? strings.flipBook.exitFullscreen : strings.flipBook.fullscreen}
-          >
-            {isFullscreen ? "\u2715" : "\u26F6"}
-          </button>
-        </div>
-        <div className="flipbook-zoom-scroll" ref={fullscreenRef}>
+        )}
+        <div className={`flipbook-zoom-scroll ${zoomLevel > 1 ? "flipbook-zoom-scrollable" : ""}`} ref={fullscreenRef}>
         <div
           className="flipbook-zoom-wrapper"
           style={{

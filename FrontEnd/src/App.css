@@ -84,9 +84,10 @@
   display: flex;
   justify-content: center;
   margin-top: 0.5rem;
-  overflow: hidden;
-  padding: 0 16px;
+  overflow: visible;
+  padding: 0;
   box-sizing: border-box;
+  width: 100%;
 }
 
 .App-link {
@@ -227,12 +228,21 @@
 
 /* Zoom scroll container - scrollable when zoomed */
 .flipbook-zoom-scroll {
-  overflow: auto;
+  overflow: hidden;
   max-height: calc(100vh - 100px);
-  max-width: 100%;
+  max-width: 100vw;
   display: flex;
   justify-content: center;
   align-items: flex-start;
+}
+
+/* When zoomed beyond 100%, enable scrollbars */
+.flipbook-zoom-scroll.flipbook-zoom-scrollable {
+  overflow: auto;
+  cursor: grab;
+}
+.flipbook-zoom-scroll.flipbook-zoom-scrollable:active {
+  cursor: grabbing;
 }
 
 /* Zoom wrapper */
@@ -241,6 +251,7 @@
   justify-content: center;
   transition: transform 0.2s ease;
   transform-origin: top center;
+  min-width: fit-content;
 }
 
 /* Center single pages (cover / last) in two-page spread mode */
@@ -337,17 +348,55 @@
   width: 100vw;
   height: 100vh;
   z-index: 9999;
-  background: #0f1923;
+  background: #000;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 16px;
+  padding: 0;
   box-sizing: border-box;
   touch-action: manipulation;
 }
-.flipbook-fullscreen-overlay .flipbook-toolbar {
-  margin-bottom: 12px;
+.flipbook-fullscreen-overlay .center-container {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.flipbook-fullscreen-overlay .flipbook-nav-wrapper {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+.flipbook-fullscreen-overlay .flipbook-toolbar-minimal {
+  position: absolute;
+  top: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+  background: rgba(15, 25, 35, 0.85);
+  backdrop-filter: blur(8px);
+  padding: 6px 16px;
+  border-radius: 24px;
+  gap: 16px;
+  opacity: 0.6;
+  transition: opacity 0.3s;
+}
+.flipbook-fullscreen-overlay .flipbook-toolbar-minimal:hover {
+  opacity: 1;
+}
+.flipbook-fullscreen-overlay .flipbook-zoom-scroll {
+  max-height: 100vh;
+  max-width: 100vw;
+  height: 100%;
+  width: 100%;
+}
+.flipbook-fullscreen-overlay .flipbook-copyright {
+  display: none;
 }
 .flipbook-fullscreen-overlay .flipbook-arrow,
 .flipbook-fullscreen-overlay .flipbook-page-indicator,
@@ -355,7 +404,7 @@
   color: #e0e7ef;
 }
 .flipbook-fullscreen-overlay .flipbook-zoom-btn {
-  background: #f59e0b;
+  background: rgba(245, 158, 11, 0.8);
   color: #f0f4f8;
 }
 .flipbook-fullscreen-btn {
@@ -378,8 +427,10 @@
   border-color: #2563eb;
 }
 .flipbook-fullscreen-overlay .flipbook-fullscreen-btn {
-  background: #f59e0b;
+  background: rgba(239, 68, 68, 0.8);
   color: #f0f4f8;
+  border-color: rgba(239, 68, 68, 0.6);
+  font-size: 1.2rem;
 }
 
 /* TTS Controls */
