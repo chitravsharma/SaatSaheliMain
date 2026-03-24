@@ -42,7 +42,9 @@ function Articles() {
   const [headline, setHeadline] = useState("");
   const [content, setContent] = useState("");
   const [imageUrl, setImageUrl] = useState("");
-  const [contentType, setContentType] = useState("Blog");
+  const [contentType, setContentType] = useState(
+    urlContentType ? (CONTENT_TYPE_MAP[urlContentType] || "Blog") : "Blog"
+  );
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [publishOnSave, setPublishOnSave] = useState(true);
@@ -217,7 +219,7 @@ function Articles() {
     setHeadline("");
     setContent("");
     setImageUrl("");
-    setContentType("Blog");
+    setContentType(urlContentType ? (CONTENT_TYPE_MAP[urlContentType] || "Blog") : "Blog");
   };
 
   const handleLike = async (articleId) => {
@@ -432,27 +434,25 @@ function Articles() {
       {/* Tabs: My Content | Browse All */}
       <div className="art-tabs">
         {userId && (
-          <button className={tab === "my" ? "active" : ""} onClick={() => { setTab("my"); setFilterType(""); }}>My Content</button>
+          <button className={tab === "my" ? "active" : ""} onClick={() => setTab("my")}>My Content</button>
         )}
         <button className={tab === "published" ? "active" : ""} onClick={() => setTab("published")}>Browse All</button>
       </div>
 
       {/* Content type filter tabs */}
-      {tab === "published" && (
-        <div className="art-filter-tabs">
-          <button className={filterType === "" ? "active" : ""} onClick={() => setFilterType("")}>All</button>
-          <button className={filterType === "Poetry" ? "active" : ""} onClick={() => setFilterType("Poetry")}>Poems</button>
-          <button className={filterType === "Blog" ? "active" : ""} onClick={() => setFilterType("Blog")}>Blogs</button>
-          <button className={filterType === "Article" ? "active" : ""} onClick={() => setFilterType("Article")}>Articles</button>
-        </div>
-      )}
+      <div className="art-filter-tabs">
+        <button className={filterType === "" ? "active" : ""} onClick={() => setFilterType("")}>All</button>
+        <button className={filterType === "Poetry" ? "active" : ""} onClick={() => setFilterType("Poetry")}>Poems</button>
+        <button className={filterType === "Blog" ? "active" : ""} onClick={() => setFilterType("Blog")}>Blogs</button>
+        <button className={filterType === "Article" ? "active" : ""} onClick={() => setFilterType("Article")}>Articles</button>
+      </div>
 
       {tab === "my" && userId && (
         <>
           <div className="art-top-actions">
             <button className="bm-btn bm-btn-create" onClick={() => { resetForm(); setShowForm(true); }}>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 5v14M5 12h14"/></svg>
-              Create Blog / Article
+              + Create Blog / Article / Poem
             </button>
           </div>
 
@@ -539,10 +539,10 @@ function Articles() {
           {loading ? (
             <p>Loading...</p>
           ) : articles.length === 0 && !showForm ? (
-            <p className="art-empty">No blogs or articles yet. Click &quot;Create Blog / Article&quot; to write your first one!</p>
+            <p className="art-empty">No content yet. Click &quot;+ Create Blog / Article / Poem&quot; to write your first one!</p>
           ) : (
             <div className="art-list">
-              {articles.map((article) => renderArticleCard(article, true))}
+              {(filterType ? articles.filter(a => a.contentType === filterType) : articles).map((article) => renderArticleCard(article, true))}
             </div>
           )}
         </>
