@@ -13,7 +13,6 @@ import com.SaatSaheli.spring.service.ArticleService;
 
 @RestController
 @RequestMapping("/api/articles")
-@CrossOrigin(origins = "*")
 public class ArticleController {
 
     @Autowired

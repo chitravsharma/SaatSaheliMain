@@ -20,7 +20,6 @@ import java.util.Optional;
  */
 @RestController
 @RequestMapping("/api/download")
-@CrossOrigin(origins = "*")
 public class DownloadController {
 
     @Autowired

@@ -10,6 +10,7 @@ export function AuthProvider({ children }) {
 
     const clearAuth = useCallback(() => {
         localStorage.removeItem("saatSaheliUser");
+        localStorage.removeItem("saatSaheliToken");
         localStorage.removeItem("saatSaheliLastActivity");
         sessionStorage.removeItem("saatSaheliSession");
     }, []);
@@ -35,15 +36,12 @@ export function AuthProvider({ children }) {
         const saved = localStorage.getItem("saatSaheliUser");
         if (!saved) return;
 
-        // sessionStorage is cleared when browser/tab is closed.
-        // If the flag is missing, it means the window was closed → clear & don't restore.
         const sessionActive = sessionStorage.getItem("saatSaheliSession");
         if (!sessionActive) {
             clearAuth();
             return;
         }
 
-        // Check if last activity was more than 15 minutes ago
         const lastActivity = localStorage.getItem("saatSaheliLastActivity");
         if (lastActivity) {
             const elapsed = Date.now() - parseInt(lastActivity, 10);
@@ -65,7 +63,7 @@ export function AuthProvider({ children }) {
 
         const events = ["mousemove", "mousedown", "keydown", "scroll", "touchstart"];
         events.forEach((e) => window.addEventListener(e, resetTimer));
-        resetTimer(); // start the timer
+        resetTimer();
 
         return () => {
             events.forEach((e) => window.removeEventListener(e, resetTimer));
@@ -74,8 +72,14 @@ export function AuthProvider({ children }) {
     }, [user, resetTimer]);
 
     const login = (userData) => {
-        setUser(userData);
-        localStorage.setItem("saatSaheliUser", JSON.stringify(userData));
+        // Store user data
+        const { token, ...userInfo } = userData;
+        setUser(userInfo);
+        localStorage.setItem("saatSaheliUser", JSON.stringify(userInfo));
+        // Store JWT token separately
+        if (token) {
+            localStorage.setItem("saatSaheliToken", token);
+        }
         sessionStorage.setItem("saatSaheliSession", "active");
         updateActivity();
     };

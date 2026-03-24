@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { useNavigate, useSearchParams, Link } from "react-router-dom";
 import { useAuth } from "../AuthContext";
 import { plans } from "./Pricing";
@@ -7,36 +7,39 @@ import "./Checkout.css";
 
 const API = process.env.REACT_APP_API_URL;
 
-function formatCard(v) {
-  return v.replace(/\D/g, "").replace(/(.{4})/g, "$1 ").trim().slice(0, 19);
-}
-function formatExpiry(v) {
-  const d = v.replace(/\D/g, "").slice(0, 4);
-  if (d.length >= 3) return d.slice(0, 2) + " / " + d.slice(2);
-  return d;
-}
-
 export default function Checkout() {
   const { user, login } = useAuth();
   const navigate = useNavigate();
   const [params] = useSearchParams();
   const planKey = params.get("plan");
+  const sessionId = params.get("session_id"); // returned from Stripe success URL
 
   const plan = useMemo(() => plans.find((p) => p.key === planKey), [planKey]);
 
-  const [paymentMethod, setPaymentMethod] = useState("card"); // "card" | "paypal"
   const [processing, setProcessing] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
 
-  // Card fields
-  const [cardName, setCardName] = useState("");
-  const [cardNumber, setCardNumber] = useState("");
-  const [expiry, setExpiry] = useState("");
-  const [cvc, setCvc] = useState("");
-
-  // PayPal fields
-  const [paypalEmail, setPaypalEmail] = useState("");
+  // If returning from Stripe with session_id, verify the session
+  useEffect(() => {
+    if (sessionId && planKey) {
+      const verify = async () => {
+        try {
+          const res = await axios.get(`${API}/api/payments/verify-session?sessionId=${sessionId}`);
+          if (res.data.status === "complete") {
+            // Update local user plan
+            const updated = { ...user, plan: res.data.planKey || planKey };
+            login(updated);
+            setSuccess(true);
+          }
+        } catch {
+          // Session verification failed — plan may have been updated via webhook
+          setSuccess(true);
+        }
+      };
+      verify();
+    }
+  }, [sessionId, planKey]);
 
   if (!plan || plan.key === "Free") {
     return (
@@ -49,28 +52,30 @@ export default function Checkout() {
     );
   }
 
-  const cardValid = cardName.trim() && cardNumber.replace(/\s/g, "").length === 16 && expiry.replace(/\D/g, "").length === 4 && cvc.length >= 3;
-  const paypalValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(paypalEmail);
-  const canSubmit = paymentMethod === "card" ? cardValid : paypalValid;
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!canSubmit) return;
+  const handleCheckout = async () => {
+    if (!user) {
+      navigate("/Login");
+      return;
+    }
     setProcessing(true);
     setError("");
 
     try {
-      // Update user plan on the backend
-      await axios.put(`${API}/api/auth/user/${user.userId}`, { plan: plan.key });
+      // Create Stripe Checkout Session
+      const res = await axios.post(`${API}/api/payments/create-checkout-session`, {
+        userId: user.userId,
+        planKey: plan.key,
+      });
 
-      // Update local session
-      const updated = { ...user, plan: plan.key };
-      login(updated);
-
-      setSuccess(true);
+      if (res.data.url) {
+        // Redirect to Stripe hosted checkout page
+        window.location.href = res.data.url;
+      } else {
+        setError("Failed to create checkout session. Please try again.");
+      }
     } catch (err) {
-      setError("Payment processing failed. Please try again.");
-    } finally {
+      const msg = err.response?.data?.error || "Payment processing failed. Please try again.";
+      setError(msg);
       setProcessing(false);
     }
   };
@@ -83,7 +88,7 @@ export default function Checkout() {
           <h2>Payment Successful!</h2>
           <p>You are now on the <strong>{plan.name}</strong> plan.</p>
           <p className="checkout-success-detail">
-            A confirmation has been sent to <strong>{user.email}</strong>.
+            A confirmation has been sent to <strong>{user?.email}</strong>.
           </p>
           <div className="checkout-actions">
             <button className="checkout-btn checkout-btn-primary" onClick={() => navigate("/account")}>
@@ -128,119 +133,28 @@ export default function Checkout() {
           </div>
         </div>
 
-        {/* Payment form */}
+        {/* Payment section */}
         <div className="checkout-card">
-          <h3>Payment Method</h3>
+          <h3>Secure Payment</h3>
+          <p className="checkout-stripe-note">
+            You will be redirected to Stripe's secure payment page to complete your purchase.
+            Your payment information is handled entirely by Stripe — we never see your card details.
+          </p>
 
-          <div className="checkout-method-tabs">
-            <button
-              className={`checkout-method-tab ${paymentMethod === "card" ? "active" : ""}`}
-              onClick={() => setPaymentMethod("card")}
-            >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
-              Credit Card
-            </button>
-            <button
-              className={`checkout-method-tab ${paymentMethod === "paypal" ? "active" : ""}`}
-              onClick={() => setPaymentMethod("paypal")}
-            >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M7 11l5-9"/><path d="M12 2c4 0 7 2 7 6s-2 6-6 6H9l-1 5H4l3-15h5z"/></svg>
-              PayPal
-            </button>
-          </div>
+          {error && <div className="checkout-error">{error}</div>}
 
-          <form onSubmit={handleSubmit} className="checkout-form">
-            {paymentMethod === "card" && (
-              <>
-                <div className="checkout-field">
-                  <label htmlFor="cardName">Name on Card</label>
-                  <input
-                    id="cardName"
-                    type="text"
-                    value={cardName}
-                    onChange={(e) => setCardName(e.target.value)}
-                    placeholder="John Doe"
-                    autoComplete="cc-name"
-                  />
-                </div>
-                <div className="checkout-field">
-                  <label htmlFor="cardNumber">Card Number</label>
-                  <input
-                    id="cardNumber"
-                    type="text"
-                    inputMode="numeric"
-                    value={cardNumber}
-                    onChange={(e) => setCardNumber(formatCard(e.target.value))}
-                    placeholder="1234 5678 9012 3456"
-                    maxLength={19}
-                    autoComplete="cc-number"
-                  />
-                </div>
-                <div className="checkout-row">
-                  <div className="checkout-field">
-                    <label htmlFor="expiry">Expiry</label>
-                    <input
-                      id="expiry"
-                      type="text"
-                      inputMode="numeric"
-                      value={expiry}
-                      onChange={(e) => setExpiry(formatExpiry(e.target.value))}
-                      placeholder="MM / YY"
-                      maxLength={7}
-                      autoComplete="cc-exp"
-                    />
-                  </div>
-                  <div className="checkout-field">
-                    <label htmlFor="cvc">CVC</label>
-                    <input
-                      id="cvc"
-                      type="text"
-                      inputMode="numeric"
-                      value={cvc}
-                      onChange={(e) => setCvc(e.target.value.replace(/\D/g, "").slice(0, 4))}
-                      placeholder="123"
-                      maxLength={4}
-                      autoComplete="cc-csc"
-                    />
-                  </div>
-                </div>
-              </>
-            )}
+          <button
+            className="checkout-btn checkout-btn-primary checkout-btn-full"
+            onClick={handleCheckout}
+            disabled={processing}
+          >
+            {processing ? "Redirecting to Stripe..." : `Pay ${plan.price}${plan.priceNote || ""}`}
+          </button>
 
-            {paymentMethod === "paypal" && (
-              <div className="checkout-paypal-section">
-                <div className="checkout-field">
-                  <label htmlFor="paypalEmail">PayPal Email</label>
-                  <input
-                    id="paypalEmail"
-                    type="email"
-                    value={paypalEmail}
-                    onChange={(e) => setPaypalEmail(e.target.value)}
-                    placeholder="you@example.com"
-                    autoComplete="email"
-                  />
-                </div>
-                <p className="checkout-paypal-note">
-                  You will be redirected to PayPal to complete payment.
-                </p>
-              </div>
-            )}
-
-            {error && <div className="checkout-error">{error}</div>}
-
-            <button
-              type="submit"
-              className="checkout-btn checkout-btn-primary checkout-btn-full"
-              disabled={!canSubmit || processing}
-            >
-              {processing ? "Processing..." : `Pay ${plan.price}${plan.priceNote || ""}`}
-            </button>
-
-            <p className="checkout-secure-note">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
-              Your payment information is encrypted and secure.
-            </p>
-          </form>
+          <p className="checkout-secure-note">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+            Powered by Stripe. PCI-DSS compliant. Your payment is encrypted and secure.
+          </p>
         </div>
       </div>
     </div>

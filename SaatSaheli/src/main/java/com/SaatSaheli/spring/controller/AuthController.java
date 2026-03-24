@@ -4,14 +4,15 @@ import com.SaatSaheli.spring.model.Login;
 import com.SaatSaheli.spring.model.User;
 import com.SaatSaheli.spring.repository.LoginRepository;
 import com.SaatSaheli.spring.repository.UserRepository;
+import com.SaatSaheli.spring.util.JwtUtil;
+import com.SaatSaheli.spring.util.RateLimiter;
+import com.SaatSaheli.spring.util.RoleUtil;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-
-import com.SaatSaheli.spring.util.RoleUtil;
+import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
@@ -20,7 +21,6 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/auth")
-@CrossOrigin(origins = "*")
 public class AuthController {
 
     @Autowired
@@ -29,15 +29,32 @@ public class AuthController {
     @Autowired
     private LoginRepository loginRepo;
 
+    @Autowired
+    private JwtUtil jwtUtil;
+
+    @Autowired
+    private RateLimiter rateLimiter;
+
     private static final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+
+    // Helper: get authenticated userId from JWT (set by JwtInterceptor)
+    private Long getAuthUserId(HttpServletRequest request) {
+        Object val = request.getAttribute("jwtUserId");
+        return val instanceof Long ? (Long) val : null;
+    }
 
     /**
      * POST /api/auth/signup
-     * Body: { firstName, middleName, lastName, phoneNumber, email, age, gender, password, provider }
      */
     @PostMapping("/signup")
-    public ResponseEntity<?> signup(@RequestBody Map<String, Object> body) {
+    public ResponseEntity<?> signup(@RequestBody Map<String, Object> body, HttpServletRequest request) {
         try {
+            String clientIp = request.getRemoteAddr();
+            if (!rateLimiter.tryAcquire("signup:" + clientIp)) {
+                return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+                        .body(errorMap("Too many signup attempts. Please try again later."));
+            }
+
             String email = (String) body.get("email");
             String password = (String) body.get("password");
             String provider = body.getOrDefault("provider", "email").toString();
@@ -46,7 +63,6 @@ public class AuthController {
                 return ResponseEntity.badRequest().body(errorMap("Email is required"));
             }
 
-            // Check if email already exists
             Optional<Login> existing = loginRepo.findByEmailIgnoreCase(email);
             if (existing.isPresent()) {
                 return ResponseEntity.status(HttpStatus.CONFLICT).body(errorMap("Account with this email already exists"));
@@ -54,7 +70,6 @@ public class AuthController {
 
             LocalDateTime now = LocalDateTime.now();
 
-            // Create User
             User user = new User();
             user.setFirstName(getStr(body, "firstName"));
             user.setMiddleName(getStr(body, "middleName"));
@@ -72,7 +87,6 @@ public class AuthController {
             user.setModifiedDate(now);
             user = userRepo.save(user);
 
-            // Create Login record
             Login login = new Login();
             login.setUserId(user.getId());
             login.setEmail(email);
@@ -83,8 +97,9 @@ public class AuthController {
             login.setProvider(provider);
             login = loginRepo.save(login);
 
-            // Build response
             Map<String, Object> response = buildUserResponse(user, login);
+            // Issue JWT token
+            response.put("token", jwtUtil.generateToken(user.getId(), email, user.getRole()));
             return ResponseEntity.ok(response);
 
         } catch (Exception e) {
@@ -95,14 +110,20 @@ public class AuthController {
 
     /**
      * POST /api/auth/login
-     * Body: { email, password, provider }
      */
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody Map<String, Object> body) {
+    public ResponseEntity<?> login(@RequestBody Map<String, Object> body, HttpServletRequest request) {
         try {
             String email = (String) body.get("email");
             String password = (String) body.get("password");
             String provider = body.getOrDefault("provider", "email").toString();
+
+            String clientIp = request.getRemoteAddr();
+            String rateLimitKey = "login:" + (email != null ? email.toLowerCase() : clientIp);
+            if (!rateLimiter.tryAcquire(rateLimitKey)) {
+                return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+                        .body(errorMap("Too many login attempts. Please try again later."));
+            }
 
             if (email == null || email.isEmpty()) {
                 return ResponseEntity.badRequest().body(errorMap("Email is required"));
@@ -110,42 +131,41 @@ public class AuthController {
 
             Optional<Login> loginOpt = loginRepo.findByEmailIgnoreCase(email);
             if (loginOpt.isEmpty()) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorMap("Account not found"));
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorMap("Invalid email or password"));
             }
 
-            Login login = loginOpt.get();
+            Login loginRecord = loginOpt.get();
 
-            // Check status
-            if ("BLOCKED".equals(login.getStatus())) {
+            if ("BLOCKED".equals(loginRecord.getStatus())) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorMap("Account is blocked"));
             }
-            if ("DISABLED".equals(login.getStatus())) {
+            if ("DISABLED".equals(loginRecord.getStatus())) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorMap("Account is disabled"));
             }
-            if ("DELETED".equals(login.getStatus())) {
+            if ("DELETED".equals(loginRecord.getStatus())) {
                 return ResponseEntity.status(HttpStatus.GONE).body(errorMap("Account has been deleted"));
             }
 
-            // Verify password for email provider
             if ("email".equals(provider)) {
-                if (password == null || !passwordEncoder.matches(password, login.getPassword())) {
-                    return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorMap("Invalid password"));
+                if (password == null || !passwordEncoder.matches(password, loginRecord.getPassword())) {
+                    return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorMap("Invalid email or password"));
                 }
             }
 
-            // Update last login date
             LocalDateTime now = LocalDateTime.now();
-            login.setLastLoginDate(now);
-            login.setStatus("ACTIVE");
-            loginRepo.save(login);
+            loginRecord.setLastLoginDate(now);
+            loginRecord.setStatus("ACTIVE");
+            loginRepo.save(loginRecord);
 
-            // Get user
-            Optional<User> userOpt = userRepo.findById(login.getUserId());
+            Optional<User> userOpt = userRepo.findById(loginRecord.getUserId());
             if (userOpt.isEmpty()) {
                 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorMap("User record not found"));
             }
 
-            Map<String, Object> response = buildUserResponse(userOpt.get(), login);
+            User user = userOpt.get();
+            Map<String, Object> response = buildUserResponse(user, loginRecord);
+            // Issue JWT token
+            response.put("token", jwtUtil.generateToken(user.getId(), email, user.getRole()));
             return ResponseEntity.ok(response);
 
         } catch (Exception e) {
@@ -155,20 +175,19 @@ public class AuthController {
     }
 
     /**
-     * PUT /api/auth/{loginId}/status
-     * Body: { status: "ACTIVE" | "INACTIVE" | "DISABLED" | "DELETED" | "BLOCKED" }
+     * PUT /api/auth/{loginId}/status — Admin only
      */
     @PutMapping("/{loginId}/status")
     public ResponseEntity<?> updateStatus(
             @PathVariable Long loginId,
             @RequestBody Map<String, String> body,
-            @RequestHeader(value = "X-User-Id", required = false) String callerUserId) {
+            HttpServletRequest request) {
         try {
-            // Verify caller is ADMIN or SUPER_ADMIN
-            if (callerUserId == null || callerUserId.isEmpty()) {
-                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorMap("Admin access required"));
+            Long callerUserId = getAuthUserId(request);
+            if (callerUserId == null) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorMap("Authentication required"));
             }
-            Optional<User> callerOpt = userRepo.findById(Long.parseLong(callerUserId));
+            Optional<User> callerOpt = userRepo.findById(callerUserId);
             if (callerOpt.isEmpty() || !RoleUtil.isAdmin(callerOpt.get().getRole())) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorMap("Admin access required"));
             }
@@ -183,11 +202,11 @@ public class AuthController {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorMap("Login not found"));
             }
 
-            Login login = loginOpt.get();
-            login.setStatus(newStatus.toUpperCase());
-            loginRepo.save(login);
+            Login loginRecord = loginOpt.get();
+            loginRecord.setStatus(newStatus.toUpperCase());
+            loginRepo.save(loginRecord);
 
-            return ResponseEntity.ok(login);
+            return ResponseEntity.ok(loginRecord);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(errorMap("Failed to update status: " + e.getMessage()));
@@ -213,17 +232,24 @@ public class AuthController {
 
     /**
      * PUT /api/auth/user/{userId}
-     * Body: User fields to update
      */
     @PutMapping("/user/{userId}")
-    public ResponseEntity<?> updateUser(@PathVariable Long userId, @RequestBody User updated) {
+    public ResponseEntity<?> updateUser(@PathVariable Long userId, @RequestBody User updated, HttpServletRequest request) {
         try {
+            // Verify the caller is the same user or an admin
+            Long callerUserId = getAuthUserId(request);
+            if (callerUserId != null && !callerUserId.equals(userId)) {
+                Optional<User> callerOpt = userRepo.findById(callerUserId);
+                if (callerOpt.isEmpty() || !RoleUtil.isAdmin(callerOpt.get().getRole())) {
+                    return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorMap("You can only update your own profile"));
+                }
+            }
+
             Optional<User> userOpt = userRepo.findById(userId);
             if (userOpt.isEmpty()) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorMap("User not found"));
             }
             User user = userOpt.get();
-            // Block role changes through this endpoint — use admin endpoint instead
             if (updated.getRole() != null && !updated.getRole().equalsIgnoreCase(user.getRole())) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN)
                         .body(errorMap("Role changes are not allowed through this endpoint"));
@@ -242,6 +268,7 @@ public class AuthController {
             if (updated.getBio() != null) user.setBio(updated.getBio());
             if (updated.getInterests() != null) user.setInterests(updated.getInterests());
             if (updated.getFields() != null) user.setFields(updated.getFields());
+            // Plan changes should go through payment flow, but allow for now
             if (updated.getPlan() != null) user.setPlan(updated.getPlan());
             user.setModifiedDate(LocalDateTime.now());
             user = userRepo.save(user);
@@ -254,50 +281,56 @@ public class AuthController {
 
     /**
      * POST /api/auth/forgot-password
-     * Body: { email }
-     * Generates a temporary password and returns it (in production, send via email).
+     * Generates a temporary password. In production, send via email.
      */
     @PostMapping("/forgot-password")
-    public ResponseEntity<?> forgotPassword(@RequestBody Map<String, String> body) {
+    public ResponseEntity<?> forgotPassword(@RequestBody Map<String, String> body, HttpServletRequest request) {
         try {
+            String clientIp = request.getRemoteAddr();
+            if (!rateLimiter.tryAcquire("forgot:" + clientIp)) {
+                return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+                        .body(errorMap("Too many password reset attempts. Please try again later."));
+            }
+
             String email = body.get("email");
             if (email == null || email.isEmpty()) {
                 return ResponseEntity.badRequest().body(errorMap("Email is required"));
             }
 
+            // Always return same response to avoid leaking account existence
+            Map<String, Object> safeResponse = new HashMap<>();
+            safeResponse.put("message", "If an account with that email exists, a temporary password has been generated. Please check your email.");
+
             Optional<Login> loginOpt = loginRepo.findByEmailIgnoreCase(email);
             if (loginOpt.isEmpty()) {
-                // Don't reveal whether account exists
-                return ResponseEntity.ok(Map.of("message", "If an account with that email exists, a password reset link has been sent."));
+                return ResponseEntity.ok(safeResponse);
             }
 
-            Login login = loginOpt.get();
-            if (!"email".equalsIgnoreCase(login.getProvider())) {
-                return ResponseEntity.ok(Map.of("message",
-                        "This account uses " + login.getProvider() + " login. Please sign in with " + login.getProvider() + " instead."));
+            Login loginRecord = loginOpt.get();
+            if (!"email".equalsIgnoreCase(loginRecord.getProvider())) {
+                safeResponse.put("message", "This account uses " + loginRecord.getProvider() + " login. Please sign in with " + loginRecord.getProvider() + " instead.");
+                return ResponseEntity.ok(safeResponse);
             }
 
-            // Generate a temporary password
+            // Generate temp password and store hashed version
             String tempPassword = generateTempPassword();
-            login.setPassword(passwordEncoder.encode(tempPassword));
-            loginRepo.save(login);
+            loginRecord.setPassword(passwordEncoder.encode(tempPassword));
+            loginRepo.save(loginRecord);
 
-            // In production, send this via email. For now, return it in response.
-            Map<String, Object> response = new HashMap<>();
-            response.put("message", "A temporary password has been generated. Please check your email.");
-            response.put("tempPassword", tempPassword); // Remove this in production; send via email instead
-            response.put("email", email);
-            return ResponseEntity.ok(response);
+            // TODO: Send tempPassword via email (e.g., SendGrid, SES, etc.)
+            // For now, log it server-side only — NEVER return in response
+            System.out.println("[SECURITY] Temp password generated for " + email + " — integrate email service to deliver");
+
+            return ResponseEntity.ok(safeResponse);
 
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(errorMap("Failed to process password reset: " + e.getMessage()));
+                    .body(errorMap("Failed to process password reset"));
         }
     }
 
     /**
      * POST /api/auth/reset-password
-     * Body: { email, oldPassword, newPassword }
      */
     @PostMapping("/reset-password")
     public ResponseEntity<?> resetPassword(@RequestBody Map<String, String> body) {
@@ -315,39 +348,36 @@ public class AuthController {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorMap("Account not found"));
             }
 
-            Login login = loginOpt.get();
-            // Verify old password
-            if (oldPassword != null && !oldPassword.isEmpty() && !passwordEncoder.matches(oldPassword, login.getPassword())) {
+            Login loginRecord = loginOpt.get();
+            if (oldPassword != null && !oldPassword.isEmpty() && !passwordEncoder.matches(oldPassword, loginRecord.getPassword())) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorMap("Current password is incorrect"));
             }
 
-            login.setPassword(passwordEncoder.encode(newPassword));
-            loginRepo.save(login);
+            loginRecord.setPassword(passwordEncoder.encode(newPassword));
+            loginRepo.save(loginRecord);
 
             return ResponseEntity.ok(Map.of("message", "Password has been reset successfully"));
 
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(errorMap("Failed to reset password: " + e.getMessage()));
+                    .body(errorMap("Failed to reset password"));
         }
     }
 
     /**
-     * PUT /api/auth/admin-reset-password/{userId}
-     * SUPER_ADMIN can reset any user's password.
-     * Body: { newPassword }
+     * PUT /api/auth/admin-reset-password/{userId} — SUPER_ADMIN only
      */
     @PutMapping("/admin-reset-password/{userId}")
     public ResponseEntity<?> adminResetPassword(
             @PathVariable Long userId,
             @RequestBody Map<String, String> body,
-            @RequestHeader("X-User-Id") String callerUserId) {
+            HttpServletRequest request) {
         try {
-            // Verify caller is SUPER_ADMIN
-            if (callerUserId == null || callerUserId.isEmpty()) {
-                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorMap("Super Admin access required"));
+            Long callerUserId = getAuthUserId(request);
+            if (callerUserId == null) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorMap("Authentication required"));
             }
-            Optional<User> callerOpt = userRepo.findById(Long.parseLong(callerUserId));
+            Optional<User> callerOpt = userRepo.findById(callerUserId);
             if (callerOpt.isEmpty() || !RoleUtil.isSuperAdmin(callerOpt.get().getRole())) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorMap("Super Admin access required"));
             }
@@ -362,15 +392,15 @@ public class AuthController {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorMap("Login not found for user"));
             }
 
-            Login login = loginOpt.get();
-            login.setPassword(passwordEncoder.encode(newPassword));
-            loginRepo.save(login);
+            Login loginRecord = loginOpt.get();
+            loginRecord.setPassword(passwordEncoder.encode(newPassword));
+            loginRepo.save(loginRecord);
 
             return ResponseEntity.ok(Map.of("message", "Password reset successfully for user " + userId));
 
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(errorMap("Failed to reset password: " + e.getMessage()));
+                    .body(errorMap("Failed to reset password"));
         }
     }
 

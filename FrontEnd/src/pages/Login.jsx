@@ -51,6 +51,7 @@ export default function Login() {
       role: data.role,
       provider: data.provider,
       plan: data.plan || "Free",
+      token: data.token, // JWT token from server
     };
     authLogin(userData);
     navigate("/");

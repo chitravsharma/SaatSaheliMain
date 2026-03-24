@@ -15,7 +15,6 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/galleries")
-@CrossOrigin(origins = "*")
 public class GalleryController {
 
     @Autowired
