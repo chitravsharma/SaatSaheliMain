@@ -11,6 +11,7 @@ const API_BOOKS = `${API}/api/books`;
 const API_AUTH = `${API}/api/auth`;
 const UPLOAD_API = `${API}/api/upload`;
 const API_GALLERIES = `${API}/api/galleries`;
+const API_ARTICLES = `${API}/api/articles`;
 
 function Account() {
   const { user } = useAuth();
@@ -20,6 +21,7 @@ function Account() {
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [articles, setArticles] = useState([]);
   const [galleries, setGalleries] = useState([]);
   const [galleryImages, setGalleryImages] = useState([]);
   const [uploadingGallery, setUploadingGallery] = useState(false);
@@ -34,12 +36,14 @@ function Account() {
       try {
         setLoading(true);
         setError("");
-        const [booksRes, profileRes, galleriesRes] = await Promise.all([
+        const [booksRes, profileRes, galleriesRes, articlesRes] = await Promise.all([
           axios.get(`${API_BOOKS}/user/${user.userId}`),
           axios.get(`${API_AUTH}/user/${user.userId}`),
           axios.get(`${API_GALLERIES}/user/${user.userId}`),
+          axios.get(`${API_ARTICLES}/user/${user.userId}`).catch(() => ({ data: [] })),
         ]);
         setBooks(Array.isArray(booksRes.data) ? booksRes.data : []);
+        setArticles(Array.isArray(articlesRes.data) ? articlesRes.data : []);
         setProfile(profileRes.data);
         const gals = Array.isArray(galleriesRes.data) ? galleriesRes.data : [];
         setGalleries(gals);
@@ -400,7 +404,38 @@ function Account() {
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
                 Poems
               </h3>
-              <p className="acct-section-desc">Share your poetry with the community. <Link to="/category/writing">Create in Writing category</Link></p>
+              {(() => {
+                const poems = articles.filter(a => a.contentType === "Poetry");
+                return poems.length > 0 ? (
+                  <table className="acct-books-table">
+                    <thead>
+                      <tr>
+                        <th>{strings.account.thTitle}</th>
+                        <th>{strings.account.thStatus}</th>
+                        <th>{strings.account.thCreated}</th>
+                        <th>{strings.account.thActions}</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {poems.map((item) => (
+                        <tr key={item.id}>
+                          <td>{item.title}</td>
+                          <td><span className={`bm-status ${statusClass(item.status)}`}>{item.status}</span></td>
+                          <td>{formatDate(item.createdDate)}</td>
+                          <td>
+                            <Link to="/articles/poems" className="bm-btn bm-btn-edit bm-btn-sm">{strings.account.editButton}</Link>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                ) : (
+                  <p className="acct-section-desc">No poems yet.</p>
+                );
+              })()}
+              <p className="acct-section-desc" style={{ marginTop: 8 }}>
+                <Link to="/articles/poems">Create &amp; manage your poems</Link>
+              </p>
             </div>
           )}
 
@@ -410,7 +445,38 @@ function Account() {
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                 Blog
               </h3>
-              <p className="acct-section-desc">Write blog posts to share your thoughts. <Link to="/books">Create a new book as your blog</Link></p>
+              {(() => {
+                const blogs = articles.filter(a => a.contentType === "Blog");
+                return blogs.length > 0 ? (
+                  <table className="acct-books-table">
+                    <thead>
+                      <tr>
+                        <th>{strings.account.thTitle}</th>
+                        <th>{strings.account.thStatus}</th>
+                        <th>{strings.account.thCreated}</th>
+                        <th>{strings.account.thActions}</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {blogs.map((item) => (
+                        <tr key={item.id}>
+                          <td>{item.title}</td>
+                          <td><span className={`bm-status ${statusClass(item.status)}`}>{item.status}</span></td>
+                          <td>{formatDate(item.createdDate)}</td>
+                          <td>
+                            <Link to="/articles/blogs" className="bm-btn bm-btn-edit bm-btn-sm">{strings.account.editButton}</Link>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                ) : (
+                  <p className="acct-section-desc">No blog posts yet.</p>
+                );
+              })()}
+              <p className="acct-section-desc" style={{ marginTop: 8 }}>
+                <Link to="/articles/blogs">Create &amp; manage your blogs</Link>
+              </p>
             </div>
           )}
 
@@ -420,7 +486,38 @@ function Account() {
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
                 Articles
               </h3>
-              <p className="acct-section-desc">Publish articles on your favorite topics. <Link to="/books">Create a new book as your article</Link></p>
+              {(() => {
+                const arts = articles.filter(a => a.contentType === "Article");
+                return arts.length > 0 ? (
+                  <table className="acct-books-table">
+                    <thead>
+                      <tr>
+                        <th>{strings.account.thTitle}</th>
+                        <th>{strings.account.thStatus}</th>
+                        <th>{strings.account.thCreated}</th>
+                        <th>{strings.account.thActions}</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {arts.map((item) => (
+                        <tr key={item.id}>
+                          <td>{item.title}</td>
+                          <td><span className={`bm-status ${statusClass(item.status)}`}>{item.status}</span></td>
+                          <td>{formatDate(item.createdDate)}</td>
+                          <td>
+                            <Link to="/articles/articles" className="bm-btn bm-btn-edit bm-btn-sm">{strings.account.editButton}</Link>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                ) : (
+                  <p className="acct-section-desc">No articles yet.</p>
+                );
+              })()}
+              <p className="acct-section-desc" style={{ marginTop: 8 }}>
+                <Link to="/articles/articles">Create &amp; manage your articles</Link>
+              </p>
             </div>
           )}
 

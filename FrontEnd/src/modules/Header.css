@@ -293,6 +293,19 @@
   display: inline-flex;
   align-items: center;
 }
+.header-writing-menu .nav-link {
+  background: rgba(37, 99, 235, 0.15);
+  color: #f0f4f8;
+  border: 2px solid #f59e0b;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.875rem;
+  padding: 6px 12px;
+}
+.header-writing-menu .nav-link:hover {
+  background: rgba(37, 99, 235, 0.25);
+  color: #fbbf24;
+}
 .nav-dropdown-arrow {
   opacity: 0.7;
   margin-left: 2px;
