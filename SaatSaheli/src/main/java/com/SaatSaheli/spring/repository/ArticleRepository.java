@@ -10,5 +10,6 @@ import java.util.List;
 public interface ArticleRepository extends JpaRepository<Article, Long> {
     List<Article> findByUserIdOrderByCreatedDateDesc(Long userId);
     List<Article> findByStatusOrderByCreatedDateDesc(String status);
+    List<Article> findByCategoryAndStatusOrderByCreatedDateDesc(String category, String status);
     List<Article> findAllByOrderByCreatedDateDesc();
 }

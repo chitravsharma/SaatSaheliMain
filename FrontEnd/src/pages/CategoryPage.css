@@ -358,3 +358,78 @@
         font-size: 0.9rem;
     }
 }
+
+/* Published articles/blogs/poems list on category pages */
+.cat-articles-section {
+    margin-top: 1.5rem;
+    background: #0f1923;
+    border: 1px solid #2a4a6b;
+    border-radius: 10px;
+    padding: 14px 18px;
+}
+
+.cat-articles-heading {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #fbbf24;
+    font-size: 1rem;
+    font-weight: 700;
+    margin: 0 0 10px 0;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #2a4a6b;
+}
+
+.cat-articles-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.cat-articles-item {
+    border-radius: 6px;
+    transition: background 0.15s;
+}
+
+.cat-articles-item:hover {
+    background: rgba(37, 99, 235, 0.1);
+}
+
+.cat-articles-link {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    text-decoration: none;
+    color: inherit;
+}
+
+.cat-articles-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.cat-articles-dot-blog { background: #c084fc; }
+.cat-articles-dot-article { background: #6ee7b7; }
+.cat-articles-dot-poetry { background: #93c5fd; }
+
+.cat-articles-title {
+    color: #f0f4f8;
+    font-size: 0.9rem;
+    font-weight: 600;
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.cat-articles-author {
+    color: #60a5fa;
+    font-size: 0.78rem;
+    flex-shrink: 0;
+}

@@ -419,7 +419,7 @@ function Account() {
                     <tbody>
                       {poems.map((item) => (
                         <tr key={item.id}>
-                          <td>{item.title}</td>
+                          <td>{item.headline || item.title}</td>
                           <td><span className={`bm-status ${statusClass(item.status)}`}>{item.status}</span></td>
                           <td>{formatDate(item.createdDate)}</td>
                           <td>
@@ -460,7 +460,7 @@ function Account() {
                     <tbody>
                       {blogs.map((item) => (
                         <tr key={item.id}>
-                          <td>{item.title}</td>
+                          <td>{item.headline || item.title}</td>
                           <td><span className={`bm-status ${statusClass(item.status)}`}>{item.status}</span></td>
                           <td>{formatDate(item.createdDate)}</td>
                           <td>
@@ -501,7 +501,7 @@ function Account() {
                     <tbody>
                       {arts.map((item) => (
                         <tr key={item.id}>
-                          <td>{item.title}</td>
+                          <td>{item.headline || item.title}</td>
                           <td><span className={`bm-status ${statusClass(item.status)}`}>{item.status}</span></td>
                           <td>{formatDate(item.createdDate)}</td>
                           <td>

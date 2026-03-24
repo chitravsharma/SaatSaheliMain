@@ -34,7 +34,8 @@ public class ArticleController {
                 return ResponseEntity.badRequest().body(errorMap("Headline is required"));
             }
             String status = (String) body.get("status");
-            Article article = articleService.createArticle(userId, headline, content, imageUrl, contentType, status);
+            String category = (String) body.get("category");
+            Article article = articleService.createArticle(userId, headline, content, imageUrl, contentType, status, category);
             return ResponseEntity.ok(article);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -51,7 +52,8 @@ public class ArticleController {
             String imageUrl = (String) body.get("imageUrl");
             String contentType = (String) body.get("contentType");
             String status = (String) body.get("status");
-            Article article = articleService.updateArticle(id, userId, headline, content, imageUrl, contentType, status);
+            String category = (String) body.get("category");
+            Article article = articleService.updateArticle(id, userId, headline, content, imageUrl, contentType, status, category);
             return ResponseEntity.ok(article);
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorMap(e.getMessage()));
@@ -91,6 +93,16 @@ public class ArticleController {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(errorMap("Failed to get articles: " + e.getMessage()));
+        }
+    }
+
+    @GetMapping("/category/{category}")
+    public ResponseEntity<?> getArticlesByCategory(@PathVariable String category) {
+        try {
+            return ResponseEntity.ok(articleService.getArticlesByCategory(category));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(errorMap("Failed to get articles by category: " + e.getMessage()));
         }
     }
 

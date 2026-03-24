@@ -7,6 +7,7 @@ import "./CategoryPage.css";
 
 const BASE_API = process.env.REACT_APP_API_URL;
 const API = `${BASE_API}/api/books`;
+const ARTICLES_API = `${BASE_API}/api/articles`;
 
 function resolveImageUrl(url) {
   if (!url) return null;
@@ -41,6 +42,7 @@ function CategoryPage() {
     const [publishedBooks, setPublishedBooks] = useState([]);
     const [allBooks, setAllBooks] = useState([]);
     const [myBooks, setMyBooks] = useState([]);
+    const [categoryArticles, setCategoryArticles] = useState([]);
     const [loading, setLoading] = useState(true);
     const [newTitle, setNewTitle] = useState("");
     const [creating, setCreating] = useState(false);
@@ -51,15 +53,20 @@ function CategoryPage() {
         setTimeout(() => setMessage(""), 3000);
     };
 
-    // Fetch published books for this category
+    // Fetch published books and articles for this category
     useEffect(() => {
         const fetchPublished = async () => {
             setLoading(true);
             try {
-                const res = await axios.get(`${API}/category/${catKey}`);
-                setPublishedBooks(Array.isArray(res.data) ? res.data : []);
+                const [booksRes, articlesRes] = await Promise.all([
+                    axios.get(`${API}/category/${catKey}`),
+                    axios.get(`${ARTICLES_API}/category/${catKey}`).catch(() => ({ data: [] })),
+                ]);
+                setPublishedBooks(Array.isArray(booksRes.data) ? booksRes.data : []);
+                setCategoryArticles(Array.isArray(articlesRes.data) ? articlesRes.data : []);
             } catch {
                 setPublishedBooks([]);
+                setCategoryArticles([]);
             }
             setLoading(false);
         };
@@ -209,6 +216,36 @@ function CategoryPage() {
                                 </button>
                             ))}
                         </div>
+                    )}
+
+                    {/* Published articles/blogs/poems in this category */}
+                    {categoryArticles.length > 0 && (
+                        <>
+                            {[
+                                { type: "Blog", label: "Blogs", icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg> },
+                                { type: "Article", label: "Articles", icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg> },
+                                { type: "Poetry", label: "Poems", icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 3a2.828 2.828 0 114 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg> },
+                            ].map(sec => {
+                                const items = categoryArticles.filter(a => a.contentType === sec.type);
+                                if (items.length === 0) return null;
+                                return (
+                                    <div key={sec.type} className="cat-articles-section">
+                                        <h3 className="cat-articles-heading">{sec.icon} {sec.label}</h3>
+                                        <ul className="cat-articles-list">
+                                            {items.map(article => (
+                                                <li key={article.id} className="cat-articles-item">
+                                                    <Link to={`/articles/${sec.type === "Poetry" ? "poems" : sec.type === "Blog" ? "blogs" : "articles"}`} className="cat-articles-link">
+                                                        <span className={`cat-articles-dot cat-articles-dot-${sec.type.toLowerCase()}`} />
+                                                        <span className="cat-articles-title">{article.headline}</span>
+                                                        {article.authorName && <span className="cat-articles-author">by {article.authorName}</span>}
+                                                    </Link>
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    </div>
+                                );
+                            })}
+                        </>
                     )}
                 </div>
             )}

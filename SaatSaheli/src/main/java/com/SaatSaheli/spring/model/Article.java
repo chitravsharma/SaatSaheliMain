@@ -27,7 +27,9 @@ public class Article {
     private String status; // PUBLISHED, DRAFT
 
     @Column(name = "content_type")
-    private String contentType; // "Blog" or "Article"
+    private String contentType; // "Blog" or "Article" or "Poetry"
+
+    private String category; // "Tech", "Creativity", "Community", "Art", "Music", "DIY", "Other"
 
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     @Column(name = "created_date")
@@ -66,6 +68,9 @@ public class Article {
 
     public String getContentType() { return contentType; }
     public void setContentType(String contentType) { this.contentType = contentType; }
+
+    public String getCategory() { return category; }
+    public void setCategory(String category) { this.category = category; }
 
     public String getAuthorName() { return authorName; }
     public void setAuthorName(String authorName) { this.authorName = authorName; }

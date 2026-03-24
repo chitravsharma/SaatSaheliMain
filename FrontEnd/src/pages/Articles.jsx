@@ -14,6 +14,8 @@ function resolveImageUrl(url) {
   return url;
 }
 
+const CATEGORY_OPTIONS = ["Tech", "Creativity", "Community", "Art", "Music", "DIY", "Other"];
+
 const CONTENT_TYPE_MAP = {
   poems: "Poetry",
   articles: "Article",
@@ -45,9 +47,12 @@ function Articles() {
   const [contentType, setContentType] = useState(
     urlContentType ? (CONTENT_TYPE_MAP[urlContentType] || "Blog") : "Blog"
   );
+  const [category, setCategory] = useState("");
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [publishOnSave, setPublishOnSave] = useState(true);
+  const [formImageSize, setFormImageSize] = useState(100); // image preview size %
+  const [cardImageSizes, setCardImageSizes] = useState({}); // per-card image zoom %
 
   // Social state per article
   const [socialData, setSocialData] = useState({});
@@ -152,6 +157,7 @@ function Articles() {
           imageUrl,
           contentType,
           status,
+          category: category || null,
         });
         showMsg(`${contentType} updated!`);
       } else {
@@ -162,6 +168,7 @@ function Articles() {
           imageUrl,
           contentType,
           status,
+          category: category || null,
         });
         showMsg(`${contentType} ${publishOnSave ? "published" : "saved as draft"}!`);
       }
@@ -208,6 +215,7 @@ function Articles() {
     setContent(article.content || "");
     setImageUrl(article.imageUrl || "");
     setContentType(article.contentType || "Article");
+    setCategory(article.category || "");
     setShowForm(true);
     setTab("my");
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -219,6 +227,8 @@ function Articles() {
     setHeadline("");
     setContent("");
     setImageUrl("");
+    setCategory("");
+    setFormImageSize(100);
     setContentType(urlContentType ? (CONTENT_TYPE_MAP[urlContentType] || "Blog") : "Blog");
   };
 
@@ -332,6 +342,7 @@ function Articles() {
           <div>
             <div className="art-badges-row">
             <span className={`art-type-badge art-type-${typeLabel.toLowerCase()}`}>{typeLabel}</span>
+            {article.category && <span className="art-type-badge art-cat-badge">{article.category}</span>}
             {isOwner && article.status === "DRAFT" && <span className="art-type-badge art-draft-badge">Draft</span>}
           </div>
             <h3 className="art-headline">{article.headline}</h3>
@@ -357,7 +368,20 @@ function Articles() {
         )}
 
         {article.imageUrl && (
-          <img src={resolveImageUrl(article.imageUrl)} alt={article.headline} className="art-card-image" />
+          <div className="art-card-image-wrap">
+            <img
+              src={resolveImageUrl(article.imageUrl)}
+              alt={article.headline}
+              className="art-card-image"
+              style={{ width: `${cardImageSizes[article.id] || 100}%`, maxHeight: cardImageSizes[article.id] > 100 ? "none" : undefined }}
+            />
+            <div className="art-card-image-controls">
+              <button className="art-img-zoom-btn" onClick={() => setCardImageSizes(s => ({ ...s, [article.id]: Math.max(25, (s[article.id] || 100) - 25) }))} title="Zoom out">&minus;</button>
+              <span className="art-img-zoom-label">{cardImageSizes[article.id] || 100}%</span>
+              <button className="art-img-zoom-btn" onClick={() => setCardImageSizes(s => ({ ...s, [article.id]: Math.min(200, (s[article.id] || 100) + 25) }))} title="Zoom in">+</button>
+              <button className="art-img-zoom-btn" onClick={() => setCardImageSizes(s => { const copy = { ...s }; delete copy[article.id]; return copy; })} title="Reset">Reset</button>
+            </div>
+          </div>
         )}
 
         {article.content && (
@@ -481,6 +505,19 @@ function Articles() {
                 </div>
               </div>
               <div className="art-field">
+                <label>Category</label>
+                <div className="art-category-selector">
+                  {CATEGORY_OPTIONS.map(cat => (
+                    <button
+                      key={cat}
+                      className={`art-cat-btn ${category === cat ? "active" : ""}`}
+                      onClick={() => setCategory(category === cat ? "" : cat)}
+                      type="button"
+                    >{cat}</button>
+                  ))}
+                </div>
+              </div>
+              <div className="art-field">
                 <label>Title *</label>
                 <input
                   type="text"
@@ -505,8 +542,19 @@ function Articles() {
                 <label>Cover Image</label>
                 {imageUrl ? (
                   <div className="art-image-preview">
-                    <img src={resolveImageUrl(imageUrl)} alt="Cover" className="art-preview-img" />
-                    <button className="bm-btn bm-btn-delete bm-btn-sm" onClick={() => setImageUrl("")}>Remove</button>
+                    <img
+                      src={resolveImageUrl(imageUrl)}
+                      alt="Cover"
+                      className="art-preview-img"
+                      style={{ width: `${formImageSize}%`, maxWidth: `${formImageSize}%` }}
+                    />
+                    <div className="art-image-controls">
+                      <button type="button" className="art-img-zoom-btn" onClick={() => setFormImageSize(s => Math.max(25, s - 25))} title="Smaller">&minus;</button>
+                      <span className="art-img-zoom-label">{formImageSize}%</span>
+                      <button type="button" className="art-img-zoom-btn" onClick={() => setFormImageSize(s => Math.min(200, s + 25))} title="Larger">+</button>
+                      <button type="button" className="art-img-zoom-btn" onClick={() => setFormImageSize(100)} title="Reset size">Reset</button>
+                      <button className="bm-btn bm-btn-delete bm-btn-sm" onClick={() => { setImageUrl(""); setFormImageSize(100); }}>Remove</button>
+                    </div>
                   </div>
                 ) : (
                   <div className="art-upload-area">
@@ -549,17 +597,59 @@ function Articles() {
       )}
 
       {tab === "published" && (
-        <div className="art-list">
-          {(() => {
-            const filtered = filterType
-              ? publicArticles.filter((a) => a.contentType === filterType)
-              : publicArticles;
-            return filtered.length === 0 ? (
-              <p className="art-empty">No published {filterType ? filterType.toLowerCase() + "s" : "content"} yet.</p>
-            ) : (
-              filtered.map((article) => renderArticleCard(article, userId && article.userId === userId))
-            );
-          })()}
+        <div className="art-browse-sections">
+          {[
+            { type: "Blog", label: "Blogs", icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg> },
+            { type: "Article", label: "Articles", icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg> },
+            { type: "Poetry", label: "Poems", icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 3a2.828 2.828 0 114 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg> },
+          ]
+            .filter(sec => !filterType || filterType === sec.type)
+            .map(sec => {
+              const items = publicArticles.filter(a => a.contentType === sec.type);
+              return (
+                <div key={sec.type} className="art-browse-section">
+                  <h3 className={`art-browse-heading art-browse-heading-${sec.type.toLowerCase()}`}>
+                    {sec.icon} {sec.label}
+                    <span className="art-browse-count">{items.length}</span>
+                  </h3>
+                  {items.length === 0 ? (
+                    <p className="art-browse-empty">No published {sec.label.toLowerCase()} yet.</p>
+                  ) : (
+                    <ul className="art-browse-list">
+                      {items.map(article => (
+                        <li key={article.id} className="art-browse-item" onClick={() => {
+                          setFilterType(sec.type);
+                          setTab("published");
+                          const el = document.getElementById(`art-detail-${article.id}`);
+                          if (el) el.scrollIntoView({ behavior: "smooth" });
+                        }}>
+                          <span className={`art-browse-dot art-browse-dot-${sec.type.toLowerCase()}`} />
+                          <div className="art-browse-item-info">
+                            <span className="art-browse-item-title">{article.headline}</span>
+                            {article.authorName && <span className="art-browse-item-author">by {article.authorName}</span>}
+                          </div>
+                          <span className="art-browse-item-date">{new Date(article.createdDate).toLocaleDateString()}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              );
+            })}
+
+          {/* Expanded detail: show full card when a filter is active */}
+          {filterType && (
+            <div className="art-list" style={{ marginTop: 24 }}>
+              <h3 style={{ color: "#fbbf24", marginBottom: 12 }}>
+                {filterType === "Poetry" ? "Poems" : filterType + "s"} — Detail View
+              </h3>
+              {publicArticles.filter(a => a.contentType === filterType).map(article => (
+                <div key={article.id} id={`art-detail-${article.id}`}>
+                  {renderArticleCard(article, userId && article.userId === userId)}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
     </div>

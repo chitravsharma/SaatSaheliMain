@@ -26,7 +26,7 @@ public class ArticleService {
     @Autowired
     private UserRepository userRepo;
 
-    public Article createArticle(Long userId, String headline, String content, String imageUrl, String contentType, String status) {
+    public Article createArticle(Long userId, String headline, String content, String imageUrl, String contentType, String status, String category) {
         LocalDateTime now = LocalDateTime.now();
         Article article = new Article();
         article.setUserId(userId);
@@ -35,20 +35,25 @@ public class ArticleService {
         article.setImageUrl(imageUrl);
         article.setContentType(contentType != null ? contentType : "Article");
         article.setStatus(status != null ? status.toUpperCase() : "PUBLISHED");
+        article.setCategory(category);
         article.setCreatedDate(now);
         article.setModifiedDate(now);
         return articleRepo.save(article);
     }
 
+    public Article createArticle(Long userId, String headline, String content, String imageUrl, String contentType, String status) {
+        return createArticle(userId, headline, content, imageUrl, contentType, status, null);
+    }
+
     public Article createArticle(Long userId, String headline, String content, String imageUrl, String contentType) {
-        return createArticle(userId, headline, content, imageUrl, contentType, null);
+        return createArticle(userId, headline, content, imageUrl, contentType, null, null);
     }
 
     public Article createArticle(Long userId, String headline, String content, String imageUrl) {
-        return createArticle(userId, headline, content, imageUrl, "Article", null);
+        return createArticle(userId, headline, content, imageUrl, "Article", null, null);
     }
 
-    public Article updateArticle(Long articleId, Long userId, String headline, String content, String imageUrl, String contentType, String status) {
+    public Article updateArticle(Long articleId, Long userId, String headline, String content, String imageUrl, String contentType, String status, String category) {
         Optional<Article> articleOpt = articleRepo.findById(articleId);
         if (articleOpt.isEmpty()) throw new RuntimeException("Article not found");
         Article article = articleOpt.get();
@@ -60,16 +65,27 @@ public class ArticleService {
         if (imageUrl != null) article.setImageUrl(imageUrl);
         if (contentType != null) article.setContentType(contentType);
         if (status != null) article.setStatus(status.toUpperCase());
+        if (category != null) article.setCategory(category);
         article.setModifiedDate(LocalDateTime.now());
         return articleRepo.save(article);
     }
 
+    public Article updateArticle(Long articleId, Long userId, String headline, String content, String imageUrl, String contentType, String status) {
+        return updateArticle(articleId, userId, headline, content, imageUrl, contentType, status, null);
+    }
+
     public Article updateArticle(Long articleId, Long userId, String headline, String content, String imageUrl, String contentType) {
-        return updateArticle(articleId, userId, headline, content, imageUrl, contentType, null);
+        return updateArticle(articleId, userId, headline, content, imageUrl, contentType, null, null);
     }
 
     public Article updateArticle(Long articleId, Long userId, String headline, String content, String imageUrl) {
-        return updateArticle(articleId, userId, headline, content, imageUrl, null, null);
+        return updateArticle(articleId, userId, headline, content, imageUrl, null, null, null);
+    }
+
+    public List<Article> getArticlesByCategory(String category) {
+        List<Article> articles = articleRepo.findByCategoryAndStatusOrderByCreatedDateDesc(category, "PUBLISHED");
+        enrichWithAuthorNames(articles);
+        return articles;
     }
 
     public void deleteArticle(Long articleId, Long userId) {
