@@ -103,7 +103,14 @@ function FlipBook({ bookId }) {
   const pageSize = usePageSize();
 
   const zoomLevel = ZOOM_LEVELS[zoomIndex] * pinchZoom;
-  const isZoomed = zoomLevel > 1;
+
+  // Calculate if the zoomed page exceeds the available viewport
+  const availHeight = (typeof window !== "undefined" ? window.innerHeight : 800) - 120;
+  const availWidth = (typeof window !== "undefined" ? window.innerWidth : 1200) - 40;
+  const scaledPageH = pageSize.h * zoomLevel;
+  const scaledPageW = pageSize.w * zoomLevel;
+  // Switch to pan mode when zoomed page exceeds viewport in either direction
+  const isPanMode = scaledPageH > availHeight || scaledPageW > availWidth;
 
   // Scale factor for positioning elements relative to desktop size
   const scale = pageSize.w / DESKTOP_W;
@@ -405,50 +412,85 @@ function FlipBook({ bookId }) {
     );
   };
 
-  // Scroll reader navigation
-  const scrollToPage = useCallback((pageIndex) => {
+  // Pan mode: navigate between pages (one page at a time)
+  const goToPage = useCallback((pageIndex) => {
+    setCurrentPage(pageIndex);
+    // Reset scroll position when changing pages in pan mode
     const container = scrollContainerRef.current;
-    if (!container) return;
-    const pageEl = container.children[pageIndex];
-    if (pageEl) {
-      pageEl.scrollIntoView({ behavior: "smooth", block: "start" });
-      setCurrentPage(pageIndex);
+    if (container) {
+      container.scrollTop = 0;
+      container.scrollLeft = 0;
     }
   }, []);
 
   const handlePrevPage = useCallback(() => {
-    if (isZoomed) {
-      const prev = Math.max(0, currentPage - 1);
-      scrollToPage(prev);
+    if (isPanMode) {
+      if (currentPage > 0) goToPage(currentPage - 1);
     } else {
       flipBookRef.current?.pageFlip()?.flipPrev();
     }
-  }, [isZoomed, currentPage, scrollToPage]);
+  }, [isPanMode, currentPage, goToPage]);
 
   const handleNextPage = useCallback(() => {
-    if (isZoomed) {
-      const next = Math.min(totalPages - 1, currentPage + 1);
-      scrollToPage(next);
+    if (isPanMode) {
+      if (currentPage < totalPages - 1) goToPage(currentPage + 1);
     } else {
       flipBookRef.current?.pageFlip()?.flipNext();
     }
-  }, [isZoomed, currentPage, totalPages, scrollToPage]);
+  }, [isPanMode, currentPage, totalPages, goToPage]);
 
   const handleFirstPage = useCallback(() => {
-    if (isZoomed) {
-      scrollToPage(0);
+    if (isPanMode) {
+      goToPage(0);
     } else {
       flipBookRef.current?.pageFlip()?.turnToPage(0);
     }
-  }, [isZoomed, scrollToPage]);
+  }, [isPanMode, goToPage]);
 
   const handleLastPage = useCallback(() => {
-    if (isZoomed) {
-      scrollToPage(totalPages - 1);
+    if (isPanMode) {
+      goToPage(totalPages - 1);
     } else if (totalPages > 0) {
       flipBookRef.current?.pageFlip()?.turnToPage(totalPages - 1);
     }
-  }, [isZoomed, totalPages, scrollToPage]);
+  }, [isPanMode, totalPages, goToPage]);
+
+  // Swipe left/right to flip pages in pan mode
+  const swipeRef = useRef({ startX: 0, startY: 0 });
+  useEffect(() => {
+    if (!isPanMode) return;
+    const container = scrollContainerRef.current;
+    if (!container) return;
+    const onTouchStart = (e) => {
+      if (e.touches.length === 1) {
+        swipeRef.current.startX = e.touches[0].clientX;
+        swipeRef.current.startY = e.touches[0].clientY;
+      }
+    };
+    const onTouchEnd = (e) => {
+      if (e.changedTouches.length === 1) {
+        const dx = e.changedTouches[0].clientX - swipeRef.current.startX;
+        const dy = e.changedTouches[0].clientY - swipeRef.current.startY;
+        // Only trigger page flip if horizontal swipe is dominant and > 80px
+        if (Math.abs(dx) > 80 && Math.abs(dx) > Math.abs(dy) * 1.5) {
+          // Check if at scroll boundary before flipping
+          const atLeftEdge = container.scrollLeft <= 0;
+          const atRightEdge = container.scrollLeft + container.clientWidth >= container.scrollWidth - 1;
+          if (dx > 0 && atLeftEdge && currentPage > 0) {
+            goToPage(currentPage - 1); // swipe right = prev page
+          } else if (dx < 0 && atRightEdge && currentPage < totalPages - 1) {
+            goToPage(currentPage + 1); // swipe left = next page
+          }
+        }
+      }
+    };
+    container.addEventListener("touchstart", onTouchStart, { passive: true });
+    container.addEventListener("touchend", onTouchEnd, { passive: true });
+    return () => {
+      container.removeEventListener("touchstart", onTouchStart);
+      container.removeEventListener("touchend", onTouchEnd);
+    };
+  }, [isPanMode, currentPage, totalPages, goToPage]);
 
   // Navigation arrows (shared between normal and fullscreen)
   const navArrows = (
@@ -508,36 +550,33 @@ function FlipBook({ bookId }) {
           </div>
         )}
 
-        {isZoomed ? (
-          /* Scroll Reader Mode — replaces flipbook when zoomed */
-          <div className="flipbook-scroll-reader" ref={fullscreenRef}>
-            <div className="flipbook-scroll-reader-inner" ref={scrollContainerRef}>
-              {pages.map((page, index) => (
-                <div
-                  key={index}
-                  className="flipbook-scroll-page"
-                  style={{
-                    /* Outer wrapper sized to the scaled dimensions so layout reserves correct space */
-                    width: pageSize.w * zoomLevel,
-                    height: pageSize.h * zoomLevel + 16,
-                  }}
-                >
-                  <div style={{
-                    transform: `scale(${zoomLevel})`,
-                    transformOrigin: "top left",
-                    width: pageSize.w,
-                    height: pageSize.h,
-                  }}>
-                    {renderPageContent(page, index)}
-                  </div>
-                </div>
-              ))}
+        {isPanMode ? (
+          /* Pan Mode — single zoomed page, scrollable in all directions, flip left/right */
+          <div className="flipbook-pan-viewport" ref={fullscreenRef}>
+            <div className="flipbook-pan-container" ref={scrollContainerRef}>
+              <div
+                className="flipbook-pan-page"
+                style={{
+                  transform: `scale(${zoomLevel})`,
+                  transformOrigin: "top left",
+                  width: pageSize.w,
+                  height: pageSize.h,
+                }}
+              >
+                {pages[currentPage] && renderPageContent(pages[currentPage], currentPage)}
+              </div>
             </div>
           </div>
         ) : (
-          /* Normal Flipbook Mode */
-          <div className="flipbook-zoom-scroll" ref={fullscreenRef}>
-            <div className="flipbook-zoom-wrapper">
+          /* Normal Flipbook Mode (with zoom scaling when not exceeding viewport) */
+          <div className={`flipbook-zoom-scroll ${zoomLevel > 1 ? "flipbook-zoom-scrollable" : ""}`} ref={fullscreenRef}>
+            <div
+              className="flipbook-zoom-wrapper"
+              style={{
+                transform: `scale(${zoomLevel})`,
+                touchAction: zoomLevel > 1 ? "pan-x pan-y" : "manipulation",
+              }}
+            >
               <HTMLFlipBook
                 width={pageSize.w}
                 height={pageSize.h}
