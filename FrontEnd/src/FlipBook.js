@@ -37,7 +37,7 @@ const DESKTOP_W = 550;
 const DESKTOP_H = 700;
 const ASPECT_RATIO = DESKTOP_H / DESKTOP_W;
 
-const ZOOM_LEVELS = [0.75, 1, 1.25, 1.5];
+const ZOOM_LEVELS = [0.75, 1, 1.25, 1.5, 2, 2.5];
 const DEFAULT_ZOOM_INDEX = 1;
 
 function usePageSize() {
@@ -103,6 +103,7 @@ function FlipBook({ bookId }) {
   const pageSize = usePageSize();
 
   const zoomLevel = ZOOM_LEVELS[zoomIndex] * pinchZoom;
+  const isZoomed = zoomLevel > 1;
 
   // Scale factor for positioning elements relative to desktop size
   const scale = pageSize.w / DESKTOP_W;
@@ -183,24 +184,6 @@ function FlipBook({ bookId }) {
     };
   });
 
-  const handlePrev = useCallback(() => {
-    flipBookRef.current?.pageFlip()?.flipPrev();
-  }, []);
-
-  const handleNext = useCallback(() => {
-    flipBookRef.current?.pageFlip()?.flipNext();
-  }, []);
-
-  const handleFirst = useCallback(() => {
-    flipBookRef.current?.pageFlip()?.turnToPage(0);
-  }, []);
-
-  const handleLast = useCallback(() => {
-    const total = pages.length;
-    if (total > 0) {
-      flipBookRef.current?.pageFlip()?.turnToPage(total - 1);
-    }
-  }, [pages.length]);
 
   const onFlip = useCallback((e) => {
     setCurrentPage(e.data);
@@ -208,14 +191,17 @@ function FlipBook({ bookId }) {
 
   const handleZoomIn = useCallback(() => {
     setZoomIndex((prev) => Math.min(prev + 1, ZOOM_LEVELS.length - 1));
+    setPinchZoom(1);
   }, []);
 
   const handleZoomOut = useCallback(() => {
     setZoomIndex((prev) => Math.max(prev - 1, 0));
+    setPinchZoom(1);
   }, []);
 
   const handleZoomReset = useCallback(() => {
     setZoomIndex(DEFAULT_ZOOM_INDEX);
+    setPinchZoom(1);
   }, []);
 
   // Text-to-Speech functions
@@ -303,15 +289,175 @@ function FlipBook({ bookId }) {
   }, []);
 
   const totalPages = pages.length;
+  const scrollContainerRef = useRef(null);
+
+  // Render a single page element (shared between flipbook and scroll reader)
+  const renderPageContent = (page, index) => {
+    const { style: textStyle, layout, coverDesign } = parseFormat(page.format);
+    const img1Src = resolveImageUrl(page.imageUrl);
+    const img2Src = resolveImageUrl(page.imageUrl2);
+    const hasLayout = img1Src || img2Src;
+    const img1Layout = layout.image1 || defaultImgLayout("image1");
+    const img2Layout = layout.image2 || defaultImgLayout("image2");
+    const textLayout = layout.text || { x: 10, y: 10, width: DESKTOP_W - 20, height: 40 };
+
+    const pageNum = page.pageNumber;
+    const isFirstPage = index === 0;
+    const isLastPage = index === pages.length - 1;
+    const isCoverOrBack = isFirstPage || isLastPage || coverDesign != null;
+
+    const pageNumStyle = {
+      position: "absolute",
+      right: 10,
+      fontSize: "0.7rem",
+      color: isCoverOrBack ? "rgba(255,255,255,0.5)" : "#6b7280",
+      pointerEvents: "none",
+      zIndex: 2,
+    };
+
+    const PAGE_MARGIN = 40 * scale;
+    const textOnlyStyle = {
+      ...textStyle,
+      padding: `${PAGE_MARGIN}px`,
+      paddingTop: `${PAGE_MARGIN + 12}px`,
+      paddingBottom: `${PAGE_MARGIN + 12}px`,
+      whiteSpace: "pre-wrap",
+      wordBreak: "break-word",
+      fontSize: textStyle.fontSize || `${Math.max(14, 16 * scale)}px`,
+      lineHeight: 1.75,
+      color: textStyle.color || "#1a1a2e",
+      fontFamily: textStyle.fontFamily || "'Georgia', 'Times New Roman', serif",
+      margin: 0,
+      height: "100%",
+      boxSizing: "border-box",
+      overflow: "hidden",
+      textAlign: "left",
+    };
+
+    if (isCoverOrBack && img1Src) {
+      return (
+        <div key={index} className="card-box flipbook-page" style={{ position: "relative", overflow: "hidden", padding: 0, width: pageSize.w, height: pageSize.h }}>
+          <img
+            src={img1Src}
+            alt={isFirstPage ? "Cover" : isLastPage ? "Back Cover" : strings.flipBook.pageImageAlt(pageNum, 1)}
+            style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", objectFit: "cover" }}
+          />
+        </div>
+      );
+    }
+
+    return (
+      <div key={index} className="card-box flipbook-page" style={{ position: "relative", overflow: "hidden", width: pageSize.w, height: pageSize.h }}>
+        <span style={{ ...pageNumStyle, top: 6 }}>{pageNum}</span>
+        <span style={{ ...pageNumStyle, bottom: 6 }}>{pageNum}</span>
+        {hasLayout ? (
+          <>
+            <div style={{
+              position: "absolute",
+              left: textLayout.x * scale,
+              top: textLayout.y * scale,
+              width: textLayout.width * scale,
+              ...textStyle,
+              fontSize: textStyle.fontSize ? `${parseFloat(textStyle.fontSize) * scale}px` : undefined,
+              whiteSpace: "pre-wrap",
+              wordBreak: "break-word",
+              pointerEvents: "none",
+            }}>
+              {page.content}
+            </div>
+            {img1Src && (
+              <img
+                src={img1Src}
+                alt={strings.flipBook.pageImageAlt(page.pageNumber, 1)}
+                style={{
+                  position: "absolute",
+                  left: img1Layout.x * scale,
+                  top: img1Layout.y * scale,
+                  width: img1Layout.width * scale,
+                  height: img1Layout.height * scale,
+                  objectFit: img1Layout.width >= DESKTOP_W - 20 && img1Layout.height >= DESKTOP_H ? "contain" : "cover",
+                  borderRadius: img1Layout.width >= DESKTOP_W - 20 && img1Layout.height >= DESKTOP_H ? 0 : 4,
+                }}
+              />
+            )}
+            {img2Src && (
+              <img
+                src={img2Src}
+                alt={strings.flipBook.pageImageAlt(page.pageNumber, 2)}
+                style={{
+                  position: "absolute",
+                  left: img2Layout.x * scale,
+                  top: img2Layout.y * scale,
+                  width: img2Layout.width * scale,
+                  height: img2Layout.height * scale,
+                  objectFit: "cover",
+                  borderRadius: 4,
+                }}
+              />
+            )}
+          </>
+        ) : (
+          <div style={textOnlyStyle}>
+            {page.content}
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  // Scroll reader navigation
+  const scrollToPage = useCallback((pageIndex) => {
+    const container = scrollContainerRef.current;
+    if (!container) return;
+    const pageEl = container.children[pageIndex];
+    if (pageEl) {
+      pageEl.scrollIntoView({ behavior: "smooth", block: "start" });
+      setCurrentPage(pageIndex);
+    }
+  }, []);
+
+  const handlePrevPage = useCallback(() => {
+    if (isZoomed) {
+      const prev = Math.max(0, currentPage - 1);
+      scrollToPage(prev);
+    } else {
+      flipBookRef.current?.pageFlip()?.flipPrev();
+    }
+  }, [isZoomed, currentPage, scrollToPage]);
+
+  const handleNextPage = useCallback(() => {
+    if (isZoomed) {
+      const next = Math.min(totalPages - 1, currentPage + 1);
+      scrollToPage(next);
+    } else {
+      flipBookRef.current?.pageFlip()?.flipNext();
+    }
+  }, [isZoomed, currentPage, totalPages, scrollToPage]);
+
+  const handleFirstPage = useCallback(() => {
+    if (isZoomed) {
+      scrollToPage(0);
+    } else {
+      flipBookRef.current?.pageFlip()?.turnToPage(0);
+    }
+  }, [isZoomed, scrollToPage]);
+
+  const handleLastPage = useCallback(() => {
+    if (isZoomed) {
+      scrollToPage(totalPages - 1);
+    } else if (totalPages > 0) {
+      flipBookRef.current?.pageFlip()?.turnToPage(totalPages - 1);
+    }
+  }, [isZoomed, totalPages, scrollToPage]);
 
   // Navigation arrows (shared between normal and fullscreen)
   const navArrows = (
     <div className="flipbook-arrow-row">
-      <button className="flipbook-arrow" onClick={handleFirst} disabled={currentPage === 0} aria-label={strings.flipBook.firstPage}>&#x23EE;</button>
-      <button className="flipbook-arrow" onClick={handlePrev} disabled={currentPage === 0} aria-label={strings.flipBook.prevPage}>&#8249;</button>
+      <button className="flipbook-arrow" onClick={handleFirstPage} disabled={currentPage === 0} aria-label={strings.flipBook.firstPage}>&#x23EE;</button>
+      <button className="flipbook-arrow" onClick={handlePrevPage} disabled={currentPage === 0} aria-label={strings.flipBook.prevPage}>&#8249;</button>
       <span className="flipbook-page-indicator">{currentPage + 1} / {totalPages}</span>
-      <button className="flipbook-arrow" onClick={handleNext} disabled={currentPage >= totalPages - 1} aria-label={strings.flipBook.nextPage}>&#8250;</button>
-      <button className="flipbook-arrow" onClick={handleLast} disabled={currentPage >= totalPages - 1} aria-label={strings.flipBook.lastPage}>&#x23ED;</button>
+      <button className="flipbook-arrow" onClick={handleNextPage} disabled={currentPage >= totalPages - 1} aria-label={strings.flipBook.nextPage}>&#8250;</button>
+      <button className="flipbook-arrow" onClick={handleLastPage} disabled={currentPage >= totalPages - 1} aria-label={strings.flipBook.lastPage}>&#x23ED;</button>
     </div>
   );
 
@@ -361,150 +507,55 @@ function FlipBook({ bookId }) {
             {fullscreenBtn}
           </div>
         )}
-        <div className={`flipbook-zoom-scroll ${zoomLevel > 1 ? "flipbook-zoom-scrollable" : ""}`} ref={fullscreenRef}>
-        <div
-          className="flipbook-zoom-wrapper"
-          style={{
-            transform: `scale(${zoomLevel})`,
-            touchAction: zoomLevel > 1 ? "pan-x pan-y" : "manipulation",
-          }}
-        >
-          <HTMLFlipBook
-            width={pageSize.w}
-            height={pageSize.h}
-            showCover={true}
-            usePortrait={pageSize.isMobile}
-            autoSize={true}
-            showPageCorners={true}
-            swipeDistance={30}
-            mobileScrollSupport={false}
-            ref={flipBookRef}
-            onFlip={onFlip}
-          >
-          {pages.map((page, index) => {
-            const { style: textStyle, layout, coverDesign } = parseFormat(page.format);
-            const img1Src = resolveImageUrl(page.imageUrl);
-            const img2Src = resolveImageUrl(page.imageUrl2);
-            const hasLayout = img1Src || img2Src;
-            const img1Layout = layout.image1 || defaultImgLayout("image1");
-            const img2Layout = layout.image2 || defaultImgLayout("image2");
-            const textLayout = layout.text || { x: 10, y: 10, width: DESKTOP_W - 20, height: 40 };
 
-            const pageNum = page.pageNumber;
-            const isFirstPage = index === 0;
-            const isLastPage = index === pages.length - 1;
-            const isCoverOrBack = isFirstPage || isLastPage || coverDesign != null;
-
-            const pageNumStyle = {
-              position: "absolute",
-              right: 10,
-              fontSize: "0.7rem",
-              color: isCoverOrBack ? "rgba(255,255,255,0.5)" : "#6b7280",
-              pointerEvents: "none",
-              zIndex: 2,
-            };
-
-            // Text-only page margins (print-friendly: ~1 inch = 72px equivalent)
-            const PAGE_MARGIN = 40 * scale;
-            const textOnlyStyle = {
-              ...textStyle,
-              padding: `${PAGE_MARGIN}px`,
-              paddingTop: `${PAGE_MARGIN + 12}px`,
-              paddingBottom: `${PAGE_MARGIN + 12}px`,
-              whiteSpace: "pre-wrap",
-              wordBreak: "break-word",
-              fontSize: textStyle.fontSize || `${Math.max(14, 16 * scale)}px`,
-              lineHeight: 1.75,
-              color: textStyle.color || "#1a1a2e",
-              fontFamily: textStyle.fontFamily || "'Georgia', 'Times New Roman', serif",
-              margin: 0,
-              height: "100%",
-              boxSizing: "border-box",
-              overflow: "hidden",
-              textAlign: "left",
-            };
-
-            // Cover/back pages: render image as full page
-            if (isCoverOrBack && img1Src) {
-              return (
-                <div key={index} className="card-box flipbook-page" style={{ position: "relative", overflow: "hidden", padding: 0 }}>
-                  <img
-                    src={img1Src}
-                    alt={isFirstPage ? "Cover" : isLastPage ? "Back Cover" : strings.flipBook.pageImageAlt(pageNum, 1)}
-                    style={{
-                      position: "absolute",
-                      top: 0,
-                      left: 0,
-                      width: "100%",
-                      height: "100%",
-                      objectFit: "cover",
-                    }}
-                  />
-                </div>
-              );
-            }
-
-            return (
-              <div key={index} className="card-box flipbook-page" style={{ position: "relative", overflow: "hidden" }}>
-                <span style={{ ...pageNumStyle, top: 6 }}>{pageNum}</span>
-                <span style={{ ...pageNumStyle, bottom: 6 }}>{pageNum}</span>
-                {hasLayout ? (
-                  <>
-                    <div style={{
-                      position: "absolute",
-                      left: textLayout.x * scale,
-                      top: textLayout.y * scale,
-                      width: textLayout.width * scale,
-                      ...textStyle,
-                      fontSize: textStyle.fontSize ? `${parseFloat(textStyle.fontSize) * scale}px` : undefined,
-                      whiteSpace: "pre-wrap",
-                      wordBreak: "break-word",
-                      pointerEvents: "none",
-                    }}>
-                      {page.content}
-                    </div>
-                    {img1Src && (
-                      <img
-                        src={img1Src}
-                        alt={strings.flipBook.pageImageAlt(page.pageNumber, 1)}
-                        style={{
-                          position: "absolute",
-                          left: img1Layout.x * scale,
-                          top: img1Layout.y * scale,
-                          width: img1Layout.width * scale,
-                          height: img1Layout.height * scale,
-                          objectFit: img1Layout.width >= DESKTOP_W - 20 && img1Layout.height >= DESKTOP_H ? "contain" : "cover",
-                          borderRadius: img1Layout.width >= DESKTOP_W - 20 && img1Layout.height >= DESKTOP_H ? 0 : 4,
-                        }}
-                      />
-                    )}
-                    {img2Src && (
-                      <img
-                        src={img2Src}
-                        alt={strings.flipBook.pageImageAlt(page.pageNumber, 2)}
-                        style={{
-                          position: "absolute",
-                          left: img2Layout.x * scale,
-                          top: img2Layout.y * scale,
-                          width: img2Layout.width * scale,
-                          height: img2Layout.height * scale,
-                          objectFit: "cover",
-                          borderRadius: 4,
-                        }}
-                      />
-                    )}
-                  </>
-                ) : (
-                  <div style={textOnlyStyle}>
-                    {page.content}
+        {isZoomed ? (
+          /* Scroll Reader Mode — replaces flipbook when zoomed */
+          <div className="flipbook-scroll-reader" ref={fullscreenRef}>
+            <div className="flipbook-scroll-reader-inner" ref={scrollContainerRef}>
+              {pages.map((page, index) => (
+                <div
+                  key={index}
+                  className="flipbook-scroll-page"
+                  style={{
+                    /* Outer wrapper sized to the scaled dimensions so layout reserves correct space */
+                    width: pageSize.w * zoomLevel,
+                    height: pageSize.h * zoomLevel + 16,
+                  }}
+                >
+                  <div style={{
+                    transform: `scale(${zoomLevel})`,
+                    transformOrigin: "top left",
+                    width: pageSize.w,
+                    height: pageSize.h,
+                  }}>
+                    {renderPageContent(page, index)}
                   </div>
-                )}
-              </div>
-            );
-          })}
-          </HTMLFlipBook>
-        </div>
-        </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : (
+          /* Normal Flipbook Mode */
+          <div className="flipbook-zoom-scroll" ref={fullscreenRef}>
+            <div className="flipbook-zoom-wrapper">
+              <HTMLFlipBook
+                width={pageSize.w}
+                height={pageSize.h}
+                showCover={true}
+                usePortrait={pageSize.isMobile}
+                autoSize={true}
+                showPageCorners={true}
+                swipeDistance={30}
+                mobileScrollSupport={false}
+                ref={flipBookRef}
+                onFlip={onFlip}
+              >
+                {pages.map((page, index) => renderPageContent(page, index))}
+              </HTMLFlipBook>
+            </div>
+          </div>
+        )}
+
         <div className="flipbook-copyright">
           &copy; {new Date().getFullYear()} @chitravsharma &mdash; SaatSaheli. All rights reserved.
         </div>

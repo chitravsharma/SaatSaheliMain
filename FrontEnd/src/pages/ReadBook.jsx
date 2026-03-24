@@ -21,6 +21,7 @@ function ReadBook() {
   const [comments, setComments] = useState([]);
   const [newComment, setNewComment] = useState("");
   const [showComments, setShowComments] = useState(false);
+  const [shareCopied, setShareCopied] = useState(false);
   const commentInputRef = useRef(null);
 
   // Fetch book info
@@ -100,6 +101,21 @@ function ReadBook() {
     } catch { /* ignore */ }
   };
 
+  const handleShare = async () => {
+    const url = window.location.href;
+    const title = book?.title || "Book";
+    const text = `Check out "${title}" on Saat Saheli!`;
+    if (navigator.share) {
+      try {
+        await navigator.share({ title, text, url });
+      } catch { /* user cancelled */ }
+    } else {
+      await navigator.clipboard.writeText(`${text}\n${url}`);
+      setShareCopied(true);
+      setTimeout(() => setShareCopied(false), 2000);
+    }
+  };
+
   const handleDeleteComment = async (commentId) => {
     try {
       await axios.delete(`${API}/api/social/comment/${commentId}?userId=${user.userId}`);
@@ -126,6 +142,10 @@ function ReadBook() {
           </button>
           <button className={`ss-btn-icon ${favorited ? "active" : ""}`} onClick={handleFavorite} title="Favorite">
             <svg width="20" height="20" viewBox="0 0 24 24" fill={favorited ? "#d4a017" : "none"} stroke={favorited ? "#d4a017" : "currentColor"} strokeWidth="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+          </button>
+          <button className="ss-btn-icon" onClick={handleShare} title="Share">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+            {shareCopied && <span className="art-copied-tooltip">Copied!</span>}
           </button>
         </div>
       </div>

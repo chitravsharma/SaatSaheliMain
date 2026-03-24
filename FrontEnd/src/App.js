@@ -62,6 +62,7 @@ function App() {
           <Route path="/admin" element={<ProtectedRoute requiredRole="ADMIN"><AdminDashboard /></ProtectedRoute>} />
           <Route path="/chat" element={<ProtectedRoute><Chat /></ProtectedRoute>} />
           <Route path="/articles" element={<Articles />} />
+          <Route path="/articles/:contentType" element={<Articles />} />
           <Route path="/gallery/:galleryId" element={<GalleryView />} />
           <Route path="/pricing" element={<Pricing />} />
           <Route path="/checkout" element={<ProtectedRoute><Checkout /></ProtectedRoute>} />
