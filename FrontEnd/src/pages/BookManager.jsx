@@ -758,6 +758,34 @@ function BookManager() {
             <p className="bm-help-contact">Need more help? Contact us at <strong>support@saatsaheli.com</strong></p>
           </div>
         )}
+
+        {/* Support / Appointment Google Form */}
+        <div className="bm-support-form-section">
+          <h3>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" strokeWidth="2" style={{ verticalAlign: "middle", marginRight: 6 }}>
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+            </svg>
+            Need Help with Page Design? / पेज डिज़ाइन में मदद चाहिए?
+          </h3>
+          <p className="bm-support-desc">
+            Request support or set up an appointment for page design help. Our team will get back to you via the details you provide.
+          </p>
+          <iframe
+            src="https://docs.google.com/forms/d/e/YOUR_GOOGLE_FORM_ID/viewform?embedded=true"
+            width="100%"
+            height="600"
+            frameBorder="0"
+            marginHeight="0"
+            marginWidth="0"
+            title="Support & Appointment Form"
+            className="bm-google-form-iframe"
+          >
+            Loading form...
+          </iframe>
+          <p className="bm-support-note">
+            <em>Responses are saved to our support sheet. We'll contact you within 24-48 hours.</em>
+          </p>
+        </div>
       </div>
     );
   }

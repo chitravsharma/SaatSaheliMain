@@ -1,5 +1,6 @@
 package com.SaatSaheli.spring.controller;
 
+import com.SaatSaheli.spring.model.Article;
 import com.SaatSaheli.spring.model.Book;
 import com.SaatSaheli.spring.model.Login;
 import com.SaatSaheli.spring.model.User;
@@ -7,7 +8,9 @@ import com.SaatSaheli.spring.repository.ArticleRepository;
 import com.SaatSaheli.spring.repository.BookRepository;
 import com.SaatSaheli.spring.repository.GalleryRepository;
 import com.SaatSaheli.spring.repository.LoginRepository;
+import com.SaatSaheli.spring.repository.PodcastRepository;
 import com.SaatSaheli.spring.repository.UserRepository;
+import com.SaatSaheli.spring.service.ArticleService;
 import com.SaatSaheli.spring.service.BookService;
 import com.SaatSaheli.spring.util.RoleUtil;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,6 +43,12 @@ public class AdminController {
 
     @Autowired
     private ArticleRepository articleRepo;
+
+    @Autowired
+    private ArticleService articleService;
+
+    @Autowired
+    private PodcastRepository podcastRepo;
 
     /** GET /api/admin/users — List all users with login info */
     @GetMapping("/users")
@@ -283,6 +292,103 @@ public class AdminController {
         }
     }
 
+    // ─── Article Admin Endpoints ───
+
+    /** GET /api/admin/articles — List all articles */
+    @GetMapping("/articles")
+    public ResponseEntity<?> listArticles(@RequestHeader("X-User-Id") String callerUserId) {
+        try {
+            User caller = verifyCaller(callerUserId, false);
+            if (caller == null) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorMap("Admin access required"));
+            }
+            List<Article> articles = articleRepo.findAllByOrderByCreatedDateDesc();
+            // Enrich with author names
+            Map<Long, User> userMap = userRepo.findAll().stream()
+                    .collect(Collectors.toMap(User::getId, u -> u, (a, b) -> a));
+            for (Article article : articles) {
+                if (article.getUserId() != null && userMap.containsKey(article.getUserId())) {
+                    User u = userMap.get(article.getUserId());
+                    String name = (u.getDisplayName() != null && !u.getDisplayName().isEmpty())
+                            ? u.getDisplayName()
+                            : ((u.getFirstName() != null ? u.getFirstName() : "")
+                            + (u.getLastName() != null ? " " + u.getLastName() : "")).trim();
+                    article.setAuthorName(name);
+                }
+            }
+            return ResponseEntity.ok(articles);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(errorMap("Failed to list articles: " + e.getMessage()));
+        }
+    }
+
+    /** DELETE /api/admin/articles/{articleId} — Delete any article */
+    @DeleteMapping("/articles/{articleId}")
+    public ResponseEntity<?> deleteArticle(
+            @PathVariable Long articleId,
+            @RequestHeader("X-User-Id") String callerUserId) {
+        try {
+            User caller = verifyCaller(callerUserId, false);
+            if (caller == null) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorMap("Admin access required"));
+            }
+            articleRepo.deleteById(articleId);
+            return ResponseEntity.ok(Map.of("message", "Article deleted"));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(errorMap("Failed to delete article: " + e.getMessage()));
+        }
+    }
+
+    /** PUT /api/admin/articles/{articleId}/status — Change article status (PUBLISHED/DRAFT) */
+    @PutMapping("/articles/{articleId}/status")
+    public ResponseEntity<?> changeArticleStatus(
+            @PathVariable Long articleId,
+            @RequestBody Map<String, String> body,
+            @RequestHeader("X-User-Id") String callerUserId) {
+        try {
+            User caller = verifyCaller(callerUserId, false);
+            if (caller == null) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorMap("Admin access required"));
+            }
+            String newStatus = body.get("status");
+            if (newStatus == null) {
+                return ResponseEntity.badRequest().body(errorMap("Status is required"));
+            }
+            Optional<Article> opt = articleRepo.findById(articleId);
+            if (opt.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorMap("Article not found"));
+            }
+            Article article = opt.get();
+            article.setStatus(newStatus.toUpperCase());
+            article.setModifiedDate(java.time.LocalDateTime.now());
+            articleRepo.save(article);
+            return ResponseEntity.ok(article);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(errorMap("Failed to change article status: " + e.getMessage()));
+        }
+    }
+
+    /** DELETE /api/admin/articles/purge — Permanently delete all DRAFT articles (SUPER_ADMIN only) */
+    @DeleteMapping("/articles/purge")
+    public ResponseEntity<?> purgeDraftArticles(@RequestHeader("X-User-Id") String callerUserId) {
+        try {
+            User caller = verifyCaller(callerUserId, true);
+            if (caller == null) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorMap("Super Admin access required"));
+            }
+            List<Article> drafts = articleRepo.findByStatusOrderByCreatedDateDesc("DRAFT");
+            int count = drafts.size();
+            articleRepo.deleteAll(drafts);
+            return ResponseEntity.ok(Map.of("message", "Permanently deleted " + count + " draft articles", "count", count));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(errorMap("Failed to purge articles: " + e.getMessage()));
+        }
+    }
+
     /** GET /api/admin/stats — Dashboard stats */
     @GetMapping("/stats")
     public ResponseEntity<?> getStats(@RequestHeader("X-User-Id") String callerUserId) {
@@ -295,6 +401,7 @@ public class AdminController {
             List<User> users = userRepo.findAll();
             List<Login> logins = loginRepo.findAll();
             List<Book> books = bookService.getAllBooks();
+            List<Article> articles = articleRepo.findAllByOrderByCreatedDateDesc();
 
             long totalUsers = users.size();
             long activeUsers = logins.stream().filter(l -> "ACTIVE".equalsIgnoreCase(l.getStatus())).count();
@@ -304,6 +411,17 @@ public class AdminController {
             long draftBooks = books.stream().filter(b -> "DRAFT".equalsIgnoreCase(b.getStatus())).count();
             long adminCount = users.stream().filter(u -> RoleUtil.isAdmin(u.getRole())).count();
 
+            // Article stats
+            long totalArticles = articles.size();
+            long publishedArticles = articles.stream().filter(a -> "PUBLISHED".equalsIgnoreCase(a.getStatus())).count();
+            long draftArticles = articles.stream().filter(a -> "DRAFT".equalsIgnoreCase(a.getStatus())).count();
+            long totalBlogs = articles.stream().filter(a -> "Blog".equalsIgnoreCase(a.getContentType())).count();
+            long totalPoems = articles.stream().filter(a -> "Poetry".equalsIgnoreCase(a.getContentType())).count();
+            long totalArticleType = articles.stream().filter(a -> "Article".equalsIgnoreCase(a.getContentType())).count();
+
+            // Podcast stats
+            long totalPodcasts = podcastRepo.count();
+
             Map<String, Object> stats = new LinkedHashMap<>();
             stats.put("totalUsers", totalUsers);
             stats.put("activeUsers", activeUsers);
@@ -312,6 +430,13 @@ public class AdminController {
             stats.put("totalBooks", totalBooks);
             stats.put("publishedBooks", publishedBooks);
             stats.put("draftBooks", draftBooks);
+            stats.put("totalArticles", totalArticles);
+            stats.put("publishedArticles", publishedArticles);
+            stats.put("draftArticles", draftArticles);
+            stats.put("totalBlogs", totalBlogs);
+            stats.put("totalPoems", totalPoems);
+            stats.put("totalArticleType", totalArticleType);
+            stats.put("totalPodcasts", totalPodcasts);
 
             return ResponseEntity.ok(stats);
         } catch (Exception e) {

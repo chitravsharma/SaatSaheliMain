@@ -27,6 +27,7 @@ function Home() {
   const [userLikes, setUserLikes] = useState({});
   const [userFavorites, setUserFavorites] = useState({});
   const [loading, setLoading] = useState(true);
+  const [shareCopiedId, setShareCopiedId] = useState(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -133,6 +134,20 @@ function Home() {
     } catch { /* ignore */ }
   };
 
+  const handleShare = async (article) => {
+    const typePath = article.contentType === "Poetry" ? "poems"
+      : article.contentType === "Blog" ? "blogs" : "articles";
+    const url = `${window.location.origin}/#/articles/${typePath}`;
+    const text = `Check out "${article.headline}" on Saat Saheli!`;
+    if (navigator.share) {
+      try { await navigator.share({ title: article.headline, text, url }); } catch { /* cancelled */ }
+    } else {
+      await navigator.clipboard.writeText(`${text}\n${url}`);
+      setShareCopiedId(article.id);
+      setTimeout(() => setShareCopiedId(null), 2000);
+    }
+  };
+
   const categoryIcons = {
     Art: "\uD83C\uDFA8",
     Music: "\uD83C\uDFB5",
@@ -234,6 +249,20 @@ function Home() {
         </div>
       )}
 
+      {/* Ad Banner 1 */}
+      {!loading && (
+        <div className="home-ad-section">
+          <div className="home-ad-banner">
+            <span className="home-ad-label">Advertisement</span>
+            <div className="home-ad-content">
+              <h3>Promote Your Creative Work!</h3>
+              <p>Reach thousands of readers and creators. Advertise your books, art, and services on Saat Saheli.</p>
+              <Link to="/contacts" className="home-ad-cta">Contact Us for Advertising</Link>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* 2. Photo Galleries */}
       {!loading && galleries.length > 0 && (
         <div className="home-section">
@@ -292,24 +321,53 @@ function Home() {
           <h2 className="home-section-heading">Blogs & Articles</h2>
           <hr className="home-section-divider" />
           <div className="home-articles-row">
-            {recentArticles.map((article) => (
-              <Link key={article.id} to="/articles" className="home-article-card">
-                {article.imageUrl && (
-                  <img src={resolveImageUrl(article.imageUrl)} alt={article.headline} className="home-article-img" />
-                )}
-                <div className="home-article-info">
-                  <span className={`home-article-type home-article-type-${(article.contentType || "article").toLowerCase()}`}>
-                    {article.contentType || "Article"}
-                  </span>
-                  <span className="home-article-title">{article.headline}</span>
-                  {article.authorName && <span className="home-article-author">by {article.authorName}</span>}
-                  <span className="home-article-date">{new Date(article.createdDate).toLocaleDateString()}</span>
+            {recentArticles.map((article) => {
+              const typePath = article.contentType === "Poetry" ? "poems"
+                : article.contentType === "Blog" ? "blogs"
+                : "articles";
+              return (
+                <div key={article.id} className="home-article-card">
+                  <Link to={`/articles/${typePath}`} className="home-article-link">
+                    {article.imageUrl && (
+                      <img src={resolveImageUrl(article.imageUrl)} alt={article.headline} className="home-article-img" />
+                    )}
+                    <div className="home-article-info">
+                      <span className={`home-article-type home-article-type-${(article.contentType || "article").toLowerCase()}`}>
+                        {article.contentType || "Article"}
+                      </span>
+                      <span className="home-article-title">{article.headline}</span>
+                      {article.authorName && <span className="home-article-author">by {article.authorName}</span>}
+                      <span className="home-article-date">{new Date(article.createdDate).toLocaleDateString()}</span>
+                    </div>
+                  </Link>
+                  <div className="home-card-social">
+                    <button className="ss-btn-icon-sm" onClick={() => handleShare(article)} title="Share">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+                      {shareCopiedId === article.id ? <span>Copied!</span> : <span>Share</span>}
+                    </button>
+                  </div>
                 </div>
-              </Link>
-            ))}
+              );
+            })}
           </div>
           <div className="home-section-more">
-            <Link to="/articles" className="ss-btn ss-btn-outline">View All Blogs & Articles</Link>
+            <Link to="/articles/poems" className="ss-btn ss-btn-outline" style={{ marginRight: 8 }}>Poems</Link>
+            <Link to="/articles/blogs" className="ss-btn ss-btn-outline" style={{ marginRight: 8 }}>Blogs</Link>
+            <Link to="/articles/articles" className="ss-btn ss-btn-outline">Articles</Link>
+          </div>
+        </div>
+      )}
+
+      {/* Ad Banner 2 - Bottom */}
+      {!loading && (
+        <div className="home-ad-section">
+          <div className="home-ad-banner home-ad-banner-alt">
+            <span className="home-ad-label">Sponsored</span>
+            <div className="home-ad-content">
+              <h3>Join Saat Saheli Creator Program</h3>
+              <p>Publish your books, podcasts, and artwork. Upgrade to Creator plan for premium publishing tools and monetization.</p>
+              <Link to="/pricing" className="home-ad-cta">Explore Plans</Link>
+            </div>
           </div>
         </div>
       )}

@@ -15,11 +15,61 @@ const AdminDashboard = () => {
     const [stats, setStats] = useState(null);
     const [users, setUsers] = useState([]);
     const [books, setBooks] = useState([]);
+    const [articles, setArticles] = useState([]);
     const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState("");
     const [userSearch, setUserSearch] = useState("");
+    const [articleSearch, setArticleSearch] = useState("");
+    const [articleTypeFilter, setArticleTypeFilter] = useState("");
+    const [articleStatusFilter, setArticleStatusFilter] = useState("");
     const [resetPasswordUserId, setResetPasswordUserId] = useState(null);
     const [resetNewPassword, setResetNewPassword] = useState("");
+
+    // Maintenance window state
+    const [maintenanceWindows, setMaintenanceWindows] = useState(() => {
+        try {
+            return JSON.parse(localStorage.getItem("ss_maintenance_windows") || "[]");
+        } catch { return []; }
+    });
+    const [mwDate, setMwDate] = useState("");
+    const [mwStartTime, setMwStartTime] = useState("");
+    const [mwEndTime, setMwEndTime] = useState("");
+    const [mwDescription, setMwDescription] = useState("");
+    const [mwActive, setMwActive] = useState(true);
+
+    const saveMaintenanceWindows = (windows) => {
+        setMaintenanceWindows(windows);
+        localStorage.setItem("ss_maintenance_windows", JSON.stringify(windows));
+    };
+
+    const addMaintenanceWindow = () => {
+        if (!mwDate || !mwStartTime || !mwEndTime) {
+            setMessage("Please fill in date, start time, and end time");
+            return;
+        }
+        const newWindow = {
+            id: Date.now(),
+            date: mwDate,
+            startTime: mwStartTime,
+            endTime: mwEndTime,
+            description: mwDescription || "Scheduled maintenance",
+            active: mwActive,
+        };
+        saveMaintenanceWindows([...maintenanceWindows, newWindow]);
+        setMwDate(""); setMwStartTime(""); setMwEndTime(""); setMwDescription(""); setMwActive(true);
+        setMessage("Maintenance window added");
+    };
+
+    const removeMaintenanceWindow = (id) => {
+        saveMaintenanceWindows(maintenanceWindows.filter(w => w.id !== id));
+        setMessage("Maintenance window removed");
+    };
+
+    const toggleMaintenanceActive = (id) => {
+        saveMaintenanceWindows(maintenanceWindows.map(w =>
+            w.id === id ? { ...w, active: !w.active } : w
+        ));
+    };
 
     const headers = { "X-User-Id": String(user?.userId || "") };
 
@@ -48,6 +98,15 @@ const AdminDashboard = () => {
         setLoading(false);
     }, [user?.userId]);
 
+    const fetchArticles = useCallback(async () => {
+        setLoading(true);
+        try {
+            const res = await axios.get(`${API}/api/admin/articles`, { headers });
+            setArticles(Array.isArray(res.data) ? res.data : []);
+        } catch { /* ignore */ }
+        setLoading(false);
+    }, [user?.userId]);
+
     useEffect(() => {
         fetchStats();
     }, [fetchStats]);
@@ -55,7 +114,8 @@ const AdminDashboard = () => {
     useEffect(() => {
         if (tab === "users") fetchUsers();
         if (tab === "books") fetchBooks();
-    }, [tab, fetchUsers, fetchBooks]);
+        if (tab === "articles") fetchArticles();
+    }, [tab, fetchUsers, fetchBooks, fetchArticles]);
 
     const changeRole = async (userId, newRole) => {
         try {
@@ -134,6 +194,66 @@ const AdminDashboard = () => {
             setMessage("Failed to purge book");
         }
     };
+
+    // ─── Article Admin Actions ───
+    const deleteArticle = async (articleId) => {
+        if (!window.confirm("Delete this article/blog/poem?")) return;
+        try {
+            await axios.delete(`${API}/api/admin/articles/${articleId}`, { headers });
+            setMessage("Article deleted");
+            fetchArticles();
+            fetchStats();
+        } catch {
+            setMessage("Failed to delete article");
+        }
+    };
+
+    const changeArticleStatus = async (articleId, newStatus) => {
+        try {
+            await axios.put(`${API}/api/admin/articles/${articleId}/status`, { status: newStatus }, { headers });
+            setMessage(`Article ${newStatus === "PUBLISHED" ? "published" : "unpublished"}`);
+            fetchArticles();
+            fetchStats();
+        } catch {
+            setMessage("Failed to change article status");
+        }
+    };
+
+    const purgeAllDraftArticles = async () => {
+        if (!window.confirm("Permanently delete ALL draft articles? This cannot be undone.")) return;
+        try {
+            const res = await axios.delete(`${API}/api/admin/articles/purge`, { headers });
+            setMessage(`Purged ${res.data.count} draft articles permanently.`);
+            fetchArticles();
+            fetchStats();
+        } catch {
+            setMessage("Failed to purge draft articles");
+        }
+    };
+
+    const handleArticleAction = (articleId, action, status) => {
+        switch (action) {
+            case "publish": changeArticleStatus(articleId, "PUBLISHED"); break;
+            case "unpublish": changeArticleStatus(articleId, "DRAFT"); break;
+            case "delete": deleteArticle(articleId); break;
+            default: break;
+        }
+    };
+
+    // Filter articles
+    const filteredArticles = articles.filter((a) => {
+        if (articleTypeFilter && a.contentType !== articleTypeFilter) return false;
+        if (articleStatusFilter && a.status !== articleStatusFilter) return false;
+        if (!articleSearch.trim()) return true;
+        const q = articleSearch.toLowerCase();
+        return (
+            (a.headline || "").toLowerCase().includes(q) ||
+            (a.authorName || "").toLowerCase().includes(q) ||
+            (a.contentType || "").toLowerCase().includes(q) ||
+            (a.category || "").toLowerCase().includes(q) ||
+            String(a.id).includes(q)
+        );
+    });
 
     const handleUserAction = async (userId, action) => {
         switch (action) {
@@ -214,6 +334,12 @@ const AdminDashboard = () => {
                 <button className={tab === "books" ? "active" : ""} onClick={() => setTab("books")}>
                     {s.tabBooks || "Books"}
                 </button>
+                <button className={tab === "articles" ? "active" : ""} onClick={() => setTab("articles")}>
+                    Articles
+                </button>
+                <button className={tab === "maintenance" ? "active" : ""} onClick={() => setTab("maintenance")}>
+                    Maintenance
+                </button>
             </div>
 
             {tab === "stats" && stats && (
@@ -245,6 +371,26 @@ const AdminDashboard = () => {
                     <div className="stat-card">
                         <div className="stat-value">{stats.draftBooks}</div>
                         <div className="stat-label">{s.draftBooks || "Drafts"}</div>
+                    </div>
+                    <div className="stat-card">
+                        <div className="stat-value">{stats.totalArticles || 0}</div>
+                        <div className="stat-label">Total Articles</div>
+                    </div>
+                    <div className="stat-card">
+                        <div className="stat-value">{stats.totalBlogs || 0}</div>
+                        <div className="stat-label">Blogs</div>
+                    </div>
+                    <div className="stat-card">
+                        <div className="stat-value">{stats.totalPoems || 0}</div>
+                        <div className="stat-label">Poems</div>
+                    </div>
+                    <div className="stat-card">
+                        <div className="stat-value">{stats.totalArticleType || 0}</div>
+                        <div className="stat-label">Articles</div>
+                    </div>
+                    <div className="stat-card">
+                        <div className="stat-value">{stats.totalPodcasts || 0}</div>
+                        <div className="stat-label">Podcasts</div>
                     </div>
                 </div>
             )}
@@ -428,6 +574,229 @@ const AdminDashboard = () => {
                             </tbody>
                         </table>
                     )}
+                </div>
+            )}
+
+            {/* Articles Tab */}
+            {tab === "articles" && (
+                <div className="admin-table-wrap">
+                    {/* Search and filters */}
+                    <div className="admin-search-bar">
+                        <input
+                            type="text"
+                            className="admin-search-input"
+                            placeholder="Search by title, author, category..."
+                            value={articleSearch}
+                            onChange={(e) => setArticleSearch(e.target.value)}
+                        />
+                        <select
+                            className="admin-action-select"
+                            value={articleTypeFilter}
+                            onChange={(e) => setArticleTypeFilter(e.target.value)}
+                        >
+                            <option value="">All Types</option>
+                            <option value="Blog">Blogs</option>
+                            <option value="Article">Articles</option>
+                            <option value="Poetry">Poems</option>
+                        </select>
+                        <select
+                            className="admin-action-select"
+                            value={articleStatusFilter}
+                            onChange={(e) => setArticleStatusFilter(e.target.value)}
+                        >
+                            <option value="">All Status</option>
+                            <option value="PUBLISHED">Published</option>
+                            <option value="DRAFT">Draft</option>
+                        </select>
+                        {(articleSearch || articleTypeFilter || articleStatusFilter) && (
+                            <span className="admin-search-count">
+                                {filteredArticles.length} of {articles.length} items
+                            </span>
+                        )}
+                    </div>
+
+                    {/* Purge bar for Super Admin */}
+                    {isSuperAdmin && (
+                        <div className="admin-purge-bar">
+                            <button className="admin-purge-btn" onClick={purgeAllDraftArticles}>
+                                Permanently Delete All Draft Articles
+                            </button>
+                            <span className="admin-purge-note">
+                                This will permanently remove all articles, blogs, and poems with &quot;DRAFT&quot; status.
+                            </span>
+                        </div>
+                    )}
+
+                    {loading ? <p>{strings.common.loading}</p> : (
+                        <table className="admin-table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Title</th>
+                                    <th>Type</th>
+                                    <th>Category</th>
+                                    <th>Author</th>
+                                    <th>Status</th>
+                                    <th>Created</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {filteredArticles.map((a) => (
+                                    <tr key={a.id}>
+                                        <td>{a.id}</td>
+                                        <td className="admin-article-title">{a.headline}</td>
+                                        <td>
+                                            <span className={`admin-type-badge admin-type-${(a.contentType || "article").toLowerCase()}`}>
+                                                {a.contentType === "Poetry" ? "Poem" : a.contentType || "Article"}
+                                            </span>
+                                        </td>
+                                        <td>{a.category || "\u2014"}</td>
+                                        <td>{a.authorName || "\u2014"}</td>
+                                        <td>
+                                            <span className={`status-badge status-${(a.status || "").toLowerCase()}`}>
+                                                {a.status}
+                                            </span>
+                                        </td>
+                                        <td>{a.createdDate ? new Date(a.createdDate).toLocaleDateString() : "\u2014"}</td>
+                                        <td>
+                                            <select
+                                                className="admin-action-select"
+                                                value=""
+                                                onChange={(e) => { handleArticleAction(a.id, e.target.value, a.status); e.target.value = ""; }}
+                                            >
+                                                <option value="" disabled>Action...</option>
+                                                {a.status !== "PUBLISHED" && (
+                                                    <option value="publish">Publish</option>
+                                                )}
+                                                {a.status !== "DRAFT" && (
+                                                    <option value="unpublish">Unpublish</option>
+                                                )}
+                                                <option value="delete">Delete</option>
+                                            </select>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    )}
+                </div>
+            )}
+
+            {/* Maintenance Tab */}
+            {tab === "maintenance" && (
+                <div className="admin-maintenance">
+                    <h2>Maintenance Windows / Weekend Outage Schedule</h2>
+                    <p className="admin-maint-desc">
+                        Schedule planned maintenance or weekend outage windows. Active windows will be displayed to users as a banner notification.
+                    </p>
+
+                    {/* Add new window form */}
+                    <div className="admin-maint-form">
+                        <h3>Add Maintenance Window</h3>
+                        <div className="admin-maint-fields">
+                            <div className="admin-maint-field">
+                                <label>Date</label>
+                                <input type="date" value={mwDate} onChange={e => setMwDate(e.target.value)} className="bm-input" />
+                            </div>
+                            <div className="admin-maint-field">
+                                <label>Start Time</label>
+                                <input type="time" value={mwStartTime} onChange={e => setMwStartTime(e.target.value)} className="bm-input" />
+                            </div>
+                            <div className="admin-maint-field">
+                                <label>End Time</label>
+                                <input type="time" value={mwEndTime} onChange={e => setMwEndTime(e.target.value)} className="bm-input" />
+                            </div>
+                            <div className="admin-maint-field admin-maint-field-wide">
+                                <label>Description</label>
+                                <input type="text" value={mwDescription} onChange={e => setMwDescription(e.target.value)} placeholder="e.g. Database maintenance, server upgrade..." className="bm-input" />
+                            </div>
+                            <div className="admin-maint-field">
+                                <label>
+                                    <input type="checkbox" checked={mwActive} onChange={e => setMwActive(e.target.checked)} />
+                                    {" "}Active (show to users)
+                                </label>
+                            </div>
+                        </div>
+                        <button className="bm-btn bm-btn-create" onClick={addMaintenanceWindow}>Add Window</button>
+                    </div>
+
+                    {/* Existing windows */}
+                    <div className="admin-maint-list">
+                        <h3>Scheduled Windows ({maintenanceWindows.length})</h3>
+                        {maintenanceWindows.length === 0 ? (
+                            <p className="admin-maint-empty">No maintenance windows scheduled.</p>
+                        ) : (
+                            <table className="admin-table">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Time</th>
+                                        <th>Description</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {maintenanceWindows
+                                        .sort((a, b) => a.date.localeCompare(b.date))
+                                        .map(w => (
+                                        <tr key={w.id}>
+                                            <td>{new Date(w.date + "T00:00").toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" })}</td>
+                                            <td>{w.startTime} - {w.endTime}</td>
+                                            <td>{w.description}</td>
+                                            <td>
+                                                <span className={`admin-maint-status ${w.active ? "admin-maint-active" : "admin-maint-inactive"}`}>
+                                                    {w.active ? "Active" : "Inactive"}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <button className="bm-btn bm-btn-sm bm-btn-edit" onClick={() => toggleMaintenanceActive(w.id)}>
+                                                    {w.active ? "Deactivate" : "Activate"}
+                                                </button>
+                                                <button className="bm-btn bm-btn-sm bm-btn-delete" onClick={() => removeMaintenanceWindow(w.id)}>
+                                                    Remove
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        )}
+                    </div>
+
+                    {/* Upcoming weekends helper */}
+                    <div className="admin-maint-weekends">
+                        <h3>Quick Add — Upcoming Weekends</h3>
+                        <div className="admin-maint-weekend-btns">
+                            {[0, 1, 2, 3].map(weekOffset => {
+                                const now = new Date();
+                                const dayOfWeek = now.getDay();
+                                const daysToSat = (6 - dayOfWeek + 7 * weekOffset) % 7 || 7 * (weekOffset || 1);
+                                const sat = new Date(now);
+                                sat.setDate(now.getDate() + daysToSat);
+                                const sun = new Date(sat);
+                                sun.setDate(sat.getDate() + 1);
+                                const satStr = sat.toISOString().split("T")[0];
+                                const sunStr = sun.toISOString().split("T")[0];
+                                const label = `${sat.toLocaleDateString(undefined, { month: "short", day: "numeric" })} - ${sun.toLocaleDateString(undefined, { month: "short", day: "numeric" })}`;
+                                return (
+                                    <button
+                                        key={weekOffset}
+                                        className="bm-btn bm-btn-edit bm-btn-sm"
+                                        onClick={() => {
+                                            setMwDate(satStr);
+                                            setMwStartTime("00:00");
+                                            setMwEndTime("23:59");
+                                            setMwDescription("Weekend maintenance window");
+                                        }}
+                                    >
+                                        {label}
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    </div>
                 </div>
             )}
         </div>

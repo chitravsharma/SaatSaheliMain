@@ -317,14 +317,21 @@
   border: 2px solid #2a4a6b;
   border-radius: 12px;
   overflow: hidden;
-  text-decoration: none;
   color: inherit;
   transition: transform 0.2s, border-color 0.2s;
+  display: flex;
+  flex-direction: column;
 }
 
 .home-article-card:hover {
   transform: translateY(-2px);
   border-color: #93c5fd;
+}
+
+.home-article-link {
+  text-decoration: none;
+  color: inherit;
+  flex: 1;
 }
 
 .home-article-img {
@@ -360,6 +367,11 @@
   color: #6ee7b7;
 }
 
+.home-article-type-poetry {
+  background: #1a2a3a;
+  color: #93c5fd;
+}
+
 .home-article-title {
   font-size: 1rem;
   font-weight: 700;
@@ -380,6 +392,79 @@
 .home-section-more {
   text-align: center;
   margin-top: 12px;
+}
+
+/* ── Advertising Section ── */
+.home-ad-section {
+  margin: 28px 0;
+}
+
+.home-ad-banner {
+  background: linear-gradient(135deg, #1e293b 0%, #162a3a 50%, #0f1923 100%);
+  border: 1px solid #2563eb;
+  border-radius: 12px;
+  padding: 20px 24px;
+  position: relative;
+  overflow: hidden;
+}
+
+.home-ad-banner-alt {
+  border-color: #f59e0b;
+  background: linear-gradient(135deg, #1a2a1a 0%, #162a3a 50%, #0f1923 100%);
+}
+
+.home-ad-label {
+  position: absolute;
+  top: 8px;
+  right: 12px;
+  font-size: 0.6rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: #64748b;
+  font-family: 'Segoe UI', system-ui, sans-serif;
+}
+
+.home-ad-content h3 {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #fbbf24;
+  margin: 0 0 8px;
+  font-family: 'Georgia', 'Times New Roman', serif;
+}
+
+.home-ad-content p {
+  font-size: 0.9rem;
+  color: #94a3b8;
+  margin: 0 0 14px;
+  line-height: 1.5;
+}
+
+.home-ad-cta {
+  display: inline-block;
+  background: #2563eb;
+  color: #fff;
+  padding: 8px 22px;
+  border-radius: 20px;
+  text-decoration: none;
+  font-size: 0.85rem;
+  font-weight: 600;
+  transition: background 0.2s, transform 0.15s;
+  font-family: 'Segoe UI', system-ui, sans-serif;
+}
+
+.home-ad-cta:hover {
+  background: #1d4ed8;
+  transform: translateY(-1px);
+}
+
+.home-ad-banner-alt .home-ad-cta {
+  background: #f59e0b;
+  color: #0c1520;
+}
+
+.home-ad-banner-alt .home-ad-cta:hover {
+  background: #d97706;
 }
 
 /* ── Responsive ── */

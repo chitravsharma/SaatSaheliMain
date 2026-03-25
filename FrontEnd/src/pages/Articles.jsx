@@ -375,12 +375,14 @@ function Articles() {
               className="art-card-image"
               style={{ width: `${cardImageSizes[article.id] || 100}%`, maxHeight: cardImageSizes[article.id] > 100 ? "none" : undefined }}
             />
-            <div className="art-card-image-controls">
-              <button className="art-img-zoom-btn" onClick={() => setCardImageSizes(s => ({ ...s, [article.id]: Math.max(25, (s[article.id] || 100) - 25) }))} title="Zoom out">&minus;</button>
-              <span className="art-img-zoom-label">{cardImageSizes[article.id] || 100}%</span>
-              <button className="art-img-zoom-btn" onClick={() => setCardImageSizes(s => ({ ...s, [article.id]: Math.min(200, (s[article.id] || 100) + 25) }))} title="Zoom in">+</button>
-              <button className="art-img-zoom-btn" onClick={() => setCardImageSizes(s => { const copy = { ...s }; delete copy[article.id]; return copy; })} title="Reset">Reset</button>
-            </div>
+            {isOwner && (
+              <div className="art-card-image-controls">
+                <button className="art-img-zoom-btn" onClick={() => setCardImageSizes(s => ({ ...s, [article.id]: Math.max(25, (s[article.id] || 100) - 25) }))} title="Zoom out">&minus;</button>
+                <span className="art-img-zoom-label">{cardImageSizes[article.id] || 100}%</span>
+                <button className="art-img-zoom-btn" onClick={() => setCardImageSizes(s => ({ ...s, [article.id]: Math.min(200, (s[article.id] || 100) + 25) }))} title="Zoom in">+</button>
+                <button className="art-img-zoom-btn" onClick={() => setCardImageSizes(s => { const copy = { ...s }; delete copy[article.id]; return copy; })} title="Reset">Reset</button>
+              </div>
+            )}
           </div>
         )}
 
