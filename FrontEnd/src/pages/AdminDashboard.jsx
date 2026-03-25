@@ -71,7 +71,26 @@ const AdminDashboard = () => {
         ));
     };
 
+    // Analytics state
+    const [analytics, setAnalytics] = useState(null);
+    const [analyticsDays, setAnalyticsDays] = useState(7);
+    const [recentVisits, setRecentVisits] = useState([]);
+    const [analyticsLoading, setAnalyticsLoading] = useState(false);
+
     const headers = { "X-User-Id": String(user?.userId || "") };
+
+    const fetchAnalytics = useCallback(async () => {
+        setAnalyticsLoading(true);
+        try {
+            const [summaryRes, recentRes] = await Promise.all([
+                axios.get(`${API}/api/analytics/summary?days=${analyticsDays}`, { headers }),
+                axios.get(`${API}/api/analytics/recent?limit=30`, { headers }),
+            ]);
+            setAnalytics(summaryRes.data);
+            setRecentVisits(Array.isArray(recentRes.data) ? recentRes.data : []);
+        } catch { /* ignore */ }
+        setAnalyticsLoading(false);
+    }, [user?.userId, analyticsDays]);
 
     const fetchStats = useCallback(async () => {
         try {
@@ -115,7 +134,8 @@ const AdminDashboard = () => {
         if (tab === "users") fetchUsers();
         if (tab === "books") fetchBooks();
         if (tab === "articles") fetchArticles();
-    }, [tab, fetchUsers, fetchBooks, fetchArticles]);
+        if (tab === "analytics") fetchAnalytics();
+    }, [tab, fetchUsers, fetchBooks, fetchArticles, fetchAnalytics]);
 
     const changeRole = async (userId, newRole) => {
         try {
@@ -336,6 +356,9 @@ const AdminDashboard = () => {
                 </button>
                 <button className={tab === "articles" ? "active" : ""} onClick={() => setTab("articles")}>
                     Articles
+                </button>
+                <button className={tab === "analytics" ? "active" : ""} onClick={() => setTab("analytics")}>
+                    Analytics
                 </button>
                 <button className={tab === "maintenance" ? "active" : ""} onClick={() => setTab("maintenance")}>
                     Maintenance
@@ -679,6 +702,194 @@ const AdminDashboard = () => {
                                 ))}
                             </tbody>
                         </table>
+                    )}
+                </div>
+            )}
+
+            {/* Analytics Tab */}
+            {tab === "analytics" && (
+                <div className="admin-analytics">
+                    <div className="analytics-header">
+                        <h2>Site Analytics / Visitor Data</h2>
+                        <div className="analytics-controls">
+                            <select
+                                className="admin-action-select"
+                                value={analyticsDays}
+                                onChange={(e) => setAnalyticsDays(Number(e.target.value))}
+                            >
+                                <option value={1}>Last 24 Hours</option>
+                                <option value={7}>Last 7 Days</option>
+                                <option value={14}>Last 14 Days</option>
+                                <option value={30}>Last 30 Days</option>
+                                <option value={90}>Last 90 Days</option>
+                            </select>
+                            <button className="bm-btn bm-btn-edit bm-btn-sm" onClick={fetchAnalytics}>Refresh</button>
+                            <a
+                                href="https://analytics.google.com"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="bm-btn bm-btn-create bm-btn-sm"
+                            >
+                                Open Google Analytics
+                            </a>
+                        </div>
+                    </div>
+
+                    {analyticsLoading && <p>Loading analytics...</p>}
+
+                    {analytics && !analyticsLoading && (
+                        <>
+                            {/* Summary Cards */}
+                            <div className="admin-stats-grid">
+                                <div className="stat-card">
+                                    <div className="stat-value">{analytics.totalPageViews}</div>
+                                    <div className="stat-label">Page Views</div>
+                                </div>
+                                <div className="stat-card">
+                                    <div className="stat-value">{analytics.uniqueVisitors}</div>
+                                    <div className="stat-label">Unique Visitors</div>
+                                </div>
+                                <div className="stat-card">
+                                    <div className="stat-value">{analytics.totalSessions}</div>
+                                    <div className="stat-label">Sessions</div>
+                                </div>
+                                <div className="stat-card">
+                                    <div className="stat-value">{analytics.anonymousVisitors}</div>
+                                    <div className="stat-label">Anonymous Visitors</div>
+                                </div>
+                                <div className="stat-card">
+                                    <div className="stat-value">{analytics.loggedInVisitors}</div>
+                                    <div className="stat-label">Logged-in Visitors</div>
+                                </div>
+                            </div>
+
+                            {/* Daily Trend */}
+                            {analytics.dailyStats && analytics.dailyStats.length > 0 && (
+                                <div className="analytics-section">
+                                    <h3>Daily Trend</h3>
+                                    <div className="analytics-chart">
+                                        {analytics.dailyStats.map((day, i) => {
+                                            const maxViews = Math.max(...analytics.dailyStats.map(d => Number(d.pageViews)), 1);
+                                            const barHeight = Math.max(4, (Number(day.pageViews) / maxViews) * 120);
+                                            return (
+                                                <div key={i} className="analytics-bar-group" title={`${day.date}: ${day.pageViews} views, ${day.uniqueVisitors} visitors`}>
+                                                    <div className="analytics-bar" style={{ height: `${barHeight}px` }} />
+                                                    <span className="analytics-bar-label">{new Date(day.date).toLocaleDateString(undefined, { month: "short", day: "numeric" })}</span>
+                                                    <span className="analytics-bar-value">{day.pageViews}</span>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            )}
+
+                            <div className="analytics-panels">
+                                {/* Top Pages */}
+                                {analytics.topPages && analytics.topPages.length > 0 && (
+                                    <div className="analytics-section analytics-panel">
+                                        <h3>Top Pages</h3>
+                                        <table className="admin-table">
+                                            <thead>
+                                                <tr><th>Page</th><th>Views</th></tr>
+                                            </thead>
+                                            <tbody>
+                                                {analytics.topPages.map((p, i) => (
+                                                    <tr key={i}>
+                                                        <td>{p.page || "/"}</td>
+                                                        <td>{p.views}</td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                )}
+
+                                {/* Device Breakdown */}
+                                {analytics.devices && Object.keys(analytics.devices).length > 0 && (
+                                    <div className="analytics-section analytics-panel">
+                                        <h3>Devices</h3>
+                                        <div className="analytics-breakdown">
+                                            {Object.entries(analytics.devices).map(([device, count]) => {
+                                                const total = Object.values(analytics.devices).reduce((a, b) => a + b, 0);
+                                                const pct = total > 0 ? Math.round((count / total) * 100) : 0;
+                                                return (
+                                                    <div key={device} className="analytics-breakdown-row">
+                                                        <span className="analytics-breakdown-label">
+                                                            {device === "desktop" ? "Desktop" : device === "mobile" ? "Mobile" : device === "tablet" ? "Tablet" : device}
+                                                        </span>
+                                                        <div className="analytics-breakdown-bar-wrap">
+                                                            <div className="analytics-breakdown-bar" style={{ width: `${pct}%` }} />
+                                                        </div>
+                                                        <span className="analytics-breakdown-value">{count} ({pct}%)</span>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Browser Breakdown */}
+                                {analytics.browsers && Object.keys(analytics.browsers).length > 0 && (
+                                    <div className="analytics-section analytics-panel">
+                                        <h3>Browsers</h3>
+                                        <div className="analytics-breakdown">
+                                            {Object.entries(analytics.browsers).map(([browser, count]) => {
+                                                const total = Object.values(analytics.browsers).reduce((a, b) => a + b, 0);
+                                                const pct = total > 0 ? Math.round((count / total) * 100) : 0;
+                                                return (
+                                                    <div key={browser} className="analytics-breakdown-row">
+                                                        <span className="analytics-breakdown-label">{browser}</span>
+                                                        <div className="analytics-breakdown-bar-wrap">
+                                                            <div className="analytics-breakdown-bar analytics-bar-alt" style={{ width: `${pct}%` }} />
+                                                        </div>
+                                                        <span className="analytics-breakdown-value">{count} ({pct}%)</span>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Recent Visits */}
+                            {recentVisits.length > 0 && (
+                                <div className="analytics-section">
+                                    <h3>Recent Visits (Last 24h)</h3>
+                                    <table className="admin-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Time</th>
+                                                <th>Page</th>
+                                                <th>Device</th>
+                                                <th>Browser</th>
+                                                <th>Type</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {recentVisits.map((v) => (
+                                                <tr key={v.id}>
+                                                    <td>{v.visitedAt ? new Date(v.visitedAt).toLocaleTimeString() : "\u2014"}</td>
+                                                    <td>{v.pagePath || "/"}</td>
+                                                    <td>{v.device || "\u2014"}</td>
+                                                    <td>{v.browser || "\u2014"}</td>
+                                                    <td>
+                                                        <span className={`admin-type-badge ${v.userId ? "admin-type-article" : "admin-type-poetry"}`}>
+                                                            {v.userId ? "Logged in" : "Anonymous"}
+                                                        </span>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            )}
+                        </>
+                    )}
+
+                    {!analytics && !analyticsLoading && (
+                        <p style={{ color: "#64748b", textAlign: "center", padding: "40px 0" }}>
+                            No visitor data yet. Data will appear as users visit the site.
+                        </p>
                     )}
                 </div>
             )}

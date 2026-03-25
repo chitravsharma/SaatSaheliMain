@@ -451,3 +451,134 @@
 .admin-search-bar .admin-action-select {
     min-width: 120px;
 }
+
+/* ── Analytics Section ── */
+.admin-analytics {
+    margin-top: 10px;
+}
+.analytics-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+.analytics-header h2 {
+    color: #fbbf24;
+    font-size: 1.3rem;
+    margin: 0;
+}
+.analytics-controls {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.analytics-section {
+    margin-bottom: 24px;
+}
+.analytics-section h3 {
+    color: #93c5fd;
+    font-size: 1rem;
+    margin: 0 0 10px;
+}
+
+/* Daily Trend Bar Chart */
+.analytics-chart {
+    display: flex;
+    align-items: flex-end;
+    gap: 6px;
+    padding: 12px 0;
+    overflow-x: auto;
+    min-height: 160px;
+}
+.analytics-bar-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    min-width: 42px;
+}
+.analytics-bar {
+    width: 28px;
+    background: linear-gradient(180deg, #2563eb, #60a5fa);
+    border-radius: 4px 4px 0 0;
+    transition: height 0.3s;
+}
+.analytics-bar-label {
+    font-size: 0.6rem;
+    color: #64748b;
+    white-space: nowrap;
+}
+.analytics-bar-value {
+    font-size: 0.65rem;
+    color: #93c5fd;
+    font-weight: 600;
+}
+
+/* Panels layout */
+.analytics-panels {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 16px;
+    margin-bottom: 20px;
+}
+.analytics-panel {
+    background: #0c1520;
+    border: 1px solid #2a4a6b;
+    border-radius: 10px;
+    padding: 16px;
+}
+
+/* Breakdown bars (device/browser) */
+.analytics-breakdown {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+.analytics-breakdown-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.analytics-breakdown-label {
+    color: #f0f4f8;
+    font-size: 0.85rem;
+    min-width: 70px;
+    flex-shrink: 0;
+}
+.analytics-breakdown-bar-wrap {
+    flex: 1;
+    height: 16px;
+    background: #1e3a52;
+    border-radius: 8px;
+    overflow: hidden;
+}
+.analytics-breakdown-bar {
+    height: 100%;
+    background: linear-gradient(90deg, #2563eb, #60a5fa);
+    border-radius: 8px;
+    transition: width 0.3s;
+}
+.analytics-breakdown-bar.analytics-bar-alt {
+    background: linear-gradient(90deg, #f59e0b, #fbbf24);
+}
+.analytics-breakdown-value {
+    color: #94a3b8;
+    font-size: 0.8rem;
+    min-width: 70px;
+    text-align: right;
+    flex-shrink: 0;
+}
+
+@media (max-width: 600px) {
+    .analytics-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    .analytics-panels {
+        grid-template-columns: 1fr;
+    }
+}

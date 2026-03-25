@@ -30,6 +30,7 @@ import Articles from './pages/Articles';
 import Podcasts from './pages/Podcasts';
 import ProtectedRoute from './components/ProtectedRoute';
 import DownloadProtection from './components/DownloadProtection';
+import VisitorTracker from './components/VisitorTracker';
 import Checkout from './pages/Checkout';
 
 
@@ -42,6 +43,7 @@ function App() {
   return (
     <ServerWakeUp>
     <div className="App">
+      <VisitorTracker />
       <Header />
       <main id="main-content">
         <DownloadProtection>
