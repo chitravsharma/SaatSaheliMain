@@ -75,9 +75,13 @@
 
 /* Book page specific styling for clean print-like look */
 .flipbook-page {
-  background: var(--bg-card);
-  border: 1px solid #c4a882;
-  box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.03), 0 2px 8px rgba(0, 0, 0, 0.1);
+  background: #fffdf8;
+  border: none;
+  border-left: 3px solid #8b5a2b;
+  box-shadow:
+    inset 0 0 40px rgba(139, 90, 43, 0.04),
+    0 2px 8px rgba(0, 0, 0, 0.1),
+    4px 4px 12px rgba(0, 0, 0, 0.06);
 }
 
 .center-container {
