@@ -149,7 +149,7 @@
   border-left: 4px solid #d4a017;
   border-radius: 0 4px 4px 0;
   font-size: 0.95rem;
-  color: #e2e8f0;
+  color: var(--text-primary);
 }
 
 .manual-tip::before {

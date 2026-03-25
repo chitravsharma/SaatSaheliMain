@@ -332,7 +332,7 @@
   align-items: flex-start;
   gap: 8px;
   font-size: 0.85rem;
-  color: #e2e8f0;
+  color: var(--text-primary);
   cursor: pointer;
   line-height: 1.4;
 }

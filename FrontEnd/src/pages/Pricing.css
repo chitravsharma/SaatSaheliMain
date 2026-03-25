@@ -71,7 +71,7 @@
 .pricing-plan-name {
   font-size: 1.35rem;
   font-weight: 700;
-  color: #e2e8f0;
+  color: var(--text-primary);
   margin: 0 0 4px;
 }
 

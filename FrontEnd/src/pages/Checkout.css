@@ -50,7 +50,7 @@
 
 .checkout-summary h3 {
   font-size: 1.1rem;
-  color: #e2e8f0;
+  color: var(--text-primary);
   margin: 0 0 16px;
   font-weight: 700;
 }
@@ -114,7 +114,7 @@
   padding-top: 16px;
   border-top: 2px solid var(--border-default);
   font-size: 1rem;
-  color: #e2e8f0;
+  color: var(--text-primary);
   font-weight: 700;
 }
 
@@ -133,7 +133,7 @@
 
 .checkout-card h3 {
   font-size: 1.1rem;
-  color: #e2e8f0;
+  color: var(--text-primary);
   margin: 0 0 16px;
   font-weight: 700;
 }
@@ -170,7 +170,7 @@
 
 .checkout-method-tab:hover {
   border-color: #3b82f6;
-  color: #e2e8f0;
+  color: var(--text-primary);
 }
 
 .checkout-method-tab.active {
@@ -203,7 +203,7 @@
   border: 2px solid var(--border-default);
   border-radius: 8px;
   background: var(--bg-body);
-  color: #e2e8f0;
+  color: var(--text-primary);
   font-size: 1rem;
   font-family: inherit;
   transition: border-color 0.2s;

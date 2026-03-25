@@ -76,8 +76,8 @@
 /* Book page specific styling for clean print-like look */
 .flipbook-page {
   background: var(--bg-card);
-  border: 1px solid var(--border-default);
-  box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.05), 0 2px 8px rgba(0, 0, 0, 0.3);
+  border: 1px solid #c4a882;
+  box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.03), 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .center-container {
@@ -424,7 +424,7 @@
 .flipbook-fullscreen-overlay .flipbook-arrow,
 .flipbook-fullscreen-overlay .flipbook-page-indicator,
 .flipbook-fullscreen-overlay .flipbook-zoom-label {
-  color: #e0e7ef;
+  color: var(--text-primary);
 }
 .flipbook-fullscreen-overlay .flipbook-zoom-btn {
   background: rgba(245, 158, 11, 0.8);

@@ -48,7 +48,7 @@
 .contact-intro p {
   font-size: 1.05rem;
   line-height: 1.7;
-  color: #e2e8f0;
+  color: var(--text-primary);
   margin: 0;
 }
 

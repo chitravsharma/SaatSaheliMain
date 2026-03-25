@@ -144,7 +144,7 @@
 .admin-manual-section p {
   font-size: 1.02rem;
   line-height: 1.8;
-  color: #e2e8f0;
+  color: var(--text-primary);
   margin: 0 0 12px;
 }
 
@@ -156,7 +156,7 @@
 .admin-manual-section li {
   font-size: 1rem;
   line-height: 1.8;
-  color: #e2e8f0;
+  color: var(--text-primary);
   margin-bottom: 8px;
 }
 
@@ -178,7 +178,7 @@
   margin-top: 16px;
   font-size: 0.95rem;
   line-height: 1.7;
-  color: #e2e8f0;
+  color: var(--text-primary);
 }
 
 .admin-manual-note strong {

@@ -252,7 +252,7 @@
 }
 
 .art-card-content {
-  color: #e2e8f0;
+  color: var(--text-primary);
   font-size: 0.95rem;
   line-height: 1.7;
   margin: 0 0 12px 0;

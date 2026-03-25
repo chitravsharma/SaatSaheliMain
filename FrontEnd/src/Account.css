@@ -133,7 +133,7 @@
 
 .acct-bio-text {
   font-size: 0.93rem;
-  color: #e2e8f0;
+  color: var(--text-primary);
   line-height: 1.7;
   margin: 0;
   white-space: pre-wrap;
