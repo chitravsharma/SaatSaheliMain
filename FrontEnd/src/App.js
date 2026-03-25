@@ -31,6 +31,7 @@ import Podcasts from './pages/Podcasts';
 import ProtectedRoute from './components/ProtectedRoute';
 import DownloadProtection from './components/DownloadProtection';
 import VisitorTracker from './components/VisitorTracker';
+import MaintenanceBanner from './components/MaintenanceBanner';
 import Checkout from './pages/Checkout';
 
 
@@ -44,6 +45,7 @@ function App() {
     <ServerWakeUp>
     <div className="App">
       <VisitorTracker />
+      <MaintenanceBanner />
       <Header />
       <main id="main-content">
         <DownloadProtection>
