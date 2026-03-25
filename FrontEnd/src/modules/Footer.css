@@ -1,11 +1,11 @@
 /* Footer - Contemporary theme with ADA/WCAG 2.1 AA compliance */
 
 .site-footer {
-  background-color: #0c1520;
-  color: #fbbf24;
+  background-color: var(--bg-header);
+  color: var(--text-primary);
   padding: 20px 24px;
   text-align: center;
-  border-top: 3px solid #2563eb;
+  border-top: 1px solid var(--border-default);
   margin-top: auto;
   font-size: 0.875rem;
   font-weight: 500;
@@ -20,7 +20,7 @@
 }
 
 .footer-link {
-  color: #ffffff;
+  color: var(--text-primary);
   text-decoration: none;
   font-weight: 600;
   font-size: 0.875rem;
@@ -29,11 +29,11 @@
   transition: color 0.2s;
 }
 .footer-link:hover {
-  color: #f59e0b;
+  color: var(--accent-gold-hover);
   text-decoration: underline;
 }
 .footer-link:focus-visible {
-  outline: 3px solid #f59e0b;
+  outline: 3px solid var(--accent-gold-hover);
   outline-offset: 2px;
 }
 

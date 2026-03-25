@@ -18,12 +18,12 @@
 .tech-hero h1 {
     font-size: 2rem;
     font-weight: 700;
-    color: #f0f4f8;
+    color: var(--text-primary);
     margin: 0 0 0.5rem;
 }
 
 .tech-hero-desc {
-    color: #94a3b8;
+    color: var(--text-muted);
     font-size: 1.05rem;
     margin: 0;
 }
@@ -33,7 +33,7 @@
     display: flex;
     gap: 0.5rem;
     margin-bottom: 1.5rem;
-    border-bottom: 2px solid #2a4a6b;
+    border-bottom: 2px solid var(--border-default);
     padding-bottom: 0.5rem;
     flex-wrap: wrap;
 }
@@ -44,22 +44,22 @@
     gap: 0.4rem;
     padding: 0.6rem 1.2rem;
     border: none;
-    background: #1e3a52;
+    background: var(--bg-card-alt);
     font-size: 0.95rem;
     cursor: pointer;
     border-radius: 6px 6px 0 0;
-    color: #94a3b8;
+    color: var(--text-muted);
     transition: all 0.2s;
 }
 
 .tech-tab.active {
-    background: #2563eb;
+    background: var(--accent-blue);
     color: #fff;
 }
 
 .tech-tab:hover:not(.active) {
-    background: #2a4a6b;
-    color: #fbbf24;
+    background: var(--border-default);
+    color: var(--accent-gold);
 }
 
 .tech-tab-icon {
@@ -77,12 +77,12 @@
 
 .tech-content-header h2 {
     font-size: 1.4rem;
-    color: #f0f4f8;
+    color: var(--text-primary);
     margin: 0 0 0.5rem;
 }
 
 .tech-content-desc {
-    color: #94a3b8;
+    color: var(--text-muted);
     font-size: 0.95rem;
     margin: 0;
 }
@@ -90,10 +90,10 @@
 .tech-placeholder {
     text-align: center;
     padding: 3rem 1rem;
-    color: #94a3b8;
-    background: #1e3a52;
+    color: var(--text-muted);
+    background: var(--bg-card-alt);
     border-radius: 12px;
-    border: 2px dashed #2a4a6b;
+    border: 2px dashed var(--border-default);
 }
 
 .tech-placeholder p {
@@ -108,7 +108,7 @@
 }
 
 .tech-footer-link a {
-    color: #fbbf24;
+    color: var(--accent-gold);
     font-weight: 600;
     text-decoration: underline;
 }

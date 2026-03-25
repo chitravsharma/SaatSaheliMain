@@ -13,7 +13,7 @@
 .pricing-hero h1 {
   font-size: 2.4rem;
   font-weight: 700;
-  background: linear-gradient(135deg, #2563eb, #60a5fa, #f59e0b);
+  background: linear-gradient(135deg, var(--accent-blue), var(--accent-blue-light), var(--accent-gold-hover));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -35,8 +35,8 @@
 }
 
 .pricing-card {
-  background: #162a3a;
-  border: 2px solid #2a4a6b;
+  background: var(--bg-card);
+  border: 2px solid var(--border-default);
   border-radius: 16px;
   padding: 28px 24px;
   position: relative;
@@ -49,7 +49,7 @@
 }
 
 .pricing-card-highlight {
-  border-color: #2563eb;
+  border-color: var(--accent-blue);
   box-shadow: 0 8px 28px rgba(37, 99, 235, 0.15);
 }
 
@@ -58,7 +58,7 @@
   top: -12px;
   left: 50%;
   transform: translateX(-50%);
-  background: linear-gradient(135deg, #2563eb, #60a5fa);
+  background: linear-gradient(135deg, var(--accent-blue), var(--accent-blue-light));
   color: white;
   font-size: 0.75rem;
   font-weight: 700;
@@ -89,7 +89,7 @@
 .pricing-amount {
   font-size: 2rem;
   font-weight: 800;
-  color: #fbbf24;
+  color: var(--accent-gold);
 }
 
 .pricing-period {
@@ -136,7 +136,7 @@
 }
 
 .pricing-star {
-  color: #f59e0b;
+  color: var(--accent-gold-hover);
   flex-shrink: 0;
 }
 
@@ -153,10 +153,10 @@
   display: block;
   width: 100%;
   padding: 12px 16px;
-  border: 2px solid #2563eb;
+  border: 2px solid var(--accent-blue);
   border-radius: 10px;
   background: transparent;
-  color: #fbbf24;
+  color: var(--accent-gold);
   font-size: 0.95rem;
   font-weight: 700;
   cursor: pointer;
@@ -166,13 +166,13 @@
 }
 
 .pricing-btn:hover {
-  background: #2563eb;
+  background: var(--accent-blue);
   color: #ffffff;
 }
 
 .pricing-btn-highlight {
-  background: linear-gradient(135deg, #2563eb, #60a5fa);
-  border-color: #2563eb;
+  background: linear-gradient(135deg, var(--accent-blue), var(--accent-blue-light));
+  border-color: var(--accent-blue);
   color: #ffffff;
 }
 
@@ -186,7 +186,7 @@
 }
 
 .pricing-card-selected {
-  border-color: #f59e0b;
+  border-color: var(--accent-gold-hover);
   box-shadow: 0 8px 28px rgba(245, 158, 11, 0.2);
 }
 

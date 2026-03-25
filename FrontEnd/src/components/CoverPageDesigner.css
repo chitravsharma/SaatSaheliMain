@@ -3,15 +3,15 @@
    ══════════════════════════════════════════════════ */
 
 .cpd-container {
-  background: #0c1520;
-  border: 1px solid #2a4a6b;
+  background: var(--bg-header);
+  border: 1px solid var(--border-default);
   border-radius: 12px;
   padding: 20px;
   margin: 16px 0;
 }
 
 .cpd-heading {
-  color: #fbbf24;
+  color: var(--accent-gold);
   font-size: 1.15rem;
   font-weight: 700;
   margin: 0 0 4px;
@@ -19,7 +19,7 @@
 }
 
 .cpd-hint {
-  color: #64748b;
+  color: var(--text-subtle);
   font-size: 0.82rem;
   margin: 0 0 16px;
   font-family: 'Segoe UI', system-ui, sans-serif;
@@ -27,7 +27,7 @@
 
 /* Collapsible sections */
 .cpd-section {
-  border: 1px solid #1e3a52;
+  border: 1px solid var(--bg-card-alt);
   border-radius: 8px;
   margin-bottom: 8px;
   overflow: hidden;
@@ -39,9 +39,9 @@
   gap: 8px;
   width: 100%;
   padding: 10px 14px;
-  background: #162a3a;
+  background: var(--bg-card);
   border: none;
-  color: #f0f4f8;
+  color: var(--text-primary);
   font-size: 0.9rem;
   font-weight: 600;
   cursor: pointer;
@@ -50,7 +50,7 @@
   transition: background 0.2s;
 }
 .cpd-section-header:hover {
-  background: #1e3a52;
+  background: var(--bg-card-alt);
 }
 
 .cpd-section-icon {
@@ -71,7 +71,7 @@
 
 .cpd-section-body {
   padding: 12px 14px;
-  background: #0f1923;
+  background: var(--bg-body);
   display: grid;
   gap: 10px;
 }
@@ -84,7 +84,7 @@
 }
 
 .cpd-label {
-  color: #94a3b8;
+  color: var(--text-muted);
   font-size: 0.78rem;
   font-weight: 600;
   font-family: 'Segoe UI', system-ui, sans-serif;
@@ -96,10 +96,10 @@
 .cpd-textarea,
 .cpd-select {
   padding: 8px 12px;
-  background: #162a3a;
-  border: 1px solid #2a4a6b;
+  background: var(--bg-card);
+  border: 1px solid var(--border-default);
   border-radius: 6px;
-  color: #f0f4f8;
+  color: var(--text-primary);
   font-size: 0.88rem;
   font-family: 'Segoe UI', system-ui, sans-serif;
   transition: border-color 0.2s;
@@ -108,7 +108,7 @@
 .cpd-textarea:focus,
 .cpd-select:focus {
   outline: none;
-  border-color: #2563eb;
+  border-color: var(--accent-blue);
 }
 
 .cpd-textarea {
@@ -120,21 +120,21 @@
   cursor: pointer;
 }
 .cpd-select option {
-  background: #162a3a;
-  color: #f0f4f8;
+  background: var(--bg-card);
+  color: var(--text-primary);
 }
 
 /* Prompt preview */
 .cpd-prompt-preview {
-  background: #162a3a;
-  border: 1px dashed #2a4a6b;
+  background: var(--bg-card);
+  border: 1px dashed var(--border-default);
   border-radius: 6px;
   padding: 10px 12px;
   margin-top: 4px;
 }
 
 .cpd-prompt-text {
-  color: #94a3b8;
+  color: var(--text-muted);
   font-size: 0.82rem;
   line-height: 1.5;
   margin: 4px 0 0;
@@ -156,7 +156,7 @@
   max-width: 280px;
   max-height: 360px;
   border-radius: 8px;
-  border: 2px solid #2a4a6b;
+  border: 2px solid var(--border-default);
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
 }
 
@@ -201,8 +201,8 @@
 }
 
 .cpd-btn-generate {
-  background: linear-gradient(135deg, #f59e0b, #d97706);
-  color: #0f1923;
+  background: linear-gradient(135deg, var(--accent-gold-hover), #d97706);
+  color: var(--bg-body);
   flex: 1;
   min-width: 200px;
 }
@@ -212,7 +212,7 @@
 }
 
 .cpd-btn-upload {
-  background: linear-gradient(135deg, #2563eb, #60a5fa);
+  background: linear-gradient(135deg, var(--accent-blue), var(--accent-blue-light));
   color: #ffffff;
   text-align: center;
 }
@@ -222,7 +222,7 @@
 }
 
 .cpd-message {
-  color: #fbbf24;
+  color: var(--accent-gold);
   font-size: 0.85rem;
   margin: 10px 0 0;
   font-family: 'Segoe UI', system-ui, sans-serif;
@@ -254,7 +254,7 @@
 .cpd-range {
   width: 100%;
   margin: 8px 0;
-  accent-color: #2563eb;
+  accent-color: var(--accent-blue);
 }
 
 .cpd-scale-buttons {
@@ -264,9 +264,9 @@
 }
 
 .cpd-scale-btn {
-  background: #162a3a;
-  border: 1px solid #2a4a6b;
-  color: #f0f4f8;
+  background: var(--bg-card);
+  border: 1px solid var(--border-default);
+  color: var(--text-primary);
   padding: 4px 12px;
   border-radius: 6px;
   font-size: 0.78rem;
@@ -275,8 +275,8 @@
   transition: background 0.2s;
 }
 .cpd-scale-btn:hover {
-  background: #1e3a52;
-  border-color: #2563eb;
+  background: var(--bg-card-alt);
+  border-color: var(--accent-blue);
 }
 
 .cpd-visual-preview {
@@ -289,10 +289,10 @@
   position: relative;
   width: 320px;
   height: 460px;
-  border: 3px solid #2a4a6b;
+  border: 3px solid var(--border-default);
   border-radius: 8px;
   overflow: hidden;
-  background: #0c1520;
+  background: var(--bg-header);
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
 }
 
@@ -443,8 +443,8 @@
   flex-wrap: wrap;
   margin-bottom: 16px;
   padding: 12px;
-  background: #0f1923;
-  border: 1px solid #1e3a52;
+  background: var(--bg-body);
+  border: 1px solid var(--bg-card-alt);
   border-radius: 8px;
 }
 
@@ -464,7 +464,7 @@
 .cpd-color-input {
   width: 32px;
   height: 32px;
-  border: 2px solid #3a5a7b;
+  border: 2px solid var(--border-strong);
   border-radius: 6px;
   padding: 1px;
   cursor: pointer;
@@ -472,12 +472,12 @@
 }
 .cpd-color-input:focus {
   outline: none;
-  border-color: #2563eb;
+  border-color: var(--accent-blue);
 }
 
 .cpd-color-hex {
   font-size: 0.72rem;
-  color: #94a3b8;
+  color: var(--text-muted);
   font-family: monospace;
   min-width: 55px;
 }
@@ -486,18 +486,18 @@
   width: 22px;
   height: 22px;
   border-radius: 50%;
-  border: 2px solid #3a5a7b;
+  border: 2px solid var(--border-strong);
   cursor: pointer;
   padding: 0;
   transition: transform 0.15s, border-color 0.15s;
 }
 .cpd-color-swatch:hover {
   transform: scale(1.2);
-  border-color: #f0f4f8;
+  border-color: var(--text-primary);
 }
 .cpd-swatch-active {
-  border-color: #fbbf24;
-  box-shadow: 0 0 0 2px #fbbf24;
+  border-color: var(--accent-gold);
+  box-shadow: 0 0 0 2px var(--accent-gold);
   transform: scale(1.15);
 }
 
@@ -515,7 +515,7 @@
 }
 .cpd-draggable-text:active {
   cursor: grabbing;
-  border-color: #fbbf24;
+  border-color: var(--accent-gold);
 }
 .cpd-drag-hint {
   font-size: 0.55rem;
@@ -544,7 +544,7 @@
 }
 .cpd-draggable-photo:active {
   cursor: grabbing;
-  border-color: #fbbf24;
+  border-color: var(--accent-gold);
 }
 .cpd-draggable-photo .cpd-drag-hint {
   position: absolute;

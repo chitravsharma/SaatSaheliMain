@@ -27,7 +27,7 @@
   color: #d4a017;
 }
 .dropdown-toggle:focus-visible {
-  outline: 3px solid #f59e0b;
+  outline: 3px solid var(--accent-gold-hover);
   outline-offset: 2px;
 }
 
@@ -36,11 +36,11 @@
   right: 0;
   top: 100%;
   margin-top: 4px;
-  background-color: #162a3a;
+  background-color: var(--bg-card);
   min-width: 180px;
   box-shadow: 0 4px 16px rgba(37, 99, 235, 0.15);
   border-radius: 8px;
-  border: 2px solid #2a4a6b;
+  border: 2px solid var(--border-default);
   z-index: 100;
   list-style-type: none;
   padding: 6px 0;
@@ -52,7 +52,7 @@
   text-decoration: none;
   display: block;
   cursor: pointer;
-  color: #f0f4f8;
+  color: var(--text-primary);
   font-size: 0.9375rem;
   font-weight: 500;
   min-height: 44px;
@@ -61,11 +61,11 @@
   transition: background-color 0.15s;
 }
 .dropdown-menu li:hover {
-  background-color: #1e3a52;
-  color: #fbbf24;
+  background-color: var(--bg-card-alt);
+  color: var(--accent-gold);
 }
 .dropdown-menu li:focus-visible {
-  outline: 3px solid #f59e0b;
+  outline: 3px solid var(--accent-gold-hover);
   outline-offset: -3px;
 }
 

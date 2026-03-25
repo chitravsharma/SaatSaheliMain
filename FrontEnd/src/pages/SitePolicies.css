@@ -13,22 +13,22 @@
 .policies-hero h1 {
   font-size: 2.4rem;
   font-weight: 700;
-  color: #fbbf24;
+  color: var(--accent-gold);
   margin-bottom: 8px;
 }
 
 .policies-divider {
   width: 60px;
   height: 4px;
-  background: linear-gradient(90deg, #2563eb, #d4a017);
+  background: linear-gradient(90deg, var(--accent-blue), #d4a017);
   border: none;
   border-radius: 2px;
   margin: 16px auto 32px;
 }
 
 .policies-section {
-  background: linear-gradient(145deg, #162a3a, #2e2820);
-  border: 1px solid #2a4a6b;
+  background: linear-gradient(145deg, var(--bg-card), #2e2820);
+  border: 1px solid var(--border-default);
   border-radius: 16px;
   padding: 28px 32px;
   box-shadow: 0 4px 24px rgba(37, 99, 235, 0.08);
@@ -38,7 +38,7 @@
 .policies-section h2 {
   font-size: 1.2rem;
   font-weight: 700;
-  color: #fbbf24;
+  color: var(--accent-gold);
   margin: 0 0 12px;
 }
 
@@ -62,7 +62,7 @@
   text-align: center;
   margin-top: 28px;
   font-size: 0.85rem;
-  color: #94a3b8;
+  color: var(--text-muted);
 }
 
 @media (max-width: 600px) {

@@ -10,15 +10,15 @@
   padding: 24px;
   font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
   line-height: 1.6;
-  color: #f0f4f8;
+  color: var(--text-primary);
 }
 
 .pub-profile-header {
   display: flex;
   align-items: center;
   gap: 20px;
-  background: #162a3a;
-  border: 2px solid #2a4a6b;
+  background: var(--bg-card);
+  border: 2px solid var(--border-default);
   border-radius: 12px;
   padding: 24px;
   margin-bottom: 24px;
@@ -29,39 +29,39 @@
   height: 100px;
   border-radius: 50%;
   object-fit: cover;
-  border: 3px solid #2563eb;
+  border: 3px solid var(--accent-blue);
   flex-shrink: 0;
 }
 
 .pub-profile-info h1 {
-  color: #f0f4f8;
+  color: var(--text-primary);
   font-size: 1.5rem;
   font-weight: 700;
   margin: 0 0 4px 0;
 }
 
 .pub-profile-headline {
-  color: #f59e0b;
+  color: var(--accent-gold-hover);
   font-style: italic;
   font-size: 1rem;
   margin: 0 0 4px 0;
 }
 
 .pub-profile-location {
-  color: #94a3b8;
+  color: var(--text-muted);
   font-size: 0.9rem;
   margin: 0 0 4px 0;
 }
 
 .pub-profile-member {
-  color: #64748b;
+  color: var(--text-subtle);
   font-size: 0.8rem;
   margin: 0;
 }
 
 .pub-profile-bio {
-  background: #162a3a;
-  border: 1px solid #2a4a6b;
+  background: var(--bg-card);
+  border: 1px solid var(--border-default);
   border-radius: 8px;
   padding: 16px;
   margin-bottom: 24px;
@@ -93,7 +93,7 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: #fbbf24;
+  color: var(--accent-gold);
   margin: 0;
 }
 
@@ -106,7 +106,7 @@
 .pub-profile-tag {
   display: inline-block;
   padding: 5px 14px;
-  background: linear-gradient(135deg, #2563eb, #60a5fa);
+  background: linear-gradient(135deg, var(--accent-blue), var(--accent-blue-light));
   color: #ffffff;
   border-radius: 20px;
   font-size: 0.82rem;
@@ -116,17 +116,17 @@
 
 .pub-profile-tag-field {
   background: transparent;
-  color: #fbbf24;
-  border: 2px solid #2563eb;
+  color: var(--accent-gold);
+  border: 2px solid var(--accent-blue);
 }
 
 /* ── Section headings ── */
 .pub-profile-page h2 {
-  color: #fbbf24;
+  color: var(--accent-gold);
   font-size: 1.25rem;
   font-weight: 700;
   margin-bottom: 16px;
-  border-bottom: 2px solid #2a4a6b;
+  border-bottom: 2px solid var(--border-default);
   padding-bottom: 6px;
 }
 
@@ -139,8 +139,8 @@
 }
 
 .pub-profile-book-card {
-  background: #162a3a;
-  border: 1px solid #2a4a6b;
+  background: var(--bg-card);
+  border: 1px solid var(--border-default);
   border-radius: 10px;
   text-decoration: none;
   text-align: center;
@@ -156,12 +156,12 @@
 }
 
 .pub-profile-book-card:focus-visible {
-  outline: 2px solid #f59e0b;
+  outline: 2px solid var(--accent-gold-hover);
   outline-offset: 2px;
 }
 
 .pub-book-cover {
-  background: linear-gradient(135deg, #0c1520 0%, #2563eb 50%, #60a5fa 100%);
+  background: linear-gradient(135deg, var(--bg-header) 0%, var(--accent-blue) 50%, var(--accent-blue-light) 100%);
   aspect-ratio: 3 / 4;
   display: flex;
   align-items: center;
@@ -182,7 +182,7 @@
   padding: 8px 10px 4px;
   font-size: 0.85rem;
   font-weight: 600;
-  color: #f0f4f8;
+  color: var(--text-primary);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -191,7 +191,7 @@
 .pub-book-category {
   padding: 0 10px 8px;
   font-size: 0.7rem;
-  color: #94a3b8;
+  color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
@@ -207,7 +207,7 @@
 .pub-gallery-item {
   border-radius: 8px;
   overflow: hidden;
-  border: 1px solid #2a4a6b;
+  border: 1px solid var(--border-default);
   aspect-ratio: 1;
   transition: box-shadow 0.2s;
 }
@@ -224,7 +224,7 @@
 
 /* ── States ── */
 .pub-profile-no-books {
-  color: #94a3b8;
+  color: var(--text-muted);
   text-align: center;
   padding: 40px 20px;
 }
@@ -233,7 +233,7 @@
 .pub-profile-not-found {
   text-align: center;
   padding: 60px 20px;
-  color: #94a3b8;
+  color: var(--text-muted);
   font-size: 1rem;
 }
 
