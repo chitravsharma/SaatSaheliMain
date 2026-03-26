@@ -28,14 +28,14 @@ function Home() {
   const [userFavorites, setUserFavorites] = useState({});
   const [loading, setLoading] = useState(true);
   const [shareCopiedId, setShareCopiedId] = useState(null);
+  const [adShareCopiedId, setAdShareCopiedId] = useState(null);
   const [advertisements, setAdvertisements] = useState([]);
 
-  // Load advertisements from localStorage
+  // Fetch active advertisements from API
   useEffect(() => {
-    try {
-      const ads = JSON.parse(localStorage.getItem("ss_advertisements") || "[]");
-      setAdvertisements(ads.filter(a => a.active));
-    } catch { /* ignore */ }
+    axios.get(`${API}/api/advertisements/active`)
+      .then(res => setAdvertisements(Array.isArray(res.data) ? res.data : []))
+      .catch(() => { /* ignore */ });
   }, []);
 
   useEffect(() => {
@@ -141,6 +141,18 @@ function Home() {
       const key = `${targetType}_${targetId}`;
       setUserFavorites(prev => ({ ...prev, [key]: res.data.favorited }));
     } catch { /* ignore */ }
+  };
+
+  const handleAdShare = async (ad) => {
+    const url = ad.linkUrl || window.location.origin;
+    const text = `Check out this on Saat Saheli: ${ad.title}`;
+    if (navigator.share) {
+      try { await navigator.share({ title: ad.title, text, url }); } catch { /* cancelled */ }
+    } else {
+      await navigator.clipboard.writeText(`${text}\n${url}`);
+      setAdShareCopiedId(ad.id);
+      setTimeout(() => setAdShareCopiedId(null), 2000);
+    }
   };
 
   const handleShare = async (article) => {
@@ -276,9 +288,15 @@ function Home() {
                 <div dangerouslySetInnerHTML={{ __html: ad.htmlContent }} />
               )}
               {ad.contentType === "text" && <h3>{ad.title}</h3>}
-              {ad.linkUrl && ad.contentType !== "image" && (
-                <a href={ad.linkUrl} target="_blank" rel="noopener noreferrer" className="home-ad-cta">Learn More</a>
-              )}
+              <div className="home-ad-actions">
+                {ad.linkUrl && ad.contentType !== "image" && (
+                  <a href={ad.linkUrl} target="_blank" rel="noopener noreferrer" className="home-ad-cta">Learn More</a>
+                )}
+                <button className="home-ad-share-btn" onClick={() => handleAdShare(ad)} title="Share this ad">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+                  {adShareCopiedId === ad.id ? "Copied!" : "Share"}
+                </button>
+              </div>
             </div>
           </div>
         </div>

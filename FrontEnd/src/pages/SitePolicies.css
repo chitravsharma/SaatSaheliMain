@@ -20,7 +20,7 @@
 .policies-divider {
   width: 60px;
   height: 4px;
-  background: linear-gradient(90deg, var(--accent-blue), #d4a017);
+  background: linear-gradient(90deg, var(--accent-gold), var(--accent-gold-hover));
   border: none;
   border-radius: 2px;
   margin: 16px auto 32px;

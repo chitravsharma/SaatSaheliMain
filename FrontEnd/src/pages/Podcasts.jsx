@@ -279,6 +279,7 @@ function Podcasts() {
       </h1>
       {message && <div className="podcast-message">{message}</div>}
 
+      <div className="podcast-section-card">
       {/* Tabs */}
       <div className="podcast-tabs">
         <button className={tab === "browse" ? "active" : ""} onClick={() => setTab("browse")}>Browse All</button>
@@ -401,6 +402,7 @@ function Podcasts() {
           </div>
         </>
       )}
+      </div>{/* end podcast-section-card */}
     </div>
   );
 }

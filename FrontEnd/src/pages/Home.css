@@ -507,6 +507,37 @@
   background: #d97706;
 }
 
+/* Ad actions row */
+.home-ad-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
+
+.home-ad-share-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.15);
+  color: var(--text-muted);
+  border: 1px solid var(--border-default);
+  padding: 6px 16px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+  font-family: 'Segoe UI', system-ui, sans-serif;
+}
+
+.home-ad-share-btn:hover {
+  background: var(--accent-gold);
+  color: #fff;
+  border-color: var(--accent-gold);
+}
+
 /* Ad image */
 .home-ad-image {
   max-width: 100%;

@@ -466,6 +466,7 @@ function Articles() {
       </div>
 
       {/* Content type filter tabs */}
+      <div className="art-section-card">
       <div className="art-filter-tabs">
         <button className={filterType === "" ? "active" : ""} onClick={() => setFilterType("")}>All</button>
         <button className={filterType === "Poetry" ? "active" : ""} onClick={() => setFilterType("Poetry")}>Poems</button>
@@ -654,6 +655,7 @@ function Articles() {
           )}
         </div>
       )}
+      </div>{/* end art-section-card */}
     </div>
   );
 }

@@ -73,6 +73,7 @@ function PublicBooks() {
         <Link to="/Login">{strings.publicBooks.loginPrompt}</Link>
       </p>
 
+      <div className="bm-section-card">
       {loading && <p>{strings.publicBooks.loading}</p>}
       {error && <p className="bm-message">{error}</p>}
 
@@ -110,6 +111,7 @@ function PublicBooks() {
           ))}
         </div>
       )}
+      </div>{/* end bm-section-card */}
     </div>
   );
 }
@@ -607,6 +609,7 @@ function BookManager() {
         <div className={isReading ? "bm-sidebar" : ""}>
           <h1>{strings.bookManager.heading}</h1>
           {message && <div className="bm-message">{message}</div>}
+          <div className="bm-section-card">
           <div className={`bm-button-row ${isReading ? "bm-button-col" : ""}`}>
             <button className="bm-btn bm-btn-create" onClick={() => { setReadingBookId(null); setView("create"); }}>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14M5 12h14"/></svg>
@@ -629,7 +632,9 @@ function BookManager() {
               My Articles
             </button>
           </div>
+          </div>{/* end bm-section-card for buttons */}
 
+          <div className="bm-section-card">
           <h2 className="bm-published-heading">{strings.publicBooks.heading}</h2>
           {publishedLoading && <p>{strings.publicBooks.loading}</p>}
           {!publishedLoading && publishedBooks.length === 0 && (
@@ -673,6 +678,7 @@ function BookManager() {
               </div>
             )
           )}
+          </div>{/* end bm-section-card for published books */}
         </div>
 
         {isReading && (() => {

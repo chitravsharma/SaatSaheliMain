@@ -26,11 +26,7 @@ const AdminDashboard = () => {
     const [resetNewPassword, setResetNewPassword] = useState("");
 
     // Advertisement banner state
-    const [advertisements, setAdvertisements] = useState(() => {
-        try {
-            return JSON.parse(localStorage.getItem("ss_advertisements") || "[]");
-        } catch { return []; }
-    });
+    const [advertisements, setAdvertisements] = useState([]);
     const [adTitle, setAdTitle] = useState("");
     const [adContentType, setAdContentType] = useState("text"); // "text" | "html" | "image"
     const [adHtmlContent, setAdHtmlContent] = useState("");
@@ -39,24 +35,32 @@ const AdminDashboard = () => {
     const [adLinkUrl, setAdLinkUrl] = useState("");
     const [adAnimation, setAdAnimation] = useState("static"); // "static" | "scroll" | "blink"
     const [adActive, setAdActive] = useState(true);
+    const [adUploading, setAdUploading] = useState(false);
 
-    const saveAdvertisements = (ads) => {
-        setAdvertisements(ads);
-        localStorage.setItem("ss_advertisements", JSON.stringify(ads));
-    };
+    const fetchAdvertisements = useCallback(async () => {
+        try {
+            const res = await axios.get(`${API}/api/advertisements`, { headers });
+            setAdvertisements(Array.isArray(res.data) ? res.data : []);
+        } catch { /* ignore */ }
+    }, [user?.userId]);
 
-    const handleAdImageUpload = (e) => {
+    const handleAdImageUpload = async (e) => {
         const file = e.target.files[0];
         if (!file) return;
-        const reader = new FileReader();
-        reader.onloadend = () => {
-            setAdImageUrl(reader.result);
+        setAdUploading(true);
+        try {
+            const formData = new FormData();
+            formData.append("file", file);
+            const res = await axios.post(`${API}/api/upload`, formData);
+            setAdImageUrl(res.data.url);
             setAdImageFile(file);
-        };
-        reader.readAsDataURL(file);
+        } catch {
+            setMessage("Failed to upload image");
+        }
+        setAdUploading(false);
     };
 
-    const addAdvertisement = () => {
+    const addAdvertisement = async () => {
         if (!adTitle.trim()) {
             setMessage("Please enter an advertisement title");
             return;
@@ -69,33 +73,44 @@ const AdminDashboard = () => {
             setMessage("Please enter HTML content for the advertisement");
             return;
         }
-        const newAd = {
-            id: Date.now(),
-            title: adTitle,
-            contentType: adContentType,
-            htmlContent: adContentType === "html" ? adHtmlContent : "",
-            imageUrl: adContentType === "image" ? adImageUrl : "",
-            linkUrl: adLinkUrl,
-            animation: adAnimation,
-            active: adActive,
-            createdAt: new Date().toISOString(),
-        };
-        saveAdvertisements([...advertisements, newAd]);
-        setAdTitle(""); setAdHtmlContent(""); setAdImageUrl(""); setAdImageFile(null);
-        setAdLinkUrl(""); setAdAnimation("static"); setAdActive(true); setAdContentType("text");
-        setMessage("Advertisement added successfully");
+        try {
+            await axios.post(`${API}/api/advertisements`, {
+                userId: user.userId,
+                title: adTitle,
+                contentType: adContentType,
+                htmlContent: adContentType === "html" ? adHtmlContent : "",
+                imageUrl: adContentType === "image" ? adImageUrl : "",
+                linkUrl: adLinkUrl,
+                animation: adAnimation,
+                active: adActive,
+            }, { headers });
+            setAdTitle(""); setAdHtmlContent(""); setAdImageUrl(""); setAdImageFile(null);
+            setAdLinkUrl(""); setAdAnimation("static"); setAdActive(true); setAdContentType("text");
+            setMessage("Advertisement added successfully");
+            fetchAdvertisements();
+        } catch {
+            setMessage("Failed to create advertisement");
+        }
     };
 
-    const removeAdvertisement = (id) => {
+    const removeAdvertisement = async (id) => {
         if (!window.confirm("Remove this advertisement?")) return;
-        saveAdvertisements(advertisements.filter(a => a.id !== id));
-        setMessage("Advertisement removed");
+        try {
+            await axios.delete(`${API}/api/advertisements/${id}`, { headers });
+            setMessage("Advertisement removed");
+            fetchAdvertisements();
+        } catch {
+            setMessage("Failed to remove advertisement");
+        }
     };
 
-    const toggleAdActive = (id) => {
-        saveAdvertisements(advertisements.map(a =>
-            a.id === id ? { ...a, active: !a.active } : a
-        ));
+    const toggleAdActive = async (id) => {
+        try {
+            await axios.put(`${API}/api/advertisements/${id}/toggle`, {}, { headers });
+            fetchAdvertisements();
+        } catch {
+            setMessage("Failed to toggle advertisement status");
+        }
     };
 
     // Maintenance window state
@@ -208,7 +223,8 @@ const AdminDashboard = () => {
         if (tab === "books") fetchBooks();
         if (tab === "articles") fetchArticles();
         if (tab === "analytics") fetchAnalytics();
-    }, [tab, fetchUsers, fetchBooks, fetchArticles, fetchAnalytics]);
+        if (tab === "advertisements") fetchAdvertisements();
+    }, [tab, fetchUsers, fetchBooks, fetchArticles, fetchAnalytics, fetchAdvertisements]);
 
     const changeRole = async (userId, newRole) => {
         try {
@@ -1124,8 +1140,8 @@ const AdminDashboard = () => {
 
                             {adContentType === "image" && (
                                 <div className="admin-maint-field admin-maint-field-wide">
-                                    <label>Upload Image</label>
-                                    <input type="file" accept="image/*" onChange={handleAdImageUpload} className="bm-input" />
+                                    <label>Upload Image {adUploading && "(Uploading...)"}</label>
+                                    <input type="file" accept="image/*" onChange={handleAdImageUpload} className="bm-input" disabled={adUploading} />
                                     {adImageUrl && (
                                         <div style={{ marginTop: 8 }}>
                                             <img src={adImageUrl} alt="Preview" style={{ maxWidth: "100%", maxHeight: 150, borderRadius: 8, border: "1px solid #ccc" }} />
@@ -1210,7 +1226,7 @@ const AdminDashboard = () => {
                                                     {ad.active ? "Active" : "Inactive"}
                                                 </span>
                                             </td>
-                                            <td>{new Date(ad.createdAt).toLocaleDateString()}</td>
+                                            <td>{ad.createdDate ? new Date(ad.createdDate).toLocaleDateString() : "\u2014"}</td>
                                             <td>
                                                 <button className="bm-btn bm-btn-sm bm-btn-edit" onClick={() => toggleAdActive(ad.id)}>
                                                     {ad.active ? "Deactivate" : "Activate"}
