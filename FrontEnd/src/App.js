@@ -33,6 +33,7 @@ import DownloadProtection from './components/DownloadProtection';
 import VisitorTracker from './components/VisitorTracker';
 import MaintenanceBanner from './components/MaintenanceBanner';
 import Checkout from './pages/Checkout';
+import Marketplace from './pages/Marketplace';
 
 
 function BookManagerWrapper() {
@@ -71,6 +72,7 @@ function App() {
           <Route path="/podcasts" element={<Podcasts />} />
           <Route path="/gallery/:galleryId" element={<GalleryView />} />
           <Route path="/pricing" element={<Pricing />} />
+          <Route path="/marketplace" element={<Marketplace />} />
           <Route path="/checkout" element={<ProtectedRoute><Checkout /></ProtectedRoute>} />
           <Route path="/manual" element={<UserManual />} />
           <Route path="/admin-manual" element={<ProtectedRoute requiredRole="ADMIN"><AdminManual /></ProtectedRoute>} />

@@ -12,6 +12,13 @@
   letter-spacing: 0.02em;
 }
 
+.site-footer nav,
+.site-footer p {
+  max-width: 960px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
 .footer-links {
   display: flex;
   justify-content: center;
