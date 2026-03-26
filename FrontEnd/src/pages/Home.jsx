@@ -28,6 +28,15 @@ function Home() {
   const [userFavorites, setUserFavorites] = useState({});
   const [loading, setLoading] = useState(true);
   const [shareCopiedId, setShareCopiedId] = useState(null);
+  const [advertisements, setAdvertisements] = useState([]);
+
+  // Load advertisements from localStorage
+  useEffect(() => {
+    try {
+      const ads = JSON.parse(localStorage.getItem("ss_advertisements") || "[]");
+      setAdvertisements(ads.filter(a => a.active));
+    } catch { /* ignore */ }
+  }, []);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -183,7 +192,6 @@ function Home() {
       {!loading && (
         <div className="home-section">
           <h2 className="home-section-heading">Recently Added Books</h2>
-          <hr className="home-section-divider" />
 
           {recentBooks.length === 0 && (
             <p className="home-empty">No published content yet. Be the first to create!</p>
@@ -249,25 +257,37 @@ function Home() {
         </div>
       )}
 
-      {/* Ad Banner 1 */}
-      {!loading && (
-        <div className="home-ad-section">
-          <div className="home-ad-banner">
+      {/* Dynamic Ad Banners */}
+      {!loading && advertisements.length > 0 && advertisements.map((ad) => (
+        <div key={ad.id} className="home-ad-section">
+          <div className={`home-ad-banner home-ad-anim-${ad.animation}`}>
             <span className="home-ad-label">Advertisement</span>
-            <div className="home-ad-content">
-              <h3>Promote Your Creative Work!</h3>
-              <p>Reach thousands of readers and creators. Advertise your books, art, and services on Saat Saheli.</p>
-              <Link to="/contacts" className="home-ad-cta">Contact Us for Advertising</Link>
+            <div className={`home-ad-content ${ad.animation === "scroll" ? "home-ad-scroll" : ""} ${ad.animation === "blink" ? "home-ad-blink" : ""}`}>
+              {ad.contentType === "image" && ad.imageUrl && (
+                ad.linkUrl ? (
+                  <a href={ad.linkUrl} target="_blank" rel="noopener noreferrer">
+                    <img src={ad.imageUrl} alt={ad.title} className="home-ad-image" />
+                  </a>
+                ) : (
+                  <img src={ad.imageUrl} alt={ad.title} className="home-ad-image" />
+                )
+              )}
+              {ad.contentType === "html" && (
+                <div dangerouslySetInnerHTML={{ __html: ad.htmlContent }} />
+              )}
+              {ad.contentType === "text" && <h3>{ad.title}</h3>}
+              {ad.linkUrl && ad.contentType !== "image" && (
+                <a href={ad.linkUrl} target="_blank" rel="noopener noreferrer" className="home-ad-cta">Learn More</a>
+              )}
             </div>
           </div>
         </div>
-      )}
+      ))}
 
       {/* 2. Photo Galleries */}
       {!loading && galleries.length > 0 && (
         <div className="home-section">
           <h2 className="home-section-heading">Photo Galleries</h2>
-          <hr className="home-section-divider" />
           <div className="home-gallery-row">
             {galleries.map((gallery) => {
               const coverImg = gallery.coverImageUrl || (gallery.images && gallery.images[0]?.imageUrl);
@@ -319,7 +339,6 @@ function Home() {
       {!loading && recentArticles.length > 0 && (
         <div className="home-section">
           <h2 className="home-section-heading">Blogs & Articles</h2>
-          <hr className="home-section-divider" />
           <div className="home-articles-row">
             {recentArticles.map((article) => {
               const typePath = article.contentType === "Poetry" ? "poems"
@@ -358,8 +377,8 @@ function Home() {
         </div>
       )}
 
-      {/* Ad Banner 2 - Bottom */}
-      {!loading && (
+      {/* Fallback ad if no dynamic ads exist */}
+      {!loading && advertisements.length === 0 && (
         <div className="home-ad-section">
           <div className="home-ad-banner home-ad-banner-alt">
             <span className="home-ad-label">Sponsored</span>

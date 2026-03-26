@@ -460,9 +460,9 @@ export default function Login() {
                     className="auth-plan-select"
                   >
                     <option value="Free">Free (Starter)</option>
-                    <option value="Premium">Premium — $5-$9/mo</option>
-                    <option value="Gold">Gold Member — $15-$20/mo</option>
-                    <option value="Creator">Creator / Pro — $29-$49/mo</option>
+                    <option value="Premium">Premium — $9/month</option>
+                    <option value="Gold">Gold Member — $19/month</option>
+                    <option value="Creator">Creator / Pro — $39/month</option>
                   </select>
                   <a href="/pricing" target="_blank" rel="noopener noreferrer" className="auth-plan-link">View plan details</a>
                 </div>

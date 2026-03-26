@@ -56,24 +56,22 @@
   font-size: 1.1rem;
 }
 
-/* ── Section ── */
+/* ── Section (platform card) ── */
 .home-section {
-  margin-bottom: 36px;
+  margin-bottom: 32px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-default);
+  border-radius: 14px;
+  padding: 24px 20px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
 }
 
 .home-section-heading {
   font-size: 1.5rem;
   font-weight: 700;
   color: var(--accent-gold);
-  margin: 0 0 4px 0;
+  margin: 0 0 18px 0;
   font-family: 'Georgia', 'Times New Roman', serif;
-}
-
-.home-section-divider {
-  border: none;
-  height: 3px;
-  background: linear-gradient(90deg, var(--accent-blue), var(--accent-blue-light), transparent);
-  margin: 0 0 24px 0;
 }
 
 .home-empty {
@@ -507,6 +505,36 @@
 
 .home-ad-banner-alt .home-ad-cta:hover {
   background: #d97706;
+}
+
+/* Ad image */
+.home-ad-image {
+  max-width: 100%;
+  max-height: 200px;
+  border-radius: 8px;
+  display: block;
+  margin: 0 auto;
+}
+
+/* ── Ad Animation: Scroll Left to Right ── */
+@keyframes adScrollLR {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(0); }
+}
+.home-ad-scroll {
+  animation: adScrollLR 1.5s ease-out;
+}
+.home-ad-anim-scroll {
+  overflow: hidden;
+}
+
+/* ── Ad Animation: Blinking ── */
+@keyframes adBlink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+.home-ad-blink {
+  animation: adBlink 2s ease-in-out infinite;
 }
 
 /* ── Responsive ── */

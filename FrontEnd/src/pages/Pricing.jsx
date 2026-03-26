@@ -83,9 +83,9 @@ const plans = [
     key: "Creator",
     name: "Creator / Pro",
     tagline: "Best for businesses, schools, or publishers",
-    price: "$49",
+    price: "$39",
     priceNote: "/ month",
-    monthlyPrice: 49,
+    monthlyPrice: 39,
     features: [
       "Everything in Gold",
       "Unlimited collaborators",

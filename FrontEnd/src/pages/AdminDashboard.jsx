@@ -25,6 +25,79 @@ const AdminDashboard = () => {
     const [resetPasswordUserId, setResetPasswordUserId] = useState(null);
     const [resetNewPassword, setResetNewPassword] = useState("");
 
+    // Advertisement banner state
+    const [advertisements, setAdvertisements] = useState(() => {
+        try {
+            return JSON.parse(localStorage.getItem("ss_advertisements") || "[]");
+        } catch { return []; }
+    });
+    const [adTitle, setAdTitle] = useState("");
+    const [adContentType, setAdContentType] = useState("text"); // "text" | "html" | "image"
+    const [adHtmlContent, setAdHtmlContent] = useState("");
+    const [adImageUrl, setAdImageUrl] = useState("");
+    const [adImageFile, setAdImageFile] = useState(null);
+    const [adLinkUrl, setAdLinkUrl] = useState("");
+    const [adAnimation, setAdAnimation] = useState("static"); // "static" | "scroll" | "blink"
+    const [adActive, setAdActive] = useState(true);
+
+    const saveAdvertisements = (ads) => {
+        setAdvertisements(ads);
+        localStorage.setItem("ss_advertisements", JSON.stringify(ads));
+    };
+
+    const handleAdImageUpload = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onloadend = () => {
+            setAdImageUrl(reader.result);
+            setAdImageFile(file);
+        };
+        reader.readAsDataURL(file);
+    };
+
+    const addAdvertisement = () => {
+        if (!adTitle.trim()) {
+            setMessage("Please enter an advertisement title");
+            return;
+        }
+        if (adContentType === "image" && !adImageUrl) {
+            setMessage("Please upload an image for the advertisement");
+            return;
+        }
+        if (adContentType === "html" && !adHtmlContent.trim()) {
+            setMessage("Please enter HTML content for the advertisement");
+            return;
+        }
+        const newAd = {
+            id: Date.now(),
+            title: adTitle,
+            contentType: adContentType,
+            htmlContent: adContentType === "html" ? adHtmlContent : "",
+            imageUrl: adContentType === "image" ? adImageUrl : "",
+            linkUrl: adLinkUrl,
+            animation: adAnimation,
+            active: adActive,
+            createdAt: new Date().toISOString(),
+        };
+        saveAdvertisements([...advertisements, newAd]);
+        setAdTitle(""); setAdHtmlContent(""); setAdImageUrl(""); setAdImageFile(null);
+        setAdLinkUrl(""); setAdAnimation("static"); setAdActive(true); setAdContentType("text");
+        setMessage("Advertisement added successfully");
+    };
+
+    const removeAdvertisement = (id) => {
+        if (!window.confirm("Remove this advertisement?")) return;
+        saveAdvertisements(advertisements.filter(a => a.id !== id));
+        setMessage("Advertisement removed");
+    };
+
+    const toggleAdActive = (id) => {
+        saveAdvertisements(advertisements.map(a =>
+            a.id === id ? { ...a, active: !a.active } : a
+        ));
+    };
+
     // Maintenance window state
     const [maintenanceWindows, setMaintenanceWindows] = useState(() => {
         try {
@@ -363,6 +436,11 @@ const AdminDashboard = () => {
                 <button className={tab === "maintenance" ? "active" : ""} onClick={() => setTab("maintenance")}>
                     Maintenance
                 </button>
+                {isSuperAdmin && (
+                    <button className={tab === "advertisements" ? "active" : ""} onClick={() => setTab("advertisements")}>
+                        Advertisements
+                    </button>
+                )}
             </div>
 
             {tab === "stats" && stats && (
@@ -1007,6 +1085,145 @@ const AdminDashboard = () => {
                                 );
                             })}
                         </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Advertisements Tab (Super Admin only) */}
+            {tab === "advertisements" && isSuperAdmin && (
+                <div className="admin-maintenance">
+                    <h2>Advertisement Banner Management</h2>
+                    <p className="admin-maint-desc">
+                        Create and manage advertisement banners displayed on the home page. You can add images, formatted HTML content, and choose animation styles.
+                    </p>
+
+                    {/* Add new advertisement form */}
+                    <div className="admin-maint-form">
+                        <h3>Create New Advertisement</h3>
+                        <div className="admin-maint-fields">
+                            <div className="admin-maint-field admin-maint-field-wide">
+                                <label>Title</label>
+                                <input type="text" value={adTitle} onChange={e => setAdTitle(e.target.value)} placeholder="Advertisement title..." className="bm-input" />
+                            </div>
+                            <div className="admin-maint-field">
+                                <label>Content Type</label>
+                                <select value={adContentType} onChange={e => setAdContentType(e.target.value)} className="admin-action-select" style={{ width: "100%" }}>
+                                    <option value="text">Plain Text (Title Only)</option>
+                                    <option value="html">Rich HTML Content</option>
+                                    <option value="image">Image Banner</option>
+                                </select>
+                            </div>
+                            <div className="admin-maint-field">
+                                <label>Animation Style</label>
+                                <select value={adAnimation} onChange={e => setAdAnimation(e.target.value)} className="admin-action-select" style={{ width: "100%" }}>
+                                    <option value="static">Static</option>
+                                    <option value="scroll">Scroll Left to Right</option>
+                                    <option value="blink">Blinking</option>
+                                </select>
+                            </div>
+
+                            {adContentType === "image" && (
+                                <div className="admin-maint-field admin-maint-field-wide">
+                                    <label>Upload Image</label>
+                                    <input type="file" accept="image/*" onChange={handleAdImageUpload} className="bm-input" />
+                                    {adImageUrl && (
+                                        <div style={{ marginTop: 8 }}>
+                                            <img src={adImageUrl} alt="Preview" style={{ maxWidth: "100%", maxHeight: 150, borderRadius: 8, border: "1px solid #ccc" }} />
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+
+                            {adContentType === "html" && (
+                                <div className="admin-maint-field admin-maint-field-wide">
+                                    <label>HTML Content</label>
+                                    <textarea
+                                        value={adHtmlContent}
+                                        onChange={e => setAdHtmlContent(e.target.value)}
+                                        placeholder="<h3>Your Ad Here</h3><p>Formatted content...</p>"
+                                        className="bm-input"
+                                        rows={5}
+                                        style={{ width: "100%", fontFamily: "monospace", resize: "vertical" }}
+                                    />
+                                    {adHtmlContent && (
+                                        <div style={{ marginTop: 8, padding: 12, background: "#f8fafc", borderRadius: 8, border: "1px solid #e2e8f0" }}>
+                                            <div style={{ fontSize: "0.7rem", color: "#64748b", marginBottom: 4 }}>Preview:</div>
+                                            <div dangerouslySetInnerHTML={{ __html: adHtmlContent }} />
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+
+                            <div className="admin-maint-field admin-maint-field-wide">
+                                <label>Link URL (optional)</label>
+                                <input type="url" value={adLinkUrl} onChange={e => setAdLinkUrl(e.target.value)} placeholder="https://example.com" className="bm-input" />
+                            </div>
+                            <div className="admin-maint-field">
+                                <label>
+                                    <input type="checkbox" checked={adActive} onChange={e => setAdActive(e.target.checked)} />
+                                    {" "}Active (show on homepage)
+                                </label>
+                            </div>
+                        </div>
+                        <button className="bm-btn bm-btn-create" onClick={addAdvertisement}>Create Advertisement</button>
+                    </div>
+
+                    {/* Existing advertisements */}
+                    <div className="admin-maint-list">
+                        <h3>Advertisements ({advertisements.length})</h3>
+                        {advertisements.length === 0 ? (
+                            <p className="admin-maint-empty">No advertisements created yet.</p>
+                        ) : (
+                            <table className="admin-table">
+                                <thead>
+                                    <tr>
+                                        <th>Title</th>
+                                        <th>Type</th>
+                                        <th>Animation</th>
+                                        <th>Preview</th>
+                                        <th>Status</th>
+                                        <th>Created</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {advertisements.map(ad => (
+                                        <tr key={ad.id}>
+                                            <td>{ad.title}</td>
+                                            <td>
+                                                <span className={`admin-type-badge admin-type-${ad.contentType === "html" ? "blog" : ad.contentType === "image" ? "article" : "poetry"}`}>
+                                                    {ad.contentType === "html" ? "HTML" : ad.contentType === "image" ? "Image" : "Text"}
+                                                </span>
+                                            </td>
+                                            <td style={{ textTransform: "capitalize" }}>{ad.animation}</td>
+                                            <td style={{ maxWidth: 200 }}>
+                                                {ad.contentType === "image" && ad.imageUrl && (
+                                                    <img src={ad.imageUrl} alt={ad.title} style={{ maxWidth: 120, maxHeight: 60, borderRadius: 4 }} />
+                                                )}
+                                                {ad.contentType === "html" && (
+                                                    <div style={{ fontSize: "0.7rem", maxHeight: 60, overflow: "hidden" }} dangerouslySetInnerHTML={{ __html: ad.htmlContent }} />
+                                                )}
+                                                {ad.contentType === "text" && <span style={{ fontSize: "0.8rem", color: "#64748b" }}>Title only</span>}
+                                            </td>
+                                            <td>
+                                                <span className={`admin-maint-status ${ad.active ? "admin-maint-active" : "admin-maint-inactive"}`}>
+                                                    {ad.active ? "Active" : "Inactive"}
+                                                </span>
+                                            </td>
+                                            <td>{new Date(ad.createdAt).toLocaleDateString()}</td>
+                                            <td>
+                                                <button className="bm-btn bm-btn-sm bm-btn-edit" onClick={() => toggleAdActive(ad.id)}>
+                                                    {ad.active ? "Deactivate" : "Activate"}
+                                                </button>
+                                                <button className="bm-btn bm-btn-sm bm-btn-delete" onClick={() => removeAdvertisement(ad.id)}>
+                                                    Remove
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        )}
                     </div>
                 </div>
             )}
