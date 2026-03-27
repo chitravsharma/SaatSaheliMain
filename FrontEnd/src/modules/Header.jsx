@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import siteLogo from './SaatSaheliLogo.jpg';
+import siteLogo from './sarayu-logo.png';
 import { useAuth } from '../AuthContext';
 import { useStrings, useLanguage } from '../LanguageContext';
 import './Header.css';
@@ -42,9 +42,7 @@ const Header = () => {
           <Link to="/" className="header-logo" onClick={closeMobileNav}>
             <img src={siteLogo} className="header-logo-img" alt={strings.header.logoAlt} />
             <div className="header-brand">
-              <span className="header-site-name">{strings.header.siteName}</span>
-              <span className="header-tagline">Welcome to Saat Saheli</span>
-              <span className="header-tagline">A Community for Passion and Creativity!</span>
+              <span className="header-tagline">Where silence speaks</span>
             </div>
           </Link>
           <button

@@ -4,7 +4,7 @@ import axios from "axios";
 const API = process.env.REACT_APP_API_URL;
 
 function ServerWakeUp({ children }) {
-  const [serverReady, setServerReady] = useState(false);
+  const [serverReady, setServerReady] = useState(true); // TODO: revert to false when backend is available
   const [retryCount, setRetryCount] = useState(0);
 
   useEffect(() => {
