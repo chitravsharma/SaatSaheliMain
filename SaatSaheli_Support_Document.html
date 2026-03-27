@@ -1,0 +1,981 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Sarayu - Technical Support Document</title>
+<style>
+  @page { margin: 0.7in; size: A4; }
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: #1a1a2e;
+    line-height: 1.6;
+    margin: 0;
+    padding: 40px 50px;
+    background: #fff;
+  }
+  .cover {
+    text-align: center;
+    padding: 120px 0 60px;
+    page-break-after: always;
+  }
+  .cover h1 {
+    font-size: 42px;
+    color: #6c3483;
+    margin-bottom: 10px;
+    letter-spacing: 2px;
+  }
+  .cover .subtitle {
+    font-size: 22px;
+    color: #5b2c6f;
+    margin-bottom: 40px;
+  }
+  .cover .meta {
+    font-size: 14px;
+    color: #666;
+    margin-top: 60px;
+    line-height: 2;
+  }
+  .cover .badge {
+    display: inline-block;
+    background: #6c3483;
+    color: #fff;
+    padding: 8px 28px;
+    border-radius: 20px;
+    font-size: 13px;
+    margin-top: 20px;
+    letter-spacing: 1px;
+  }
+  h1 { font-size: 26px; color: #6c3483; border-bottom: 3px solid #6c3483; padding-bottom: 8px; margin-top: 40px; }
+  h2 { font-size: 20px; color: #5b2c6f; margin-top: 30px; border-left: 4px solid #6c3483; padding-left: 12px; }
+  h3 { font-size: 16px; color: #7d3c98; margin-top: 20px; }
+  table { width: 100%; border-collapse: collapse; margin: 15px 0; font-size: 13px; }
+  th { background: #6c3483; color: white; padding: 10px 12px; text-align: left; font-weight: 600; }
+  td { padding: 8px 12px; border-bottom: 1px solid #ddd; }
+  tr:nth-child(even) { background: #f8f4fc; }
+  .info-box {
+    background: #f3e8ff;
+    border-left: 4px solid #6c3483;
+    padding: 14px 18px;
+    margin: 15px 0;
+    border-radius: 0 6px 6px 0;
+    font-size: 14px;
+  }
+  .warning-box {
+    background: #fff3cd;
+    border-left: 4px solid #e67e22;
+    padding: 14px 18px;
+    margin: 15px 0;
+    border-radius: 0 6px 6px 0;
+    font-size: 14px;
+  }
+  .danger-box {
+    background: #fde8e8;
+    border-left: 4px solid #e74c3c;
+    padding: 14px 18px;
+    margin: 15px 0;
+    border-radius: 0 6px 6px 0;
+    font-size: 14px;
+  }
+  code {
+    background: #f0e6f6;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-family: 'Courier New', monospace;
+    font-size: 13px;
+    color: #5b2c6f;
+  }
+  pre {
+    background: #2d2d2d;
+    color: #f8f8f2;
+    padding: 16px;
+    border-radius: 6px;
+    overflow-x: auto;
+    font-size: 12.5px;
+    line-height: 1.5;
+  }
+  .toc { page-break-after: always; }
+  .toc ul { list-style: none; padding-left: 0; }
+  .toc li { padding: 6px 0; border-bottom: 1px dotted #ccc; font-size: 15px; }
+  .toc li span { color: #6c3483; font-weight: 600; margin-right: 8px; }
+  .section { page-break-before: auto; }
+  .footer { text-align: center; font-size: 11px; color: #999; margin-top: 60px; padding-top: 15px; border-top: 1px solid #ddd; }
+  ul { padding-left: 20px; }
+  li { margin-bottom: 4px; }
+</style>
+</head>
+<body>
+
+<!-- COVER PAGE -->
+<div class="cover">
+  <h1>Sarayu</h1>
+  <div class="subtitle">Technical Support Document</div>
+  <div class="badge">INTERNAL &amp; OPERATIONS USE</div>
+  <div class="meta">
+    <strong>Version:</strong> 1.0<br>
+    <strong>Date:</strong> March 25, 2026<br>
+    <strong>Platform:</strong> Web Application (React + Spring Boot)<br>
+    <strong>Database:</strong> PostgreSQL (Neon Cloud)<br>
+    <strong>AI Engine:</strong> Hugging Face Inference API (Stable Diffusion XL)<br>
+    <strong>Prepared by:</strong> Sarayu Development Team
+  </div>
+</div>
+
+<!-- TABLE OF CONTENTS -->
+<div class="toc">
+  <h1>Table of Contents</h1>
+  <ul>
+    <li><span>1.</span> Platform Overview</li>
+    <li><span>2.</span> System Architecture</li>
+    <li><span>3.</span> Technical Support &mdash; Server &amp; Deployment</li>
+    <li><span>4.</span> User Support &mdash; Account &amp; Access Issues</li>
+    <li><span>5.</span> Database Support &mdash; PostgreSQL / Neon</li>
+    <li><span>6.</span> Admin Support &mdash; Admin Panel Operations</li>
+    <li><span>7.</span> Super Admin Support &mdash; Elevated Operations</li>
+    <li><span>8.</span> AI &amp; Image Generation Support</li>
+    <li><span>9.</span> File Upload &amp; Storage Support</li>
+    <li><span>10.</span> Chat &amp; Community Support</li>
+    <li><span>11.</span> Payments &amp; Subscription Support (Stripe)</li>
+    <li><span>12.</span> Security &amp; Authentication</li>
+    <li><span>13.</span> API Reference &mdash; Quick Lookup</li>
+    <li><span>14.</span> Error Code Reference</li>
+    <li><span>15.</span> Environment Variables Reference</li>
+    <li><span>16.</span> Troubleshooting Guide</li>
+    <li><span>17.</span> Escalation Matrix &amp; Contact</li>
+    <li><span>18.</span> Rebranding Migration &mdash; SaatSaheli to Sarayu</li>
+  </ul>
+</div>
+
+<!-- SECTION 1 -->
+<div class="section">
+<h1>1. Platform Overview</h1>
+<p><strong>Sarayu</strong> (formerly SaatSaheli) is a full-stack creative publishing and community platform that enables users to create, publish, and share digital books, articles, and image galleries. The platform features AI-powered content generation with multilingual (Hindi/English) support.</p>
+
+<h2>1.1 Key Features</h2>
+<ul>
+  <li><strong>Book Publishing:</strong> Create, edit, and publish digital books with drag-and-drop page editing</li>
+  <li><strong>AI Cover Generation:</strong> Generate book covers using Stable Diffusion XL with 12+ artistic styles</li>
+  <li><strong>Multilingual AI Prompts:</strong> Hindi-to-English translation for AI image prompts (Helsinki-NLP)</li>
+  <li><strong>Document Upload:</strong> Import PDF and Word documents, auto-converted to page-based books</li>
+  <li><strong>Flipbook Reader:</strong> Interactive page-flip style book reading experience</li>
+  <li><strong>Galleries &amp; Articles:</strong> Create and manage image galleries and articles</li>
+  <li><strong>Community Chat:</strong> Real-time chat rooms across 6 categories</li>
+  <li><strong>Social Features:</strong> Likes, comments, favorites, following/followers</li>
+  <li><strong>Subscription Plans:</strong> Free, Premium, Gold, and Creator tiers via Stripe</li>
+  <li><strong>Admin Dashboard:</strong> User management, content moderation, platform statistics</li>
+</ul>
+
+<h2>1.2 Technology Stack</h2>
+<table>
+  <tr><th>Layer</th><th>Technology</th><th>Version</th></tr>
+  <tr><td>Frontend</td><td>React, React Router, Axios</td><td>19.x</td></tr>
+  <tr><td>Backend</td><td>Java, Spring Boot, Spring Data JPA</td><td>Java 17, Spring Boot 3.4.5</td></tr>
+  <tr><td>Database</td><td>PostgreSQL (Neon Cloud)</td><td>Latest</td></tr>
+  <tr><td>AI/ML</td><td>Hugging Face Inference API</td><td>Stable Diffusion XL, Helsinki-NLP</td></tr>
+  <tr><td>File Storage</td><td>Cloudinary</td><td>v1.38.0</td></tr>
+  <tr><td>Payments</td><td>Stripe</td><td>v28.2.0</td></tr>
+  <tr><td>Auth</td><td>JWT (HS256), Google OAuth, BCrypt</td><td>jjwt 0.12.6</td></tr>
+  <tr><td>Deployment</td><td>GitHub Pages (Frontend), Spring Boot JAR (Backend)</td><td>&mdash;</td></tr>
+</table>
+</div>
+
+<!-- SECTION 2 -->
+<div class="section">
+<h1>2. System Architecture</h1>
+
+<h2>2.1 High-Level Architecture</h2>
+<pre>
+  [React Frontend :3000]
+         |
+         | REST API (JSON over HTTPS)
+         |
+  [Spring Boot Backend :8081]
+         |
+    +---------+---------+---------+---------+
+    |         |         |         |         |
+  [Neon   [Cloudinary] [Stripe] [Hugging  [Google
+  Postgres]                      Face API]  OAuth]
+</pre>
+
+<h2>2.2 Backend Package Structure</h2>
+<pre>
+com.SaatSaheli.spring/
+  ├── config/         CorsConfig, JwtInterceptor, GlobalExceptionHandler
+  ├── controller/     AuthController, BookController, AdminController,
+  │                   ChatController, GalleryController, ArticleController,
+  │                   SocialController, PaymentController, HealthController
+  ├── model/          User, Login, Book, Page, Article, Gallery,
+  │                   GalleryImage, ChatRoom, ChatMessage, Comment,
+  │                   ContentLike, Favorite
+  ├── repository/     JPA repositories for all models
+  ├── service/        Business logic services
+  └── util/           RoleUtil, RateLimiter, JwtUtil
+</pre>
+
+<h2>2.3 Port Configuration</h2>
+<table>
+  <tr><th>Service</th><th>Port</th><th>Notes</th></tr>
+  <tr><td>Frontend (React)</td><td>3000</td><td>Development server via <code>npm start</code></td></tr>
+  <tr><td>Backend (Spring Boot)</td><td>8081</td><td>Started via <code>./mvnw clean spring-boot:run</code></td></tr>
+  <tr><td>PostgreSQL (Neon)</td><td>5432</td><td>Cloud-hosted, SSL required</td></tr>
+</table>
+</div>
+
+<!-- SECTION 3 -->
+<div class="section">
+<h1>3. Technical Support &mdash; Server &amp; Deployment</h1>
+
+<h2>3.1 Starting the Backend</h2>
+<pre>
+cd SaatSaheliMain/SaatSaheli/
+./mvnw clean spring-boot:run
+</pre>
+<div class="warning-box">
+  <strong>Important:</strong> Always use <code>./mvnw clean spring-boot:run</code> when Java source files change. Incremental compilation can miss new files.
+</div>
+
+<h2>3.2 Starting the Frontend</h2>
+<pre>
+cd SaatSaheliMain/FrontEnd/
+npm start
+</pre>
+
+<h2>3.3 Health Check</h2>
+<table>
+  <tr><th>Endpoint</th><th>Method</th><th>Expected Response</th></tr>
+  <tr><td><code>GET /api/health</code></td><td>GET</td><td><code>{"status": "ok"}</code></td></tr>
+</table>
+<p>Use this endpoint for uptime monitoring and load balancer health probes.</p>
+
+<h2>3.4 Build &amp; Deployment Notes</h2>
+<ul>
+  <li><strong>Frontend build:</strong> <code>npm run build</code> &mdash; requires Node.js 20 LTS (build hangs on Node v25)</li>
+  <li><strong>Frontend hosting:</strong> GitHub Pages via <code>gh-pages</code> package</li>
+  <li><strong>Backend build:</strong> <code>./mvnw clean package</code> produces executable JAR</li>
+  <li><strong>JPA DDL strategy:</strong> <code>update</code> &mdash; Hibernate auto-migrates schema on startup</li>
+</ul>
+
+<h2>3.5 Server Restart Checklist</h2>
+<ol>
+  <li>Verify <code>.env</code> file exists at <code>SaatSaheli/.env</code> with all required variables</li>
+  <li>Run <code>./mvnw clean spring-boot:run</code></li>
+  <li>Confirm health check returns <code>{"status": "ok"}</code></li>
+  <li>Verify database connectivity via any GET endpoint</li>
+  <li>Test frontend connectivity to backend</li>
+</ol>
+</div>
+
+<!-- SECTION 4 -->
+<div class="section">
+<h1>4. User Support &mdash; Account &amp; Access Issues</h1>
+
+<h2>4.1 User Registration</h2>
+<table>
+  <tr><th>Endpoint</th><th>Method</th><th>Rate Limit</th></tr>
+  <tr><td><code>/api/auth/signup</code></td><td>POST</td><td>10 attempts per 15 minutes (per IP)</td></tr>
+</table>
+<p><strong>Required fields:</strong> name, email, password<br>
+<strong>Defaults:</strong> Role = USER, Plan = Free</p>
+
+<h2>4.2 User Login</h2>
+<table>
+  <tr><th>Endpoint</th><th>Method</th><th>Auth Providers</th></tr>
+  <tr><td><code>/api/auth/login</code></td><td>POST</td><td>Email/Password, Google OAuth</td></tr>
+</table>
+<p>Returns a JWT token valid for <strong>24 hours</strong>.</p>
+
+<h2>4.3 Common User Issues &amp; Resolutions</h2>
+<table>
+  <tr><th>Issue</th><th>Cause</th><th>Resolution</th></tr>
+  <tr><td>Cannot sign up</td><td>Email already exists</td><td>Use a different email or reset password</td></tr>
+  <tr><td>Cannot sign up</td><td>Rate limit exceeded (429)</td><td>Wait 15 minutes and retry</td></tr>
+  <tr><td>Cannot log in</td><td>Wrong password</td><td>Use forgot password flow</td></tr>
+  <tr><td>Cannot log in</td><td>Account blocked/disabled</td><td>Contact admin to reactivate (status change)</td></tr>
+  <tr><td>Token expired</td><td>JWT expired after 24h</td><td>Log in again to get a new token</td></tr>
+  <tr><td>Google login fails</td><td>OAuth misconfiguration</td><td>Verify Google OAuth client ID in frontend config</td></tr>
+</table>
+
+<h2>4.4 Password Reset Flow</h2>
+<h3>User-Initiated Reset</h3>
+<ol>
+  <li>User calls <code>POST /api/auth/forgot-password</code> with email</li>
+  <li>System generates a temporary password (logged server-side)</li>
+  <li>User receives temp password and calls <code>POST /api/auth/reset-password</code> with old + new password</li>
+</ol>
+
+<h3>Admin-Initiated Reset (Super Admin Only)</h3>
+<ol>
+  <li>Super Admin calls <code>PUT /api/auth/admin-reset-password/{userId}</code></li>
+  <li>Password is force-reset without requiring old password verification</li>
+</ol>
+
+<h2>4.5 Account Statuses</h2>
+<table>
+  <tr><th>Status</th><th>Description</th><th>User Can Login?</th></tr>
+  <tr><td><code>ACTIVE</code></td><td>Normal active account</td><td>Yes</td></tr>
+  <tr><td><code>INACTIVE</code></td><td>Temporarily deactivated</td><td>No</td></tr>
+  <tr><td><code>DISABLED</code></td><td>Administratively disabled</td><td>No</td></tr>
+  <tr><td><code>BLOCKED</code></td><td>Blocked for policy violations</td><td>No</td></tr>
+  <tr><td><code>DELETED</code></td><td>Soft-deleted account</td><td>No</td></tr>
+</table>
+</div>
+
+<!-- SECTION 5 -->
+<div class="section">
+<h1>5. Database Support &mdash; PostgreSQL / Neon</h1>
+
+<h2>5.1 Connection Details</h2>
+<table>
+  <tr><th>Parameter</th><th>Value</th></tr>
+  <tr><td>Provider</td><td>Neon Cloud PostgreSQL</td></tr>
+  <tr><td>Connection URL</td><td><code>${NEON_DB_URL}</code> (env variable)</td></tr>
+  <tr><td>Driver</td><td><code>org.postgresql.Driver</code></td></tr>
+  <tr><td>ORM</td><td>Spring Data JPA / Hibernate</td></tr>
+  <tr><td>DDL Strategy</td><td><code>update</code> (auto-migrate)</td></tr>
+</table>
+
+<h2>5.2 Connection Pool Configuration (HikariCP)</h2>
+<table>
+  <tr><th>Setting</th><th>Value</th><th>Reason</th></tr>
+  <tr><td>Maximum Pool Size</td><td>5</td><td>Neon limits concurrent connections</td></tr>
+  <tr><td>Connection Timeout</td><td>20,000 ms (20s)</td><td>Allow time for cold-start connections</td></tr>
+  <tr><td>Max Lifetime</td><td>600,000 ms (10 min)</td><td>Neon closes long-lived idle connections</td></tr>
+  <tr><td>Idle Timeout</td><td>300,000 ms (5 min)</td><td>Release unused connections promptly</td></tr>
+  <tr><td>Keep-Alive Time</td><td>60,000 ms (1 min)</td><td>Prevent premature idle closure</td></tr>
+</table>
+
+<h2>5.3 Database Schema (Entity Tables)</h2>
+<table>
+  <tr><th>Table</th><th>Description</th><th>Key Relationships</th></tr>
+  <tr><td><code>users</code></td><td>User profiles, roles, plans</td><td>One-to-one with logins</td></tr>
+  <tr><td><code>logins</code></td><td>Credentials, auth provider, status</td><td>Linked to users</td></tr>
+  <tr><td><code>books</code></td><td>Book metadata, status, category</td><td>Owned by user; has many pages</td></tr>
+  <tr><td><code>pages</code></td><td>Book page content and numbering</td><td>Belongs to book</td></tr>
+  <tr><td><code>articles</code></td><td>Articles with headline and content</td><td>Owned by user</td></tr>
+  <tr><td><code>galleries</code></td><td>Image gallery containers</td><td>Owned by user; has many images</td></tr>
+  <tr><td><code>gallery_images</code></td><td>Individual gallery images</td><td>Belongs to gallery</td></tr>
+  <tr><td><code>chat_rooms</code></td><td>Chat room definitions</td><td>Has many messages</td></tr>
+  <tr><td><code>chat_messages</code></td><td>Individual chat messages</td><td>Belongs to room; sent by user</td></tr>
+  <tr><td><code>comments</code></td><td>Comments on books/galleries/articles</td><td>Polymorphic by target type</td></tr>
+  <tr><td><code>content_likes</code></td><td>Like toggles on content</td><td>Polymorphic by target type</td></tr>
+  <tr><td><code>favorites</code></td><td>User-favorited content</td><td>Linked to user</td></tr>
+</table>
+
+<h2>5.4 Common Database Issues</h2>
+<table>
+  <tr><th>Issue</th><th>Cause</th><th>Resolution</th></tr>
+  <tr><td>Connection refused</td><td>Neon instance sleeping</td><td>First request wakes it; retry after 5&ndash;10s</td></tr>
+  <tr><td>Too many connections</td><td>Pool exhaustion (max 5)</td><td>Check for connection leaks; restart backend</td></tr>
+  <tr><td>Connection reset</td><td>Neon closed idle connection</td><td>HikariCP auto-recovers; keepalive prevents this</td></tr>
+  <tr><td>Null byte error (0x00)</td><td>Content contains null characters</td><td>Sanitize data before insert (strip <code>\u0000</code>)</td></tr>
+  <tr><td>Schema out of sync</td><td>Manual DB changes vs JPA model</td><td>Restart backend &mdash; Hibernate re-syncs with <code>ddl-auto: update</code></td></tr>
+</table>
+
+<h2>5.5 Database Maintenance Commands</h2>
+<pre>
+-- Check active connections
+SELECT count(*) FROM pg_stat_activity WHERE datname = 'your_db_name';
+
+-- Check table sizes
+SELECT relname, pg_size_pretty(pg_total_relation_size(relid))
+FROM pg_catalog.pg_statio_user_tables ORDER BY pg_total_relation_size(relid) DESC;
+
+-- Check row counts
+SELECT schemaname, relname, n_live_tup
+FROM pg_stat_user_tables ORDER BY n_live_tup DESC;
+</pre>
+
+<h2>5.6 Data Migration History</h2>
+<div class="info-box">
+  <strong>Migration completed March 2026:</strong> Migrated from Google Sheets to Neon PostgreSQL.<br>
+  Runner: <code>DataMigrationRunner.java</code> (run with <code>-Dspring-boot.run.profiles=migrate</code>)<br>
+  Migrated: 5 users, 5 logins, 22 books, 244 pages, 6 chat rooms, 4 chat messages.
+</div>
+</div>
+
+<!-- SECTION 6 -->
+<div class="section">
+<h1>6. Admin Support &mdash; Admin Panel Operations</h1>
+
+<h2>6.1 Admin Role Capabilities</h2>
+<p>Users with <code>ADMIN</code> role can perform the following operations:</p>
+
+<table>
+  <tr><th>Operation</th><th>Endpoint</th><th>Method</th></tr>
+  <tr><td>View all users with activity stats</td><td><code>/api/admin/users</code></td><td>GET</td></tr>
+  <tr><td>Change user account status</td><td><code>/api/admin/users/{userId}/status</code></td><td>PUT</td></tr>
+  <tr><td>View all books</td><td><code>/api/admin/books</code></td><td>GET</td></tr>
+  <tr><td>Delete a book</td><td><code>/api/admin/books/{bookId}</code></td><td>DELETE</td></tr>
+  <tr><td>Archive a book</td><td><code>/api/admin/books/{bookId}/archive</code></td><td>PUT</td></tr>
+  <tr><td>Recover a deleted/archived book</td><td><code>/api/admin/books/{bookId}/recover</code></td><td>PUT</td></tr>
+  <tr><td>View platform statistics</td><td><code>/api/admin/stats</code></td><td>GET</td></tr>
+  <tr><td>Delete any chat message</td><td><code>/api/chat/messages/{messageId}</code></td><td>DELETE</td></tr>
+</table>
+
+<h2>6.2 Platform Statistics Dashboard</h2>
+<p>The <code>/api/admin/stats</code> endpoint returns:</p>
+<ul>
+  <li>Total users, active users, blocked users</li>
+  <li>Total books, published books, draft books</li>
+  <li>Creator vs. Visitor user counts</li>
+  <li>Content activity metrics</li>
+</ul>
+
+<h2>6.3 User Management Actions</h2>
+<h3>Blocking a User</h3>
+<pre>
+PUT /api/admin/users/{userId}/status
+Header: Authorization: Bearer {admin_jwt_token}
+Body: { "status": "BLOCKED" }
+</pre>
+
+<h3>Reactivating a User</h3>
+<pre>
+PUT /api/admin/users/{userId}/status
+Header: Authorization: Bearer {admin_jwt_token}
+Body: { "status": "ACTIVE" }
+</pre>
+
+<h2>6.4 Content Moderation</h2>
+<ul>
+  <li><strong>Archive:</strong> Hides book from public view, can be recovered</li>
+  <li><strong>Delete:</strong> Soft-deletes the book (status = DELETED)</li>
+  <li><strong>Recover:</strong> Restores a deleted/archived book to DRAFT status</li>
+  <li><strong>Chat moderation:</strong> Admin can delete any chat message (soft delete &mdash; shows as "[deleted]")</li>
+</ul>
+</div>
+
+<!-- SECTION 7 -->
+<div class="section">
+<h1>7. Super Admin Support &mdash; Elevated Operations</h1>
+
+<div class="danger-box">
+  <strong>SUPER_ADMIN operations are irreversible in some cases.</strong> Exercise extreme caution with purge operations.
+</div>
+
+<h2>7.1 Super Admin Exclusive Capabilities</h2>
+<table>
+  <tr><th>Operation</th><th>Endpoint</th><th>Method</th><th>Risk Level</th></tr>
+  <tr><td>Change user role</td><td><code>/api/admin/users/{userId}/role</code></td><td>PUT</td><td style="color:#e67e22;">Medium</td></tr>
+  <tr><td>Force password reset</td><td><code>/api/auth/admin-reset-password/{userId}</code></td><td>PUT</td><td style="color:#e67e22;">Medium</td></tr>
+  <tr><td>Purge single book permanently</td><td><code>/api/admin/books/{bookId}/purge</code></td><td>DELETE</td><td style="color:#e74c3c;">HIGH</td></tr>
+  <tr><td>Purge all deleted books</td><td><code>/api/admin/books/purge</code></td><td>DELETE</td><td style="color:#e74c3c;">CRITICAL</td></tr>
+</table>
+
+<h2>7.2 Role Hierarchy</h2>
+<pre>
+SUPER_ADMIN  (highest - can do everything)
+    |
+  ADMIN      (can manage users and content, cannot assign roles)
+    |
+   USER      (standard user - create and manage own content)
+</pre>
+
+<h2>7.3 Role Assignment Rules</h2>
+<ul>
+  <li>Only <code>SUPER_ADMIN</code> can assign or change user roles</li>
+  <li>Valid roles: <code>USER</code>, <code>ADMIN</code>, <code>SUPER_ADMIN</code></li>
+  <li><code>ADMIN</code> cannot promote other users to <code>ADMIN</code> or <code>SUPER_ADMIN</code></li>
+</ul>
+
+<h3>Assigning a Role</h3>
+<pre>
+PUT /api/admin/users/{userId}/role
+Header: Authorization: Bearer {superadmin_jwt_token}
+Body: { "role": "ADMIN" }
+</pre>
+
+<h2>7.4 Purge Operations</h2>
+<div class="danger-box">
+  <strong>Purge = Permanent Deletion.</strong> Data cannot be recovered after purge. Always verify before executing.
+</div>
+<ul>
+  <li><strong>Single purge:</strong> Permanently deletes one book and all its pages</li>
+  <li><strong>Bulk purge:</strong> Permanently deletes ALL books with status <code>DELETED</code></li>
+</ul>
+</div>
+
+<!-- SECTION 8 -->
+<div class="section">
+<h1>8. AI &amp; Image Generation Support</h1>
+
+<h2>8.1 AI Image Generation</h2>
+<table>
+  <tr><th>Parameter</th><th>Details</th></tr>
+  <tr><td>Endpoint</td><td><code>POST /api/generate-image</code></td></tr>
+  <tr><td>Model</td><td>Stable Diffusion XL Base 1.0 (<code>stabilityai/stable-diffusion-xl-base-1.0</code>)</td></tr>
+  <tr><td>Provider</td><td>Hugging Face Inference API</td></tr>
+  <tr><td>API URL</td><td><code>https://router.huggingface.co/hf-inference/models/</code></td></tr>
+  <tr><td>Auth</td><td>Bearer token via <code>HUGGINGFACE_API_TOKEN</code></td></tr>
+</table>
+
+<h2>8.2 Available Style Presets</h2>
+<table>
+  <tr><th>Style</th><th>Prompt Prefix</th></tr>
+  <tr><td>General</td><td>"High quality, detailed illustration:"</td></tr>
+  <tr><td>Children</td><td>"Children's book illustration, colorful, whimsical style:"</td></tr>
+  <tr><td>Poetry</td><td>"Artistic, dreamy, poetic watercolor illustration:"</td></tr>
+  <tr><td>Story</td><td>"Vivid storytelling illustration, narrative scene:"</td></tr>
+  <tr><td>Art</td><td>"Fine art painting, museum quality, expressive brushwork:"</td></tr>
+  <tr><td>Fantasy</td><td>"Epic fantasy art, magical, otherworldly scene:"</td></tr>
+  <tr><td>Realistic</td><td>"Photorealistic, high detail, lifelike rendering:"</td></tr>
+  <tr><td>Science</td><td>"Scientific illustration, accurate, educational diagram style:"</td></tr>
+  <tr><td>Technology</td><td>"Futuristic, sleek technology concept art:"</td></tr>
+  <tr><td>History</td><td>"Historical illustration, period-accurate, vintage style:"</td></tr>
+  <tr><td>Geography</td><td>"Beautiful landscape, geographical illustration, natural scenery:"</td></tr>
+  <tr><td>Politics</td><td>"Editorial illustration, bold political commentary style:"</td></tr>
+</table>
+
+<h2>8.3 Multilingual Support</h2>
+<div class="info-box">
+  <strong>Hindi Prompt Support:</strong> The system detects Devanagari script in user prompts and auto-translates to English using the <code>Helsinki-NLP/opus-mt-hi-en</code> model before sending to Stable Diffusion.
+</div>
+
+<h2>8.4 Retry Logic</h2>
+<ul>
+  <li>Up to <strong>3 retry attempts</strong> with <strong>20-second delays</strong></li>
+  <li>Triggers on HTTP 503 (model loading / cold start)</li>
+  <li>Generated images are uploaded to <strong>Cloudinary</strong> for persistence</li>
+</ul>
+
+<h2>8.5 Common AI Issues</h2>
+<table>
+  <tr><th>Issue</th><th>Cause</th><th>Resolution</th></tr>
+  <tr><td>503 Service Unavailable</td><td>Model cold start</td><td>Auto-retries (up to 3x with 20s delay)</td></tr>
+  <tr><td>Image not generated</td><td>HF API token expired</td><td>Regenerate token at huggingface.co/settings/tokens</td></tr>
+  <tr><td>Poor image quality</td><td>Vague prompt</td><td>Use more specific, descriptive prompts</td></tr>
+  <tr><td>Hindi prompt not working</td><td>Translation API failure</td><td>Falls back to original text; check HF token</td></tr>
+</table>
+</div>
+
+<!-- SECTION 9 -->
+<div class="section">
+<h1>9. File Upload &amp; Storage Support</h1>
+
+<h2>9.1 Upload Configuration</h2>
+<table>
+  <tr><th>Setting</th><th>Value</th></tr>
+  <tr><td>Max File Size</td><td>10 MB per file</td></tr>
+  <tr><td>Max Request Size</td><td>50 MB per request</td></tr>
+  <tr><td>Supported Formats</td><td>PDF, DOCX, DOC, JPEG, PNG, GIF, WebP, BMP, TIFF</td></tr>
+  <tr><td>Storage Provider</td><td>Cloudinary</td></tr>
+</table>
+
+<h2>9.2 Document Processing</h2>
+<ul>
+  <li><strong>PDF Upload:</strong> PDFBox extracts text per page + renders pages as images (150 DPI)</li>
+  <li><strong>Word Upload:</strong> Apache POI extracts text with 500-character page pagination</li>
+  <li><strong>Privacy:</strong> EXIF metadata (GPS, camera info) is stripped before upload</li>
+</ul>
+
+<h2>9.3 Common Upload Issues</h2>
+<table>
+  <tr><th>Issue</th><th>Resolution</th></tr>
+  <tr><td>413 Payload Too Large</td><td>Reduce file size below 10MB</td></tr>
+  <tr><td>Unsupported format</td><td>Convert to a supported format</td></tr>
+  <tr><td>Cloudinary upload fails</td><td>Check Cloudinary credentials in .env</td></tr>
+  <tr><td>PDF pages missing</td><td>Check PDF is not password-protected</td></tr>
+</table>
+</div>
+
+<!-- SECTION 10 -->
+<div class="section">
+<h1>10. Chat &amp; Community Support</h1>
+
+<h2>10.1 Default Chat Rooms</h2>
+<table>
+  <tr><th>Room</th><th>Category</th><th>Purpose</th></tr>
+  <tr><td>Art</td><td>Art</td><td>Discuss visual arts and artwork</td></tr>
+  <tr><td>Music</td><td>Music</td><td>Music discussions and sharing</td></tr>
+  <tr><td>Writing</td><td>Writing</td><td>Creative writing and feedback</td></tr>
+  <tr><td>Tech</td><td>Tech</td><td>Technology and tools</td></tr>
+  <tr><td>Creativity</td><td>Creativity</td><td>General creative discussions</td></tr>
+  <tr><td>Community</td><td>Community</td><td>Announcements and general talk</td></tr>
+</table>
+
+<h2>10.2 Chat Features</h2>
+<ul>
+  <li>Real-time polling every <strong>5 seconds</strong></li>
+  <li>Pagination support via <code>afterId</code> and <code>limit</code> parameters</li>
+  <li>Soft-delete for messages (shows as "[deleted]")</li>
+  <li>Message deletion: allowed for sender or admin</li>
+  <li>Auto-initialization: rooms are created on first access if none exist</li>
+</ul>
+</div>
+
+<!-- SECTION 11 -->
+<div class="section">
+<h1>11. Payments &amp; Subscription Support (Stripe)</h1>
+
+<h2>11.1 Subscription Plans</h2>
+<table>
+  <tr><th>Plan</th><th>Description</th></tr>
+  <tr><td>Free</td><td>Basic access, limited features</td></tr>
+  <tr><td>Premium</td><td>Enhanced features and content access</td></tr>
+  <tr><td>Gold</td><td>Full platform access with priority support</td></tr>
+  <tr><td>Creator</td><td>All features + publishing and monetization tools</td></tr>
+</table>
+
+<h2>11.2 Payment Flow</h2>
+<ol>
+  <li>User selects plan on frontend</li>
+  <li>Frontend calls backend to create Stripe Checkout Session</li>
+  <li>User is redirected to Stripe for payment</li>
+  <li>Stripe sends webhook event on payment completion</li>
+  <li>Backend webhook handler updates user's plan</li>
+</ol>
+
+<h2>11.3 Stripe Configuration</h2>
+<table>
+  <tr><th>Variable</th><th>Purpose</th></tr>
+  <tr><td><code>STRIPE_SECRET_KEY</code></td><td>Server-side Stripe API key</td></tr>
+  <tr><td><code>STRIPE_WEBHOOK_SECRET</code></td><td>Webhook signature verification</td></tr>
+</table>
+</div>
+
+<!-- SECTION 12 -->
+<div class="section">
+<h1>12. Security &amp; Authentication</h1>
+
+<h2>12.1 JWT Authentication</h2>
+<table>
+  <tr><th>Parameter</th><th>Value</th></tr>
+  <tr><td>Algorithm</td><td>HS256 (HMAC-SHA256)</td></tr>
+  <tr><td>Token Expiry</td><td>24 hours</td></tr>
+  <tr><td>Header</td><td><code>Authorization: Bearer {token}</code></td></tr>
+  <tr><td>Fallback Header</td><td><code>X-User-Id</code> (legacy support)</td></tr>
+  <tr><td>Secret</td><td><code>${JWT_SECRET}</code> environment variable</td></tr>
+</table>
+
+<h2>12.2 Rate Limiting</h2>
+<table>
+  <tr><th>Endpoint</th><th>Key</th><th>Limit</th><th>Window</th></tr>
+  <tr><td>Signup</td><td>IP Address</td><td>10 attempts</td><td>15 minutes</td></tr>
+  <tr><td>Login</td><td>Email / IP</td><td>10 attempts</td><td>15 minutes</td></tr>
+  <tr><td>Forgot Password</td><td>IP Address</td><td>10 attempts</td><td>15 minutes</td></tr>
+</table>
+<div class="info-box">
+  Rate limits are stored in-memory and reset on server restart.
+</div>
+
+<h2>12.3 Password Security</h2>
+<ul>
+  <li>Passwords hashed with <strong>BCrypt</strong> (one-way hashing)</li>
+  <li>Plain-text passwords are never stored or logged</li>
+  <li>Password comparison via BCrypt <code>matches()</code> function</li>
+</ul>
+
+<h2>12.4 CORS Configuration</h2>
+<table>
+  <tr><th>Setting</th><th>Value</th></tr>
+  <tr><td>Allowed Origins</td><td>Configurable via <code>CORS_ALLOWED_ORIGINS</code></td></tr>
+  <tr><td>Default Origins</td><td><code>http://localhost:3000</code>, <code>http://localhost:8081</code></td></tr>
+  <tr><td>Allowed Methods</td><td>GET, POST, PUT, DELETE, OPTIONS</td></tr>
+  <tr><td>Credentials</td><td>Allowed</td></tr>
+</table>
+</div>
+
+<!-- SECTION 13 -->
+<div class="section">
+<h1>13. API Reference &mdash; Quick Lookup</h1>
+
+<table>
+  <tr><th>Category</th><th>Base Path</th><th>Auth Required</th></tr>
+  <tr><td>Authentication</td><td><code>/api/auth/*</code></td><td>Varies</td></tr>
+  <tr><td>Books</td><td><code>/api/books/*</code></td><td>Yes (most)</td></tr>
+  <tr><td>File Upload</td><td><code>/api/upload</code></td><td>Yes</td></tr>
+  <tr><td>File Download</td><td><code>/api/download/*</code></td><td>Yes</td></tr>
+  <tr><td>AI Image Generation</td><td><code>/api/generate-image</code></td><td>Yes</td></tr>
+  <tr><td>Chat</td><td><code>/api/chat/*</code></td><td>Yes</td></tr>
+  <tr><td>Social (Likes/Comments)</td><td><code>/api/social/*</code></td><td>Yes</td></tr>
+  <tr><td>Galleries</td><td><code>/api/galleries/*</code></td><td>Yes (most)</td></tr>
+  <tr><td>Articles</td><td><code>/api/articles/*</code></td><td>Yes (most)</td></tr>
+  <tr><td>Payments</td><td><code>/api/payments/*</code></td><td>Yes</td></tr>
+  <tr><td>Admin</td><td><code>/api/admin/*</code></td><td>ADMIN / SUPER_ADMIN</td></tr>
+  <tr><td>Health Check</td><td><code>/api/health</code></td><td>No</td></tr>
+</table>
+</div>
+
+<!-- SECTION 14 -->
+<div class="section">
+<h1>14. Error Code Reference</h1>
+
+<table>
+  <tr><th>HTTP Code</th><th>Meaning</th><th>Common Causes</th></tr>
+  <tr><td>200</td><td>Success</td><td>Request completed normally</td></tr>
+  <tr><td>201</td><td>Created</td><td>Resource created successfully</td></tr>
+  <tr><td>400</td><td>Bad Request</td><td>Invalid input, missing fields, validation failure</td></tr>
+  <tr><td>401</td><td>Unauthorized</td><td>Missing or invalid JWT token</td></tr>
+  <tr><td>403</td><td>Forbidden</td><td>Insufficient role/permissions</td></tr>
+  <tr><td>404</td><td>Not Found</td><td>Resource does not exist</td></tr>
+  <tr><td>409</td><td>Conflict</td><td>Duplicate resource (e.g., email already registered)</td></tr>
+  <tr><td>413</td><td>Payload Too Large</td><td>File exceeds 10MB upload limit</td></tr>
+  <tr><td>429</td><td>Too Many Requests</td><td>Rate limit exceeded (10 per 15 min)</td></tr>
+  <tr><td>500</td><td>Internal Server Error</td><td>Unexpected server error</td></tr>
+  <tr><td>503</td><td>Service Unavailable</td><td>AI model loading (Hugging Face cold start)</td></tr>
+</table>
+
+<p><strong>Standard error response format:</strong></p>
+<pre>
+{
+  "error": "Human-readable error message"
+}
+</pre>
+</div>
+
+<!-- SECTION 15 -->
+<div class="section">
+<h1>15. Environment Variables Reference</h1>
+
+<table>
+  <tr><th>Variable</th><th>Purpose</th><th>Required</th></tr>
+  <tr><td><code>NEON_DB_URL</code></td><td>PostgreSQL connection URL</td><td>Yes</td></tr>
+  <tr><td><code>NEON_DB_USERNAME</code></td><td>Database username</td><td>Yes</td></tr>
+  <tr><td><code>NEON_DB_PASSWORD</code></td><td>Database password</td><td>Yes</td></tr>
+  <tr><td><code>JWT_SECRET</code></td><td>JWT signing secret key</td><td>Yes</td></tr>
+  <tr><td><code>HUGGINGFACE_API_TOKEN</code></td><td>HF Inference API token</td><td>Yes</td></tr>
+  <tr><td><code>CLOUDINARY_CLOUD_NAME</code></td><td>Cloudinary account name</td><td>Yes</td></tr>
+  <tr><td><code>CLOUDINARY_API_KEY</code></td><td>Cloudinary API key</td><td>Yes</td></tr>
+  <tr><td><code>CLOUDINARY_API_SECRET</code></td><td>Cloudinary API secret</td><td>Yes</td></tr>
+  <tr><td><code>STRIPE_SECRET_KEY</code></td><td>Stripe API secret key</td><td>Yes</td></tr>
+  <tr><td><code>STRIPE_WEBHOOK_SECRET</code></td><td>Stripe webhook verification</td><td>Yes</td></tr>
+  <tr><td><code>CORS_ALLOWED_ORIGINS</code></td><td>Allowed frontend origins</td><td>Yes</td></tr>
+  <tr><td><code>GOOGLE_CREDENTIALS_FILE</code></td><td>Path to Google service account JSON</td><td>Optional</td></tr>
+  <tr><td><code>GOOGLE_DRIVE_FOLDER_ID</code></td><td>Google Drive folder ID</td><td>Optional</td></tr>
+  <tr><td><code>GOOGLE_SHEETS_SPREADSHEET_ID</code></td><td>Legacy Google Sheets ID</td><td>Optional</td></tr>
+  <tr><td><code>REACT_APP_API_URL</code></td><td>Backend URL for frontend</td><td>Yes (frontend)</td></tr>
+</table>
+
+<p><strong>Environment file location:</strong> <code>SaatSaheli/.env</code> (gitignored, loaded via spring-dotenv)</p>
+</div>
+
+<!-- SECTION 16 -->
+<div class="section">
+<h1>16. Troubleshooting Guide</h1>
+
+<h2>16.1 Backend Won't Start</h2>
+<table>
+  <tr><th>Symptom</th><th>Check</th><th>Fix</th></tr>
+  <tr><td>Port 8081 in use</td><td><code>lsof -i :8081</code></td><td>Kill existing process or change port</td></tr>
+  <tr><td>DB connection fails</td><td>Check <code>.env</code> variables</td><td>Verify Neon DB URL, username, password</td></tr>
+  <tr><td>Missing .env file</td><td>Check <code>SaatSaheli/.env</code> exists</td><td>Create from template with required vars</td></tr>
+  <tr><td>Java version mismatch</td><td><code>java -version</code></td><td>Install Java 17+</td></tr>
+  <tr><td>Compilation error</td><td>Check build output</td><td>Use <code>./mvnw clean</code> before build</td></tr>
+</table>
+
+<h2>16.2 Frontend Won't Start</h2>
+<table>
+  <tr><th>Symptom</th><th>Check</th><th>Fix</th></tr>
+  <tr><td>Port 3000 in use</td><td><code>lsof -i :3000</code></td><td>Kill existing process</td></tr>
+  <tr><td>Missing dependencies</td><td>Check <code>node_modules/</code></td><td>Run <code>npm install</code></td></tr>
+  <tr><td>Build hangs</td><td>Check Node version</td><td>Use Node.js 20 LTS (not v25)</td></tr>
+  <tr><td>API calls fail</td><td>Check <code>REACT_APP_API_URL</code></td><td>Set correct backend URL</td></tr>
+</table>
+
+<h2>16.3 AI Image Generation Fails</h2>
+<table>
+  <tr><th>Symptom</th><th>Check</th><th>Fix</th></tr>
+  <tr><td>503 errors persist</td><td>HF model status</td><td>Wait for model to load; check HF status page</td></tr>
+  <tr><td>401 Unauthorized</td><td>HF API token</td><td>Regenerate token at huggingface.co</td></tr>
+  <tr><td>Empty response</td><td>Cloudinary config</td><td>Verify Cloudinary credentials</td></tr>
+</table>
+
+<h2>16.4 Payment Issues</h2>
+<table>
+  <tr><th>Symptom</th><th>Check</th><th>Fix</th></tr>
+  <tr><td>Checkout fails</td><td>Stripe key validity</td><td>Verify <code>STRIPE_SECRET_KEY</code></td></tr>
+  <tr><td>Webhook not received</td><td>Webhook URL config</td><td>Verify <code>STRIPE_WEBHOOK_SECRET</code> and endpoint URL in Stripe dashboard</td></tr>
+  <tr><td>Plan not updated</td><td>Server logs</td><td>Check webhook handler for errors</td></tr>
+</table>
+</div>
+
+<!-- SECTION 17 -->
+<div class="section">
+<h1>17. Escalation Matrix &amp; Contact</h1>
+
+<h2>17.1 Support Tiers</h2>
+<table>
+  <tr><th>Tier</th><th>Scope</th><th>Handled By</th><th>Response Time</th></tr>
+  <tr><td>L1 &mdash; Basic</td><td>Login issues, password resets, general queries</td><td>Support Staff / Admin</td><td>Within 24 hours</td></tr>
+  <tr><td>L2 &mdash; Technical</td><td>API errors, upload failures, AI issues, payment problems</td><td>Development Team</td><td>Within 48 hours</td></tr>
+  <tr><td>L3 &mdash; Critical</td><td>Database issues, security incidents, server downtime</td><td>Senior Developer / Super Admin</td><td>Within 4 hours</td></tr>
+  <tr><td>L4 &mdash; Emergency</td><td>Data breach, complete outage, payment data exposure</td><td>Project Lead + All Hands</td><td>Immediate</td></tr>
+</table>
+
+<h2>17.2 Escalation Triggers</h2>
+<ul>
+  <li><strong>Escalate to L2</strong> if L1 cannot resolve within 24 hours or issue is technical</li>
+  <li><strong>Escalate to L3</strong> if issue affects multiple users, involves data loss, or server is unresponsive</li>
+  <li><strong>Escalate to L4</strong> if there is a confirmed security breach or complete platform outage</li>
+</ul>
+
+<h2>17.3 Key Operational Contacts</h2>
+<table>
+  <tr><th>Role</th><th>Responsibility</th></tr>
+  <tr><td>Super Admin</td><td>Role management, force resets, permanent data operations</td></tr>
+  <tr><td>Admin</td><td>User management, content moderation, platform monitoring</td></tr>
+  <tr><td>Developer</td><td>Bug fixes, API issues, deployment, infrastructure</td></tr>
+</table>
+
+<h2>17.4 Useful Monitoring Commands</h2>
+<pre>
+# Health check
+curl http://localhost:8081/api/health
+
+# Check backend process
+lsof -i :8081
+
+# Check frontend process
+lsof -i :3000
+
+# View backend logs (if running in terminal)
+# Logs appear in stdout of the ./mvnw process
+
+# Database connection test
+psql "${NEON_DB_URL}" -c "SELECT 1;"
+</pre>
+</div>
+
+<!-- SECTION 18 -->
+<div class="section">
+<h1>18. Rebranding Migration &mdash; SaatSaheli to Sarayu</h1>
+
+<p>On March 27, 2026, the platform was rebranded from <strong>SaatSaheli</strong> to <strong>Sarayu</strong>. This section documents all changes made and steps required for a complete migration.</p>
+
+<h2>18.1 Summary of Changes</h2>
+<table>
+  <tr><th>Area</th><th>What Changed</th><th>Status</th></tr>
+  <tr><td>Site name &amp; branding</td><td>All user-visible text &ldquo;Saat Saheli&rdquo; / &ldquo;SaatSaheli&rdquo; &rarr; &ldquo;Sarayu&rdquo;</td><td>Done</td></tr>
+  <tr><td>Logo</td><td>Replaced <code>SaatSaheliLogo.jpg</code> with <code>sarayu-logo.png</code> (cropped)</td><td>Done</td></tr>
+  <tr><td>Header</td><td>Dark gradient background, Cormorant Garamond font, slogan &ldquo;Sarayu, where silence speaks&rdquo;</td><td>Done</td></tr>
+  <tr><td>Footer</td><td>Dark gradient background, matching header theme</td><td>Done</td></tr>
+  <tr><td>Page background</td><td>Changed from <code>#f8fafc</code> to warm off-white <code>#f5f0eb</code></td><td>Done</td></tr>
+  <tr><td>Contact email</td><td><code>support@saatsaheli.com</code> &rarr; <code>avikaventures.info@gmail.com</code></td><td>Done</td></tr>
+  <tr><td>Contact/Feedback forms</td><td>Now link to Google Forms (footer opens in new tab)</td><td>Done</td></tr>
+  <tr><td>Production API URL</td><td><code>.env.production</code>: <code>saatsaheli.onrender.com</code> &rarr; <code>sarayu.onrender.com</code></td><td>Done</td></tr>
+  <tr><td>HTML meta tags</td><td>Title, OG, Twitter cards updated to &ldquo;Sarayu&rdquo;</td><td>Done</td></tr>
+  <tr><td>manifest.json</td><td>short_name and name updated to &ldquo;Sarayu&rdquo;</td><td>Done</td></tr>
+  <tr><td>Java package names</td><td><code>com.SaatSaheli.spring.*</code> &mdash; NOT changed (internal only, no user impact)</td><td>Skipped</td></tr>
+  <tr><td>localStorage keys</td><td><code>saatSaheliUser</code>, <code>saatSaheliToken</code>, etc. &mdash; NOT changed (would log out existing users)</td><td>Skipped</td></tr>
+  <tr><td>Cloudinary folder</td><td><code>&quot;saatsaheli&quot;</code> folder &mdash; NOT changed (storage internal, no user impact)</td><td>Skipped</td></tr>
+</table>
+
+<h2>18.2 Files Modified in Rebranding</h2>
+<h3>Frontend</h3>
+<ul>
+  <li><code>FrontEnd/.env.production</code> &mdash; API URL</li>
+  <li><code>FrontEnd/public/index.html</code> &mdash; title, meta, OG tags, Google Font import</li>
+  <li><code>FrontEnd/public/manifest.json</code> &mdash; app name</li>
+  <li><code>FrontEnd/src/constants/strings.js</code> &mdash; all user-visible strings</li>
+  <li><code>FrontEnd/src/modules/Header.jsx</code> &mdash; logo import, tagline</li>
+  <li><code>FrontEnd/src/modules/Header.css</code> &mdash; dark gradient, font styles, layout</li>
+  <li><code>FrontEnd/src/modules/Footer.jsx</code> &mdash; Google Form links</li>
+  <li><code>FrontEnd/src/modules/Footer.css</code> &mdash; dark gradient</li>
+  <li><code>FrontEnd/src/modules/Sidebar.jsx</code> &mdash; logo import</li>
+  <li><code>FrontEnd/src/modules/sarayu-logo.png</code> &mdash; new logo file</li>
+  <li><code>FrontEnd/src/index.css</code> &mdash; background color</li>
+  <li><code>FrontEnd/src/components/ServerWakeUp.jsx</code> &mdash; wakeup message</li>
+  <li><code>FrontEnd/src/components/TermsGate.jsx</code> &mdash; terms text</li>
+  <li><code>FrontEnd/src/pages/Home.jsx</code> &mdash; share text, creator program</li>
+  <li><code>FrontEnd/src/pages/BookManager.jsx</code> &mdash; contact email</li>
+  <li><code>FrontEnd/src/pages/Contacts.jsx</code> &mdash; redirect to Google Form</li>
+  <li><code>FrontEnd/src/pages/SitePolicies.jsx</code> &mdash; marketplace disclaimer</li>
+  <li><code>FrontEnd/src/pages/UserManual.jsx</code> &mdash; manual text</li>
+  <li><code>FrontEnd/src/pages/AdminManual.jsx</code> &mdash; admin manual text</li>
+  <li><code>FrontEnd/src/pages/Pricing.jsx</code> &mdash; watermark text</li>
+  <li><code>FrontEnd/src/pages/Marketplace.jsx</code> &mdash; share text, disclaimer</li>
+  <li><code>FrontEnd/src/pages/Articles.jsx</code> &mdash; share text</li>
+  <li><code>FrontEnd/src/pages/Podcasts.jsx</code> &mdash; share text</li>
+  <li><code>FrontEnd/src/pages/ReadBook.jsx</code> &mdash; share text</li>
+  <li><code>FrontEnd/src/FlipBook.js</code> &mdash; copyright footer</li>
+</ul>
+
+<h2>18.3 Render.com Configuration</h2>
+<ol>
+  <li>Go to <strong>Render Dashboard</strong> &rarr; your service &rarr; <strong>Settings</strong> &rarr; <strong>General</strong></li>
+  <li>Change <strong>Name</strong> from <code>SaatSaheli</code> to <code>sarayu</code></li>
+  <li>Save &mdash; URL becomes <code>https://sarayu.onrender.com</code></li>
+  <li>If <code>CORS_ALLOWED_ORIGINS</code> is set in Environment, update it to include <code>https://sarayu.onrender.com</code></li>
+  <li>Trigger a <strong>Manual Deploy</strong> to rebuild with updated code</li>
+</ol>
+
+<h2>18.4 Google Cloud Console &mdash; OAuth 2.0 Client ID Updates</h2>
+<div class="warning-box">
+  <strong>Critical:</strong> Google OAuth login will break if these steps are not completed after the Render URL change.
+</div>
+<ol>
+  <li>Go to <a href="https://console.cloud.google.com/">Google Cloud Console</a></li>
+  <li>Select the project (e.g., <code>chproject-487021</code>)</li>
+  <li>Navigate to <strong>APIs &amp; Services</strong> &rarr; <strong>Credentials</strong></li>
+  <li>Click on the <strong>OAuth 2.0 Client ID</strong> used by the app</li>
+  <li>Under <strong>Authorized JavaScript origins</strong>, update:
+    <ul>
+      <li>Remove: <code>https://saatsaheli.onrender.com</code></li>
+      <li>Add: <code>https://sarayu.onrender.com</code></li>
+      <li>Keep: <code>http://localhost:3000</code> (for local development)</li>
+    </ul>
+  </li>
+  <li>Under <strong>Authorized redirect URIs</strong>, update:
+    <ul>
+      <li>Remove: <code>https://saatsaheli.onrender.com</code></li>
+      <li>Add: <code>https://sarayu.onrender.com</code></li>
+      <li>Remove: <code>https://saatsaheli.onrender.com/Login</code></li>
+      <li>Add: <code>https://sarayu.onrender.com/Login</code></li>
+      <li>Keep: <code>http://localhost:3000</code> and <code>http://localhost:3000/Login</code></li>
+    </ul>
+  </li>
+  <li>Click <strong>Save</strong></li>
+  <li>Changes may take up to 5 minutes to propagate</li>
+</ol>
+
+<h2>18.5 OAuth Consent Screen Updates</h2>
+<ol>
+  <li>In Google Cloud Console, go to <strong>APIs &amp; Services</strong> &rarr; <strong>OAuth consent screen</strong></li>
+  <li>Update <strong>Application name</strong> from &ldquo;SaatSaheli&rdquo; to &ldquo;Sarayu&rdquo;</li>
+  <li>Update <strong>Application home page</strong> to <code>https://sarayu.onrender.com</code></li>
+  <li>Update <strong>Authorized domains</strong>: add <code>sarayu.onrender.com</code>, remove old domain</li>
+  <li>Update <strong>Privacy policy link</strong> to <code>https://sarayu.onrender.com/policies</code></li>
+  <li>Save changes</li>
+</ol>
+
+<h2>18.6 Stripe Dashboard Updates</h2>
+<ol>
+  <li>Go to <a href="https://dashboard.stripe.com/">Stripe Dashboard</a></li>
+  <li>Navigate to <strong>Developers</strong> &rarr; <strong>Webhooks</strong></li>
+  <li>Update the webhook endpoint URL from <code>https://saatsaheli.onrender.com/api/payments/webhook</code> to <code>https://sarayu.onrender.com/api/payments/webhook</code></li>
+  <li>Verify the webhook secret (<code>STRIPE_WEBHOOK_SECRET</code>) remains the same or update in Render env vars</li>
+</ol>
+
+<h2>18.7 Items NOT Changed (By Design)</h2>
+<table>
+  <tr><th>Item</th><th>Current Value</th><th>Reason Not Changed</th></tr>
+  <tr><td>Java package</td><td><code>com.SaatSaheli.spring</code></td><td>Internal only; massive refactor with no user benefit</td></tr>
+  <tr><td>localStorage keys</td><td><code>saatSaheliUser</code>, <code>saatSaheliToken</code>, <code>saatSaheliLang</code></td><td>Changing would force-logout all existing users</td></tr>
+  <tr><td>Cloudinary folder</td><td><code>&quot;saatsaheli&quot;</code></td><td>Storage folder name; no user visibility</td></tr>
+  <tr><td>GitHub repo name</td><td><code>SaatSaheliMain</code></td><td>Can be renamed later; would require Render relink</td></tr>
+  <tr><td>JWT default secret</td><td>Contains &ldquo;SaatSaheli&rdquo;</td><td>Overridden by <code>JWT_SECRET</code> env var in production</td></tr>
+</table>
+
+<h2>18.8 Post-Migration Verification Checklist</h2>
+<ol>
+  <li>Verify <code>https://sarayu.onrender.com</code> loads the homepage</li>
+  <li>Verify header shows Sarayu logo and &ldquo;Sarayu, where silence speaks&rdquo;</li>
+  <li>Verify browser tab title shows &ldquo;Sarayu &mdash; A Community for Passion and Creativity&rdquo;</li>
+  <li>Verify Google OAuth login works (redirects back to new URL)</li>
+  <li>Verify email/password login works</li>
+  <li>Verify footer &ldquo;Contact Us&rdquo; opens Google Form in new tab</li>
+  <li>Verify footer &ldquo;Feedback&rdquo; opens Google Form in new tab</li>
+  <li>Verify About page shows &ldquo;About Sarayu&rdquo;</li>
+  <li>Verify Site Policies page shows &ldquo;Sarayu&rdquo; throughout</li>
+  <li>Verify Stripe checkout flow works with new webhook URL</li>
+  <li>Verify book share links reference &ldquo;Sarayu&rdquo;</li>
+  <li>Verify the old URL <code>saatsaheli.onrender.com</code> no longer resolves (or redirects)</li>
+</ol>
+</div>
+
+<div class="footer">
+  <p><strong>Sarayu Technical Support Document</strong> | Version 1.1 | March 27, 2026</p>
+  <p>This document is for internal and operational use. Keep credentials and access details confidential.</p>
+</div>
+
+</body>
+</html>
