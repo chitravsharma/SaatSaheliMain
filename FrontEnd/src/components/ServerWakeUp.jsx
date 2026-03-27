@@ -42,7 +42,7 @@ function ServerWakeUp({ children }) {
             <polyline points="12 6 12 12 16 14" />
           </svg>
         </div>
-        <h2 className="server-wakeup-title">Saat Saheli is waking up...</h2>
+        <h2 className="server-wakeup-title">Sarayu is waking up...</h2>
         <p className="server-wakeup-msg">
           Our server is starting up. This usually takes 30–60 seconds on first visit.
         </p>

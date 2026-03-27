@@ -14,7 +14,7 @@ const AdminManual = () => {
       <div className="admin-manual-hero">
         <h1>Admin Manual</h1>
         <p className="admin-manual-subtitle">
-          A comprehensive guide for administrators and super-administrators of SaatSaheli.
+          A comprehensive guide for administrators and super-administrators of Sarayu.
         </p>
         <hr className="admin-manual-divider" />
       </div>
@@ -132,7 +132,7 @@ const AdminManual = () => {
       <section className="admin-manual-section" id="chat-room-management">
         <h2>5. Chat Room Management</h2>
         <p>
-          SaatSaheli features six dedicated chat rooms, each centered around a creative theme:
+          Sarayu features six dedicated chat rooms, each centered around a creative theme:
         </p>
         <div className="admin-manual-chat-grid">
           <div className="admin-manual-chat-room">Art</div>
@@ -154,7 +154,7 @@ const AdminManual = () => {
         <h2>6. Content Moderation</h2>
         <p>
           As an administrator, you are responsible for upholding the community standards
-          of SaatSaheli. When reviewing user content, keep the following guidelines in mind:
+          of Sarayu. When reviewing user content, keep the following guidelines in mind:
         </p>
         <ul>
           <li>All content must be original or properly attributed.</li>
@@ -175,7 +175,7 @@ const AdminManual = () => {
       <section className="admin-manual-section" id="site-maintenance">
         <h2>7. Site Maintenance</h2>
         <p>
-          SaatSaheli is deployed across three services. Understanding the architecture
+          Sarayu is deployed across three services. Understanding the architecture
           helps with troubleshooting and maintenance:
         </p>
 

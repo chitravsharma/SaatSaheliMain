@@ -48,9 +48,9 @@ const SitePolicies = () => {
 
     <div className="policies-section policies-buysell">
       <h2>Buy/Sell Marketplace Disclaimer</h2>
-      <p><strong>Saat Saheli provides the Buy/Sell Marketplace as a community convenience feature only.</strong></p>
+      <p><strong>Sarayu provides the Buy/Sell Marketplace as a community convenience feature only.</strong></p>
       <p>
-        Saat Saheli, its owners, administrators, and affiliates are <strong>not responsible</strong> for any actions,
+        Sarayu, its owners, administrators, and affiliates are <strong>not responsible</strong> for any actions,
         items, transactions, disputes, or outcomes arising from the use of the Buy/Sell Marketplace. This includes
         but is not limited to:
       </p>
@@ -64,7 +64,7 @@ const SitePolicies = () => {
       </ul>
       <p>
         <strong>All transactions are conducted entirely at the risk of the buyer and seller.</strong> Both
-        parties are fully responsible for their own actions, communications, and agreements. Saat Saheli does
+        parties are fully responsible for their own actions, communications, and agreements. Sarayu does
         not mediate disputes, process payments, or guarantee any transactions.
       </p>
       <p>
@@ -72,7 +72,7 @@ const SitePolicies = () => {
         for in-person exchanges, and never share sensitive financial information through the platform.
       </p>
       <p>
-        By using the Buy/Sell Marketplace, you acknowledge and agree to these terms. Saat Saheli reserves the
+        By using the Buy/Sell Marketplace, you acknowledge and agree to these terms. Sarayu reserves the
         right to remove any listing at any time without notice.
       </p>
     </div>

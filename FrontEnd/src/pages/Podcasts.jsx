@@ -185,7 +185,7 @@ function Podcasts() {
 
   const handleShare = async (podcast) => {
     const url = `${window.location.origin}/#/podcasts`;
-    const text = `Listen to "${podcast.title}" on Saat Saheli!`;
+    const text = `Listen to "${podcast.title}" on Sarayu!`;
     if (navigator.share) {
       try { await navigator.share({ title: podcast.title, text, url }); } catch { /* cancelled */ }
     } else {

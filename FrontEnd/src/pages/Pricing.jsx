@@ -22,7 +22,7 @@ const plans = [
       "100 MB cloud storage",
     ],
     limitations: [
-      "SaatSaheli watermark on exported books",
+      "Sarayu watermark on exported books",
       "No collaboration features",
       "Limited templates",
     ],

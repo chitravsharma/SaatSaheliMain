@@ -14,9 +14,9 @@ const UserManual = () => {
       <div className="manual-container">
         {/* ── Title ── */}
         <div className="manual-title-block">
-          <h1>SaatSaheli User Manual</h1>
+          <h1>Sarayu User Manual</h1>
           <p className="manual-subtitle">
-            Everything you need to know to get the most out of SaatSaheli
+            Everything you need to know to get the most out of Sarayu
           </p>
         </div>
 
@@ -222,7 +222,7 @@ const UserManual = () => {
         <section id="reading-books" className="manual-section">
           <h2>5. Reading Books</h2>
           <p>
-            SaatSaheli features a <strong>FlipBook reader</strong> that
+            Sarayu features a <strong>FlipBook reader</strong> that
             presents books in a realistic page-turning format.
           </p>
 
@@ -256,7 +256,7 @@ const UserManual = () => {
           <h2>6. Search</h2>
           <p>
             Use the <strong>Search</strong> feature to find books across the
-            entire SaatSaheli library.
+            entire Sarayu library.
           </p>
 
           <h3>Search Criteria</h3>
@@ -292,7 +292,7 @@ const UserManual = () => {
         <section id="chat" className="manual-section">
           <h2>7. Chat</h2>
           <p>
-            SaatSaheli includes <strong>chat rooms</strong> where members can
+            Sarayu includes <strong>chat rooms</strong> where members can
             communicate in real time.
           </p>
           <ol>
@@ -315,7 +315,7 @@ const UserManual = () => {
 
           <div className="manual-tip">
             Chat rooms are a great way to discuss books, share ideas, and
-            connect with fellow SaatSaheli members.
+            connect with fellow Sarayu members.
           </div>
         </section>
 
@@ -389,7 +389,7 @@ const UserManual = () => {
 
         {/* ── Footer ── */}
         <div className="manual-footer">
-          SaatSaheli &mdash; Create, Share, Inspire
+          Sarayu &mdash; Create, Share, Inspire
         </div>
       </div>
     </div>

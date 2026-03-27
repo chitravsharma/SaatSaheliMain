@@ -310,7 +310,7 @@ function Articles() {
 
   const handleShare = async (article) => {
     const url = `${window.location.origin}/#/articles`;
-    const text = `Check out "${article.headline}" on Saat Saheli!`;
+    const text = `Check out "${article.headline}" on Sarayu!`;
     if (navigator.share) {
       try {
         await navigator.share({ title: article.headline, text, url });
