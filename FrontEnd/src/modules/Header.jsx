@@ -42,7 +42,7 @@ const Header = () => {
           <Link to="/" className="header-logo" onClick={closeMobileNav}>
             <img src={siteLogo} className="header-logo-img" alt={strings.header.logoAlt} />
             <div className="header-brand">
-              <span className="header-tagline">Where silence speaks</span>
+              <span className="header-tagline">Sarayu, where silence speaks</span>
             </div>
           </Link>
           <button

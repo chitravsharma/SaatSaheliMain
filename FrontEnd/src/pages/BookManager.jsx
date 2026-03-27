@@ -761,7 +761,7 @@ function BookManager() {
               <li>Use the <strong>Read</strong> button to have a page read aloud.</li>
               <li>Use <strong>Podcast</strong> mode to listen to the entire book continuously.</li>
             </ul>
-            <p className="bm-help-contact">Need more help? Contact us at <strong>support@saatsaheli.com</strong></p>
+            <p className="bm-help-contact">Need more help? Contact us at <strong>avikaventures.info@gmail.com</strong></p>
           </div>
         )}
 
@@ -985,7 +985,7 @@ function BookManager() {
                   <li>In preview or read mode, use <strong>Read</strong> to hear the current page read aloud.</li>
                   <li>Use <strong>Podcast</strong> mode to listen to the entire book continuously.</li>
                 </ul>
-                <p className="bm-help-contact">Questions? Contact <strong>support@saatsaheli.com</strong></p>
+                <p className="bm-help-contact">Questions? Contact <strong>avikaventures.info@gmail.com</strong></p>
               </div>
             )}
 
