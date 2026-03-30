@@ -42,7 +42,8 @@ const Header = () => {
           <Link to="/" className="header-logo" onClick={closeMobileNav}>
             <img src={siteLogo} className="header-logo-img" alt={strings.header.logoAlt} />
             <div className="header-brand">
-              <span className="header-tagline">Welcome to Saat Saheli</span>
+              <span className="header-site-name">Saat Saheli</span>
+              <span className="header-site-name-hi">सात सहेली</span>
               <span className="header-tagline">A Community for Passion and Creativity!</span>
             </div>
           </Link>
