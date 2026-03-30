@@ -190,6 +190,12 @@ function Home() {
     <div className="home-container">
       {/* Category tags */}
       <div className="home-tags">
+        <Link to="/magazine" className="home-tag-link home-tag-magazine">
+          <span className="home-tag-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg>
+          </span>
+          {strings.header.navMagazine}
+        </Link>
         {strings.about.tags.map((tag) => (
           <Link key={tag} to={`/category/${tag.toLowerCase()}`} className="home-tag-link">
             <span className="home-tag-icon">{categoryIcons[tag] || "\uD83D\uDCDA"}</span>

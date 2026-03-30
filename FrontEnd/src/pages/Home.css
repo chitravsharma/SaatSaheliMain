@@ -1,5 +1,6 @@
 /* Home page - Dark artistic theme */
 
+
 .home-container {
   max-width: 960px;
   margin: 24px auto;
@@ -46,6 +47,9 @@
   background: var(--accent-blue);
   color: #ffffff;
   transform: translateY(-1px);
+}
+.home-tag-magazine svg {
+  vertical-align: middle;
 }
 .home-tag-link:focus-visible {
   outline: 3px solid var(--accent-gold-hover);
