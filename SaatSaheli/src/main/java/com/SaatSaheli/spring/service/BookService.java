@@ -245,6 +245,26 @@ public class BookService {
         return books;
     }
 
+    /** Get the published magazine (singleton book with category MAGAZINE) */
+    public Book getMagazine() {
+        Optional<Book> magOpt = bookRepo.findFirstByCategoryIgnoreCaseOrderByModifiedDateDesc("MAGAZINE");
+        if (magOpt.isEmpty()) return null;
+        Book mag = magOpt.get();
+        mag.setPages(pageRepo.findByBookIdOrderByPageNumberAsc(mag.getId()));
+        if (!mag.getPages().isEmpty() && mag.getPages().get(0).getImageUrl() != null) {
+            mag.setCoverImageUrl(mag.getPages().get(0).getImageUrl());
+        }
+        return mag;
+    }
+
+    /** Get or create the magazine book (for admin use) */
+    @Transactional
+    public Book getOrCreateMagazine(Long adminUserId) {
+        Book mag = getMagazine();
+        if (mag != null) return mag;
+        return createBook("Saat Saheli Magazine", adminUserId, "MAGAZINE");
+    }
+
     public List<Book> getBooksByUser(Long userId) {
         List<Book> books = bookRepo.findByUserId(userId).stream()
                 .filter(b -> !"DELETED".equalsIgnoreCase(b.getStatus()))

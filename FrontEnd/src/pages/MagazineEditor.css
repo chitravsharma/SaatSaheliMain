@@ -1,0 +1,274 @@
+.mag-editor {
+  padding: 0;
+}
+
+.mag-editor-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.mag-editor-header h2 {
+  margin: 0;
+  font-size: 1.4rem;
+  color: var(--text-primary, #1a1a2e);
+}
+
+.mag-editor-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.mag-status {
+  font-size: 0.85rem;
+  color: var(--text-secondary, #666);
+  font-style: italic;
+}
+
+.mag-message {
+  background: #e8f5e9;
+  color: #2e7d32;
+  padding: 8px 14px;
+  border-radius: 6px;
+  margin-bottom: 12px;
+  font-size: 0.9rem;
+}
+
+.mag-editor-body {
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
+}
+
+/* Page list sidebar */
+.mag-page-list {
+  flex-shrink: 0;
+  width: 200px;
+}
+
+.mag-page-list h3 {
+  margin: 0 0 10px;
+  font-size: 1rem;
+}
+
+.mag-page-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 4px;
+  max-height: 600px;
+  overflow-y: auto;
+}
+
+.mag-page-slot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 2px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background: #fafafa;
+  cursor: pointer;
+  font-size: 0.7rem;
+  min-height: 42px;
+  transition: all 0.15s;
+}
+
+.mag-page-slot:hover {
+  border-color: #c9a84c;
+  background: #fffdf5;
+}
+
+.mag-page-filled {
+  background: #e8f0fe;
+  border-color: #90b4e8;
+}
+
+.mag-page-selected {
+  background: #c9a84c !important;
+  color: #fff !important;
+  border-color: #b08930 !important;
+}
+
+.mag-page-selected .mag-page-label {
+  color: #fff;
+}
+
+.mag-page-num {
+  font-weight: 600;
+  font-size: 0.75rem;
+}
+
+.mag-page-label {
+  font-size: 0.6rem;
+  color: #999;
+}
+
+/* Page editor panel */
+.mag-page-editor {
+  flex: 1;
+  min-width: 0;
+}
+
+.mag-page-editor h3 {
+  margin: 0 0 12px;
+  font-size: 1.1rem;
+}
+
+.mag-editor-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  align-items: flex-end;
+  margin-bottom: 14px;
+}
+
+.mag-editor-row label,
+.mag-block-controls label {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  font-size: 0.8rem;
+  color: var(--text-secondary, #555);
+}
+
+.mag-editor-row select,
+.mag-editor-row input[type="number"] {
+  padding: 4px 6px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 0.85rem;
+}
+
+.mag-editor-section {
+  margin-bottom: 16px;
+}
+
+.mag-editor-section h4 {
+  margin: 0 0 8px;
+  font-size: 0.95rem;
+}
+
+.mag-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.mag-section-header h4 {
+  margin: 0;
+}
+
+.mag-textarea {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  resize: vertical;
+  font-family: inherit;
+}
+
+.mag-block-card {
+  background: #f8f8f8;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 10px;
+  margin-bottom: 8px;
+}
+
+.mag-block-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: flex-end;
+  margin-top: 6px;
+}
+
+.mag-block-controls input[type="number"],
+.mag-block-controls input[type="text"],
+.mag-block-controls select {
+  padding: 3px 5px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 0.8rem;
+}
+
+.mag-img-preview {
+  margin-bottom: 6px;
+}
+
+/* Preview */
+.mag-preview {
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+  margin: 0 auto;
+}
+
+/* Buttons */
+.mag-btn {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 500;
+  transition: opacity 0.15s;
+}
+
+.mag-btn:hover { opacity: 0.85; }
+.mag-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.mag-btn-primary {
+  background: #c9a84c;
+  color: #fff;
+}
+
+.mag-btn-publish {
+  background: #2e7d32;
+  color: #fff;
+}
+
+.mag-btn-danger {
+  background: #c62828;
+  color: #fff;
+  padding: 4px 10px;
+  font-size: 0.78rem;
+}
+
+.mag-btn-sm {
+  padding: 5px 12px;
+  font-size: 0.78rem;
+  background: #546e7a;
+  color: #fff;
+}
+
+.mag-upload-btn {
+  cursor: pointer;
+}
+
+.mag-editor-actions-bottom {
+  display: flex;
+  gap: 10px;
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid #eee;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .mag-editor-body {
+    flex-direction: column;
+  }
+  .mag-page-list {
+    width: 100%;
+  }
+  .mag-page-grid {
+    grid-template-columns: repeat(8, 1fr);
+    max-height: 200px;
+  }
+}

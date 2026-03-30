@@ -250,6 +250,20 @@ public class BookController {
         }
     }
 
+    @GetMapping("/magazine")
+    public ResponseEntity<?> getMagazine() {
+        try {
+            Book magazine = bookService.getMagazine();
+            if (magazine == null || !"PUBLISHED".equalsIgnoreCase(magazine.getStatus())) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorMap("Magazine not available yet"));
+            }
+            return ResponseEntity.ok(magazine);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(errorMap("Failed to fetch magazine: " + e.getMessage()));
+        }
+    }
+
     private Map<String, String> errorMap(String message) {
         Map<String, String> map = new HashMap<>();
         map.put("error", message);

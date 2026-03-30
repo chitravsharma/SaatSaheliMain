@@ -28,6 +28,7 @@ import GalleryView from './pages/GalleryView';
 import Pricing from './pages/Pricing';
 import Articles from './pages/Articles';
 import Podcasts from './pages/Podcasts';
+import Magazine from './pages/Magazine';
 import ProtectedRoute from './components/ProtectedRoute';
 import DownloadProtection from './components/DownloadProtection';
 import VisitorTracker from './components/VisitorTracker';
@@ -70,6 +71,7 @@ function App() {
           <Route path="/articles" element={<Articles />} />
           <Route path="/articles/:contentType" element={<Articles />} />
           <Route path="/podcasts" element={<Podcasts />} />
+          <Route path="/magazine" element={<Magazine />} />
           <Route path="/gallery/:galleryId" element={<GalleryView />} />
           <Route path="/pricing" element={<Pricing />} />
           <Route path="/marketplace" element={<Marketplace />} />

@@ -445,6 +445,42 @@ public class AdminController {
         }
     }
 
+    // ── Magazine endpoints ──
+
+    @GetMapping("/magazine")
+    public ResponseEntity<?> getOrCreateMagazine(@RequestHeader("X-User-Id") String callerUserId) {
+        User caller = verifyCaller(callerUserId, false);
+        if (caller == null) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorMap("Admin access required"));
+        }
+        try {
+            Book magazine = bookService.getOrCreateMagazine(caller.getId());
+            return ResponseEntity.ok(magazine);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(errorMap("Failed to get magazine: " + e.getMessage()));
+        }
+    }
+
+    @PutMapping("/magazine/publish")
+    public ResponseEntity<?> publishMagazine(@RequestHeader("X-User-Id") String callerUserId) {
+        User caller = verifyCaller(callerUserId, false);
+        if (caller == null) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorMap("Admin access required"));
+        }
+        try {
+            Book magazine = bookService.getMagazine();
+            if (magazine == null) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorMap("Magazine not found"));
+            }
+            bookService.publishBook(magazine.getId(), null);
+            return ResponseEntity.ok(Map.of("message", "Magazine published successfully"));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(errorMap("Failed to publish magazine: " + e.getMessage()));
+        }
+    }
+
     private User verifyCaller(String callerUserId, boolean requireSuperAdmin) {
         try {
             if (callerUserId == null || callerUserId.isEmpty()) return null;

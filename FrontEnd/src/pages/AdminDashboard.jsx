@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import axios from "axios";
 import { useAuth } from "../AuthContext";
 import { useStrings } from "../LanguageContext";
+import MagazineEditor from "./MagazineEditor";
 import "./AdminDashboard.css";
 
 const API = process.env.REACT_APP_API_URL;
@@ -451,6 +452,9 @@ const AdminDashboard = () => {
                 </button>
                 <button className={tab === "maintenance" ? "active" : ""} onClick={() => setTab("maintenance")}>
                     Maintenance
+                </button>
+                <button className={tab === "magazine" ? "active" : ""} onClick={() => setTab("magazine")}>
+                    Magazine
                 </button>
                 {isSuperAdmin && (
                     <button className={tab === "advertisements" ? "active" : ""} onClick={() => setTab("advertisements")}>
@@ -1242,6 +1246,9 @@ const AdminDashboard = () => {
                         )}
                     </div>
                 </div>
+            )}
+            {tab === "magazine" && (
+                <MagazineEditor />
             )}
         </div>
     );

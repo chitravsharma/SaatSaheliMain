@@ -1,0 +1,24 @@
+.magazine-container {
+  max-width: 960px;
+  margin: 24px auto;
+  padding: 0 24px;
+  text-align: center;
+}
+
+.magazine-heading {
+  font-family: 'Great Vibes', cursive;
+  color: #c9a84c;
+  font-size: 2.2rem;
+  margin-bottom: 16px;
+}
+
+.magazine-loading {
+  color: var(--text-secondary, #666);
+  font-style: italic;
+}
+
+.magazine-not-found {
+  color: var(--text-secondary, #666);
+  font-size: 1.1rem;
+  margin-top: 32px;
+}

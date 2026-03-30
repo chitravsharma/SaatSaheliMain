@@ -18,18 +18,26 @@ function resolveImageUrl(url) {
   return url;
 }
 
-// Parse JSON format string into text style + layout + coverDesign
+// Parse JSON format string into text style + layout + coverDesign + magazine fields
 function parseFormat(formatStr) {
-  if (!formatStr) return { style: {}, layout: {}, coverDesign: null };
+  if (!formatStr) return { style: {}, layout: {}, coverDesign: null, backgroundColor: null, border: null, textBlocks: [], imageBlocks: [] };
   try {
     const parsed = JSON.parse(formatStr);
     const style = {};
     if (parsed.fontFamily) style.fontFamily = parsed.fontFamily;
     if (parsed.fontSize) style.fontSize = parsed.fontSize;
     if (parsed.color) style.color = parsed.color;
-    return { style, layout: parsed.layout || {}, coverDesign: parsed.coverDesign || null };
+    return {
+      style,
+      layout: parsed.layout || {},
+      coverDesign: parsed.coverDesign || null,
+      backgroundColor: parsed.backgroundColor || null,
+      border: parsed.border || null,
+      textBlocks: parsed.textBlocks || [],
+      imageBlocks: parsed.imageBlocks || [],
+    };
   } catch {
-    return { style: {}, layout: {}, coverDesign: null };
+    return { style: {}, layout: {}, coverDesign: null, backgroundColor: null, border: null, textBlocks: [], imageBlocks: [] };
   }
 }
 
@@ -308,7 +316,7 @@ function FlipBook({ bookId }) {
 
   // Render a single page element (shared between flipbook and scroll reader)
   const renderPageContent = (page, index) => {
-    const { style: textStyle, layout, coverDesign } = parseFormat(page.format);
+    const { style: textStyle, layout, coverDesign, backgroundColor, border, textBlocks, imageBlocks } = parseFormat(page.format);
     const img1Src = resolveImageUrl(page.imageUrl);
     const img2Src = resolveImageUrl(page.imageUrl2);
     const hasLayout = img1Src || img2Src;
@@ -349,9 +357,21 @@ function FlipBook({ bookId }) {
       textAlign: "left",
     };
 
+    // Magazine-style page styling (backgroundColor, border)
+    const pageContainerStyle = {
+      position: "relative",
+      overflow: "hidden",
+      width: pageSize.w,
+      height: pageSize.h,
+    };
+    if (backgroundColor) pageContainerStyle.backgroundColor = backgroundColor;
+    if (border) {
+      pageContainerStyle.border = `${border.width || "2px"} ${border.style || "solid"} ${border.color || "#333"}`;
+    }
+
     if (isCoverOrBack && img1Src) {
       return (
-        <div key={index} className="card-box flipbook-page" style={{ position: "relative", overflow: "hidden", padding: 0, width: pageSize.w, height: pageSize.h }}>
+        <div key={index} className="card-box flipbook-page" style={{ ...pageContainerStyle, padding: 0 }}>
           <img
             src={img1Src}
             alt={isFirstPage ? "Cover" : isLastPage ? "Back Cover" : strings.flipBook.pageImageAlt(pageNum, 1)}
@@ -361,11 +381,48 @@ function FlipBook({ bookId }) {
       );
     }
 
+    // Check if this page uses magazine-style textBlocks/imageBlocks
+    const hasMagazineBlocks = textBlocks.length > 0 || imageBlocks.length > 0;
+
     return (
-      <div key={index} className="card-box flipbook-page" style={{ position: "relative", overflow: "hidden", width: pageSize.w, height: pageSize.h }}>
+      <div key={index} className="card-box flipbook-page" style={pageContainerStyle}>
         <span style={{ ...pageNumStyle, top: 6 }}>{pageNum}</span>
         <span style={{ ...pageNumStyle, bottom: 6 }}>{pageNum}</span>
-        {hasLayout ? (
+        {hasMagazineBlocks ? (
+          <>
+            {textBlocks.map((tb) => (
+              <div key={tb.id} style={{
+                position: "absolute",
+                left: (tb.x || 0) * scale,
+                top: (tb.y || 0) * scale,
+                width: (tb.width || 200) * scale,
+                height: tb.height ? tb.height * scale : "auto",
+                fontFamily: tb.fontFamily || "sans-serif",
+                fontSize: tb.fontSize ? `${parseFloat(tb.fontSize) * scale}px` : `${14 * scale}px`,
+                color: tb.color || "#000",
+                whiteSpace: "pre-wrap",
+                wordBreak: "break-word",
+                overflow: "hidden",
+                pointerEvents: "none",
+              }}>
+                {tb.content}
+              </div>
+            ))}
+            {imageBlocks.map((ib) => (
+              <img key={ib.id} src={resolveImageUrl(ib.url)} alt=""
+                style={{
+                  position: "absolute",
+                  left: (ib.x || 0) * scale,
+                  top: (ib.y || 0) * scale,
+                  width: (ib.width || 200) * scale,
+                  height: (ib.height || 150) * scale,
+                  objectFit: "cover",
+                  borderRadius: 4,
+                }}
+              />
+            ))}
+          </>
+        ) : hasLayout ? (
           <>
             <div style={{
               position: "absolute",
