@@ -145,7 +145,7 @@ function Home() {
 
   const handleAdShare = async (ad) => {
     const url = ad.linkUrl || window.location.origin;
-    const text = `Check out this on Sarayu: ${ad.title}`;
+    const text = `Check out this on Saat Saheli: ${ad.title}`;
     if (navigator.share) {
       try { await navigator.share({ title: ad.title, text, url }); } catch { /* cancelled */ }
     } else {
@@ -159,7 +159,7 @@ function Home() {
     const typePath = article.contentType === "Poetry" ? "poems"
       : article.contentType === "Blog" ? "blogs" : "articles";
     const url = `${window.location.origin}/#/articles/${typePath}`;
-    const text = `Check out "${article.headline}" on Sarayu!`;
+    const text = `Check out "${article.headline}" on Saat Saheli!`;
     if (navigator.share) {
       try { await navigator.share({ title: article.headline, text, url }); } catch { /* cancelled */ }
     } else {
@@ -401,7 +401,7 @@ function Home() {
           <div className="home-ad-banner home-ad-banner-alt">
             <span className="home-ad-label">Sponsored</span>
             <div className="home-ad-content">
-              <h3>Join Sarayu Creator Program</h3>
+              <h3>Join Saat Saheli Creator Program</h3>
               <p>Publish your books, podcasts, and artwork. Upgrade to Creator plan for premium publishing tools and monetization.</p>
               <Link to="/pricing" className="home-ad-cta">Explore Plans</Link>
             </div>

@@ -142,7 +142,7 @@ export default function Marketplace() {
 
   const handleShare = async (item) => {
     const url = `${window.location.origin}/#/marketplace`;
-    const text = `Check out "${item.title}" for ${item.price} on Sarayu Marketplace!`;
+    const text = `Check out "${item.title}" for ${item.price} on Saat Saheli Marketplace!`;
     if (navigator.share) {
       try { await navigator.share({ title: item.title, text, url }); } catch { /* cancelled */ }
     } else {
@@ -211,7 +211,7 @@ export default function Marketplace() {
       </h1>
 
       <p className="mp-disclaimer">
-        Sarayu is not responsible for any transactions, items, or outcomes of buying/selling.
+        SaatSaheli is not responsible for any transactions, items, or outcomes of buying/selling.
         Buyers and sellers are fully responsible for their actions.
         <Link to="/policies" className="mp-policy-link"> Read full policies</Link>
       </p>

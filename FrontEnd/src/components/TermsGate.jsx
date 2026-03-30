@@ -24,7 +24,7 @@ function TermsGate({ userId, children }) {
       <div className="terms-gate-modal" role="dialog" aria-labelledby="terms-gate-title" aria-modal="true">
         <h2 id="terms-gate-title">Terms &amp; Conditions</h2>
         <div className="terms-gate-body">
-          <p>Before creating content on Sarayu, please read and accept our Terms &amp; Conditions.</p>
+          <p>Before creating content on SaatSaheli, please read and accept our Terms &amp; Conditions.</p>
 
           <h3>Content Guidelines</h3>
           <ul>
@@ -37,7 +37,7 @@ function TermsGate({ userId, children }) {
 
           <h3>User Responsibilities</h3>
           <ul>
-            <li>You are solely responsible for the content you publish on Sarayu.</li>
+            <li>You are solely responsible for the content you publish on SaatSaheli.</li>
             <li>You must not use the platform for illegal activities or to distribute malicious content.</li>
             <li>Respect other community members and their creative works.</li>
             <li>Report any content that violates these guidelines.</li>
@@ -45,9 +45,9 @@ function TermsGate({ userId, children }) {
 
           <h3>Platform Rights</h3>
           <ul>
-            <li>Sarayu reserves the right to remove any content that violates these terms without prior notice.</li>
+            <li>SaatSaheli reserves the right to remove any content that violates these terms without prior notice.</li>
             <li>Accounts found repeatedly violating these terms may be suspended or permanently removed.</li>
-            <li>By publishing on Sarayu, you grant the platform a non-exclusive license to display your content within the site.</li>
+            <li>By publishing on SaatSaheli, you grant the platform a non-exclusive license to display your content within the site.</li>
           </ul>
 
           <p>

@@ -17,9 +17,9 @@ export const en = {
 
   header: {
     skipLink: "Skip to main content",
-    logoAlt: "Sarayu logo",
-    siteName: "Sarayu",
-    siteTagline: "Sarayu \u2013 Where silence speaks",
+    logoAlt: "SaatSaheli logo",
+    siteName: "Saat Saheli",
+    siteTagline: "Welcome to Saat Saheli \u2013 A Community for Passion and Creativity!",
     navHome: "Home",
     navAbout: "About",
     navBooks: "Books",
@@ -41,11 +41,11 @@ export const en = {
     contactUs: "Contact Us",
     sitePolicies: "Site Policies",
     feedback: "Feedback",
-    copyright: "\u00A9 2026 Sarayu. All rights reserved.",
+    copyright: "\u00A9 2026 SaatSaheli. All rights reserved.",
   },
 
   home: {
-    welcomeHeading: "Welcome to Sarayu \u2013 A Community for Passion and Creativity!",
+    welcomeHeading: "Welcome to Saat Saheli \u2013 A Community for Passion and Creativity!",
     searchHeading: "Search Books",
     labelBookId: "Book ID",
     labelBookName: "Book Name",
@@ -74,9 +74,9 @@ export const en = {
   },
 
   about: {
-    heading: "About Sarayu",
+    heading: "About SaatSaheli",
     description:
-      "Do you have a hobby, skill, or passion you can't stop talking about? Whether you're an artist, musician, writer, tech enthusiast, or simply someone who loves trying new things, Sarayu is the perfect creative community for you to share, learn, and connect through hobby sharing.",
+      "Do you have a hobby, skill, or passion you can't stop talking about? Whether you're an artist, musician, writer, tech enthusiast, or simply someone who loves trying new things, Saat Saheli is the perfect creative community for you to share, learn, and connect through hobby sharing.",
     tags: ["Art", "Music", "Writing", "Tech", "Creativity", "Community"],
   },
 
@@ -84,7 +84,7 @@ export const en = {
     heading: "Contact Us",
     subheading: "Questions or Comments?",
     intro:
-      "Contact us today to join our creative community, create your own page, share your hobbies, and explore a world of talent and creativity with Sarayu!",
+      "Contact us today to join our creative community, create your own page, share your hobbies, and explore a world of talent and creativity with Saat Saheli!",
     labelName: "Name",
     labelEmail: "Email",
     labelMessage: "Message",
@@ -103,7 +103,7 @@ export const en = {
     heading: "Site Policies",
     termsHeading: "Terms of Use",
     termsBody:
-      "By accessing and using Sarayu, you agree to comply with these terms. Sarayu is a creative community platform for sharing hobbies, skills, and passions. All users must use the platform respectfully and in accordance with applicable laws.",
+      "By accessing and using SaatSaheli, you agree to comply with these terms. SaatSaheli is a creative community platform for sharing hobbies, skills, and passions. All users must use the platform respectfully and in accordance with applicable laws.",
     contentHeading: "Content Creation Policy",
     contentIntro: "Users are responsible for all content they create and publish, including books, poems, art, gallery images, tech posts, DIY projects, articles, recipes, and any other creative works. All content must be:",
     contentRules: [
@@ -116,11 +116,11 @@ export const en = {
       "Respectful of other community members and their creative works",
     ],
     contentFooter:
-      "Sarayu reserves the right to remove any content that violates these guidelines without prior notice. Repeated violations may result in account suspension or permanent removal.",
-    contentAcceptance: "By creating any content on Sarayu, you confirm that you have read, understood, and agree to abide by these content guidelines.",
+      "SaatSaheli reserves the right to remove any content that violates these guidelines without prior notice. Repeated violations may result in account suspension or permanent removal.",
+    contentAcceptance: "By creating any content on SaatSaheli, you confirm that you have read, understood, and agree to abide by these content guidelines.",
     privacyHeading: "Privacy Policy",
     privacyBody:
-      "We value your privacy. Sarayu collects only the information necessary to provide our services, including your name, email address, and content you create. We do not sell or share your personal information with third parties. Your data is stored securely and used solely for operating the platform.",
+      "We value your privacy. SaatSaheli collects only the information necessary to provide our services, including your name, email address, and content you create. We do not sell or share your personal information with third parties. Your data is stored securely and used solely for operating the platform.",
     accountHeading: "Account Policy",
     accountRules: [
       "Users must provide accurate information when creating an account",
@@ -130,7 +130,7 @@ export const en = {
     ],
     ipHeading: "Intellectual Property",
     ipBody:
-      "All content created and published on Sarayu remains the intellectual property of its creator. By publishing on our platform, you grant Sarayu a non-exclusive license to display your content within the platform. You may remove your content at any time.",
+      "All content created and published on SaatSaheli remains the intellectual property of its creator. By publishing on our platform, you grant SaatSaheli a non-exclusive license to display your content within the platform. You may remove your content at any time.",
     contactHeading: "Contact",
     contactBody: "For questions about these policies, please reach out to us at",
     contactEmail: "avikaventures.info@gmail.com",
@@ -138,7 +138,7 @@ export const en = {
   },
 
   login: {
-    brand: "Sarayu",
+    brand: "Saat Saheli",
     tagline: "Your digital book platform",
     logInHeading: "Log In",
     createAccountHeading: "Create Account",

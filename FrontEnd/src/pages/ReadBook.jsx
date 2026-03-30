@@ -104,7 +104,7 @@ function ReadBook() {
   const handleShare = async () => {
     const url = window.location.href;
     const title = book?.title || "Book";
-    const text = `Check out "${title}" on Sarayu!`;
+    const text = `Check out "${title}" on Saat Saheli!`;
     if (navigator.share) {
       try {
         await navigator.share({ title, text, url });

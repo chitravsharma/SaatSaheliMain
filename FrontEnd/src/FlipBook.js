@@ -527,7 +527,7 @@ function FlipBook({ bookId }) {
         </div>
 
         <div className="flipbook-copyright">
-          &copy; {new Date().getFullYear()} @chitravsharma &mdash; Sarayu. All rights reserved.
+          &copy; {new Date().getFullYear()} @chitravsharma &mdash; SaatSaheli. All rights reserved.
         </div>
       </div>
     </div>
