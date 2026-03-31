@@ -255,9 +255,7 @@ public class BookService {
                 .findFirst().orElse(null);
         if (mag == null) return null;
         mag.setPages(pageRepo.findByBookIdOrderByPageNumberAsc(mag.getId()));
-        if (!mag.getPages().isEmpty() && mag.getPages().get(0).getImageUrl() != null) {
-            mag.setCoverImageUrl(mag.getPages().get(0).getImageUrl());
-        }
+        enrichWithCoverImages(List.of(mag));
         return mag;
     }
 
@@ -267,12 +265,9 @@ public class BookService {
                 .filter(m -> !"DELETED".equalsIgnoreCase(m.getStatus()))
                 .collect(Collectors.toList());
         for (Book mag : mags) {
-            List<Page> pages = pageRepo.findByBookIdOrderByPageNumberAsc(mag.getId());
-            mag.setPages(pages);
-            if (!pages.isEmpty() && pages.get(0).getImageUrl() != null) {
-                mag.setCoverImageUrl(pages.get(0).getImageUrl());
-            }
+            mag.setPages(pageRepo.findByBookIdOrderByPageNumberAsc(mag.getId()));
         }
+        enrichWithCoverImages(mags);
         return mags;
     }
 
@@ -505,9 +500,33 @@ public class BookService {
                 Page firstPage = pages.get(0);
                 if (firstPage.getImageUrl() != null && !firstPage.getImageUrl().isEmpty()) {
                     book.setCoverImageUrl(firstPage.getImageUrl());
+                } else {
+                    String coverUrl = extractFirstImageFromFormat(firstPage.getFormat());
+                    if (coverUrl != null) {
+                        book.setCoverImageUrl(coverUrl);
+                    }
                 }
             }
         }
+    }
+
+    /** Extract the first image URL from a page's format JSON (imageBlocks array) */
+    private String extractFirstImageFromFormat(String format) {
+        if (format == null || format.isEmpty() || !format.startsWith("{")) return null;
+        try {
+            com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+            com.fasterxml.jackson.databind.JsonNode root = mapper.readTree(format);
+            com.fasterxml.jackson.databind.JsonNode imageBlocks = root.get("imageBlocks");
+            if (imageBlocks != null && imageBlocks.isArray() && imageBlocks.size() > 0) {
+                com.fasterxml.jackson.databind.JsonNode url = imageBlocks.get(0).get("url");
+                if (url != null && !url.asText().isEmpty()) {
+                    return url.asText();
+                }
+            }
+        } catch (Exception e) {
+            // ignore parse errors
+        }
+        return null;
     }
 
     /** Permanently delete all books with DELETED status and their pages */

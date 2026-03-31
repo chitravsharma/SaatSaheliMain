@@ -648,6 +648,36 @@ const MagazineEditor = () => {
                   </div>
                   <button className="mag-btn mag-btn-danger mag-btn-xs" onClick={() => removeImageBlock(selectedImageBlock.id)}>Remove</button>
                 </div>
+                <div className="mag-props-row">
+                  <label>Fit
+                    <select value={selectedImageBlock.objectFit || "cover"}
+                      onChange={(e) => updateImageBlock(selectedImageBlock.id, "objectFit", e.target.value)}>
+                      <option value="cover">Fill (crop)</option>
+                      <option value="contain">Fit (show full)</option>
+                      <option value="fill">Stretch</option>
+                    </select>
+                  </label>
+                  <label>Opacity
+                    <input type="range" min="10" max="100" value={selectedImageBlock.opacity || 100}
+                      onChange={(e) => updateImageBlock(selectedImageBlock.id, "opacity", +e.target.value)}
+                      style={{ width: 80 }} />
+                    <span style={{ fontSize: "0.7rem" }}>{selectedImageBlock.opacity || 100}%</span>
+                  </label>
+                  <button className="mag-btn mag-btn-sm" onClick={() => {
+                    updateImageBlock(selectedImageBlock.id, "x", 0);
+                    updateImageBlock(selectedImageBlock.id, "y", 0);
+                    updateImageBlock(selectedImageBlock.id, "width", PAGE_W);
+                    updateImageBlock(selectedImageBlock.id, "height", PAGE_H);
+                    updateImageBlock(selectedImageBlock.id, "objectFit", "contain");
+                  }}>Fit to Page</button>
+                  <button className="mag-btn mag-btn-sm" onClick={() => {
+                    updateImageBlock(selectedImageBlock.id, "x", 0);
+                    updateImageBlock(selectedImageBlock.id, "y", 0);
+                    updateImageBlock(selectedImageBlock.id, "width", PAGE_W);
+                    updateImageBlock(selectedImageBlock.id, "height", PAGE_H);
+                    updateImageBlock(selectedImageBlock.id, "objectFit", "cover");
+                  }}>Fill Page</button>
+                </div>
               </div>
             )}
 
@@ -701,7 +731,13 @@ const MagazineEditor = () => {
                     scale={canvasScale}
                   >
                     <img src={resolveUrl(ib.url)} alt="" draggable={false}
-                      style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: 2, pointerEvents: "none", userSelect: "none" }} />
+                      style={{
+                        width: "100%", height: "100%",
+                        objectFit: ib.objectFit || "cover",
+                        borderRadius: 2,
+                        pointerEvents: "none", userSelect: "none",
+                        opacity: (ib.opacity || 100) / 100,
+                      }} />
                   </DraggableBlock>
                 ))}
 
