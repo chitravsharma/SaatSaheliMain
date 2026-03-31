@@ -20,7 +20,8 @@
 .mag-editor-actions {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 
 .mag-status {
@@ -44,10 +45,102 @@
   align-items: flex-start;
 }
 
-/* Page list sidebar */
+/* ── Sidebar (editions + pages) ── */
+.mag-sidebar {
+  flex-shrink: 0;
+  width: 210px;
+}
+
+/* ── Editions list ── */
+.mag-editions {
+  margin-bottom: 14px;
+}
+
+.mag-editions h4 {
+  margin: 0 0 6px;
+  font-size: 0.9rem;
+}
+
+.mag-editions-list {
+  max-height: 200px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.mag-edition-item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  padding: 6px 8px;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  background: #fafafa;
+  cursor: pointer;
+  font-size: 0.72rem;
+  transition: all 0.12s;
+  text-align: left;
+  width: 100%;
+}
+
+.mag-edition-item:hover {
+  border-color: #c9a84c;
+  background: #fffdf5;
+}
+
+.mag-edition-active {
+  background: #e8f0fe !important;
+  border-color: #90b4e8 !important;
+}
+
+.mag-edition-title {
+  font-weight: 600;
+  font-size: 0.76rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.mag-edition-badge {
+  font-size: 0.6rem;
+  padding: 1px 5px;
+  border-radius: 3px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.mag-badge-pub {
+  background: #e8f5e9;
+  color: #2e7d32;
+}
+
+.mag-badge-draft {
+  background: #fff3e0;
+  color: #e65100;
+}
+
+.mag-edition-date {
+  font-size: 0.6rem;
+  color: #999;
+}
+
+/* ── Document upload ── */
+.mag-doc-upload {
+  margin-bottom: 12px;
+}
+
+.mag-doc-btn {
+  width: 100%;
+  text-align: center;
+  display: block;
+}
+
+/* ── Page list ── */
 .mag-page-list {
   flex-shrink: 0;
-  width: 200px;
 }
 
 .mag-page-list h3 {
@@ -59,7 +152,7 @@
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 4px;
-  max-height: 600px;
+  max-height: 500px;
   overflow-y: auto;
 }
 
@@ -108,7 +201,7 @@
   color: #999;
 }
 
-/* Page editor panel */
+/* ── Page editor panel ── */
 .mag-page-editor {
   flex: 1;
   min-width: 0;
@@ -119,49 +212,244 @@
   font-size: 1.1rem;
 }
 
-.mag-editor-row {
+/* ── Toolbar ── */
+.mag-toolbar {
   display: flex;
   flex-wrap: wrap;
-  gap: 14px;
-  align-items: flex-end;
-  margin-bottom: 14px;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  background: #f5f5f5;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  margin-bottom: 10px;
 }
 
-.mag-editor-row label,
-.mag-block-controls label {
+.mag-toolbar-label {
   display: flex;
-  flex-direction: column;
-  gap: 3px;
-  font-size: 0.8rem;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.78rem;
   color: var(--text-secondary, #555);
 }
 
-.mag-editor-row select,
-.mag-editor-row input[type="number"] {
-  padding: 4px 6px;
+.mag-toolbar-label select,
+.mag-toolbar-label input[type="number"] {
+  padding: 2px 4px;
   border: 1px solid #ccc;
   border-radius: 4px;
-  font-size: 0.85rem;
+  font-size: 0.8rem;
 }
 
+.mag-toolbar-sep {
+  width: 1px;
+  height: 20px;
+  background: #d0d0d0;
+  margin: 0 4px;
+}
+
+/* ── Properties panel ── */
+.mag-props-panel {
+  background: #fafafa;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-bottom: 10px;
+}
+
+.mag-props-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+
+.mag-props-row:last-child {
+  margin-bottom: 0;
+}
+
+.mag-props-row label {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 0.78rem;
+  color: var(--text-secondary, #555);
+}
+
+.mag-props-row label select,
+.mag-props-row label input[type="text"],
+.mag-props-row label input[type="number"] {
+  padding: 3px 5px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 0.8rem;
+}
+
+.mag-props-textarea {
+  flex: 1;
+  min-width: 200px;
+  padding: 6px 8px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 0.88rem;
+  resize: vertical;
+  font-family: inherit;
+}
+
+.mag-props-thumb {
+  width: 60px;
+  height: 44px;
+  object-fit: cover;
+  border-radius: 4px;
+  border: 1px solid #ddd;
+}
+
+.mag-props-info {
+  display: flex;
+  flex-direction: column;
+  font-size: 0.78rem;
+  color: #666;
+}
+
+/* Format buttons */
+.mag-fmt-btn {
+  width: 30px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background: #fff;
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: all 0.12s;
+}
+
+.mag-fmt-btn:hover {
+  background: #eee;
+}
+
+.mag-fmt-active {
+  background: #c9a84c;
+  color: #fff;
+  border-color: #b08930;
+}
+
+/* ── Interactive canvas ── */
+.mag-canvas-wrap {
+  margin-bottom: 14px;
+}
+
+.mag-canvas-hint {
+  font-size: 0.72rem;
+  color: #999;
+  margin-bottom: 4px;
+}
+
+.mag-canvas {
+  position: relative;
+  overflow: hidden;
+  border-radius: 4px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+  touch-action: none;
+}
+
+.mag-canvas-page-num {
+  position: absolute;
+  bottom: 4px;
+  right: 6px;
+  font-size: 10px;
+  color: #999;
+  pointer-events: none;
+}
+
+/* Draggable block */
+.mag-canvas-block {
+  border: 1px dashed transparent;
+  box-sizing: border-box;
+  transition: border-color 0.1s;
+}
+
+.mag-canvas-block:hover {
+  border-color: rgba(201, 168, 76, 0.5);
+}
+
+.mag-block-selected {
+  border-color: #c9a84c !important;
+  box-shadow: 0 0 0 2px rgba(201, 168, 76, 0.25);
+}
+
+.mag-block-active {
+  border-color: #c9a84c !important;
+  opacity: 0.9;
+}
+
+.mag-block-type-label {
+  position: absolute;
+  top: -8px;
+  left: 4px;
+  font-size: 9px;
+  background: #c9a84c;
+  color: #fff;
+  padding: 0 4px;
+  border-radius: 3px;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.mag-canvas-block:hover .mag-block-type-label,
+.mag-block-selected .mag-block-type-label {
+  opacity: 1;
+}
+
+.mag-resize-handle {
+  position: absolute;
+  right: -4px;
+  bottom: -4px;
+  width: 12px;
+  height: 12px;
+  background: #c9a84c;
+  border: 1px solid #b08930;
+  border-radius: 2px;
+  cursor: nwse-resize;
+  opacity: 0;
+  transition: opacity 0.15s;
+  touch-action: none;
+}
+
+.mag-canvas-block:hover .mag-resize-handle,
+.mag-block-selected .mag-resize-handle {
+  opacity: 1;
+}
+
+.mag-block-dims {
+  position: absolute;
+  bottom: -18px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 9px;
+  color: #666;
+  background: rgba(255, 255, 255, 0.9);
+  padding: 1px 5px;
+  border-radius: 3px;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+/* ── Section & textarea ── */
 .mag-editor-section {
   margin-bottom: 16px;
 }
 
-.mag-editor-section h4 {
-  margin: 0 0 8px;
-  font-size: 0.95rem;
-}
-
-.mag-section-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 8px;
-}
-
-.mag-section-header h4 {
-  margin: 0;
+.mag-section-label {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text-secondary, #555);
+  margin-bottom: 4px;
 }
 
 .mag-textarea {
@@ -174,42 +462,7 @@
   font-family: inherit;
 }
 
-.mag-block-card {
-  background: #f8f8f8;
-  border: 1px solid #e0e0e0;
-  border-radius: 8px;
-  padding: 10px;
-  margin-bottom: 8px;
-}
-
-.mag-block-controls {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  align-items: flex-end;
-  margin-top: 6px;
-}
-
-.mag-block-controls input[type="number"],
-.mag-block-controls input[type="text"],
-.mag-block-controls select {
-  padding: 3px 5px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  font-size: 0.8rem;
-}
-
-.mag-img-preview {
-  margin-bottom: 6px;
-}
-
-/* Preview */
-.mag-preview {
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
-  margin: 0 auto;
-}
-
-/* Buttons */
+/* ── Buttons ── */
 .mag-btn {
   padding: 8px 16px;
   border: none;
@@ -240,6 +493,11 @@
   font-size: 0.78rem;
 }
 
+.mag-btn-xs {
+  padding: 3px 8px;
+  font-size: 0.72rem;
+}
+
 .mag-btn-sm {
   padding: 5px 12px;
   font-size: 0.78rem;
@@ -259,16 +517,24 @@
   border-top: 1px solid #eee;
 }
 
-/* Responsive */
+/* ── Responsive ── */
 @media (max-width: 768px) {
   .mag-editor-body {
     flex-direction: column;
   }
-  .mag-page-list {
+  .mag-sidebar {
     width: 100%;
   }
   .mag-page-grid {
     grid-template-columns: repeat(8, 1fr);
     max-height: 200px;
+  }
+  .mag-editions-list {
+    flex-direction: row;
+    overflow-x: auto;
+    max-height: none;
+  }
+  .mag-edition-item {
+    min-width: 120px;
   }
 }

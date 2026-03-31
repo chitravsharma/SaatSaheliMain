@@ -82,32 +82,25 @@ function PublicBooks() {
       )}
 
       {!loading && !error && books.length > 0 && (
-        <div className="bm-public-grid">
+        <div className="bm-books-row">
           {books.map((book) => (
-            <button
-              key={book.id}
-              className="bm-public-card"
-              onClick={() => setReadingBookId(book.id)}
-              aria-label={`Read ${book.title}`}
-            >
-              <div className="bm-public-cover">
-                {book.coverImageUrl ? (
-                  <img src={resolveImageUrl(book.coverImageUrl)} alt={book.title} className="bm-public-cover-img" />
-                ) : (
-                  <span className="bm-public-cover-title">{book.title}</span>
-                )}
-              </div>
-              {book.authorName && (
-                <Link
-                  to={`/profile/${book.userId}`}
-                  className="bm-public-author bm-author-link"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  {book.authorName}
-                </Link>
-              )}
-              <span className="bm-public-read">{strings.publicBooks.readButton}</span>
-            </button>
+            <div key={book.id} className="bm-book-card">
+              <button className="bm-book-card-link" onClick={() => setReadingBookId(book.id)} aria-label={`Read ${book.title}`}>
+                <div className="bm-book-cover">
+                  {book.coverImageUrl ? (
+                    <img src={resolveImageUrl(book.coverImageUrl)} alt={book.title} className="bm-book-cover-img" />
+                  ) : (
+                    <span className="bm-book-cover-title">{book.title}</span>
+                  )}
+                </div>
+                <div className="bm-book-info">
+                  <span className="bm-book-title">{book.title}</span>
+                  {book.authorName && (
+                    <span className="bm-book-author">by {book.authorName}</span>
+                  )}
+                </div>
+              </button>
+            </div>
           ))}
         </div>
       )}
@@ -654,26 +647,25 @@ function BookManager() {
                 ))}
               </div>
             ) : (
-              <div className="bm-public-grid">
+              <div className="bm-books-row">
                 {publishedBooks.map((book) => (
-                  <button
-                    key={book.id}
-                    className="bm-public-card"
-                    onClick={() => setReadingBookId(book.id)}
-                    aria-label={`Read ${book.title}`}
-                  >
-                    <div className="bm-public-cover">
-                      {book.coverImageUrl ? (
-                        <img src={resolveImageUrl(book.coverImageUrl)} alt={book.title} className="bm-public-cover-img" />
-                      ) : (
-                        <span className="bm-public-cover-title">{book.title}</span>
-                      )}
-                    </div>
-                    {book.authorName && (
-                      <span className="bm-public-author">{book.authorName}</span>
-                    )}
-                    <span className="bm-public-read">{strings.publicBooks.readButton}</span>
-                  </button>
+                  <div key={book.id} className="bm-book-card">
+                    <button className="bm-book-card-link" onClick={() => setReadingBookId(book.id)} aria-label={`Read ${book.title}`}>
+                      <div className="bm-book-cover">
+                        {book.coverImageUrl ? (
+                          <img src={resolveImageUrl(book.coverImageUrl)} alt={book.title} className="bm-book-cover-img" />
+                        ) : (
+                          <span className="bm-book-cover-title">{book.title}</span>
+                        )}
+                      </div>
+                      <div className="bm-book-info">
+                        <span className="bm-book-title">{book.title}</span>
+                        {book.authorName && (
+                          <span className="bm-book-author">by {book.authorName}</span>
+                        )}
+                      </div>
+                    </button>
+                  </div>
                 ))}
               </div>
             )

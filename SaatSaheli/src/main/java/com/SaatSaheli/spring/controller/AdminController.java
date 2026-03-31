@@ -3,6 +3,7 @@ package com.SaatSaheli.spring.controller;
 import com.SaatSaheli.spring.model.Article;
 import com.SaatSaheli.spring.model.Book;
 import com.SaatSaheli.spring.model.Login;
+import com.SaatSaheli.spring.model.Page;
 import com.SaatSaheli.spring.model.User;
 import com.SaatSaheli.spring.repository.ArticleRepository;
 import com.SaatSaheli.spring.repository.BookRepository;
@@ -12,11 +13,13 @@ import com.SaatSaheli.spring.repository.PodcastRepository;
 import com.SaatSaheli.spring.repository.UserRepository;
 import com.SaatSaheli.spring.service.ArticleService;
 import com.SaatSaheli.spring.service.BookService;
+import com.SaatSaheli.spring.service.DocumentExtractionService;
 import com.SaatSaheli.spring.util.RoleUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -49,6 +52,9 @@ public class AdminController {
 
     @Autowired
     private PodcastRepository podcastRepo;
+
+    @Autowired
+    private DocumentExtractionService documentExtractionService;
 
     /** GET /api/admin/users — List all users with login info */
     @GetMapping("/users")
@@ -462,6 +468,40 @@ public class AdminController {
         }
     }
 
+    /** GET /api/admin/magazines — List all magazine editions (latest first) */
+    @GetMapping("/magazines")
+    public ResponseEntity<?> listMagazines(@RequestHeader("X-User-Id") String callerUserId) {
+        User caller = verifyCaller(callerUserId, false);
+        if (caller == null) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorMap("Admin access required"));
+        }
+        try {
+            return ResponseEntity.ok(bookService.getAllMagazines());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(errorMap("Failed to list magazines: " + e.getMessage()));
+        }
+    }
+
+    /** POST /api/admin/magazine/new — Create a new magazine edition */
+    @PostMapping("/magazine/new")
+    public ResponseEntity<?> createNewMagazineEdition(
+            @RequestHeader("X-User-Id") String callerUserId,
+            @RequestBody(required = false) Map<String, String> body) {
+        User caller = verifyCaller(callerUserId, false);
+        if (caller == null) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorMap("Admin access required"));
+        }
+        try {
+            String title = body != null ? body.get("title") : null;
+            Book magazine = bookService.createNewMagazineEdition(caller.getId(), title);
+            return ResponseEntity.ok(magazine);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(errorMap("Failed to create magazine edition: " + e.getMessage()));
+        }
+    }
+
     @PutMapping("/magazine/publish")
     public ResponseEntity<?> publishMagazine(@RequestHeader("X-User-Id") String callerUserId) {
         User caller = verifyCaller(callerUserId, false);
@@ -479,6 +519,126 @@ public class AdminController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(errorMap("Failed to publish magazine: " + e.getMessage()));
         }
+    }
+
+    /** PUT /api/admin/magazine/{magazineId}/unpublish — Unpublish (set back to DRAFT) */
+    @PutMapping("/magazine/{magazineId}/unpublish")
+    public ResponseEntity<?> unpublishMagazine(
+            @PathVariable Long magazineId,
+            @RequestHeader("X-User-Id") String callerUserId) {
+        User caller = verifyCaller(callerUserId, false);
+        if (caller == null) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorMap("Admin access required"));
+        }
+        try {
+            bookService.saveDraft(magazineId, null);
+            return ResponseEntity.ok(Map.of("message", "Magazine unpublished"));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(errorMap("Failed to unpublish magazine: " + e.getMessage()));
+        }
+    }
+
+    /** PUT /api/admin/magazine/{magazineId}/publish — Publish a specific magazine edition */
+    @PutMapping("/magazine/{magazineId}/publish")
+    public ResponseEntity<?> publishMagazineById(
+            @PathVariable Long magazineId,
+            @RequestHeader("X-User-Id") String callerUserId) {
+        User caller = verifyCaller(callerUserId, false);
+        if (caller == null) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorMap("Admin access required"));
+        }
+        try {
+            bookService.publishBook(magazineId, null);
+            return ResponseEntity.ok(Map.of("message", "Magazine published"));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(errorMap("Failed to publish magazine: " + e.getMessage()));
+        }
+    }
+
+    /** POST /api/admin/magazine/upload-document — Upload PDF/Word to create magazine pages */
+    @PostMapping("/magazine/upload-document")
+    public ResponseEntity<?> uploadMagazineDocument(
+            @RequestParam("file") MultipartFile file,
+            @RequestParam(value = "magazineId", required = false) Long magazineId,
+            @RequestParam(value = "title", required = false) String title,
+            @RequestHeader("X-User-Id") String callerUserId) {
+        User caller = verifyCaller(callerUserId, false);
+        if (caller == null) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorMap("Admin access required"));
+        }
+        try {
+            if (file.isEmpty()) {
+                return ResponseEntity.badRequest().body(errorMap("File is required"));
+            }
+            String filename = file.getOriginalFilename();
+            boolean isPdf = filename != null && filename.toLowerCase().endsWith(".pdf");
+
+            // Get or create magazine
+            Book magazine;
+            if (magazineId != null) {
+                magazine = bookService.getBook(magazineId);
+            } else {
+                magazine = bookService.getOrCreateMagazine(caller.getId());
+            }
+            if (title != null && !title.trim().isEmpty()) {
+                bookService.updateBook(magazine.getId(), title.trim(), null, null);
+            }
+
+            // Extract pages from document and add them to the magazine
+            if (isPdf) {
+                List<String> imageUrls = documentExtractionService.extractPdfAsImages(file);
+                if (imageUrls.isEmpty()) {
+                    return ResponseEntity.badRequest().body(errorMap("No pages could be rendered from the PDF"));
+                }
+                int startPage = magazine.getPages() != null ? magazine.getPages().size() + 1 : 1;
+                for (int i = 0; i < imageUrls.size(); i++) {
+                    Page page = new Page();
+                    page.setBookId(magazine.getId());
+                    page.setPageNumber(startPage + i);
+                    page.setImageUrl(imageUrls.get(i));
+                    page.setFormat("{\"layout\":{\"image1\":{\"x\":0,\"y\":0,\"width\":550,\"height\":700}}}");
+                    page.setCreatedDate(java.time.LocalDateTime.now());
+                    page.setModifiedDate(java.time.LocalDateTime.now());
+                    bookService.addPage(magazine.getId(), page, null);
+                }
+            } else {
+                List<String> pageTexts = documentExtractionService.extractText(file);
+                if (pageTexts.isEmpty()) {
+                    return ResponseEntity.badRequest().body(errorMap("No text could be extracted from the document"));
+                }
+                int startPage = magazine.getPages() != null ? magazine.getPages().size() + 1 : 1;
+                for (int i = 0; i < pageTexts.size(); i++) {
+                    Page page = new Page();
+                    page.setBookId(magazine.getId());
+                    page.setPageNumber(startPage + i);
+                    page.setContent(pageTexts.get(i));
+                    String format = "{\"textBlocks\":[{\"id\":\"tb" + System.currentTimeMillis() + i +
+                            "\",\"content\":" + escapeJson(pageTexts.get(i)) +
+                            ",\"fontFamily\":\"serif\",\"fontSize\":\"14px\",\"color\":\"#000000\"," +
+                            "\"x\":20,\"y\":20,\"width\":510,\"height\":660}]}";
+                    page.setFormat(format);
+                    page.setCreatedDate(java.time.LocalDateTime.now());
+                    page.setModifiedDate(java.time.LocalDateTime.now());
+                    bookService.addPage(magazine.getId(), page, null);
+                }
+            }
+
+            // Reload and return the magazine with updated pages
+            Book updated = bookService.getBook(magazine.getId());
+            updated.setPages(bookService.getPagesByBookId(magazine.getId()));
+            return ResponseEntity.ok(updated);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(errorMap("Failed to process document: " + e.getMessage()));
+        }
+    }
+
+    private String escapeJson(String text) {
+        if (text == null) return "\"\"";
+        return "\"" + text.replace("\\", "\\\\").replace("\"", "\\\"")
+                .replace("\n", "\\n").replace("\r", "\\r").replace("\t", "\\t") + "\"";
     }
 
     private User verifyCaller(String callerUserId, boolean requireSuperAdmin) {

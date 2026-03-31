@@ -170,18 +170,14 @@ function Home() {
   };
 
   const categoryIcons = {
-    Art: "\uD83C\uDFA8",
-    Music: "\uD83C\uDFB5",
-    Writing: "\u270D\uFE0F",
-    Tech: "\uD83D\uDCBB",
-    Creativity: "\u2728",
-    Community: "\uD83C\uDF10",
+    Magazine: "\uD83D\uDCD6",
+    Books: "\uD83D\uDCDA",
   };
 
-  // Group books by category
+  // Group books into only two categories: Magazine and Books
   const grouped = {};
   recentBooks.forEach((book) => {
-    const cat = book.category || "Other";
+    const cat = (book.category || "").toUpperCase() === "MAGAZINE" ? "Magazine" : "Books";
     if (!grouped[cat]) grouped[cat] = [];
     grouped[cat].push(book);
   });

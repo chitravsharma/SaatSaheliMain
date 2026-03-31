@@ -3,6 +3,7 @@ package com.SaatSaheli.spring.controller;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import com.SaatSaheli.spring.model.Page;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -261,6 +262,21 @@ public class BookController {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(errorMap("Failed to fetch magazine: " + e.getMessage()));
+        }
+    }
+
+    /** GET /api/books/magazines — List all published magazine editions (for readers) */
+    @GetMapping("/magazines")
+    public ResponseEntity<?> getPublishedMagazines() {
+        try {
+            List<Book> all = bookService.getAllMagazines();
+            List<Book> published = all.stream()
+                    .filter(m -> "PUBLISHED".equalsIgnoreCase(m.getStatus()))
+                    .collect(Collectors.toList());
+            return ResponseEntity.ok(published);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(errorMap("Failed to fetch magazines: " + e.getMessage()));
         }
     }
 

@@ -236,16 +236,18 @@ public class BookService {
         for (Book book : books) {
             if (book.getUserId() != null && userMap.containsKey(book.getUserId())) {
                 User u = userMap.get(book.getUserId());
-                String name = (u.getFirstName() != null ? u.getFirstName() : "")
-                        + (u.getLastName() != null ? " " + u.getLastName() : "");
-                book.setAuthorName(name.trim());
+                String name = (u.getDisplayName() != null && !u.getDisplayName().isEmpty())
+                        ? u.getDisplayName()
+                        : ((u.getFirstName() != null ? u.getFirstName() : "")
+                        + (u.getLastName() != null ? " " + u.getLastName() : "")).trim();
+                book.setAuthorName(name);
             }
         }
         enrichWithCoverImages(books);
         return books;
     }
 
-    /** Get the published magazine (singleton book with category MAGAZINE) */
+    /** Get the most recent magazine (any status) */
     public Book getMagazine() {
         Optional<Book> magOpt = bookRepo.findFirstByCategoryIgnoreCaseOrderByModifiedDateDesc("MAGAZINE");
         if (magOpt.isEmpty()) return null;
@@ -257,12 +259,42 @@ public class BookService {
         return mag;
     }
 
-    /** Get or create the magazine book (for admin use) */
+    /** Get all magazine editions ordered by most recent first */
+    public List<Book> getAllMagazines() {
+        List<Book> mags = bookRepo.findByCategoryIgnoreCaseOrderByModifiedDateDesc("MAGAZINE");
+        for (Book mag : mags) {
+            List<Page> pages = pageRepo.findByBookIdOrderByPageNumberAsc(mag.getId());
+            mag.setPages(pages);
+            if (!pages.isEmpty() && pages.get(0).getImageUrl() != null) {
+                mag.setCoverImageUrl(pages.get(0).getImageUrl());
+            }
+        }
+        return mags;
+    }
+
+    /** Get or create the current draft magazine (for admin use) */
     @Transactional
     public Book getOrCreateMagazine(Long adminUserId) {
-        Book mag = getMagazine();
-        if (mag != null) return mag;
+        // Look for an existing DRAFT magazine first
+        List<Book> mags = bookRepo.findByCategoryIgnoreCaseOrderByModifiedDateDesc("MAGAZINE");
+        for (Book m : mags) {
+            if ("DRAFT".equalsIgnoreCase(m.getStatus())) {
+                m.setPages(pageRepo.findByBookIdOrderByPageNumberAsc(m.getId()));
+                if (!m.getPages().isEmpty() && m.getPages().get(0).getImageUrl() != null) {
+                    m.setCoverImageUrl(m.getPages().get(0).getImageUrl());
+                }
+                return m;
+            }
+        }
+        // No draft magazine exists — create one
         return createBook("Saat Saheli Magazine", adminUserId, "MAGAZINE");
+    }
+
+    /** Create a new magazine edition (always a new draft) */
+    @Transactional
+    public Book createNewMagazineEdition(Long adminUserId, String title) {
+        String editionTitle = (title != null && !title.trim().isEmpty()) ? title.trim() : "Saat Saheli Magazine";
+        return createBook(editionTitle, adminUserId, "MAGAZINE");
     }
 
     public List<Book> getBooksByUser(Long userId) {
@@ -288,9 +320,11 @@ public class BookService {
         for (Book book : books) {
             if (book.getUserId() != null && userMap.containsKey(book.getUserId())) {
                 User u = userMap.get(book.getUserId());
-                String name = (u.getFirstName() != null ? u.getFirstName() : "")
-                        + (u.getLastName() != null ? " " + u.getLastName() : "");
-                book.setAuthorName(name.trim());
+                String name = (u.getDisplayName() != null && !u.getDisplayName().isEmpty())
+                        ? u.getDisplayName()
+                        : ((u.getFirstName() != null ? u.getFirstName() : "")
+                        + (u.getLastName() != null ? " " + u.getLastName() : "")).trim();
+                book.setAuthorName(name);
             }
         }
         enrichWithCoverImages(books);
@@ -358,9 +392,11 @@ public class BookService {
         for (Book book : filtered) {
             if (book.getUserId() != null && userMap.containsKey(book.getUserId())) {
                 User u = userMap.get(book.getUserId());
-                String name = (u.getFirstName() != null ? u.getFirstName() : "")
-                        + (u.getLastName() != null ? " " + u.getLastName() : "");
-                book.setAuthorName(name.trim());
+                String name = (u.getDisplayName() != null && !u.getDisplayName().isEmpty())
+                        ? u.getDisplayName()
+                        : ((u.getFirstName() != null ? u.getFirstName() : "")
+                        + (u.getLastName() != null ? " " + u.getLastName() : "")).trim();
+                book.setAuthorName(name);
             }
             book.setPages(pageRepo.findByBookIdOrderByPageNumberAsc(book.getId()));
         }
