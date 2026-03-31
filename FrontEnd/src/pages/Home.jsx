@@ -188,20 +188,62 @@ function Home() {
 
   return (
     <div className="home-container">
-      {/* Category tags */}
+      {/* Quick nav links */}
       <div className="home-tags">
-        <Link to="/magazine" className="home-tag-link home-tag-magazine">
+        <Link to="/magazine" className="home-tag-link">
           <span className="home-tag-icon">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg>
           </span>
           {strings.header.navMagazine}
         </Link>
-        {strings.about.tags.map((tag) => (
-          <Link key={tag} to={`/category/${tag.toLowerCase()}`} className="home-tag-link">
-            <span className="home-tag-icon">{categoryIcons[tag] || "\uD83D\uDCDA"}</span>
-            {tag}
-          </Link>
-        ))}
+        <Link to="/about" className="home-tag-link">
+          <span className="home-tag-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+          </span>
+          {strings.header.navAbout}
+        </Link>
+        <Link to="/books" className="home-tag-link">
+          <span className="home-tag-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
+          </span>
+          Books
+        </Link>
+        <Link to="/articles/poems" className="home-tag-link">
+          <span className="home-tag-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.828 2.828 0 114 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
+          </span>
+          Poems
+        </Link>
+        <Link to="/articles/articles" className="home-tag-link">
+          <span className="home-tag-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+          </span>
+          Articles
+        </Link>
+        <Link to="/articles/blogs" className="home-tag-link">
+          <span className="home-tag-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
+          </span>
+          Blogs
+        </Link>
+        <Link to="/podcasts" className="home-tag-link">
+          <span className="home-tag-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+          </span>
+          Podcasts
+        </Link>
+        <Link to="/marketplace" className="home-tag-link">
+          <span className="home-tag-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6"/></svg>
+          </span>
+          Buy/Sell
+        </Link>
+        <Link to="/manual" className="home-tag-link">
+          <span className="home-tag-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          </span>
+          Help
+        </Link>
       </div>
 
       {loading && <div className="loading-spinner" />}
