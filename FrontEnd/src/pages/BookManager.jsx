@@ -25,7 +25,8 @@ function PublicBooks() {
     const fetchPublished = async () => {
       try {
         const res = await axios.get(`${API}/search?status=PUBLISHED`);
-        setBooks(Array.isArray(res.data) ? res.data : []);
+        const allBooks = Array.isArray(res.data) ? res.data : [];
+        setBooks(allBooks.filter((b) => (b.category || "").toUpperCase() !== "MAGAZINE"));
       } catch {
         setError(strings.publicBooks.error);
       } finally {
@@ -157,7 +158,8 @@ function BookManager() {
     const fetchPublished = async () => {
       try {
         const res = await axios.get(`${API}/search?status=PUBLISHED&userId=${userId}`);
-        setPublishedBooks(Array.isArray(res.data) ? res.data : []);
+        const allBooks = Array.isArray(res.data) ? res.data : [];
+        setPublishedBooks(allBooks.filter((b) => (b.category || "").toUpperCase() !== "MAGAZINE"));
       } catch {
         setPublishedBooks([]);
       } finally {

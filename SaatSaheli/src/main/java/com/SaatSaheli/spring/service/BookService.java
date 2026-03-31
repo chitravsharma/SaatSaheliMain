@@ -247,11 +247,13 @@ public class BookService {
         return books;
     }
 
-    /** Get the most recent magazine (any status) */
+    /** Get the most recent non-deleted magazine */
     public Book getMagazine() {
-        Optional<Book> magOpt = bookRepo.findFirstByCategoryIgnoreCaseOrderByModifiedDateDesc("MAGAZINE");
-        if (magOpt.isEmpty()) return null;
-        Book mag = magOpt.get();
+        List<Book> mags = bookRepo.findByCategoryIgnoreCaseOrderByModifiedDateDesc("MAGAZINE");
+        Book mag = mags.stream()
+                .filter(m -> !"DELETED".equalsIgnoreCase(m.getStatus()))
+                .findFirst().orElse(null);
+        if (mag == null) return null;
         mag.setPages(pageRepo.findByBookIdOrderByPageNumberAsc(mag.getId()));
         if (!mag.getPages().isEmpty() && mag.getPages().get(0).getImageUrl() != null) {
             mag.setCoverImageUrl(mag.getPages().get(0).getImageUrl());
@@ -259,9 +261,11 @@ public class BookService {
         return mag;
     }
 
-    /** Get all magazine editions ordered by most recent first */
+    /** Get all magazine editions ordered by most recent first (excludes deleted) */
     public List<Book> getAllMagazines() {
-        List<Book> mags = bookRepo.findByCategoryIgnoreCaseOrderByModifiedDateDesc("MAGAZINE");
+        List<Book> mags = bookRepo.findByCategoryIgnoreCaseOrderByModifiedDateDesc("MAGAZINE").stream()
+                .filter(m -> !"DELETED".equalsIgnoreCase(m.getStatus()))
+                .collect(Collectors.toList());
         for (Book mag : mags) {
             List<Page> pages = pageRepo.findByBookIdOrderByPageNumberAsc(mag.getId());
             mag.setPages(pages);
@@ -272,21 +276,12 @@ public class BookService {
         return mags;
     }
 
-    /** Get or create the current draft magazine (for admin use) */
+    /** Get or create the current magazine (for admin use) — returns the most recent one regardless of status */
     @Transactional
     public Book getOrCreateMagazine(Long adminUserId) {
-        // Look for an existing DRAFT magazine first
-        List<Book> mags = bookRepo.findByCategoryIgnoreCaseOrderByModifiedDateDesc("MAGAZINE");
-        for (Book m : mags) {
-            if ("DRAFT".equalsIgnoreCase(m.getStatus())) {
-                m.setPages(pageRepo.findByBookIdOrderByPageNumberAsc(m.getId()));
-                if (!m.getPages().isEmpty() && m.getPages().get(0).getImageUrl() != null) {
-                    m.setCoverImageUrl(m.getPages().get(0).getImageUrl());
-                }
-                return m;
-            }
-        }
-        // No draft magazine exists — create one
+        Book mag = getMagazine();
+        if (mag != null) return mag;
+        // No magazine exists at all — create one
         return createBook("Saat Saheli Magazine", adminUserId, "MAGAZINE");
     }
 

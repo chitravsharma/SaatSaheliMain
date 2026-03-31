@@ -284,7 +284,7 @@ function Home() {
                             </div>
                             <div className="home-book-info">
                               <span className="home-book-title">{book.title}</span>
-                              {book.authorName && (
+                              {category !== "Magazine" && book.authorName && (
                                 <span className="home-book-author">by {book.authorName}</span>
                               )}
                             </div>
