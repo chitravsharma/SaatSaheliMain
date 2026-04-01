@@ -618,9 +618,12 @@ function FlipBook({ bookId }) {
             <HTMLFlipBook
               width={pageSize.w}
               height={pageSize.h}
+              maxWidth={pageSize.w}
+              maxHeight={pageSize.h}
               showCover={true}
               usePortrait={pageSize.isMobile}
-              autoSize={true}
+              autoSize={false}
+              size="fixed"
               showPageCorners={true}
               swipeDistance={30}
               mobileScrollSupport={false}
