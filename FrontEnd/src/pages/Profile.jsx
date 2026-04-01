@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { useAuth } from "../AuthContext";
 import { useStrings } from "../LanguageContext";
+import ImageEditor from "../components/ImageEditor";
 import "../Profile.css";
 
 const API = process.env.REACT_APP_API_URL;
@@ -23,6 +24,7 @@ function Profile() {
   const [fields, setFields] = useState([]);
   const [profileImageUrl, setProfileImageUrl] = useState("");
   const [uploading, setUploading] = useState(false);
+  const [editorFile, setEditorFile] = useState(null);
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
@@ -64,9 +66,7 @@ function Profile() {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleImageUpload = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
+  const uploadProfileImage = async (file) => {
     setUploading(true);
     setError("");
     try {
@@ -80,6 +80,13 @@ function Profile() {
     } finally {
       setUploading(false);
     }
+  };
+
+  const handleImageUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setEditorFile(file);
+    e.target.value = "";
   };
 
   const handleSubmit = async (e) => {
@@ -250,6 +257,13 @@ function Profile() {
           </button>
         </div>
       </form>
+      {editorFile && (
+        <ImageEditor
+          file={editorFile}
+          onDone={(editedFile) => { uploadProfileImage(editedFile); setEditorFile(null); }}
+          onCancel={() => setEditorFile(null)}
+        />
+      )}
     </div>
   );
 }

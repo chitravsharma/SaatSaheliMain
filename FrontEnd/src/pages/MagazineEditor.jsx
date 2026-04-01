@@ -3,6 +3,7 @@ import axios from "axios";
 import { useAuth } from "../AuthContext";
 import { useStrings } from "../LanguageContext";
 import FlipBook from "../FlipBook";
+import ImageEditor from "../components/ImageEditor";
 import "./MagazineEditor.css";
 
 const API = process.env.REACT_APP_API_URL;
@@ -141,6 +142,8 @@ const MagazineEditor = () => {
   const [uploading, setUploading] = useState(false);
   const [selectedBlockId, setSelectedBlockId] = useState(null);
   const [docUploading, setDocUploading] = useState(false);
+  const [editorFile, setEditorFile] = useState(null);
+  const [editorCallback, setEditorCallback] = useState(null);
 
   const canvasWrapRef = useRef(null);
   const [canvasScale, setCanvasScale] = useState(1);
@@ -530,7 +533,17 @@ const MagazineEditor = () => {
               <label className="mag-btn mag-btn-sm mag-upload-btn">
                 {uploading ? s.uploading : s.addImageBlock}
                 <input type="file" accept="image/*" hidden disabled={uploading}
-                  onChange={(e) => e.target.files[0] && handleImageUpload(e.target.files[0])} />
+                  onChange={(e) => {
+                    const f = e.target.files[0];
+                    if (!f) return;
+                    setEditorFile(f);
+                    setEditorCallback(() => (editedFile) => {
+                      handleImageUpload(editedFile);
+                      setEditorFile(null);
+                      setEditorCallback(null);
+                    });
+                    e.target.value = "";
+                  }} />
               </label>
               <span className="mag-toolbar-sep" />
               <label className="mag-toolbar-label">{s.bg}
@@ -627,22 +640,29 @@ const MagazineEditor = () => {
                     <span>{selectedImageBlock.width} × {selectedImageBlock.height}</span>
                     <label className="mag-btn mag-btn-sm mag-upload-btn" style={{ marginTop: 4 }}>
                       {s.replace}
-                      <input type="file" accept="image/*" hidden onChange={async (e) => {
+                      <input type="file" accept="image/*" hidden onChange={(e) => {
                         const file = e.target.files?.[0];
                         if (!file) return;
-                        setUploading(true);
-                        try {
-                          const formData = new FormData();
-                          formData.append("file", file);
-                          const res = await axios.post(`${API}/api/upload`, formData, {
-                            headers: { ...headers, "Content-Type": "multipart/form-data" },
-                          });
-                          updateImageBlock(selectedImageBlock.id, "url", res.data.url || res.data);
-                        } catch (err) {
-                          showMsg("Upload failed: " + (err.response?.data?.error || err.message));
-                        } finally {
-                          setUploading(false);
-                        }
+                        const blockId = selectedImageBlock.id;
+                        setEditorFile(file);
+                        setEditorCallback(() => async (editedFile) => {
+                          setUploading(true);
+                          try {
+                            const formData = new FormData();
+                            formData.append("file", editedFile);
+                            const res = await axios.post(`${API}/api/upload`, formData, {
+                              headers: { ...headers, "Content-Type": "multipart/form-data" },
+                            });
+                            updateImageBlock(blockId, "url", res.data.url || res.data);
+                          } catch (err) {
+                            showMsg("Upload failed: " + (err.response?.data?.error || err.message));
+                          } finally {
+                            setUploading(false);
+                          }
+                          setEditorFile(null);
+                          setEditorCallback(null);
+                        });
+                        e.target.value = "";
                       }} />
                     </label>
                   </div>
@@ -716,9 +736,9 @@ const MagazineEditor = () => {
                       whiteSpace: "pre-wrap", wordBreak: "break-word",
                       overflow: "hidden", lineHeight: 1.4,
                       pointerEvents: "none", userSelect: "none",
-                    }}>
-                      {tb.content}
-                    </div>
+                    }}
+                      dangerouslySetInnerHTML={{ __html: tb.content }}
+                    />
                   </DraggableBlock>
                 ))}
 
@@ -769,6 +789,13 @@ const MagazineEditor = () => {
           </div>
         )}
       </div>
+      {editorFile && (
+        <ImageEditor
+          file={editorFile}
+          onDone={(editedFile) => editorCallback && editorCallback(editedFile)}
+          onCancel={() => { setEditorFile(null); setEditorCallback(null); }}
+        />
+      )}
     </div>
   );
 };

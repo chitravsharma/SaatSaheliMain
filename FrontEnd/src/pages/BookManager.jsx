@@ -7,6 +7,7 @@ import CoverPageDesigner from "../components/CoverPageDesigner";
 import { useAuth } from "../AuthContext";
 import { useStrings } from "../LanguageContext";
 import TermsGate from "../components/TermsGate";
+import ImageEditor from "../components/ImageEditor";
 import "../BookManager.css";
 
 const API = `${process.env.REACT_APP_API_URL}/api/books`;
@@ -194,6 +195,10 @@ function BookManager() {
   const [editGenerating1, setEditGenerating1] = useState(false);
   const [editGenerating2, setEditGenerating2] = useState(false);
   const [imageStyle, setImageStyle] = useState("general");
+
+  // Image editor state
+  const [editorFile, setEditorFile] = useState(null);
+  const [editorCallback, setEditorCallback] = useState(null);
 
   // Cover/Back page designer state
   const [coverDesignData, setCoverDesignData] = useState({});
@@ -510,7 +515,13 @@ function BookManager() {
             className="bm-file-input"
             onChange={(e) => {
               if (e.target.files[0]) {
-                handleUpload(e.target.files[0], setUrl, setUploading);
+                setEditorFile(e.target.files[0]);
+                setEditorCallback(() => (editedFile) => {
+                  handleUpload(editedFile, setUrl, setUploading);
+                  setEditorFile(null);
+                  setEditorCallback(null);
+                });
+                e.target.value = "";
               }
             }}
           />
@@ -1198,7 +1209,18 @@ function BookManager() {
   return null;
   })();
 
-  return <TermsGate userId={userId}>{wrappedContent}</TermsGate>;
+  return (
+    <TermsGate userId={userId}>
+      {wrappedContent}
+      {editorFile && (
+        <ImageEditor
+          file={editorFile}
+          onDone={(editedFile) => editorCallback && editorCallback(editedFile)}
+          onCancel={() => { setEditorFile(null); setEditorCallback(null); }}
+        />
+      )}
+    </TermsGate>
+  );
 }
 
 export default BookManager;

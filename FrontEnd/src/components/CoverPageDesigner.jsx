@@ -1,5 +1,6 @@
 import React, { useState, useRef, useCallback } from "react";
 import axios from "axios";
+import ImageEditor from "./ImageEditor";
 import "./CoverPageDesigner.css";
 
 const GENERATE_API = `${process.env.REACT_APP_API_URL}/api/generate-image`;
@@ -61,6 +62,8 @@ function CoverPageDesigner({ type, bookTitle, authorName, imageUrl, onImageChang
   const [imageScale, setImageScale] = useState(initialData?.imageScale || 100);
   const [authorPhotoUrl, setAuthorPhotoUrl] = useState(initialData?.authorPhotoUrl || "");
   const [uploadingAuthorPhoto, setUploadingAuthorPhoto] = useState(false);
+  const [editorFile, setEditorFile] = useState(null);
+  const [editorCallback, setEditorCallback] = useState(null);
   const [savedComposite, setSavedComposite] = useState(false); // true after saving composite image
   const [bgImageUrl, setBgImageUrl] = useState(""); // original background image before composite
   const customizerRef = useRef(null);
@@ -109,39 +112,44 @@ function CoverPageDesigner({ type, bookTitle, authorName, imageUrl, onImageChang
     }
   };
 
-  const handleUpload = async (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setUploading(true);
+  const doUpload = async (file, onSuccess, setLoadingState) => {
+    setLoadingState(true);
     setMessage("");
     try {
       const formData = new FormData();
       formData.append("file", file);
       const res = await axios.post(UPLOAD_API, formData, { headers: { "Content-Type": "multipart/form-data" } });
-      if (onImageChange) onImageChange(res.data.url);
+      onSuccess(res.data.url);
       setMessage("Image uploaded!");
     } catch (err) {
       setMessage(`Upload failed: ${err.response?.data?.error || err.message}`);
     } finally {
-      setUploading(false);
+      setLoadingState(false);
     }
   };
 
-  const handleAuthorPhotoUpload = async (e) => {
+  const handleUpload = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    setUploadingAuthorPhoto(true);
-    try {
-      const formData = new FormData();
-      formData.append("file", file);
-      const res = await axios.post(UPLOAD_API, formData, { headers: { "Content-Type": "multipart/form-data" } });
-      setAuthorPhotoUrl(res.data.url);
-      update("authorPhotoUrl", res.data.url);
-    } catch {
-      setMessage("Author photo upload failed");
-    } finally {
-      setUploadingAuthorPhoto(false);
-    }
+    setEditorFile(file);
+    setEditorCallback(() => (editedFile) => {
+      doUpload(editedFile, (url) => onImageChange && onImageChange(url), setUploading);
+      setEditorFile(null);
+      setEditorCallback(null);
+    });
+    e.target.value = "";
+  };
+
+  const handleAuthorPhotoUpload = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setEditorFile(file);
+    setEditorCallback(() => (editedFile) => {
+      doUpload(editedFile, (url) => { setAuthorPhotoUrl(url); update("authorPhotoUrl", url); }, setUploadingAuthorPhoto);
+      setEditorFile(null);
+      setEditorCallback(null);
+    });
+    e.target.value = "";
   };
 
   const handleSaveAndCustomize = () => {
@@ -985,6 +993,13 @@ function CoverPageDesigner({ type, bookTitle, authorName, imageUrl, onImageChang
 
         {message && <p className="cpd-message">{message}</p>}
       </div>
+      {editorFile && (
+        <ImageEditor
+          file={editorFile}
+          onDone={(editedFile) => editorCallback && editorCallback(editedFile)}
+          onCancel={() => { setEditorFile(null); setEditorCallback(null); }}
+        />
+      )}
     </div>
   );
 }

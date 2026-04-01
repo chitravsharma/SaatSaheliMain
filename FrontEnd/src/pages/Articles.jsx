@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { useNavigate, Link, useParams } from "react-router-dom";
 import axios from "axios";
 import { useAuth } from "../AuthContext";
+import ImageEditor from "../components/ImageEditor";
 import "../Articles.css";
 
 const API = process.env.REACT_APP_API_URL;
@@ -49,6 +50,7 @@ function Articles() {
   );
   const [category, setCategory] = useState("");
   const [uploading, setUploading] = useState(false);
+  const [editorFile, setEditorFile] = useState(null);
   const [saving, setSaving] = useState(false);
   const [publishOnSave, setPublishOnSave] = useState(true);
   const [formImageSize, setFormImageSize] = useState(100); // image preview size %
@@ -123,9 +125,7 @@ function Articles() {
     list.forEach((a) => fetchSocialForArticle(a.id));
   }, [articles.length, publicArticles.length, tab]);
 
-  const handleImageUpload = async (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  const uploadImageFile = async (file) => {
     setUploading(true);
     try {
       const formData = new FormData();
@@ -139,6 +139,13 @@ function Articles() {
     } finally {
       setUploading(false);
     }
+  };
+
+  const handleImageUpload = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setEditorFile(file);
+    e.target.value = "";
   };
 
   const handleSave = async () => {
@@ -656,6 +663,13 @@ function Articles() {
         </div>
       )}
       </div>{/* end art-section-card */}
+      {editorFile && (
+        <ImageEditor
+          file={editorFile}
+          onDone={(editedFile) => { uploadImageFile(editedFile); setEditorFile(null); }}
+          onCancel={() => setEditorFile(null)}
+        />
+      )}
     </div>
   );
 }

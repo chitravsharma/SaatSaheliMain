@@ -266,7 +266,11 @@ function FlipBook({ bookId }) {
   const getPageText = useCallback((pageIndex) => {
     if (pageIndex < 0 || pageIndex >= pages.length) return "";
     const page = pages[pageIndex];
-    return page.content || "";
+    const raw = page.content || "";
+    // Strip HTML tags for TTS
+    const div = document.createElement("div");
+    div.innerHTML = raw;
+    return div.textContent || "";
   }, [pages]);
 
   const stopTts = useCallback(() => {
@@ -465,9 +469,9 @@ function FlipBook({ bookId }) {
                 overflow: "hidden",
                 pointerEvents: "none",
                 zIndex: 2,
-              }}>
-                {tb.content}
-              </div>
+              }}
+                dangerouslySetInnerHTML={{ __html: tb.content }}
+              />
             ))}
           </>
         ) : hasLayout ? (
@@ -482,9 +486,9 @@ function FlipBook({ bookId }) {
               whiteSpace: "pre-wrap",
               wordBreak: "break-word",
               pointerEvents: "none",
-            }}>
-              {page.content}
-            </div>
+            }}
+              dangerouslySetInnerHTML={{ __html: page.content }}
+            />
             {img1Src && (
               <img
                 src={img1Src}
@@ -517,9 +521,9 @@ function FlipBook({ bookId }) {
             )}
           </>
         ) : (
-          <div style={textOnlyStyle}>
-            {page.content}
-          </div>
+          <div style={textOnlyStyle}
+            dangerouslySetInnerHTML={{ __html: page.content }}
+          />
         )}
         </div>
       </div>
