@@ -400,7 +400,7 @@ const MagazineEditor = () => {
       formData.append("file", file);
       formData.append("magazineId", magazine.id);
       const res = await axios.post(`${API}/api/admin/magazine/upload-document`, formData, {
-        headers: { ...headers, "Content-Type": "multipart/form-data" },
+        headers: { "X-User-Id": String(user?.userId || "") },
       });
       setMagazine(res.data);
       setPages(res.data.pages || []);
@@ -439,9 +439,7 @@ const MagazineEditor = () => {
     try {
       const formData = new FormData();
       formData.append("file", file);
-      const res = await axios.post(`${API}/api/upload`, formData, {
-        headers: { ...headers, "Content-Type": "multipart/form-data" },
-      });
+      const res = await axios.post(`${API}/api/upload`, formData);
       const url = res.data.url || res.data;
       const id = `ib${Date.now()}`;
       setImageBlocks((prev) => [...prev, { id, url, x: 20, y: 100, width: 300, height: 200 }]);
@@ -742,7 +740,7 @@ const MagazineEditor = () => {
                             const formData = new FormData();
                             formData.append("file", editedFile);
                             const res = await axios.post(`${API}/api/upload`, formData, {
-                              headers: { ...headers, "Content-Type": "multipart/form-data" },
+                              headers: { "X-User-Id": String(user?.userId || "") },
                             });
                             updateImageBlock(blockId, "url", res.data.url || res.data);
                           } catch (err) {

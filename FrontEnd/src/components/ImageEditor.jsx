@@ -78,7 +78,6 @@ function drawShapePath(ctx, shape, cx, cy, r) {
 }
 
 function ImageEditor({ file, onDone, onCancel }) {
-  const canvasRef = useRef(null);
   const previewRef = useRef(null);
   const [img, setImg] = useState(null);
   const [rotation, setRotation] = useState(0);
@@ -154,19 +153,29 @@ function ImageEditor({ file, onDone, onCancel }) {
 
   const handleApply = useCallback(() => {
     if (!img) return;
-    const canvas = canvasRef.current || document.createElement("canvas");
-    canvasRef.current = canvas;
+
+    // If no edits were made, just send the original file
+    if (rotation === 0 && !flipH && !flipV && shape === "none") {
+      onDone(file);
+      return;
+    }
+
+    const canvas = document.createElement("canvas");
     const ctx = canvas.getContext("2d");
 
     const isRotated90 = rotation % 180 !== 0;
     const srcW = img.naturalWidth;
     const srcH = img.naturalHeight;
-    const outW = isRotated90 ? srcH : srcW;
-    const outH = isRotated90 ? srcW : srcH;
+    // Limit output to max 2000px to avoid huge canvases
+    const maxDim = 2000;
+    const downscale = Math.min(1, maxDim / Math.max(srcW, srcH));
+    const dw = Math.round(srcW * downscale);
+    const dh = Math.round(srcH * downscale);
+    const outW = isRotated90 ? dh : dw;
+    const outH = isRotated90 ? dw : dh;
 
     canvas.width = outW;
     canvas.height = outH;
-    ctx.clearRect(0, 0, outW, outH);
 
     const cx = outW / 2;
     const cy = outH / 2;
@@ -182,16 +191,41 @@ function ImageEditor({ file, onDone, onCancel }) {
     ctx.translate(cx, cy);
     ctx.rotate((rotation * Math.PI) / 180);
     ctx.scale(flipH ? -1 : 1, flipV ? -1 : 1);
-    ctx.drawImage(img, -srcW / 2, -srcH / 2, srcW, srcH);
+    ctx.drawImage(img, -dw / 2, -dh / 2, dw, dh);
     ctx.restore();
 
-    canvas.toBlob((blob) => {
-      if (blob) {
-        const baseName = file.name.replace(/\.\w+$/, "") || "image";
-        const editedFile = new File([blob], `${baseName}.png`, { type: "image/png" });
-        onDone(editedFile);
-      }
-    }, "image/png");
+    // Use toDataURL as fallback if toBlob fails
+    try {
+      canvas.toBlob((blob) => {
+        if (blob && blob.size > 0) {
+          const baseName = file.name.replace(/\.\w+$/, "") || "image";
+          const editedFile = new File([blob], `${baseName}.png`, { type: "image/png" });
+          onDone(editedFile);
+        } else {
+          // Fallback: use toDataURL
+          const dataUrl = canvas.toDataURL("image/png");
+          const byteString = atob(dataUrl.split(",")[1]);
+          const ab = new ArrayBuffer(byteString.length);
+          const ia = new Uint8Array(ab);
+          for (let i = 0; i < byteString.length; i++) ia[i] = byteString.charCodeAt(i);
+          const fallbackBlob = new Blob([ab], { type: "image/png" });
+          const baseName = file.name.replace(/\.\w+$/, "") || "image";
+          const editedFile = new File([fallbackBlob], `${baseName}.png`, { type: "image/png" });
+          onDone(editedFile);
+        }
+      }, "image/png");
+    } catch {
+      // If toBlob throws, use toDataURL
+      const dataUrl = canvas.toDataURL("image/png");
+      const byteString = atob(dataUrl.split(",")[1]);
+      const ab = new ArrayBuffer(byteString.length);
+      const ia = new Uint8Array(ab);
+      for (let i = 0; i < byteString.length; i++) ia[i] = byteString.charCodeAt(i);
+      const fallbackBlob = new Blob([ab], { type: "image/png" });
+      const baseName = file.name.replace(/\.\w+$/, "") || "image";
+      const editedFile = new File([fallbackBlob], `${baseName}.png`, { type: "image/png" });
+      onDone(editedFile);
+    }
   }, [img, rotation, flipH, flipV, shape, file, onDone]);
 
   const handleSkip = useCallback(() => {
