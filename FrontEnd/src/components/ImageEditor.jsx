@@ -187,11 +187,16 @@ function ImageEditor({ file, onDone, onCancel }) {
 
     canvas.toBlob((blob) => {
       if (blob) {
-        const editedFile = new File([blob], file.name.replace(/\.\w+$/, ".png"), { type: "image/png" });
+        const baseName = file.name.replace(/\.\w+$/, "") || "image";
+        const editedFile = new File([blob], `${baseName}.png`, { type: "image/png" });
         onDone(editedFile);
       }
     }, "image/png");
   }, [img, rotation, flipH, flipV, shape, file, onDone]);
+
+  const handleSkip = useCallback(() => {
+    onDone(file);
+  }, [file, onDone]);
 
   const handleReset = () => {
     setRotation(0);
@@ -277,6 +282,7 @@ function ImageEditor({ file, onDone, onCancel }) {
 
         <div className="img-editor-actions">
           <button className="img-editor-btn img-editor-btn-reset" onClick={handleReset}>Reset</button>
+          <button className="img-editor-btn img-editor-btn-skip" onClick={handleSkip}>Skip</button>
           <button className="img-editor-btn img-editor-btn-cancel" onClick={onCancel}>Cancel</button>
           <button className="img-editor-btn img-editor-btn-apply" onClick={handleApply}>Apply</button>
         </div>

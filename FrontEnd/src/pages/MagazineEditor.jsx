@@ -415,7 +415,7 @@ const MagazineEditor = () => {
   /* ── Text block helpers ── */
   const addTextBlock = () => {
     const id = `tb${Date.now()}`;
-    setTextBlocks([...textBlocks, {
+    setTextBlocks((prev) => [...prev, {
       id, content: "New text", fontFamily: "sans-serif", fontSize: "16px",
       color: "#000000", fontWeight: "normal", fontStyle: "normal",
       textAlign: "left", textDecoration: "none",
@@ -425,11 +425,11 @@ const MagazineEditor = () => {
   };
 
   const updateTextBlock = (id, field, value) => {
-    setTextBlocks(textBlocks.map((tb) => tb.id === id ? { ...tb, [field]: value } : tb));
+    setTextBlocks((prev) => prev.map((tb) => tb.id === id ? { ...tb, [field]: value } : tb));
   };
 
   const removeTextBlock = (id) => {
-    setTextBlocks(textBlocks.filter((tb) => tb.id !== id));
+    setTextBlocks((prev) => prev.filter((tb) => tb.id !== id));
     if (selectedBlockId === id) setSelectedBlockId(null);
   };
 
@@ -444,7 +444,7 @@ const MagazineEditor = () => {
       });
       const url = res.data.url || res.data;
       const id = `ib${Date.now()}`;
-      setImageBlocks([...imageBlocks, { id, url, x: 20, y: 100, width: 300, height: 200 }]);
+      setImageBlocks((prev) => [...prev, { id, url, x: 20, y: 100, width: 300, height: 200 }]);
       setSelectedBlockId(id);
     } catch (e) {
       showMsg("Upload failed: " + (e.response?.data?.error || e.message));
@@ -454,11 +454,11 @@ const MagazineEditor = () => {
   };
 
   const updateImageBlock = (id, field, value) => {
-    setImageBlocks(imageBlocks.map((ib) => ib.id === id ? { ...ib, [field]: value } : ib));
+    setImageBlocks((prev) => prev.map((ib) => ib.id === id ? { ...ib, [field]: value } : ib));
   };
 
   const removeImageBlock = (id) => {
-    setImageBlocks(imageBlocks.filter((ib) => ib.id !== id));
+    setImageBlocks((prev) => prev.filter((ib) => ib.id !== id));
     if (selectedBlockId === id) setSelectedBlockId(null);
   };
 

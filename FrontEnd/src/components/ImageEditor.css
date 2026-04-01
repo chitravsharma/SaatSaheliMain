@@ -181,6 +181,15 @@
   color: #e2e8f0;
 }
 
+.img-editor-btn-skip {
+  background: rgba(59, 130, 246, 0.2);
+  color: #60a5fa;
+  border-color: rgba(59, 130, 246, 0.3);
+}
+.img-editor-btn-skip:hover {
+  background: rgba(59, 130, 246, 0.35);
+}
+
 .img-editor-btn-cancel {
   background: rgba(239, 68, 68, 0.2);
   color: #f87171;
