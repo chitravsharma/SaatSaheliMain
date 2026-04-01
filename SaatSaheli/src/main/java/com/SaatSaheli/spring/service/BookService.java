@@ -501,6 +501,7 @@ public class BookService {
                 if (firstPage.getImageUrl() != null && !firstPage.getImageUrl().isEmpty()) {
                     book.setCoverImageUrl(firstPage.getImageUrl());
                 } else {
+                    // Try to extract image URL from format JSON (magazine-style pages store images in imageBlocks)
                     String coverUrl = extractFirstImageFromFormat(firstPage.getFormat());
                     if (coverUrl != null) {
                         book.setCoverImageUrl(coverUrl);

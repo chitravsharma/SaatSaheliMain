@@ -1,34 +1,47 @@
-import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import React, { useState, useEffect, useCallback } from "react";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
 import { useStrings } from "../LanguageContext";
 import "../BookManager.css";
 
-const API = `${process.env.REACT_APP_API_URL}/api/books`;
+const API_BASE = process.env.REACT_APP_API_URL;
+const API = `${API_BASE}/api/books`;
+
+function resolveImageUrl(url) {
+  if (!url) return null;
+  if (url.startsWith("/uploads/")) return `${API_BASE}${url}`;
+  const match = url.match(/\/file\/d\/([^/]+)\//);
+  if (match) return `https://drive.google.com/thumbnail?id=${match[1]}&sz=w200`;
+  return url;
+}
 
 function SearchBooks() {
   const strings = useStrings();
   const navigate = useNavigate();
-  const [searchId, setSearchId] = useState("");
-  const [searchTitle, setSearchTitle] = useState("");
-  const [searchAuthor, setSearchAuthor] = useState("");
-  const [searchStatus, setSearchStatus] = useState("");
+  const location = useLocation();
+  const [query, setQuery] = useState("");
+  const [searchType, setSearchType] = useState("");
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
-  const [showAdvanced, setShowAdvanced] = useState(false);
-  const [searchCategory, setSearchCategory] = useState("");
 
-  const handleSearch = async () => {
+  const doSearch = useCallback(async (q, type) => {
+    if (!q && !type) return;
     setLoading(true);
     setSearched(true);
     try {
       const params = new URLSearchParams();
-      if (searchId.trim()) params.append("id", searchId.trim());
-      if (searchTitle.trim()) params.append("title", searchTitle.trim());
-      if (searchAuthor.trim()) params.append("author", searchAuthor.trim());
-      if (searchStatus) params.append("status", searchStatus);
-      if (searchCategory) params.append("category", searchCategory);
+      const authorTypes = ["author"];
+      const categoryTypes = ["Art", "Music", "Tech", "Creativity", "Community"];
+
+      if (type && authorTypes.includes(type)) {
+        if (q) params.append("author", q);
+      } else if (type && categoryTypes.includes(type)) {
+        if (q) params.append("title", q);
+        params.append("category", type);
+      } else {
+        if (q) params.append("title", q);
+      }
 
       const res = await axios.get(`${API}/search?${params.toString()}`);
       setResults(Array.isArray(res.data) ? res.data : []);
@@ -37,141 +50,141 @@ function SearchBooks() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const handleClear = () => {
-    setSearchId("");
-    setSearchTitle("");
-    setSearchAuthor("");
-    setSearchStatus("");
-    setSearchCategory("");
-    setResults([]);
-    setSearched(false);
-  };
+  // Read URL query params from header search and auto-search
+  useEffect(() => {
+    const urlParams = new URLSearchParams(location.search);
+    const q = urlParams.get("q") || "";
+    const type = urlParams.get("type") || "";
+    setQuery(q);
+    setSearchType(type);
+    if (q || type) {
+      doSearch(q, type);
+    }
+  }, [location.search, doSearch]);
 
   const handleSelectBook = (book) => {
     navigate(`/read/${book.id}`);
   };
 
+  const searchSuggestions = [
+    { label: "Browse all Books", to: "/books" },
+    { label: "Read the Magazine", to: "/magazine" },
+    { label: "Explore Poems", to: "/articles/poems" },
+    { label: "Read Articles", to: "/articles/articles" },
+    { label: "Discover Blogs", to: "/articles/blogs" },
+    { label: "Listen to Podcasts", to: "/podcasts" },
+    { label: "Photo Galleries", to: "/category/Art" },
+    { label: "Visit Marketplace", to: "/marketplace" },
+  ];
+
   return (
     <div className="book-manager search-page">
       <h1>{strings.searchBooks.heading}</h1>
 
-      <div className="bm-search-form">
-        <div className="bm-search-fields">
-          <input
-            type="text"
-            placeholder={strings.searchBooks.placeholderBookId}
-            value={searchId}
-            onChange={(e) => setSearchId(e.target.value)}
-            className="bm-input bm-input-small"
-            aria-label={strings.searchBooks.ariaBookId}
-          />
-          <input
-            type="text"
-            placeholder={strings.searchBooks.placeholderTitle}
-            value={searchTitle}
-            onChange={(e) => setSearchTitle(e.target.value)}
-            className="bm-input"
-            aria-label={strings.searchBooks.ariaTitle}
-          />
-          <input
-            type="text"
-            placeholder={strings.searchBooks.placeholderAuthor}
-            value={searchAuthor}
-            onChange={(e) => setSearchAuthor(e.target.value)}
-            className="bm-input"
-            aria-label={strings.searchBooks.ariaAuthor}
-          />
-          <select
-            value={searchStatus}
-            onChange={(e) => setSearchStatus(e.target.value)}
-            className="bm-format-select"
-            aria-label={strings.searchBooks.ariaStatus}
-          >
-            <option value="">{strings.searchBooks.statusAll}</option>
-            <option value="DRAFT">{strings.searchBooks.statusDraft}</option>
-            <option value="PUBLISHED">{strings.searchBooks.statusPublished}</option>
-            <option value="ARCHIVED">{strings.searchBooks.statusArchived}</option>
-          </select>
-        </div>
-        <div className="bm-search-actions">
-          <button className="bm-btn bm-btn-all" onClick={handleSearch} disabled={loading}>
-            {loading ? (
-              <><span className="btn-spinner" /> {strings.searchBooks.searching}</>
-            ) : strings.searchBooks.searchButton}
-          </button>
-          <button className="bm-btn bm-btn-back" onClick={handleClear}>{strings.searchBooks.clearButton}</button>
-          <button
-            className="bm-btn bm-btn-edit"
-            type="button"
-            onClick={() => setShowAdvanced((prev) => !prev)}
-          >
-            {showAdvanced ? strings.searchBooks.simpleSearch : strings.searchBooks.advancedSearch}
-          </button>
-        </div>
-        {showAdvanced && (
-          <div className="bm-search-fields" style={{ marginTop: "12px" }}>
-            <select
-              value={searchCategory}
-              onChange={(e) => setSearchCategory(e.target.value)}
-              className="bm-format-select"
-              aria-label={strings.searchBooks.categoryFilter}
-            >
-              <option value="">{strings.searchBooks.categoryAll}</option>
-              <option value="Art">Art</option>
-              <option value="Music">Music</option>
-              <option value="Writing">Writing</option>
-              <option value="Tech">Tech</option>
-              <option value="Creativity">Creativity</option>
-              <option value="Community">Community</option>
-            </select>
-          </div>
-        )}
-      </div>
+      {query && (
+        <p style={{ color: "var(--text-secondary, #6b7280)", fontSize: "1rem", margin: "0 0 20px" }}>
+          Showing results for: <strong style={{ color: "var(--text-primary, #e2e8f0)" }}>{query}</strong>
+          {searchType && <> in <strong style={{ color: "var(--text-primary, #e2e8f0)" }}>{searchType}</strong></>}
+        </p>
+      )}
 
-      {searched && (
+      {loading && <div className="loading-spinner" />}
+
+      {searched && !loading && results.length > 0 && (
         <div className="bm-search-results-table">
           <h3>{strings.searchBooks.resultsHeading(results.length)}</h3>
-          {results.length === 0 ? (
-            <p>{strings.searchBooks.noResults}</p>
-          ) : (
-            <table className="bm-results-table">
-              <thead>
-                <tr>
-                  <th>{strings.searchBooks.thId}</th>
-                  <th>{strings.searchBooks.thTitle}</th>
-                  <th>{strings.searchBooks.thAuthor}</th>
-                  <th>{strings.searchBooks.thStatus}</th>
-                  <th>{strings.searchBooks.thModified}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {results.map((book) => (
-                  <tr key={book.id}>
-                    <td>{book.id}</td>
-                    <td>
-                      <button className="bm-table-link" onClick={() => handleSelectBook(book)}>
-                        {book.title}
-                      </button>
-                    </td>
-                    <td>
-                      {book.authorName ? (
-                        <Link to={`/profile/${book.userId}`} className="bm-author-link">
-                          {book.authorName}
-                        </Link>
-                      ) : strings.searchBooks.emptyAuthor}
-                    </td>
-                    <td>
-                      <span className={`bm-status-dot ${book.status === "PUBLISHED" ? "dot-published" : "dot-draft"}`} />
-                      {book.status}
-                    </td>
-                    <td>{book.modifiedDate}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 16 }}>
+            {results.map((book) => (
+              <div key={book.id} className="home-book-card" style={{
+                background: "var(--bg-card, #1e293b)", border: "1px solid var(--border-default, #334155)",
+                borderRadius: 12, padding: 0, minWidth: 150, maxWidth: 180, cursor: "pointer",
+                transition: "transform 0.2s, box-shadow 0.2s",
+              }}
+                onClick={() => handleSelectBook(book)}
+                onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "0 4px 16px rgba(0,0,0,0.2)"; }}
+                onMouseLeave={(e) => { e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = ""; }}
+              >
+                <div style={{
+                  width: "100%", height: 200, borderRadius: "12px 12px 0 0", overflow: "hidden",
+                  background: "linear-gradient(135deg, #1e3a5f, #2d1b4e)", display: "flex",
+                  alignItems: "center", justifyContent: "center",
+                }}>
+                  {book.coverImageUrl ? (
+                    <img src={resolveImageUrl(book.coverImageUrl)} alt={book.title}
+                      style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                  ) : (
+                    <span style={{ color: "#c9a84c", fontSize: "0.9rem", fontWeight: 600, textAlign: "center", padding: 12 }}>
+                      {book.title}
+                    </span>
+                  )}
+                </div>
+                <div style={{ padding: "10px 12px" }}>
+                  <div style={{ fontWeight: 600, fontSize: "0.88rem", color: "var(--text-primary, #e2e8f0)", marginBottom: 4,
+                    overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                    {book.title}
+                  </div>
+                  {book.authorName && (
+                    <div style={{ fontSize: "0.78rem", color: "var(--text-secondary, #9ca3af)" }}>
+                      by {book.authorName}
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {searched && !loading && results.length === 0 && (
+        <div style={{ textAlign: "center", padding: "40px 20px" }}>
+          <div style={{ fontSize: "2.5rem", marginBottom: 12 }}>&#128269;</div>
+          <h3 style={{ color: "var(--text-primary, #e2e8f0)", marginBottom: 8 }}>
+            No results found{query ? ` for "${query}"` : ""}
+          </h3>
+          <p style={{ color: "var(--text-secondary, #9ca3af)", marginBottom: 24, maxWidth: 400, margin: "0 auto 24px" }}>
+            Try searching with different keywords, check spelling, or use the header search bar to search by title, author, or category.
+          </p>
+          <h4 style={{ color: "var(--text-primary, #e2e8f0)", marginBottom: 16 }}>You might like to explore:</h4>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 10, justifyContent: "center" }}>
+            {searchSuggestions.map((s) => (
+              <Link key={s.to} to={s.to} style={{
+                padding: "8px 18px", borderRadius: 8, fontSize: "0.88rem", fontWeight: 600,
+                background: "var(--bg-card-alt, #1e293b)", color: "var(--accent-gold, #c9a84c)",
+                border: "1px solid var(--border-default, #334155)", textDecoration: "none",
+                transition: "background 0.2s, border-color 0.2s",
+              }}
+                onMouseEnter={(e) => { e.currentTarget.style.borderColor = "var(--accent-gold, #c9a84c)"; }}
+                onMouseLeave={(e) => { e.currentTarget.style.borderColor = "var(--border-default, #334155)"; }}
+              >
+                {s.label}
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {!searched && !loading && (
+        <div style={{ textAlign: "center", padding: "40px 20px", color: "var(--text-secondary, #9ca3af)" }}>
+          <div style={{ fontSize: "2.5rem", marginBottom: 12 }}>&#128270;</div>
+          <p style={{ fontSize: "1.05rem" }}>Use the search bar in the header to find books, authors, and more.</p>
+          <h4 style={{ color: "var(--text-primary, #e2e8f0)", marginTop: 24, marginBottom: 16 }}>Or explore:</h4>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 10, justifyContent: "center" }}>
+            {searchSuggestions.map((s) => (
+              <Link key={s.to} to={s.to} style={{
+                padding: "8px 18px", borderRadius: 8, fontSize: "0.88rem", fontWeight: 600,
+                background: "var(--bg-card-alt, #1e293b)", color: "var(--accent-gold, #c9a84c)",
+                border: "1px solid var(--border-default, #334155)", textDecoration: "none",
+                transition: "background 0.2s, border-color 0.2s",
+              }}
+                onMouseEnter={(e) => { e.currentTarget.style.borderColor = "var(--accent-gold, #c9a84c)"; }}
+                onMouseLeave={(e) => { e.currentTarget.style.borderColor = "var(--border-default, #334155)"; }}
+              >
+                {s.label}
+              </Link>
+            ))}
+          </div>
         </div>
       )}
     </div>

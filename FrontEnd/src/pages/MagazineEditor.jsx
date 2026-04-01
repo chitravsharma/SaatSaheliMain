@@ -284,7 +284,7 @@ const MagazineEditor = () => {
     if (!magazine) return;
     try {
       await axios.put(`${API}/api/admin/magazine/${magazine.id}/unpublish`, {}, { headers });
-      showMsg("Magazine unpublished (back to draft)");
+      showMsg(s.unpublishSuccess || "Magazine unpublished (back to draft)");
       await fetchMagazine();
       await fetchAllEditions();
     } catch (e) {
@@ -296,7 +296,7 @@ const MagazineEditor = () => {
     if (!magazine) return;
     try {
       await axios.put(`${API}/api/books/${magazine.id}/draft`, null, { headers, params: { userId: user.userId } });
-      showMsg("Draft saved!");
+      showMsg(s.draftSaved || "Draft saved!");
       await fetchMagazine();
       await fetchAllEditions();
     } catch (e) {
@@ -306,14 +306,14 @@ const MagazineEditor = () => {
 
   /* ── New edition ── */
   const handleNewEdition = async () => {
-    const title = window.prompt("Enter title for new magazine edition:", "Saat Saheli Magazine");
+    const title = window.prompt(s.newEditionPrompt || "Enter title for new magazine edition:", "Saat Saheli Magazine");
     if (title === null) return;
     try {
       const res = await axios.post(`${API}/api/admin/magazine/new`, { title: title || undefined }, { headers });
       setMagazine(res.data);
       setPages(res.data.pages || []);
       setSelectedPageNum(null);
-      showMsg("New edition created!");
+      showMsg(s.newEditionCreated || "New edition created!");
       await fetchAllEditions();
     } catch (e) {
       showMsg("Failed: " + (e.response?.data?.error || e.message));
@@ -349,7 +349,7 @@ const MagazineEditor = () => {
       });
       setMagazine(res.data);
       setPages(res.data.pages || []);
-      showMsg("Document pages imported!");
+      showMsg(s.docImported || "Document pages imported!");
     } catch (e) {
       showMsg("Upload failed: " + (e.response?.data?.error || e.message));
     } finally {
@@ -427,8 +427,8 @@ const MagazineEditor = () => {
     return (
       <div className="mag-editor">
         <div className="mag-editor-header">
-          <h2>{magazine.title || "Magazine"} — Preview</h2>
-          <button className="mag-btn mag-btn-primary" onClick={() => setShowPreview(false)}>Back to Editor</button>
+          <h2>{magazine.title || s.heading} — {s.preview}</h2>
+          <button className="mag-btn mag-btn-primary" onClick={() => setShowPreview(false)}>{s.backToEditor}</button>
         </div>
         <FlipBook bookId={magazine.id} />
       </div>
@@ -444,17 +444,17 @@ const MagazineEditor = () => {
             {magazine?.title} — {magazine?.status || "DRAFT"}
           </span>
           <button className="mag-btn mag-btn-sm" onClick={() => setShowPreview(true)} disabled={!magazine}>
-            Preview
+            {s.preview}
           </button>
           <button className="mag-btn mag-btn-sm" onClick={handleSaveDraft} disabled={!magazine}>
-            Save Draft
+            {s.saveDraft}
           </button>
           {magazine?.status !== "PUBLISHED" ? (
-            <button className="mag-btn mag-btn-publish" onClick={handlePublish}>{s.publish || "Publish"}</button>
+            <button className="mag-btn mag-btn-publish" onClick={handlePublish}>{s.publish}</button>
           ) : (
-            <button className="mag-btn mag-btn-danger" onClick={handleUnpublish}>Unpublish</button>
+            <button className="mag-btn mag-btn-danger" onClick={handleUnpublish}>{s.unpublish}</button>
           )}
-          <button className="mag-btn mag-btn-sm" onClick={handleNewEdition}>+ New Edition</button>
+          <button className="mag-btn mag-btn-sm" onClick={handleNewEdition}>{s.newEdition}</button>
         </div>
       </div>
       {message && <div className="mag-message">{message}</div>}
@@ -465,7 +465,7 @@ const MagazineEditor = () => {
           {/* Old editions */}
           {allEditions.length > 1 && (
             <div className="mag-editions">
-              <h4>Editions</h4>
+              <h4>{s.editions}</h4>
               <div className="mag-editions-list">
                 {allEditions.map((ed) => (
                   <button
@@ -473,7 +473,7 @@ const MagazineEditor = () => {
                     className={`mag-edition-item ${ed.id === magazine?.id ? "mag-edition-active" : ""}`}
                     onClick={() => switchToEdition(ed.id)}
                   >
-                    <span className="mag-edition-title">{ed.title || "Untitled"}</span>
+                    <span className="mag-edition-title">{ed.title || s.untitled}</span>
                     <span className={`mag-edition-badge ${ed.status === "PUBLISHED" ? "mag-badge-pub" : "mag-badge-draft"}`}>
                       {ed.status}
                     </span>
@@ -489,7 +489,7 @@ const MagazineEditor = () => {
           {/* Document upload */}
           <div className="mag-doc-upload">
             <label className="mag-btn mag-btn-sm mag-upload-btn mag-doc-btn">
-              {docUploading ? "Importing..." : "Upload PDF/Word"}
+              {docUploading ? s.importing : s.uploadDoc}
               <input type="file" accept=".pdf,.docx,.doc" hidden disabled={docUploading}
                 onChange={(e) => e.target.files[0] && handleDocUpload(e.target.files[0])} />
             </label>
@@ -497,7 +497,7 @@ const MagazineEditor = () => {
 
           {/* Page grid */}
           <div className="mag-page-list">
-            <h3>Pages</h3>
+            <h3>{s.pages}</h3>
             <div className="mag-page-grid">
               {Array.from({ length: TOTAL_PAGES }, (_, i) => i + 1).map((num) => {
                 const exists = !!getPage(num);
@@ -509,8 +509,8 @@ const MagazineEditor = () => {
                     onClick={() => selectPage(num)}
                   >
                     <span className="mag-page-num">{num}</span>
-                    {num === 1 && <span className="mag-page-label">Cover</span>}
-                    {num === TOTAL_PAGES && <span className="mag-page-label">Back</span>}
+                    {num === 1 && <span className="mag-page-label">{s.cover}</span>}
+                    {num === TOTAL_PAGES && <span className="mag-page-label">{s.back}</span>}
                     {!exists && num !== 1 && num !== TOTAL_PAGES && <span className="mag-page-label">{s.emptyPage || "Empty"}</span>}
                   </button>
                 );
@@ -526,23 +526,23 @@ const MagazineEditor = () => {
 
             {/* Toolbar */}
             <div className="mag-toolbar">
-              <button className="mag-btn mag-btn-sm" onClick={addTextBlock}>+ Text</button>
+              <button className="mag-btn mag-btn-sm" onClick={addTextBlock}>{s.addTextBlock}</button>
               <label className="mag-btn mag-btn-sm mag-upload-btn">
-                {uploading ? "Uploading..." : "+ Image"}
+                {uploading ? s.uploading : s.addImageBlock}
                 <input type="file" accept="image/*" hidden disabled={uploading}
                   onChange={(e) => e.target.files[0] && handleImageUpload(e.target.files[0])} />
               </label>
               <span className="mag-toolbar-sep" />
-              <label className="mag-toolbar-label">BG
+              <label className="mag-toolbar-label">{s.bg}
                 <input type="color" value={backgroundColor} onChange={(e) => setBackgroundColor(e.target.value)} />
               </label>
-              <label className="mag-toolbar-label">Border
+              <label className="mag-toolbar-label">{s.border}
                 <select value={borderStyle} onChange={(e) => setBorderStyle(e.target.value)}>
-                  <option value="none">None</option>
-                  <option value="solid">Solid</option>
-                  <option value="dashed">Dashed</option>
-                  <option value="dotted">Dotted</option>
-                  <option value="double">Double</option>
+                  <option value="none">{s.none}</option>
+                  <option value="solid">{s.solid}</option>
+                  <option value="dashed">{s.dashed}</option>
+                  <option value="dotted">{s.dotted}</option>
+                  <option value="double">{s.double}</option>
                 </select>
               </label>
               {borderStyle !== "none" && (
@@ -567,11 +567,11 @@ const MagazineEditor = () => {
                     value={selectedTextBlock.content}
                     onChange={(e) => updateTextBlock(selectedTextBlock.id, "content", e.target.value)}
                     rows={2}
-                    placeholder="Enter text..."
+                    placeholder={s.enterText}
                   />
                 </div>
                 <div className="mag-props-row">
-                  <label>Font
+                  <label>{s.fontFamily}
                     <select value={selectedTextBlock.fontFamily}
                       onChange={(e) => updateTextBlock(selectedTextBlock.id, "fontFamily", e.target.value)}>
                       {FONT_FAMILIES.map((f) => (
@@ -579,12 +579,12 @@ const MagazineEditor = () => {
                       ))}
                     </select>
                   </label>
-                  <label>Size
+                  <label>{s.fontSize}
                     <input type="text" value={selectedTextBlock.fontSize}
                       onChange={(e) => updateTextBlock(selectedTextBlock.id, "fontSize", e.target.value)}
                       style={{ width: 56 }} />
                   </label>
-                  <label>Color
+                  <label>{s.fontColor}
                     <input type="color" value={selectedTextBlock.color}
                       onChange={(e) => updateTextBlock(selectedTextBlock.id, "color", e.target.value)} />
                   </label>
@@ -594,26 +594,26 @@ const MagazineEditor = () => {
                     className={`mag-fmt-btn ${selectedTextBlock.fontWeight === "bold" ? "mag-fmt-active" : ""}`}
                     onClick={() => updateTextBlock(selectedTextBlock.id, "fontWeight",
                       selectedTextBlock.fontWeight === "bold" ? "normal" : "bold")}
-                    title="Bold"><b>B</b></button>
+                    title={s.bold}><b>B</b></button>
                   <button
                     className={`mag-fmt-btn ${selectedTextBlock.fontStyle === "italic" ? "mag-fmt-active" : ""}`}
                     onClick={() => updateTextBlock(selectedTextBlock.id, "fontStyle",
                       selectedTextBlock.fontStyle === "italic" ? "normal" : "italic")}
-                    title="Italic"><i>I</i></button>
+                    title={s.italic}><i>I</i></button>
                   <button
                     className={`mag-fmt-btn ${selectedTextBlock.textDecoration === "underline" ? "mag-fmt-active" : ""}`}
                     onClick={() => updateTextBlock(selectedTextBlock.id, "textDecoration",
                       selectedTextBlock.textDecoration === "underline" ? "none" : "underline")}
-                    title="Underline"><u>U</u></button>
+                    title={s.underline}><u>U</u></button>
                   <span className="mag-toolbar-sep" />
                   <select value={selectedTextBlock.textAlign || "left"}
                     onChange={(e) => updateTextBlock(selectedTextBlock.id, "textAlign", e.target.value)}>
-                    <option value="left">Left</option>
-                    <option value="center">Center</option>
-                    <option value="right">Right</option>
+                    <option value="left">{s.left}</option>
+                    <option value="center">{s.center}</option>
+                    <option value="right">{s.right}</option>
                   </select>
                   <span className="mag-toolbar-sep" />
-                  <button className="mag-btn mag-btn-danger mag-btn-xs" onClick={() => removeTextBlock(selectedTextBlock.id)}>Remove</button>
+                  <button className="mag-btn mag-btn-danger mag-btn-xs" onClick={() => removeTextBlock(selectedTextBlock.id)}>{s.remove}</button>
                 </div>
               </div>
             )}
@@ -626,7 +626,7 @@ const MagazineEditor = () => {
                   <div className="mag-props-info">
                     <span>{selectedImageBlock.width} × {selectedImageBlock.height}</span>
                     <label className="mag-btn mag-btn-sm mag-upload-btn" style={{ marginTop: 4 }}>
-                      Replace
+                      {s.replace}
                       <input type="file" accept="image/*" hidden onChange={async (e) => {
                         const file = e.target.files?.[0];
                         if (!file) return;
@@ -646,18 +646,18 @@ const MagazineEditor = () => {
                       }} />
                     </label>
                   </div>
-                  <button className="mag-btn mag-btn-danger mag-btn-xs" onClick={() => removeImageBlock(selectedImageBlock.id)}>Remove</button>
+                  <button className="mag-btn mag-btn-danger mag-btn-xs" onClick={() => removeImageBlock(selectedImageBlock.id)}>{s.remove}</button>
                 </div>
                 <div className="mag-props-row">
-                  <label>Fit
+                  <label>{s.fit}
                     <select value={selectedImageBlock.objectFit || "cover"}
                       onChange={(e) => updateImageBlock(selectedImageBlock.id, "objectFit", e.target.value)}>
-                      <option value="cover">Fill (crop)</option>
-                      <option value="contain">Fit (show full)</option>
-                      <option value="fill">Stretch</option>
+                      <option value="cover">{s.fillCrop}</option>
+                      <option value="contain">{s.fitShowFull}</option>
+                      <option value="fill">{s.stretch}</option>
                     </select>
                   </label>
-                  <label>Opacity
+                  <label>{s.opacity}
                     <input type="range" min="10" max="100" value={selectedImageBlock.opacity || 100}
                       onChange={(e) => updateImageBlock(selectedImageBlock.id, "opacity", +e.target.value)}
                       style={{ width: 80 }} />
@@ -669,21 +669,21 @@ const MagazineEditor = () => {
                     updateImageBlock(selectedImageBlock.id, "width", PAGE_W);
                     updateImageBlock(selectedImageBlock.id, "height", PAGE_H);
                     updateImageBlock(selectedImageBlock.id, "objectFit", "contain");
-                  }}>Fit to Page</button>
+                  }}>{s.fitToPage}</button>
                   <button className="mag-btn mag-btn-sm" onClick={() => {
                     updateImageBlock(selectedImageBlock.id, "x", 0);
                     updateImageBlock(selectedImageBlock.id, "y", 0);
                     updateImageBlock(selectedImageBlock.id, "width", PAGE_W);
                     updateImageBlock(selectedImageBlock.id, "height", PAGE_H);
                     updateImageBlock(selectedImageBlock.id, "objectFit", "cover");
-                  }}>Fill Page</button>
+                  }}>{s.fillPage}</button>
                 </div>
               </div>
             )}
 
             {/* ── Interactive canvas ── */}
             <div className="mag-canvas-wrap" ref={canvasWrapRef}>
-              <div className="mag-canvas-hint">Drag to move — corner handle to resize</div>
+              <div className="mag-canvas-hint">{s.canvasHint}</div>
               <div
                 className="mag-canvas"
                 style={{
@@ -747,20 +747,20 @@ const MagazineEditor = () => {
 
             {/* Page text for search / TTS (optional) */}
             <div className="mag-editor-section">
-              <label className="mag-section-label">Page Text (for search &amp; read-aloud — optional)</label>
+              <label className="mag-section-label">{s.pageTextLabel}</label>
               <textarea
                 className="mag-textarea"
                 value={pageContent}
                 onChange={(e) => setPageContent(e.target.value)}
                 rows={3}
-                placeholder="Optional plain text content..."
+                placeholder={s.pageTextPlaceholder}
               />
             </div>
 
             {/* Actions */}
             <div className="mag-editor-actions-bottom">
               <button className="mag-btn mag-btn-primary" onClick={handleSavePage} disabled={saving}>
-                {saving ? "Saving..." : "Save Page"}
+                {saving ? s.saving : s.savePage}
               </button>
               {getPage(selectedPageNum) && (
                 <button className="mag-btn mag-btn-danger" onClick={handleDeletePage}>{s.deletePage || "Delete Page"}</button>

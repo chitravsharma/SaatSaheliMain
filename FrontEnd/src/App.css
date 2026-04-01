@@ -75,7 +75,7 @@
 
 /* Book page specific styling for clean print-like look */
 .flipbook-page {
-  background: #fffdf8;
+  background-color: #fffdf8;
   border: none;
   border-left: 3px solid #8b5a2b;
   box-shadow:

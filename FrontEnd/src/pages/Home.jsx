@@ -169,15 +169,17 @@ function Home() {
     }
   };
 
+  const magLabel = strings.home.catMagazine || "Magazine";
+  const booksLabel = strings.home.catBooks || "Books";
   const categoryIcons = {
-    Magazine: "\uD83D\uDCD6",
-    Books: "\uD83D\uDCDA",
+    [magLabel]: "\uD83D\uDCD6",
+    [booksLabel]: "\uD83D\uDCDA",
   };
 
   // Group books into only two categories: Magazine and Books
   const grouped = {};
   recentBooks.forEach((book) => {
-    const cat = (book.category || "").toUpperCase() === "MAGAZINE" ? "Magazine" : "Books";
+    const cat = (book.category || "").toUpperCase() === "MAGAZINE" ? magLabel : booksLabel;
     if (!grouped[cat]) grouped[cat] = [];
     grouped[cat].push(book);
   });
@@ -284,7 +286,7 @@ function Home() {
                             </div>
                             <div className="home-book-info">
                               <span className="home-book-title">{book.title}</span>
-                              {category !== "Magazine" && book.authorName && (
+                              {category !== magLabel && book.authorName && (
                                 <span className="home-book-author">by {book.authorName}</span>
                               )}
                             </div>

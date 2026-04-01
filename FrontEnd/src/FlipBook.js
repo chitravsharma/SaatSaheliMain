@@ -48,13 +48,44 @@ const ASPECT_RATIO = DESKTOP_H / DESKTOP_W;
 const ZOOM_LEVELS = [0.75, 1, 1.25, 1.5, 2, 2.5];
 const DEFAULT_ZOOM_INDEX = 1;
 
-function usePageSize() {
+function usePageSize(isFullscreen) {
   const [size, setSize] = useState({ w: DESKTOP_W, h: DESKTOP_H, isMobile: false });
 
   useEffect(() => {
     const update = () => {
       const vw = window.innerWidth;
       const vh = window.innerHeight;
+      const isMobile = vw < 768;
+
+      if (isFullscreen) {
+        // Fullscreen: use full viewport, reserve only minimal toolbar space
+        const toolbarH = 50;
+        const availH = vh - toolbarH;
+        const availW = vw - (isMobile ? 16 : 40);
+
+        if (isMobile) {
+          // Mobile fullscreen: single page, fit to screen
+          let h = availH;
+          let w = Math.round(h / ASPECT_RATIO);
+          if (w > availW) {
+            w = availW;
+            h = Math.round(w * ASPECT_RATIO);
+          }
+          setSize({ w, h, isMobile: true });
+        } else {
+          // Desktop fullscreen: two-page spread, each page fits half the width
+          const halfW = Math.floor((availW - 8) / 2); // 8px gap between pages
+          let h = availH;
+          let w = Math.round(h / ASPECT_RATIO);
+          if (w > halfW) {
+            w = halfW;
+            h = Math.round(w * ASPECT_RATIO);
+          }
+          setSize({ w, h, isMobile: false });
+        }
+        return;
+      }
+
       if (vw < 500) {
         const w = Math.min(vw - 32, 360);
         setSize({ w, h: Math.round(w * ASPECT_RATIO), isMobile: true });
@@ -82,7 +113,7 @@ function usePageSize() {
     update();
     window.addEventListener("resize", update);
     return () => window.removeEventListener("resize", update);
-  }, []);
+  }, [isFullscreen]);
 
   return size;
 }
@@ -108,7 +139,7 @@ function FlipBook({ bookId }) {
   const pinchRef = useRef({ startDist: 0, startZoom: 1 });
   const fullscreenRef = useRef(null);
   const ttsPageRef = useRef(0); // track which page TTS is reading for podcast mode
-  const pageSize = usePageSize();
+  const pageSize = usePageSize(isFullscreen);
 
   const zoomLevel = ZOOM_LEVELS[zoomIndex] * pinchZoom;
 
@@ -131,18 +162,21 @@ function FlipBook({ bookId }) {
       .catch(err => console.error(err));
   }, [bookId]);
 
-  // Native fullscreen API for mobile
+  // Native fullscreen API
   const toggleFullscreen = useCallback(() => {
     if (!isFullscreen) {
       setIsFullscreen(true);
       setPinchZoom(1);
-      // Use native fullscreen on mobile
+      // Hide body scrollbar for immersive experience
+      document.body.style.overflow = "hidden";
+      // Use native fullscreen API
       const el = fullscreenRef.current || document.documentElement;
       if (el.requestFullscreen) el.requestFullscreen().catch(() => {});
       else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
     } else {
       setIsFullscreen(false);
       setPinchZoom(1);
+      document.body.style.overflow = "";
       if (document.exitFullscreen) document.exitFullscreen().catch(() => {});
       else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
     }
@@ -151,12 +185,13 @@ function FlipBook({ bookId }) {
   useEffect(() => {
     if (!isFullscreen) return;
     const handleEsc = (e) => {
-      if (e.key === "Escape") { setIsFullscreen(false); setPinchZoom(1); }
+      if (e.key === "Escape") { setIsFullscreen(false); setPinchZoom(1); document.body.style.overflow = ""; }
     };
     const handleFsChange = () => {
       if (!document.fullscreenElement && !document.webkitFullscreenElement) {
         setIsFullscreen(false);
         setPinchZoom(1);
+        document.body.style.overflow = "";
       }
     };
     window.addEventListener("keydown", handleEsc);
@@ -357,26 +392,29 @@ function FlipBook({ bookId }) {
       textAlign: "left",
     };
 
-    // Magazine-style page styling (backgroundColor, border)
-    const pageContainerStyle = {
+    // Inner wrapper carries background/border since page-flip overwrites outer div's inline styles
+    const innerStyle = {
       position: "relative",
       overflow: "hidden",
-      width: pageSize.w,
-      height: pageSize.h,
+      width: "100%",
+      height: "100%",
+      boxSizing: "border-box",
     };
-    if (backgroundColor) pageContainerStyle.backgroundColor = backgroundColor;
+    if (backgroundColor) innerStyle.background = backgroundColor;
     if (border) {
-      pageContainerStyle.border = `${border.width || "2px"} ${border.style || "solid"} ${border.color || "#333"}`;
+      innerStyle.border = `${border.width || "2px"} ${border.style || "solid"} ${border.color || "#333"}`;
     }
 
     if (isCoverOrBack && img1Src) {
       return (
-        <div key={index} className="card-box flipbook-page" style={{ ...pageContainerStyle, padding: 0 }}>
-          <img
-            src={img1Src}
-            alt={isFirstPage ? "Cover" : isLastPage ? "Back Cover" : strings.flipBook.pageImageAlt(pageNum, 1)}
-            style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", objectFit: "cover" }}
-          />
+        <div key={index} className="card-box flipbook-page">
+          <div style={{ ...innerStyle, padding: 0 }}>
+            <img
+              src={img1Src}
+              alt={isFirstPage ? "Cover" : isLastPage ? "Back Cover" : strings.flipBook.pageImageAlt(pageNum, 1)}
+              style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", objectFit: "cover" }}
+            />
+          </div>
         </div>
       );
     }
@@ -385,11 +423,29 @@ function FlipBook({ bookId }) {
     const hasMagazineBlocks = textBlocks.length > 0 || imageBlocks.length > 0;
 
     return (
-      <div key={index} className="card-box flipbook-page" style={pageContainerStyle}>
+      <div key={index} className="card-box flipbook-page">
+        <div style={innerStyle}>
         <span style={{ ...pageNumStyle, top: 6 }}>{pageNum}</span>
         <span style={{ ...pageNumStyle, bottom: 6 }}>{pageNum}</span>
         {hasMagazineBlocks ? (
           <>
+            {/* Render images first so text appears on top */}
+            {imageBlocks.map((ib) => (
+              <img key={ib.id} src={resolveImageUrl(ib.url)} alt=""
+                style={{
+                  position: "absolute",
+                  left: (ib.x || 0) * scale,
+                  top: (ib.y || 0) * scale,
+                  width: (ib.width || 200) * scale,
+                  height: (ib.height || 150) * scale,
+                  objectFit: ib.objectFit || "cover",
+                  borderRadius: 4,
+                  opacity: (ib.opacity != null ? ib.opacity : 100) / 100,
+                  zIndex: 1,
+                }}
+              />
+            ))}
+            {/* Text blocks rendered after images = on top */}
             {textBlocks.map((tb) => (
               <div key={tb.id} style={{
                 position: "absolute",
@@ -400,26 +456,18 @@ function FlipBook({ bookId }) {
                 fontFamily: tb.fontFamily || "sans-serif",
                 fontSize: tb.fontSize ? `${parseFloat(tb.fontSize) * scale}px` : `${14 * scale}px`,
                 color: tb.color || "#000",
+                fontWeight: tb.fontWeight || "normal",
+                fontStyle: tb.fontStyle || "normal",
+                textDecoration: tb.textDecoration || "none",
+                textAlign: tb.textAlign || "left",
                 whiteSpace: "pre-wrap",
                 wordBreak: "break-word",
                 overflow: "hidden",
                 pointerEvents: "none",
+                zIndex: 2,
               }}>
                 {tb.content}
               </div>
-            ))}
-            {imageBlocks.map((ib) => (
-              <img key={ib.id} src={resolveImageUrl(ib.url)} alt=""
-                style={{
-                  position: "absolute",
-                  left: (ib.x || 0) * scale,
-                  top: (ib.y || 0) * scale,
-                  width: (ib.width || 200) * scale,
-                  height: (ib.height || 150) * scale,
-                  objectFit: "cover",
-                  borderRadius: 4,
-                }}
-              />
             ))}
           </>
         ) : hasLayout ? (
@@ -473,6 +521,7 @@ function FlipBook({ bookId }) {
             {page.content}
           </div>
         )}
+        </div>
       </div>
     );
   };
