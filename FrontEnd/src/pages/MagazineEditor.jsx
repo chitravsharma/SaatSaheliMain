@@ -144,6 +144,7 @@ const MagazineEditor = () => {
   const [docUploading, setDocUploading] = useState(false);
   const [editorFile, setEditorFile] = useState(null);
   const [editorCallback, setEditorCallback] = useState(null);
+  const [moveTarget, setMoveTarget] = useState("");
 
   const canvasWrapRef = useRef(null);
   const [canvasScale, setCanvasScale] = useState(1);
@@ -267,6 +268,57 @@ const MagazineEditor = () => {
       await fetchMagazine();
     } catch (e) {
       showMsg("Delete failed: " + (e.response?.data?.error || e.message));
+    }
+  };
+
+  /* ── Move page to a new position (shift others) ── */
+  const handleMovePage = async (fromNum, toNum) => {
+    if (fromNum === toNum || !magazine) return;
+    const sourceP = getPage(fromNum);
+    if (!sourceP) { showMsg("Source page does not exist"); return; }
+
+    // Collect all existing pages sorted by pageNumber
+    const sorted = [...pages].sort((a, b) => a.pageNumber - b.pageNumber);
+
+    // Build new order: remove source, insert at target position
+    const without = sorted.filter((p) => p.pageNumber !== fromNum);
+    // Find insert index: where target pageNumber would sit
+    let insertIdx = without.findIndex((p) => p.pageNumber >= toNum);
+    if (insertIdx === -1) insertIdx = without.length;
+    without.splice(insertIdx, 0, sourceP);
+
+    // Assign new sequential page numbers starting from the minimum existing
+    const updates = [];
+    without.forEach((p, idx) => {
+      const newNum = idx + 1;
+      if (p.pageNumber !== newNum) {
+        updates.push({ id: p.id, pageNumber: newNum });
+      }
+    });
+
+    if (updates.length === 0) return;
+    setSaving(true);
+    try {
+      // Use a temporary high offset to avoid unique constraint conflicts
+      const offset = TOTAL_PAGES + 100;
+      for (const u of updates) {
+        await axios.put(`${API}/api/books/page/${u.id}`, {
+          pageNumber: u.pageNumber + offset,
+        }, { headers, params: { userId: user.userId } });
+      }
+      for (const u of updates) {
+        await axios.put(`${API}/api/books/page/${u.id}`, {
+          pageNumber: u.pageNumber,
+        }, { headers, params: { userId: user.userId } });
+      }
+      showMsg(`Page ${fromNum} moved to position ${toNum}`);
+      await fetchMagazine();
+      setSelectedPageNum(toNum);
+    } catch (e) {
+      showMsg("Move failed: " + (e.response?.data?.error || e.message));
+      await fetchMagazine();
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -519,6 +571,45 @@ const MagazineEditor = () => {
                 );
               })}
             </div>
+
+            {/* Move page controls */}
+            {selectedPageNum !== null && getPage(selectedPageNum) && (
+              <div className="mag-move-controls">
+                <span className="mag-move-label">Move page {selectedPageNum} to:</span>
+                <input
+                  type="number"
+                  className="mag-move-input"
+                  min={1}
+                  max={TOTAL_PAGES}
+                  value={moveTarget}
+                  onChange={(e) => setMoveTarget(e.target.value)}
+                  placeholder="#"
+                />
+                <button
+                  className="mag-btn mag-btn-sm"
+                  disabled={saving || !moveTarget || Number(moveTarget) === selectedPageNum || Number(moveTarget) < 1 || Number(moveTarget) > TOTAL_PAGES}
+                  onClick={() => { handleMovePage(selectedPageNum, Number(moveTarget)); setMoveTarget(""); }}
+                >
+                  Move
+                </button>
+                <button
+                  className="mag-btn mag-btn-sm"
+                  disabled={saving || selectedPageNum <= 1}
+                  onClick={() => handleMovePage(selectedPageNum, selectedPageNum - 1)}
+                  title="Move up"
+                >
+                  &#9650;
+                </button>
+                <button
+                  className="mag-btn mag-btn-sm"
+                  disabled={saving || selectedPageNum >= TOTAL_PAGES}
+                  onClick={() => handleMovePage(selectedPageNum, selectedPageNum + 1)}
+                  title="Move down"
+                >
+                  &#9660;
+                </button>
+              </div>
+            )}
           </div>
         </div>
 
