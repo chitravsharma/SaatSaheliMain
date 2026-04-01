@@ -85,17 +85,37 @@ function ImageEditor({ file, onDone, onCancel }) {
   const [flipV, setFlipV] = useState(false);
   const [shape, setShape] = useState("none");
 
-  // Load image from file
+  // Load image from file — use createImageBitmap to respect EXIF orientation
   useEffect(() => {
     if (!file) return;
-    const image = new Image();
-    const url = URL.createObjectURL(file);
-    image.onload = () => {
-      setImg(image);
-      URL.revokeObjectURL(url);
+    let cancelled = false;
+
+    const loadImage = async () => {
+      try {
+        // createImageBitmap with imageOrientation handles EXIF rotation
+        const bitmap = await createImageBitmap(file, { imageOrientation: "from-image" });
+        // Draw bitmap to a canvas to get a correctly oriented Image
+        const c = document.createElement("canvas");
+        c.width = bitmap.width;
+        c.height = bitmap.height;
+        c.getContext("2d").drawImage(bitmap, 0, 0);
+        bitmap.close();
+        const image = new Image();
+        image.onload = () => { if (!cancelled) setImg(image); };
+        image.src = c.toDataURL();
+      } catch {
+        // Fallback for browsers without createImageBitmap options
+        const image = new Image();
+        const url = URL.createObjectURL(file);
+        image.onload = () => {
+          if (!cancelled) setImg(image);
+          URL.revokeObjectURL(url);
+        };
+        image.src = url;
+      }
     };
-    image.src = url;
-    return () => URL.revokeObjectURL(url);
+    loadImage();
+    return () => { cancelled = true; };
   }, [file]);
 
   // Draw preview
