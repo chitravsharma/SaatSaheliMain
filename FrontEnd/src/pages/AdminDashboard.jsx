@@ -7,6 +7,16 @@ import "./AdminDashboard.css";
 
 const API = process.env.REACT_APP_API_URL;
 
+const PST_TZ = "America/Los_Angeles";
+const toPSTTime = (dateStr) => {
+    if (!dateStr) return "\u2014";
+    return new Date(dateStr).toLocaleTimeString("en-US", { timeZone: PST_TZ, hour: "2-digit", minute: "2-digit", second: "2-digit", timeZoneName: "short" });
+};
+const toPSTDate = (dateStr, opts) => {
+    if (!dateStr) return "\u2014";
+    return new Date(dateStr).toLocaleDateString("en-US", { timeZone: PST_TZ, ...opts });
+};
+
 const AdminDashboard = () => {
     const { user, isSuperAdmin } = useAuth();
     const strings = useStrings();
@@ -779,7 +789,7 @@ const AdminDashboard = () => {
                                                 {a.status}
                                             </span>
                                         </td>
-                                        <td>{a.createdDate ? new Date(a.createdDate).toLocaleDateString() : "\u2014"}</td>
+                                        <td>{toPSTDate(a.createdDate)}</td>
                                         <td>
                                             <select
                                                 className="admin-action-select"
@@ -872,7 +882,7 @@ const AdminDashboard = () => {
                                             return (
                                                 <div key={i} className="analytics-bar-group" title={`${day.date}: ${day.pageViews} views, ${day.uniqueVisitors} visitors`}>
                                                     <div className="analytics-bar" style={{ height: `${barHeight}px` }} />
-                                                    <span className="analytics-bar-label">{new Date(day.date).toLocaleDateString(undefined, { month: "short", day: "numeric" })}</span>
+                                                    <span className="analytics-bar-label">{toPSTDate(day.date, { month: "short", day: "numeric" })}</span>
                                                     <span className="analytics-bar-value">{day.pageViews}</span>
                                                 </div>
                                             );
@@ -966,7 +976,7 @@ const AdminDashboard = () => {
                                         <tbody>
                                             {recentVisits.map((v) => (
                                                 <tr key={v.id}>
-                                                    <td>{v.visitedAt ? new Date(v.visitedAt).toLocaleTimeString() : "\u2014"}</td>
+                                                    <td>{toPSTTime(v.visitedAt)}</td>
                                                     <td>{v.pagePath || "/"}</td>
                                                     <td>{v.device || "\u2014"}</td>
                                                     <td>{v.browser || "\u2014"}</td>
@@ -1051,7 +1061,7 @@ const AdminDashboard = () => {
                                         .sort((a, b) => a.date.localeCompare(b.date))
                                         .map(w => (
                                         <tr key={w.id}>
-                                            <td>{new Date(w.date + "T00:00").toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" })}</td>
+                                            <td>{toPSTDate(w.date + "T00:00", { weekday: "short", month: "short", day: "numeric" })}</td>
                                             <td>{w.startTime} - {w.endTime}</td>
                                             <td>{w.description}</td>
                                             <td>
@@ -1088,7 +1098,7 @@ const AdminDashboard = () => {
                                 sun.setDate(sat.getDate() + 1);
                                 const satStr = sat.toISOString().split("T")[0];
                                 const sunStr = sun.toISOString().split("T")[0];
-                                const label = `${sat.toLocaleDateString(undefined, { month: "short", day: "numeric" })} - ${sun.toLocaleDateString(undefined, { month: "short", day: "numeric" })}`;
+                                const label = `${sat.toLocaleDateString("en-US", { timeZone: PST_TZ, month: "short", day: "numeric" })} - ${sun.toLocaleDateString("en-US", { timeZone: PST_TZ, month: "short", day: "numeric" })}`;
                                 return (
                                     <button
                                         key={weekOffset}
@@ -1230,7 +1240,7 @@ const AdminDashboard = () => {
                                                     {ad.active ? "Active" : "Inactive"}
                                                 </span>
                                             </td>
-                                            <td>{ad.createdDate ? new Date(ad.createdDate).toLocaleDateString() : "\u2014"}</td>
+                                            <td>{toPSTDate(ad.createdDate)}</td>
                                             <td>
                                                 <button className="bm-btn bm-btn-sm bm-btn-edit" onClick={() => toggleAdActive(ad.id)}>
                                                     {ad.active ? "Deactivate" : "Activate"}
