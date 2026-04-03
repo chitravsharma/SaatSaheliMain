@@ -170,11 +170,11 @@
 }
 
 .auth-success {
-  background-color: rgba(10, 54, 34, 0.25);
-  color: #86efac;
+  background-color: #ecfdf5;
+  color: #065f46;
   padding: 12px 16px;
   border-radius: 8px;
-  border-left: 4px solid #4ade80;
+  border-left: 4px solid #10b981;
   font-weight: 500;
   font-size: 0.875rem;
 }
@@ -229,7 +229,7 @@
 }
 
 .auth-forgot-info {
-  color: var(--text-muted);
+  color: #1e293b;
   font-size: 0.9rem;
   margin: 0 0 12px;
 }

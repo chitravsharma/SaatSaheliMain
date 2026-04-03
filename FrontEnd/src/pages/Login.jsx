@@ -17,7 +17,7 @@ export default function Login() {
   const strings = useStrings();
   const isRegisterPath = location.pathname.toLowerCase() === "/register";
   const initialMode = (isRegisterPath || searchParams.get("mode") === "signup") ? "signup" : "login";
-  const [mode, setMode] = useState(initialMode); // "login" | "signup" | "forgot"
+  const [mode, setMode] = useState(initialMode); // "login" | "signup" | "forgot" | "changePassword"
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
@@ -29,6 +29,11 @@ export default function Login() {
   // Forgot password fields
   const [forgotEmail, setForgotEmail] = useState("");
   const [forgotSent, setForgotSent] = useState(false);
+
+  // Change password fields (after temp password login)
+  const [changeNewPassword, setChangeNewPassword] = useState("");
+  const [changeConfirmPassword, setChangeConfirmPassword] = useState("");
+  const [pendingUserData, setPendingUserData] = useState(null);
 
   // Signup fields
   const [firstName, setFirstName] = useState("");
@@ -49,8 +54,17 @@ export default function Login() {
       role: data.role,
       provider: data.provider,
       plan: data.plan || "Free",
-      token: data.token, // JWT token from server
+      token: data.token,
     };
+
+    if (data.mustChangePassword) {
+      setPendingUserData(userData);
+      setMode("changePassword");
+      setError("");
+      setSuccess("");
+      return;
+    }
+
     authLogin(userData);
     navigate("/");
   };
@@ -164,6 +178,47 @@ export default function Login() {
       setSuccess("If an account with that email exists, you will receive password reset instructions via email.");
     } catch (err) {
       setError(err.response?.data?.error || "Failed to process request.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleChangePassword = async (e) => {
+    e.preventDefault();
+    setError("");
+    setSuccess("");
+    if (changeNewPassword.length < 8) {
+      setError("Password must be at least 8 characters long.");
+      return;
+    }
+    if (!/[A-Z]/.test(changeNewPassword)) {
+      setError("Password must contain at least one uppercase letter.");
+      return;
+    }
+    if (!/[0-9]/.test(changeNewPassword)) {
+      setError("Password must contain at least one number.");
+      return;
+    }
+    if (!/[!@#$%^&*()_+=[\]{};':"\\|,.<>/?-]/.test(changeNewPassword)) {
+      setError("Password must contain at least one special character.");
+      return;
+    }
+    if (changeNewPassword !== changeConfirmPassword) {
+      setError("Passwords do not match.");
+      return;
+    }
+    setLoading(true);
+    try {
+      await axios.post(`${API_BASE}/reset-password`, {
+        email: pendingUserData.email,
+        newPassword: changeNewPassword,
+      }, {
+        headers: { Authorization: `Bearer ${pendingUserData.token}` },
+      });
+      authLogin(pendingUserData);
+      navigate("/");
+    } catch (err) {
+      setError(err.response?.data?.error || "Failed to update password.");
     } finally {
       setLoading(false);
     }
@@ -340,6 +395,47 @@ export default function Login() {
                   </div>
                 </form>
               )}
+            </>
+          )}
+
+          {mode === "changePassword" && (
+            <>
+              <h2>Create Your New Password</h2>
+              <form className="auth-form" onSubmit={handleChangePassword}>
+                {error && <div className="auth-error" role="alert">{error}</div>}
+                {success && <div className="auth-success" role="status">{success}</div>}
+                <p className="auth-forgot-info">
+                  You logged in with a temporary password. Please create a new password to secure your account.
+                </p>
+                <div className="auth-field">
+                  <label htmlFor="change-new-password">New Password</label>
+                  <input
+                    id="change-new-password"
+                    type="password"
+                    placeholder="Min 8 chars, uppercase, number, special char"
+                    value={changeNewPassword}
+                    onChange={(e) => setChangeNewPassword(e.target.value)}
+                    required
+                    minLength={8}
+                    autoComplete="new-password"
+                  />
+                </div>
+                <div className="auth-field">
+                  <label htmlFor="change-confirm-password">Confirm New Password</label>
+                  <input
+                    id="change-confirm-password"
+                    type="password"
+                    placeholder="Re-enter your new password"
+                    value={changeConfirmPassword}
+                    onChange={(e) => setChangeConfirmPassword(e.target.value)}
+                    required
+                    autoComplete="new-password"
+                  />
+                </div>
+                <button type="submit" className="auth-btn auth-btn-primary" disabled={loading}>
+                  {loading ? "Updating..." : "Set New Password"}
+                </button>
+              </form>
             </>
           )}
 

@@ -38,6 +38,13 @@ public class Login {
 
     private String provider; // "email", "google", "apple"
 
+    @Column(name = "must_change_password")
+    private Boolean mustChangePassword = false;
+
+    @JsonIgnore
+    @Column(name = "temp_password")
+    private String tempPassword;
+
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
@@ -64,6 +71,12 @@ public class Login {
 
     public String getProvider() { return provider; }
     public void setProvider(String provider) { this.provider = provider; }
+
+    public Boolean getMustChangePassword() { return mustChangePassword; }
+    public void setMustChangePassword(Boolean mustChangePassword) { this.mustChangePassword = mustChangePassword; }
+
+    public String getTempPassword() { return tempPassword; }
+    public void setTempPassword(String tempPassword) { this.tempPassword = tempPassword; }
 
     @Override
     public String toString() {

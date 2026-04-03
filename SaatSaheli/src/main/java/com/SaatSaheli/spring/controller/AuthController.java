@@ -151,8 +151,20 @@ public class AuthController {
             }
 
             if ("email".equals(provider)) {
-                if (password == null || !passwordEncoder.matches(password, loginRecord.getPassword())) {
+                boolean matchesOldPassword = password != null && passwordEncoder.matches(password, loginRecord.getPassword());
+                boolean matchesTempPassword = password != null
+                        && loginRecord.getTempPassword() != null
+                        && !loginRecord.getTempPassword().isEmpty()
+                        && passwordEncoder.matches(password, loginRecord.getTempPassword());
+
+                if (!matchesOldPassword && !matchesTempPassword) {
                     return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorMap("Invalid email or password"));
+                }
+
+                // If user logged in with old password, clear temp password and flag
+                if (matchesOldPassword && !matchesTempPassword) {
+                    loginRecord.setTempPassword(null);
+                    loginRecord.setMustChangePassword(false);
                 }
             }
 
@@ -316,9 +328,10 @@ public class AuthController {
                 return ResponseEntity.ok(safeResponse);
             }
 
-            // Generate temp password and store hashed version
+            // Generate temp password — store in separate column, keep old password intact
             String tempPassword = generateTempPassword();
-            loginRecord.setPassword(passwordEncoder.encode(tempPassword));
+            loginRecord.setTempPassword(passwordEncoder.encode(tempPassword));
+            loginRecord.setMustChangePassword(true);
             loginRepo.save(loginRecord);
 
             // Send temp password via email
@@ -357,6 +370,8 @@ public class AuthController {
             }
 
             loginRecord.setPassword(passwordEncoder.encode(newPassword));
+            loginRecord.setTempPassword(null);
+            loginRecord.setMustChangePassword(false);
             loginRepo.save(loginRecord);
 
             return ResponseEntity.ok(Map.of("message", "Password has been reset successfully"));
@@ -428,6 +443,7 @@ public class AuthController {
         response.put("provider", login.getProvider());
         response.put("plan", user.getPlan());
         response.put("lastLoginDate", login.getLastLoginDate());
+        response.put("mustChangePassword", Boolean.TRUE.equals(login.getMustChangePassword()));
         return response;
     }
 
