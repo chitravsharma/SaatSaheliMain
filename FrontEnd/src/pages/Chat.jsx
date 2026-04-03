@@ -19,6 +19,7 @@ const Chat = () => {
     const [messages, setMessages] = useState([]);
     const [newMessage, setNewMessage] = useState("");
     const [sending, setSending] = useState(false);
+    const [error, setError] = useState("");
     const messagesEndRef = useRef(null);
     const lastMessageIdRef = useRef(null);
     const pollRef = useRef(null);
@@ -34,7 +35,7 @@ const Chat = () => {
                 if (res.data.length > 0 && !selectedRoom) {
                     setSelectedRoom(res.data[0]);
                 }
-            } catch { /* ignore */ }
+            } catch (err) { console.error("Failed to fetch chat rooms:", err); }
         };
         fetchRooms();
     }, []);
@@ -58,7 +59,7 @@ const Chat = () => {
             if (res.data.length > 0) {
                 lastMessageIdRef.current = res.data[res.data.length - 1].id;
             }
-        } catch { /* ignore */ }
+        } catch (err) { console.error("Failed to fetch messages:", err); }
     }, [selectedRoom, user?.userId]);
 
     // Initial load when room changes
@@ -84,6 +85,7 @@ const Chat = () => {
         e.preventDefault();
         if (!newMessage.trim() || !selectedRoom) return;
         setSending(true);
+        setError("");
         try {
             const res = await axios.post(
                 `${API}/api/chat/rooms/${selectedRoom.id}/messages`,
@@ -93,7 +95,10 @@ const Chat = () => {
             setMessages(prev => [...prev, res.data]);
             lastMessageIdRef.current = res.data.id;
             setNewMessage("");
-        } catch { /* ignore */ }
+        } catch (err) {
+            console.error("Failed to send message:", err);
+            setError(s.sendError || "Failed to send message. Please try again.");
+        }
         setSending(false);
     };
 
@@ -103,7 +108,10 @@ const Chat = () => {
             setMessages(prev =>
                 prev.map(m => m.id === messageId ? { ...m, message: "[deleted]", isDeleted: true } : m)
             );
-        } catch { /* ignore */ }
+        } catch (err) {
+            console.error("Failed to delete message:", err);
+            setError(s.deleteError || "Failed to delete message. Please try again.");
+        }
     };
 
     const selectRoom = (room) => {
@@ -185,6 +193,7 @@ const Chat = () => {
                             })}
                             <div ref={messagesEndRef} />
                         </div>
+                        {error && <div className="chat-error" role="alert">{error}</div>}
                         <form className="chat-input-bar" onSubmit={handleSend}>
                             <input
                                 type="text"

@@ -1020,7 +1020,7 @@ function BookManager() {
                 {pageNumber && isCoverOrBack(pageNumber) && !canCustomizeCover && (
                   <div className="bm-upgrade-notice" style={{ padding: "16px", background: "rgba(37,99,235,0.1)", borderRadius: "8px", border: "1px solid #2a4a6b", marginTop: "8px", color: "#94a3b8", fontSize: "0.9rem" }}>
                     <strong style={{ color: "#fbbf24" }}>Cover Page Customization</strong> is available for Premium plan and above.{" "}
-                    <a href="/pricing" style={{ color: "#f59e0b", textDecoration: "underline" }}>Upgrade your plan</a> to unlock this feature.
+                    <Link to="/pricing" style={{ color: "#f59e0b", textDecoration: "underline" }}>Upgrade your plan</Link> to unlock this feature.
                   </div>
                 )}
 
@@ -1093,7 +1093,7 @@ function BookManager() {
                       ) : isCoverOrBack(editingPage.pageNumber) && !canCustomizeCover ? (
                         <div className="bm-upgrade-notice" style={{ padding: "16px", background: "rgba(37,99,235,0.1)", borderRadius: "8px", border: "1px solid #2a4a6b", marginTop: "8px", color: "#94a3b8", fontSize: "0.9rem" }}>
                           <strong style={{ color: "#fbbf24" }}>Cover Page Customization</strong> is available for Premium plan and above.{" "}
-                          <a href="/pricing" style={{ color: "#f59e0b", textDecoration: "underline" }}>Upgrade your plan</a> to unlock this feature.
+                          <Link to="/pricing" style={{ color: "#f59e0b", textDecoration: "underline" }}>Upgrade your plan</Link> to unlock this feature.
                         </div>
                       ) : (
                         <>

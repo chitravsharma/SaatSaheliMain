@@ -248,6 +248,21 @@
   }
 }
 
+@media (max-width: 900px) {
+  .pricing-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+  }
+
+  .pricing-card {
+    padding: 22px 18px;
+  }
+
+  .pricing-hero h1 {
+    font-size: 2rem;
+  }
+}
+
 @media (max-width: 600px) {
   .pricing-grid {
     grid-template-columns: 1fr;

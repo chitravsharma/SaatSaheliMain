@@ -47,3 +47,23 @@
   margin-left: 250px;
   transition: margin-left 0.3s ease-in-out;
 }
+
+@media (max-width: 768px) {
+  .sidebar {
+    width: 100%;
+    left: -100%;
+  }
+
+  .sidebar.open {
+    left: 0;
+    box-shadow: 2px 0 12px rgba(0, 0, 0, 0.3);
+  }
+
+  .main-content.shifted {
+    margin-left: 0;
+  }
+
+  .toggle-button {
+    right: -60px;
+  }
+}

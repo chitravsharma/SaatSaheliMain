@@ -283,6 +283,36 @@
 }
 
 /* ── Responsive ── */
+@media (max-width: 768px) {
+  .about-page {
+    margin: 40px auto;
+  }
+
+  .about-hero h1 {
+    font-size: 2rem;
+  }
+
+  .about-card {
+    padding: 28px 24px;
+  }
+
+  .about-features-grid {
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  }
+
+  .about-highlights-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .about-cta-section {
+    padding: 32px 24px;
+  }
+
+  .about-section-title {
+    font-size: 1.4rem;
+  }
+}
+
 @media (max-width: 600px) {
   .about-page {
     margin: 32px auto;

@@ -51,7 +51,8 @@ function Account() {
           setSelectedGalleryId(gals[0].id);
           setGalleryImages(gals[0].images || []);
         }
-      } catch {
+      } catch (err) {
+        console.error("Failed to load account data:", err);
         setError(strings.account.error);
       } finally {
         setLoading(false);
@@ -69,7 +70,8 @@ function Account() {
       setGalleryImages([]);
       setNewGalleryTitle("");
       setGalleryMsg("Gallery created!");
-    } catch {
+    } catch (err) {
+      console.error("Failed to create gallery:", err);
       setGalleryMsg("Failed to create gallery");
     }
   };
@@ -77,6 +79,12 @@ function Account() {
   const handleGalleryUpload = async (e) => {
     const files = Array.from(e.target.files);
     if (!files.length || !selectedGalleryId) return;
+    const MAX_SIZE = 5 * 1024 * 1024; // 5MB
+    const oversized = files.filter(f => f.size > MAX_SIZE);
+    if (oversized.length) {
+      setGalleryMsg(`${oversized.length} file(s) exceed the 5MB size limit.`);
+      return;
+    }
     setUploadingGallery(true);
     setGalleryMsg("");
     let uploaded = 0;
@@ -89,8 +97,9 @@ function Account() {
         const res = await axios.post(`${API_GALLERIES}/${selectedGalleryId}/images`, formData);
         setGalleryImages(prev => [...prev, res.data]);
         uploaded++;
-      } catch {
-        // skip failed uploads
+      } catch (err) {
+        console.error("Failed to upload image:", err);
+        setGalleryMsg(`Some images failed to upload.`);
       }
     }
     if (uploaded > 0) {
@@ -104,7 +113,10 @@ function Account() {
     try {
       await axios.delete(`${API_GALLERIES}/images/${imageId}?userId=${user.userId}`);
       setGalleryImages(galleryImages.filter(img => img.id !== imageId));
-    } catch { /* ignore */ }
+    } catch (err) {
+      console.error("Failed to remove gallery image:", err);
+      setGalleryMsg("Failed to remove image.");
+    }
   };
 
   const handleSelectGallery = (galleryId) => {
@@ -124,7 +136,10 @@ function Account() {
         setGalleryImages(updated[0]?.images || []);
       }
       setGalleryMsg("Gallery deleted!");
-    } catch { setGalleryMsg("Failed to delete gallery"); }
+    } catch (err) {
+      console.error("Failed to delete gallery:", err);
+      setGalleryMsg("Failed to delete gallery");
+    }
   };
 
   const userInterests = profile?.interests ? profile.interests.split(",").map(s => s.trim()) : [];

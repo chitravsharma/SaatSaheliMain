@@ -277,6 +277,25 @@
     background: #1d4ed8;
 }
 
+@media (max-width: 768px) {
+    .chat-container {
+        height: calc(100vh - 140px);
+    }
+
+    .chat-sidebar {
+        width: 220px;
+        min-width: 180px;
+    }
+
+    .chat-msg {
+        max-width: 80%;
+    }
+
+    .chat-input-bar button {
+        padding: 0.7rem 1rem;
+    }
+}
+
 @media (max-width: 700px) {
     .chat-container {
         flex-direction: column;

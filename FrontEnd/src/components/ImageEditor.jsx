@@ -85,6 +85,13 @@ function ImageEditor({ file, onDone, onCancel }) {
   const [flipV, setFlipV] = useState(false);
   const [shape, setShape] = useState("none");
 
+  // Escape key to close
+  useEffect(() => {
+    const handleKeyDown = (e) => { if (e.key === "Escape") onCancel(); };
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [onCancel]);
+
   // Load image from file — use createImageBitmap to respect EXIF orientation
   useEffect(() => {
     if (!file) return;
@@ -326,6 +333,7 @@ function ImageEditor({ file, onDone, onCancel }) {
                   className={`img-editor-shape-btn ${shape === s.id ? "active" : ""}`}
                   onClick={() => setShape(s.id)}
                   title={s.label}
+                  aria-label={s.label}
                 >
                   {s.icon}
                 </button>

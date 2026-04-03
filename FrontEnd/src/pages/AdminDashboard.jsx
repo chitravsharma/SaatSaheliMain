@@ -442,7 +442,7 @@ const AdminDashboard = () => {
     return (
         <div className="admin-dashboard">
             <h1>{s.heading || "Admin Dashboard"}</h1>
-            {message && <div className="admin-message" onClick={() => setMessage("")}>{message}</div>}
+            {message && <div className="admin-message" onClick={() => setMessage("")} role="status">{message}</div>}
 
             <div className="admin-tabs">
                 <button className={tab === "stats" ? "active" : ""} onClick={() => setTab("stats")}>

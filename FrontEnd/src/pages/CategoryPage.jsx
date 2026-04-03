@@ -152,7 +152,7 @@ function CategoryPage() {
                 </p>
             </div>
 
-            {message && <div className="cat-message" onClick={() => setMessage("")}>{message}</div>}
+            {message && <div className="cat-message" onClick={() => setMessage("")} role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") setMessage(""); }}>{message}</div>}
 
             {/* Navigation tabs */}
             <div className="cat-tabs">

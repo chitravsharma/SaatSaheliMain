@@ -52,7 +52,7 @@ function TermsGate({ userId, children }) {
 
           <p>
             For full details, please review our{" "}
-            <Link to="/policies" target="_blank" rel="noopener noreferrer">
+            <Link to="/policies">
               Site Policies
             </Link>.
           </p>

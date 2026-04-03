@@ -22,6 +22,7 @@ function GalleryView() {
   const [comments, setComments] = useState([]);
   const [newComment, setNewComment] = useState("");
   const [showComments, setShowComments] = useState(false);
+  const [error, setError] = useState("");
   const commentInputRef = useRef(null);
 
   useEffect(() => {
@@ -30,8 +31,8 @@ function GalleryView() {
         const res = await axios.get(`${API}/api/galleries/${galleryId}`);
         setGallery(res.data);
         setLikeCount(res.data.likeCount || 0);
-      } catch {
-        // ignore
+      } catch (err) {
+        console.error("Failed to fetch gallery:", err);
       } finally {
         setLoading(false);
       }
@@ -57,7 +58,9 @@ function GalleryView() {
         }
         setLikeCount(likeRes.data.count);
         setComments(commentsRes.data || []);
-      } catch { /* ignore */ }
+      } catch (err) {
+        console.error("Failed to fetch social data:", err);
+      }
     };
     fetchSocial();
   }, [galleryId, user]);
@@ -74,7 +77,9 @@ function GalleryView() {
       const res = await axios.post(`${API}/api/social/like`, { userId: user.userId, targetType: "GALLERY", targetId: Number(galleryId) });
       setLiked(res.data.liked);
       setLikeCount(res.data.count);
-    } catch { /* ignore */ }
+    } catch (err) {
+      setError("Failed to update like. Please try again.");
+    }
   };
 
   const handleFavorite = async () => {
@@ -88,7 +93,9 @@ function GalleryView() {
     try {
       const res = await axios.post(`${API}/api/social/favorite`, { userId: user.userId, targetType: "GALLERY", targetId: Number(galleryId) });
       setFavorited(res.data.favorited);
-    } catch { /* ignore */ }
+    } catch (err) {
+      setError("Failed to update favorite. Please try again.");
+    }
   };
 
   const handleAddComment = async (e) => {
@@ -101,14 +108,18 @@ function GalleryView() {
       });
       setComments([res.data, ...comments]);
       setNewComment("");
-    } catch { /* ignore */ }
+    } catch (err) {
+      setError("Failed to post comment. Please try again.");
+    }
   };
 
   const handleDeleteComment = async (commentId) => {
     try {
       await axios.delete(`${API}/api/social/comment/${commentId}?userId=${user.userId}`);
       setComments(comments.filter(c => c.id !== commentId));
-    } catch { /* ignore */ }
+    } catch (err) {
+      setError("Failed to delete comment. Please try again.");
+    }
   };
 
   const openLightbox = (index) => setLightboxIndex(index);
@@ -161,10 +172,17 @@ function GalleryView() {
         </button>
       </div>
 
+      {error && (
+        <div className="gv-error" role="alert">
+          {error}
+          <button className="gv-error-dismiss" onClick={() => setError("")}>&times;</button>
+        </div>
+      )}
+
       {/* Photo grid */}
       <div className="gv-grid">
         {images.map((img, i) => (
-          <div key={img.id || i} className="gv-grid-item" onClick={() => openLightbox(i)}>
+          <div key={img.id || i} className="gv-grid-item" onClick={() => openLightbox(i)} role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") openLightbox(i); }}>
             <img src={img.imageUrl} alt={img.caption || `Photo ${i + 1}`} className="gv-grid-img" />
             {img.caption && <div className="gv-grid-caption">{img.caption}</div>}
           </div>
@@ -216,10 +234,10 @@ function GalleryView() {
       {lightboxIndex >= 0 && images[lightboxIndex] && (
         <div className="gv-lightbox" onClick={closeLightbox}>
           <div className="gv-lightbox-content" onClick={(e) => e.stopPropagation()}>
-            <button className="gv-lightbox-close" onClick={closeLightbox}>&times;</button>
-            <button className="gv-lightbox-prev" onClick={prevImage}>&lsaquo;</button>
+            <button className="gv-lightbox-close" onClick={closeLightbox} aria-label="Close">&times;</button>
+            <button className="gv-lightbox-prev" onClick={prevImage} aria-label="Previous image">&lsaquo;</button>
             <img src={images[lightboxIndex].imageUrl} alt={images[lightboxIndex].caption || ""} className="gv-lightbox-img" />
-            <button className="gv-lightbox-next" onClick={nextImage}>&rsaquo;</button>
+            <button className="gv-lightbox-next" onClick={nextImage} aria-label="Next image">&rsaquo;</button>
             {images[lightboxIndex].caption && (
               <div className="gv-lightbox-caption">{images[lightboxIndex].caption}</div>
             )}

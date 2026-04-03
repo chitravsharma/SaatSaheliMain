@@ -279,6 +279,39 @@
   font-size: 0.8rem;
 }
 
+/* Error banner */
+.gv-error {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #fdecea;
+  color: #b71c1c;
+  border: 1px solid #f5c6cb;
+  border-radius: 8px;
+  padding: 10px 16px;
+  margin-bottom: 16px;
+  font-size: 0.95rem;
+}
+
+.gv-error-dismiss {
+  background: none;
+  border: none;
+  color: #b71c1c;
+  font-size: 1.3rem;
+  cursor: pointer;
+  padding: 0 4px;
+  line-height: 1;
+}
+
+@media (max-width: 768px) {
+  .gv-container { padding: 0 16px; }
+  .gv-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+  .gv-title { font-size: 1.4rem; }
+  .gv-lightbox-prev { left: 8px; }
+  .gv-lightbox-next { right: 8px; }
+  .gv-comment-form { flex-direction: column; }
+}
+
 @media (max-width: 600px) {
   .gv-container { padding: 0 12px; margin: 12px auto; }
   .gv-grid { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 8px; }

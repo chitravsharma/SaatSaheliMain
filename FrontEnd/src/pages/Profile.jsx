@@ -85,6 +85,12 @@ function Profile() {
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
     if (!file) return;
+    const MAX_SIZE = 5 * 1024 * 1024; // 5MB
+    if (file.size > MAX_SIZE) {
+      setError("Image must be under 5MB.");
+      e.target.value = "";
+      return;
+    }
     setEditorFile(file);
     e.target.value = "";
   };

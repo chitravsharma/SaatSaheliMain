@@ -22,6 +22,7 @@ function ReadBook() {
   const [newComment, setNewComment] = useState("");
   const [showComments, setShowComments] = useState(false);
   const [shareCopied, setShareCopied] = useState(false);
+  const [error, setError] = useState("");
   const commentInputRef = useRef(null);
 
   // Fetch book info
@@ -29,7 +30,7 @@ function ReadBook() {
     if (!bookId) return;
     axios.get(`${API}/api/books/${bookId}`)
       .then(res => setBook(res.data))
-      .catch(() => {});
+      .catch(err => console.error("Failed to fetch book:", err));
   }, [bookId]);
 
   // Fetch social data
@@ -52,7 +53,7 @@ function ReadBook() {
         }
         setLikeCount(likeRes.data.count);
         setComments(commentsRes.data || []);
-      } catch { /* ignore */ }
+      } catch (err) { console.error("Failed to fetch social data:", err); }
     };
     fetchSocial();
   }, [bookId, user]);
@@ -70,7 +71,10 @@ function ReadBook() {
       const res = await axios.post(`${API}/api/social/like`, { userId: user.userId, targetType: "BOOK", targetId: Number(bookId) });
       setLiked(res.data.liked);
       setLikeCount(res.data.count);
-    } catch { /* ignore */ }
+    } catch (err) {
+      console.error("Failed to toggle like:", err);
+      setError("Could not update like. Please try again.");
+    }
   };
 
   const handleFavorite = async () => {
@@ -85,12 +89,15 @@ function ReadBook() {
     try {
       const res = await axios.post(`${API}/api/social/favorite`, { userId: user.userId, targetType: "BOOK", targetId: Number(bookId) });
       setFavorited(res.data.favorited);
-    } catch { /* ignore */ }
+    } catch (err) {
+      console.error("Failed to toggle favorite:", err);
+      setError("Could not update favorite. Please try again.");
+    }
   };
 
   const handleAddComment = async (e) => {
     e.preventDefault();
-    if (!user) return navigate("/Login");
+    if (!user) { setError("Please log in to comment."); return navigate("/Login"); }
     if (!newComment.trim()) return;
     try {
       const res = await axios.post(`${API}/api/social/comment`, {
@@ -98,7 +105,10 @@ function ReadBook() {
       });
       setComments([res.data, ...comments]);
       setNewComment("");
-    } catch { /* ignore */ }
+    } catch (err) {
+      console.error("Failed to post comment:", err);
+      setError("Could not post comment. Please try again.");
+    }
   };
 
   const handleShare = async () => {
@@ -120,7 +130,10 @@ function ReadBook() {
     try {
       await axios.delete(`${API}/api/social/comment/${commentId}?userId=${user.userId}`);
       setComments(comments.filter(c => c.id !== commentId));
-    } catch { /* ignore */ }
+    } catch (err) {
+      console.error("Failed to delete comment:", err);
+      setError("Could not delete comment. Please try again.");
+    }
   };
 
   return (
@@ -149,6 +162,8 @@ function ReadBook() {
           </button>
         </div>
       </div>
+
+      {error && <div className="rb-error" role="alert" onClick={() => setError("")}>{error}</div>}
 
       {/* Book title & author */}
       {book && (

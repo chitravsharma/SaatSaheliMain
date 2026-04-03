@@ -193,8 +193,8 @@
     border: 2px solid var(--border-default);
     border-radius: 12px;
     padding: 28px;
-    width: 400px;
-    max-width: 90vw;
+    width: 100%;
+    max-width: 400px;
 }
 
 .admin-reset-card h3 {

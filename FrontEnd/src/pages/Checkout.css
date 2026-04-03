@@ -348,4 +348,27 @@
   .checkout-actions {
     flex-direction: column;
   }
+
+  .checkout-page {
+    padding: 0 16px;
+    margin: 20px auto;
+  }
+
+  .checkout-header h1 {
+    font-size: 1.6rem;
+  }
+
+  .checkout-card {
+    padding: 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .checkout-row {
+    grid-template-columns: 1fr;
+  }
+
+  .checkout-header h1 {
+    font-size: 1.4rem;
+  }
 }

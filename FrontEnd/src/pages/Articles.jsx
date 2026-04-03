@@ -105,7 +105,7 @@ function Articles() {
           comments: commentsRes.data || [],
         },
       }));
-    } catch { /* ignore */ }
+    } catch (err) { console.error("Failed to load social data for article", articleId, err); }
   };
 
   useEffect(() => {
@@ -151,6 +151,10 @@ function Articles() {
   const handleSave = async () => {
     if (!headline.trim()) {
       showMsg("Title is required");
+      return;
+    }
+    if (publishOnSave && content.trim().length < 50) {
+      showMsg("Content must be at least 50 characters to publish. Save as draft instead.");
       return;
     }
     setSaving(true);
@@ -258,7 +262,7 @@ function Articles() {
         ...prev,
         [articleId]: { ...prev[articleId], liked: res.data.liked, likeCount: res.data.count },
       }));
-    } catch { /* ignore */ }
+    } catch { showMsg("Failed to like. Please try again."); }
   };
 
   const handleFavorite = async (articleId) => {
@@ -280,12 +284,12 @@ function Articles() {
         ...prev,
         [articleId]: { ...prev[articleId], favorited: res.data.favorited },
       }));
-    } catch { /* ignore */ }
+    } catch { showMsg("Failed to favorite. Please try again."); }
   };
 
   const handleAddComment = async (e, articleId) => {
     e.preventDefault();
-    if (!userId) return navigate("/Login");
+    if (!userId) { showMsg("Please log in to comment."); return navigate("/Login"); }
     if (!newComment.trim()) return;
     try {
       const res = await axios.post(`${API}/api/social/comment`, {
@@ -299,7 +303,7 @@ function Articles() {
         },
       }));
       setNewComment("");
-    } catch { /* ignore */ }
+    } catch { showMsg("Failed to post comment. Please try again."); }
   };
 
   const handleDeleteComment = async (commentId, articleId) => {
@@ -312,7 +316,7 @@ function Articles() {
           comments: (prev[articleId]?.comments || []).filter((c) => c.id !== commentId),
         },
       }));
-    } catch { /* ignore */ }
+    } catch { showMsg("Failed to delete comment. Please try again."); }
   };
 
   const handleShare = async (article) => {

@@ -30,12 +30,14 @@ function Home() {
   const [shareCopiedId, setShareCopiedId] = useState(null);
   const [adShareCopiedId, setAdShareCopiedId] = useState(null);
   const [advertisements, setAdvertisements] = useState([]);
+  const [actionError, setActionError] = useState("");
+  const [busyActions, setBusyActions] = useState(new Set());
 
   // Fetch active advertisements from API
   useEffect(() => {
     axios.get(`${API}/api/advertisements/active`)
       .then(res => setAdvertisements(Array.isArray(res.data) ? res.data : []))
-      .catch(() => { /* ignore */ });
+      .catch((err) => { console.error("Failed to fetch advertisements:", err); });
   }, []);
 
   useEffect(() => {
@@ -63,8 +65,8 @@ function Home() {
 
         setBookCounts(bookCountsRes.data || { likes: {}, comments: {} });
         setGalleryCounts(galleryCountsRes.data || { likes: {}, comments: {} });
-      } catch {
-        // ignore
+      } catch (err) {
+        console.error("Failed to fetch home page data:", err);
       } finally {
         setLoading(false);
       }
@@ -101,12 +103,14 @@ function Home() {
         (bookFavs.data || []).forEach(f => { favMap[`BOOK_${f.targetId}`] = true; });
         (galleryFavs.data || []).forEach(f => { favMap[`GALLERY_${f.targetId}`] = true; });
         setUserFavorites(favMap);
-      } catch { /* ignore */ }
+      } catch (err) { console.error("Failed to fetch user social data:", err); }
     };
     fetchUserSocial();
   }, [user]);
 
   const handleLike = async (targetType, targetId) => {
+    const actionKey = `like_${targetType}_${targetId}`;
+    if (busyActions.has(actionKey)) return;
     if (!user) {
       const anonKey = `anon_like_${targetType}_${targetId}`;
       const wasLiked = localStorage.getItem(anonKey) === "true";
@@ -115,19 +119,29 @@ function Home() {
       setUserLikes(prev => ({ ...prev, [key]: !wasLiked }));
       return;
     }
+    setBusyActions(prev => new Set(prev).add(actionKey));
+    const key = `${targetType}_${targetId}`;
+    const prevLiked = userLikes[key];
+    setUserLikes(prev => ({ ...prev, [key]: !prevLiked }));
     try {
       const res = await axios.post(`${API}/api/social/like`, { userId: user.userId, targetType, targetId });
-      const key = `${targetType}_${targetId}`;
       setUserLikes(prev => ({ ...prev, [key]: res.data.liked }));
       if (targetType === "BOOK") {
         setBookCounts(prev => ({ ...prev, likes: { ...prev.likes, [targetId]: res.data.count } }));
       } else {
         setGalleryCounts(prev => ({ ...prev, likes: { ...prev.likes, [targetId]: res.data.count } }));
       }
-    } catch { /* ignore */ }
+    } catch {
+      setUserLikes(prev => ({ ...prev, [key]: prevLiked }));
+      setActionError("Something went wrong. Please try again.");
+    } finally {
+      setBusyActions(prev => { const n = new Set(prev); n.delete(actionKey); return n; });
+    }
   };
 
   const handleFavorite = async (targetType, targetId) => {
+    const actionKey = `fav_${targetType}_${targetId}`;
+    if (busyActions.has(actionKey)) return;
     if (!user) {
       const anonKey = `anon_fav_${targetType}_${targetId}`;
       const wasFav = localStorage.getItem(anonKey) === "true";
@@ -136,11 +150,19 @@ function Home() {
       setUserFavorites(prev => ({ ...prev, [key]: !wasFav }));
       return;
     }
+    setBusyActions(prev => new Set(prev).add(actionKey));
+    const key = `${targetType}_${targetId}`;
+    const prevFav = userFavorites[key];
+    setUserFavorites(prev => ({ ...prev, [key]: !prevFav }));
     try {
       const res = await axios.post(`${API}/api/social/favorite`, { userId: user.userId, targetType, targetId });
-      const key = `${targetType}_${targetId}`;
       setUserFavorites(prev => ({ ...prev, [key]: res.data.favorited }));
-    } catch { /* ignore */ }
+    } catch {
+      setUserFavorites(prev => ({ ...prev, [key]: prevFav }));
+      setActionError("Something went wrong. Please try again.");
+    } finally {
+      setBusyActions(prev => { const n = new Set(prev); n.delete(actionKey); return n; });
+    }
   };
 
   const handleAdShare = async (ad) => {
@@ -184,8 +206,21 @@ function Home() {
     grouped[cat].push(book);
   });
 
+  // Auto-dismiss action error after 4 seconds
+  useEffect(() => {
+    if (!actionError) return;
+    const t = setTimeout(() => setActionError(""), 4000);
+    return () => clearTimeout(t);
+  }, [actionError]);
+
   return (
     <div className="home-container">
+      {actionError && (
+        <div className="home-action-error" role="alert" style={{ background: "#fef2f2", color: "#b91c1c", padding: "8px 16px", borderRadius: 8, margin: "8px 0", textAlign: "center", fontSize: 14 }}>
+          {actionError}
+          <button onClick={() => setActionError("")} style={{ marginLeft: 12, background: "none", border: "none", color: "#b91c1c", cursor: "pointer", fontWeight: "bold" }} aria-label="Dismiss">&times;</button>
+        </div>
+      )}
       {/* Quick nav links */}
       <div className="home-tags">
         <Link to="/magazine" className="home-tag-link">

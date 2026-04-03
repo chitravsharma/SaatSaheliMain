@@ -33,6 +33,7 @@ export default function Marketplace() {
   const [image1, setImage1] = useState("");
   const [image2, setImage2] = useState("");
   const [uploading, setUploading] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   const fetchListings = async () => {
     setLoading(true);
@@ -86,6 +87,7 @@ export default function Marketplace() {
     if (!price.trim()) { setMessage("Price is required"); return; }
     if (!contactInfo.trim()) { setMessage("Contact info is required"); return; }
 
+    setSaving(true);
     const body = {
       userId,
       title: title.trim(),
@@ -111,6 +113,8 @@ export default function Marketplace() {
       if (userId) fetchMyListings();
     } catch (err) {
       setMessage(err.response?.data?.error || "Failed to save listing");
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -216,7 +220,7 @@ export default function Marketplace() {
         <Link to="/policies" className="mp-policy-link"> Read full policies</Link>
       </p>
 
-      {message && <div className="mp-message" onClick={() => setMessage("")}>{message}</div>}
+      {message && <div className="mp-message" onClick={() => setMessage("")} role="status">{message}</div>}
 
       <div className="mp-section-card">
         {/* Tabs */}
@@ -304,7 +308,7 @@ export default function Marketplace() {
                   </div>
                 </div>
                 <div className="mp-form-actions">
-                  <button className="bm-btn bm-btn-create" onClick={handleSave} disabled={uploading}>
+                  <button className="bm-btn bm-btn-create" onClick={handleSave} disabled={saving || uploading}>
                     {editingId ? "Update Listing" : "Publish Listing"}
                   </button>
                   <button className="bm-btn bm-btn-back" onClick={resetForm}>Cancel</button>
