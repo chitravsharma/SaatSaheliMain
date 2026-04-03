@@ -39,15 +39,24 @@
   <body>
     <noscript>You need to enable JavaScript to run this app.</noscript>
     <script>
-      // Redirect non-hash paths into HashRouter format
-      // e.g. /SaatSaheliMain/contacts → /SaatSaheliMain/#/contacts
+      // Clean URL path — HashRouter only needs the base path
+      // Works on both saatsaheli.com (base="/") and GitHub Pages (base="/SaatSaheliMain")
       (function() {
-        var basePath = '/SaatSaheliMain';
         var loc = window.location;
         var path = loc.pathname;
-        if (path !== basePath && path !== basePath + '/' && path.startsWith(basePath + '/') && !loc.hash) {
-          var route = path.slice(basePath.length);
-          loc.replace(basePath + '/#' + route);
+        // Detect base path: "/SaatSaheliMain" on GH Pages, "/" on custom domain
+        var basePath = path.startsWith('/SaatSaheliMain') ? '/SaatSaheliMain' : '';
+        var cleanBase = basePath + '/';
+        var extraPath = path.slice(cleanBase.length);
+        // If there's extra path beyond the base (e.g. /doesnotexist or /SaatSaheliMain/doesnotexist)
+        if (extraPath && path !== cleanBase && path !== basePath) {
+          if (loc.hash) {
+            // Has hash — just clean the path, keep the hash
+            loc.replace(cleanBase + loc.hash);
+          } else {
+            // No hash — convert extra path to hash route
+            loc.replace(cleanBase + '#/' + extraPath);
+          }
         }
       })();
     </script>
