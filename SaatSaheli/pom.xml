@@ -113,6 +113,11 @@
 			<artifactId>cloudinary-http45</artifactId>
 			<version>1.38.0</version>
 		</dependency>
+		<!-- Spring Mail (Gmail SMTP for password reset & contact notifications) -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-mail</artifactId>
+		</dependency>
 		<!-- Stripe payments -->
 		<dependency>
 			<groupId>com.stripe</groupId>

@@ -1,45 +1,15 @@
-import React, { useState, useMemo, useEffect } from "react";
-import { useNavigate, useSearchParams, Link } from "react-router-dom";
+import React from "react";
+import { useSearchParams, Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../AuthContext";
 import { plans } from "./Pricing";
-import axios from "axios";
 import "./Checkout.css";
 
-const API = process.env.REACT_APP_API_URL;
-
 export default function Checkout() {
-  const { user, login } = useAuth();
+  const { user } = useAuth();
   const navigate = useNavigate();
   const [params] = useSearchParams();
   const planKey = params.get("plan");
-  const sessionId = params.get("session_id"); // returned from Stripe success URL
-
-  const plan = useMemo(() => plans.find((p) => p.key === planKey), [planKey]);
-
-  const [processing, setProcessing] = useState(false);
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState(false);
-
-  // If returning from Stripe with session_id, verify the session
-  useEffect(() => {
-    if (sessionId && planKey) {
-      const verify = async () => {
-        try {
-          const res = await axios.get(`${API}/api/payments/verify-session?sessionId=${sessionId}`);
-          if (res.data.status === "complete") {
-            // Update local user plan
-            const updated = { ...user, plan: res.data.planKey || planKey };
-            login(updated);
-            setSuccess(true);
-          }
-        } catch {
-          // Session verification failed — plan may have been updated via webhook
-          setSuccess(true);
-        }
-      };
-      verify();
-    }
-  }, [sessionId, planKey]);
+  const plan = plans.find((p) => p.key === planKey);
 
   if (!plan || plan.key === "Free") {
     return (
@@ -52,57 +22,6 @@ export default function Checkout() {
     );
   }
 
-  const handleCheckout = async () => {
-    if (!user) {
-      navigate("/Login");
-      return;
-    }
-    setProcessing(true);
-    setError("");
-
-    try {
-      // Create Stripe Checkout Session
-      const res = await axios.post(`${API}/api/payments/create-checkout-session`, {
-        userId: user.userId,
-        planKey: plan.key,
-      });
-
-      if (res.data.url) {
-        // Redirect to Stripe hosted checkout page
-        window.location.href = res.data.url;
-      } else {
-        setError("Failed to create checkout session. Please try again.");
-      }
-    } catch (err) {
-      const msg = err.response?.data?.error || "Payment processing failed. Please try again.";
-      setError(msg);
-      setProcessing(false);
-    }
-  };
-
-  if (success) {
-    return (
-      <div className="checkout-page">
-        <div className="checkout-card checkout-success">
-          <div className="checkout-success-icon">&#10003;</div>
-          <h2>Payment Successful!</h2>
-          <p>You are now on the <strong>{plan.name}</strong> plan.</p>
-          <p className="checkout-success-detail">
-            A confirmation has been sent to <strong>{user?.email}</strong>.
-          </p>
-          <div className="checkout-actions">
-            <button className="checkout-btn checkout-btn-primary" onClick={() => navigate("/account")}>
-              Go to Dashboard
-            </button>
-            <button className="checkout-btn checkout-btn-outline" onClick={() => navigate("/books")}>
-              Start Creating
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="checkout-page">
       <div className="checkout-header">
@@ -110,50 +29,41 @@ export default function Checkout() {
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="15 18 9 12 15 6"/></svg>
           Back to Plans
         </button>
-        <h1>Checkout</h1>
+        <h1>Upgrade to {plan.name}</h1>
       </div>
 
-      <div className="checkout-layout">
-        {/* Order summary */}
-        <div className="checkout-summary">
-          <h3>Order Summary</h3>
-          <div className="checkout-plan-info">
-            <span className="checkout-plan-name">{plan.name}</span>
-            <span className="checkout-plan-price">{plan.price}<span className="checkout-plan-period">{plan.priceNote}</span></span>
-          </div>
-          <ul className="checkout-plan-features">
-            {plan.features.slice(0, 5).map((f, i) => (
-              <li key={i}><span className="checkout-check">&#10003;</span> {f}</li>
-            ))}
-            {plan.features.length > 5 && <li className="checkout-more">+ {plan.features.length - 5} more features</li>}
-          </ul>
-          <div className="checkout-total">
-            <span>Total</span>
-            <span className="checkout-total-amount">{plan.price}{plan.priceNote}</span>
-          </div>
-        </div>
-
-        {/* Payment section */}
-        <div className="checkout-card">
-          <h3>Secure Payment</h3>
-          <p className="checkout-stripe-note">
-            You will be redirected to Stripe's secure payment page to complete your purchase.
-            Your payment information is handled entirely by Stripe — we never see your card details.
+      <div className="checkout-card" style={{ maxWidth: 560, margin: '0 auto' }}>
+        <div style={{ textAlign: 'center', padding: '20px 0' }}>
+          <div style={{ fontSize: '3rem', marginBottom: 16 }}>&#9993;</div>
+          <h2 style={{ marginBottom: 12 }}>Contact Us to Upgrade</h2>
+          <p style={{ color: 'var(--text-muted, #9ca3af)', fontSize: '1.05rem', lineHeight: 1.7, marginBottom: 24 }}>
+            We're currently setting up online payments. To upgrade to the{" "}
+            <strong>{plan.name} ({plan.price}{plan.priceNote || ""})</strong> plan,
+            please reach out to us and our team will activate your plan.
           </p>
 
-          {error && <div className="checkout-error">{error}</div>}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12, alignItems: 'center' }}>
+            <a
+              href="mailto:avikaventures.info@gmail.com?subject=Plan%20Upgrade%20Request%20-%20{planKey}&body=Hi%2C%0A%0AI%20would%20like%20to%20upgrade%20to%20the%20{planKey}%20plan.%0A%0AMy%20account%20email%3A%20{userEmail}%0A%0AThank%20you!"
+              className="checkout-btn checkout-btn-primary"
+              style={{ textDecoration: 'none', display: 'inline-block' }}
+              onClick={(e) => {
+                // Build the mailto properly with actual values
+                e.preventDefault();
+                const subject = encodeURIComponent(`Plan Upgrade Request - ${plan.name}`);
+                const body = encodeURIComponent(`Hi,\n\nI would like to upgrade to the ${plan.name} plan (${plan.price}${plan.priceNote || ""}).\n\nMy account email: ${user?.email || ""}\n\nThank you!`);
+                window.location.href = `mailto:avikaventures.info@gmail.com?subject=${subject}&body=${body}`;
+              }}
+            >
+              Email Us to Upgrade
+            </a>
+            <Link to="/contacts" className="checkout-btn checkout-btn-outline" style={{ textDecoration: 'none' }}>
+              Go to Contact Page
+            </Link>
+          </div>
 
-          <button
-            className="checkout-btn checkout-btn-primary checkout-btn-full"
-            onClick={handleCheckout}
-            disabled={processing}
-          >
-            {processing ? "Redirecting to Stripe..." : `Pay ${plan.price}${plan.priceNote || ""}`}
-          </button>
-
-          <p className="checkout-secure-note">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
-            Powered by Stripe. PCI-DSS compliant. Your payment is encrypted and secure.
+          <p style={{ marginTop: 24, fontSize: '0.9rem', color: 'var(--text-muted, #9ca3af)' }}>
+            We typically respond within 24 hours.
           </p>
         </div>
       </div>

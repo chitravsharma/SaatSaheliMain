@@ -6,6 +6,7 @@ import com.SaatSaheli.spring.repository.LoginRepository;
 import com.SaatSaheli.spring.repository.UserRepository;
 import com.SaatSaheli.spring.util.JwtUtil;
 import com.SaatSaheli.spring.util.RateLimiter;
+import com.SaatSaheli.spring.service.EmailService;
 import com.SaatSaheli.spring.util.RoleUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,6 +35,9 @@ public class AuthController {
 
     @Autowired
     private RateLimiter rateLimiter;
+
+    @Autowired
+    private EmailService emailService;
 
     private static final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
@@ -317,9 +321,8 @@ public class AuthController {
             loginRecord.setPassword(passwordEncoder.encode(tempPassword));
             loginRepo.save(loginRecord);
 
-            // TODO: Send tempPassword via email (e.g., SendGrid, SES, etc.)
-            // For now, log it server-side only — NEVER return in response
-            System.out.println("[SECURITY] Temp password generated for " + email + " — integrate email service to deliver");
+            // Send temp password via email
+            emailService.sendPasswordResetEmail(email, tempPassword);
 
             return ResponseEntity.ok(safeResponse);
 

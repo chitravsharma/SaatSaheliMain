@@ -38,6 +38,19 @@
   </head>
   <body>
     <noscript>You need to enable JavaScript to run this app.</noscript>
+    <script>
+      // Redirect non-hash paths into HashRouter format
+      // e.g. /SaatSaheliMain/contacts → /SaatSaheliMain/#/contacts
+      (function() {
+        var basePath = '/SaatSaheliMain';
+        var loc = window.location;
+        var path = loc.pathname;
+        if (path !== basePath && path !== basePath + '/' && path.startsWith(basePath + '/') && !loc.hash) {
+          var route = path.slice(basePath.length);
+          loc.replace(basePath + '/#' + route);
+        }
+      })();
+    </script>
     <div id="root"></div>
     <!--
       This HTML file is a template.

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useNavigate, useSearchParams, useLocation } from "react-router-dom";
+import { useNavigate, useSearchParams, useLocation, Link } from "react-router-dom";
 import { GoogleLogin, GoogleOAuthProvider } from "@react-oauth/google";
 import axios from "axios";
 import { useAuth } from "../AuthContext";
@@ -28,9 +28,7 @@ export default function Login() {
 
   // Forgot password fields
   const [forgotEmail, setForgotEmail] = useState("");
-  const [tempPassword, setTempPassword] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmNewPassword, setConfirmNewPassword] = useState("");
+  const [forgotSent, setForgotSent] = useState(false);
 
   // Signup fields
   const [firstName, setFirstName] = useState("");
@@ -149,45 +147,11 @@ export default function Login() {
     }
     setLoading(true);
     try {
-      const res = await axios.post(`${API_BASE}/forgot-password`, { email: forgotEmail.trim() });
-      if (res.data.tempPassword) {
-        setTempPassword(res.data.tempPassword);
-        setSuccess("A temporary password has been generated. Use it to set your new password below.");
-      } else {
-        setSuccess(res.data.message || "If an account exists, a reset link has been sent.");
-      }
+      await axios.post(`${API_BASE}/forgot-password`, { email: forgotEmail.trim() });
+      setForgotSent(true);
+      setSuccess("If an account with that email exists, you will receive password reset instructions via email.");
     } catch (err) {
       setError(err.response?.data?.error || "Failed to process request.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleResetPassword = async (e) => {
-    e.preventDefault();
-    setError("");
-    if (!newPassword || newPassword.length < 6) {
-      setError("New password must be at least 6 characters.");
-      return;
-    }
-    if (newPassword !== confirmNewPassword) {
-      setError("Passwords do not match.");
-      return;
-    }
-    setLoading(true);
-    try {
-      await axios.post(`${API_BASE}/reset-password`, {
-        email: forgotEmail.trim(),
-        oldPassword: tempPassword,
-        newPassword,
-      });
-      setSuccess("Password reset successfully! You can now log in with your new password.");
-      setTempPassword("");
-      setNewPassword("");
-      setConfirmNewPassword("");
-      setTimeout(() => switchMode("login"), 2000);
-    } catch (err) {
-      setError(err.response?.data?.error || "Failed to reset password.");
     } finally {
       setLoading(false);
     }
@@ -326,11 +290,22 @@ export default function Login() {
           {mode === "forgot" && (
             <>
               <h2>Reset Password</h2>
-              {!tempPassword ? (
+              {forgotSent ? (
+                <div className="auth-form">
+                  {success && <div className="auth-success" role="status">{success}</div>}
+                  <p className="auth-forgot-info">
+                    Check your email for password reset instructions. If you don't see it, check your spam folder.
+                  </p>
+                  <div className="auth-switch">
+                    <button onClick={() => { switchMode("login"); setForgotSent(false); }}>
+                      Back to Login
+                    </button>
+                  </div>
+                </div>
+              ) : (
                 <form className="auth-form" onSubmit={handleForgotPassword}>
                   {error && <div className="auth-error" role="alert">{error}</div>}
-                  {success && <div className="auth-success" role="status">{success}</div>}
-                  <p className="auth-forgot-info">Enter your email address and we'll send you a temporary password.</p>
+                  <p className="auth-forgot-info">Enter your email address and we'll send you password reset instructions.</p>
                   <div className="auth-field">
                     <label htmlFor="forgot-email">Email</label>
                     <input
@@ -346,50 +321,13 @@ export default function Login() {
                   <button type="submit" className="auth-btn auth-btn-primary" disabled={loading}>
                     {loading ? "Sending..." : "Send Reset Link"}
                   </button>
-                </form>
-              ) : (
-                <form className="auth-form" onSubmit={handleResetPassword}>
-                  {error && <div className="auth-error" role="alert">{error}</div>}
-                  {success && <div className="auth-success" role="status">{success}</div>}
-                  <div className="auth-temp-password">
-                    <p>Your temporary password:</p>
-                    <code className="auth-temp-code">{tempPassword}</code>
+                  <div className="auth-switch">
+                    <button onClick={() => switchMode("login")}>
+                      Back to Login
+                    </button>
                   </div>
-                  <div className="auth-field">
-                    <label htmlFor="new-password">New Password</label>
-                    <input
-                      id="new-password"
-                      type="password"
-                      placeholder="Enter new password (min 6 chars)"
-                      value={newPassword}
-                      onChange={(e) => setNewPassword(e.target.value)}
-                      required
-                      minLength={6}
-                      autoComplete="new-password"
-                    />
-                  </div>
-                  <div className="auth-field">
-                    <label htmlFor="confirm-new-password">Confirm New Password</label>
-                    <input
-                      id="confirm-new-password"
-                      type="password"
-                      placeholder="Confirm new password"
-                      value={confirmNewPassword}
-                      onChange={(e) => setConfirmNewPassword(e.target.value)}
-                      required
-                      autoComplete="new-password"
-                    />
-                  </div>
-                  <button type="submit" className="auth-btn auth-btn-primary" disabled={loading}>
-                    {loading ? "Resetting..." : "Set New Password"}
-                  </button>
                 </form>
               )}
-              <div className="auth-switch">
-                <button onClick={() => { switchMode("login"); setTempPassword(""); }}>
-                  Back to Login
-                </button>
-              </div>
             </>
           )}
 
@@ -464,7 +402,10 @@ export default function Login() {
                     <option value="Gold">Gold Member — $19/month</option>
                     <option value="Creator">Creator / Pro — $39/month</option>
                   </select>
-                  <a href="/pricing" target="_blank" rel="noopener noreferrer" className="auth-plan-link">View plan details</a>
+                  {selectedPlan !== "Free" && (
+                    <p className="auth-plan-note">Paid plans require manual activation. Contact us at <a href="mailto:avikaventures.info@gmail.com">avikaventures.info@gmail.com</a> after signup.</p>
+                  )}
+                  <Link to="/pricing" className="auth-plan-link">View plan details</Link>
                 </div>
 
                 <div className="auth-field">
@@ -502,7 +443,7 @@ export default function Login() {
                       onChange={(e) => setAcceptedTerms(e.target.checked)}
                       className="auth-terms-checkbox"
                     />
-                    <span>I accept the <a href="/policies" target="_blank" rel="noopener noreferrer">Terms and Conditions</a> and <a href="/policies" target="_blank" rel="noopener noreferrer">Content Creation Policy</a></span>
+                    <span>I accept the <Link to="/policies">Terms and Conditions</Link> and <Link to="/policies">Content Creation Policy</Link></span>
                   </label>
                 </div>
 

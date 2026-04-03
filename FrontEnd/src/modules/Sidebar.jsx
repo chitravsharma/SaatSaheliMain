@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import siteLogo from './SaatSaheliLogo.jpg';
 import './sidebar.css'; // Import the CSS file for styling
 
@@ -13,9 +14,9 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
 	  		  <img src={siteLogo} className="App-logo2" alt="SaatSaheli logo" />
 	  	 </div>
         <ul className="grid-item">
-          <li><a href="/">Home</a></li>
-          <li><a href="/about">About</a></li>
-          <li><a href="/contact">Contact</a></li>
+          <li><Link to="/" onClick={toggleSidebar}>Home</Link></li>
+          <li><Link to="/about" onClick={toggleSidebar}>About</Link></li>
+          <li><Link to="/contacts" onClick={toggleSidebar}>Contact</Link></li>
         </ul>
       </nav>
     </div>

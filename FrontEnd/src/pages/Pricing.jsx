@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../AuthContext";
 import "./Pricing.css";
@@ -110,6 +110,14 @@ export default function Pricing() {
   const { user, userPlan } = useAuth();
   const navigate = useNavigate();
   const [selectedPlan, setSelectedPlan] = useState(null);
+  const [showContact, setShowContact] = useState(false);
+  const bannerRef = useRef(null);
+
+  useEffect(() => {
+    if (showContact && bannerRef.current) {
+      bannerRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  }, [showContact, selectedPlan]);
 
   const handleSelect = (plan) => {
     if (plan.key === "Free") return;
@@ -117,19 +125,16 @@ export default function Pricing() {
       navigate("/Login");
       return;
     }
-    if (plan.key === userPlan) return; // already on this plan
+    if (plan.key === userPlan) return;
     setSelectedPlan(plan.key);
-    navigate(`/checkout?plan=${plan.key}`);
+    setShowContact(true);
   };
 
   const getCtaLabel = (plan) => {
-    if (!user) return plan.cta;
+    if (!user) return plan.key === "Free" ? plan.cta : "Contact Us to Upgrade";
     if (plan.key === userPlan) return "Current Plan";
-    const planOrder = ["Free", "Premium", "Gold", "Creator"];
-    const currentIdx = planOrder.indexOf(userPlan);
-    const targetIdx = planOrder.indexOf(plan.key);
-    if (targetIdx < currentIdx) return "Downgrade";
-    return plan.cta;
+    if (plan.key === "Free") return plan.cta;
+    return "Contact Us to Upgrade";
   };
 
   return (
@@ -138,6 +143,17 @@ export default function Pricing() {
         <h1>Choose Your Plan</h1>
         <p>Start free and upgrade as you grow. Every plan includes access to our book creation tools.</p>
       </div>
+
+      {showContact && (
+        <div className="pricing-contact-banner" ref={bannerRef}>
+          <p>
+            To upgrade to the <strong>{selectedPlan}</strong> plan, please contact us at{" "}
+            <a href="mailto:avikaventures.info@gmail.com">avikaventures.info@gmail.com</a>{" "}
+            or visit our <Link to="/contacts">Contact page</Link>. Our team will set up your plan.
+          </p>
+          <button className="pricing-contact-close" onClick={() => setShowContact(false)} aria-label="Close">&times;</button>
+        </div>
+      )}
 
       <div className="pricing-grid">
         {plans.map((plan) => {

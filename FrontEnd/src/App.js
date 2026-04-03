@@ -35,6 +35,7 @@ import VisitorTracker from './components/VisitorTracker';
 import MaintenanceBanner from './components/MaintenanceBanner';
 import Checkout from './pages/Checkout';
 import Marketplace from './pages/Marketplace';
+import NotFound from './pages/NotFound';
 
 
 function BookManagerWrapper() {
@@ -79,6 +80,7 @@ function App() {
           <Route path="/manual" element={<UserManual />} />
           <Route path="/admin-manual" element={<ProtectedRoute requiredRole="ADMIN"><AdminManual /></ProtectedRoute>} />
           <Route path="/logout" element={<Logout />} />
+          <Route path="*" element={<NotFound />} />
         </Routes>
         </DownloadProtection>
       </main>
