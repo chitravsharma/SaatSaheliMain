@@ -398,6 +398,80 @@ Test the following in each browser:
 
 ---
 
+## SECTION 10: FUNCTIONAL TEST ISSUES — FIX STATUS
+
+All 33 issues from `FUNCTIONAL_TEST_ISSUES.md` (static code audit, April 3, 2026).
+
+### CRITICAL (5/5 Fixed)
+
+| # | Issue | Status | Fix Summary |
+|---|-------|--------|-------------|
+| 01 | Contact form redirects to Google Form | FIXED | Real in-app form + backend `ContactController` + email notification to admin |
+| 02 | Temp password exposed in browser | FIXED | Removed from UI; email delivery via Gmail SMTP; forced password change on temp login; old password stays valid if user remembers it |
+| 03 | Sidebar `/contact` broken link | FIXED | Changed to `/contacts` + converted `<a>` to `<Link>` |
+| 04 | No 404 page for invalid URLs | FIXED | `NotFound.jsx` + catch-all route + hash URL redirect; login-aware buttons |
+| 05 | Stripe price IDs are placeholders | FIXED | Replaced Stripe checkout with "Contact Us to Upgrade" flow; admin manually upgrades users |
+
+### HIGH (8/8 Fixed)
+
+| # | Issue | Status | Fix Summary |
+|---|-------|--------|-------------|
+| 11 | Sidebar uses `<a>` tags instead of `<Link>` | FIXED | Converted to React Router `<Link>`, added `onClick={toggleSidebar}` |
+| 12 | Login page internal links open new tab | FIXED | Removed `target="_blank"`, converted to `<Link>` |
+| 13 | TermsGate internal link opens new tab | FIXED | Removed `target="_blank"` from policies link |
+| 16 | Silent error swallowing on social actions | FIXED | Error feedback added across Home, Articles, GalleryView, Chat, Account, ReadBook |
+| 25 | 8 CSS files missing tablet breakpoints | FIXED | Added `@media (max-width: 768px)` to Chat, Checkout, Marketplace, GalleryView, About, CategoryPage, MagazineEditor |
+| 26 | Sidebar fixed 250px not responsive | FIXED | Full-width overlay on mobile with drop shadow |
+| 27 | MagazineEditor 4-col grid no breakpoint | FIXED | 2 columns at 768px, 1 column at 480px |
+| 28 | Flipbook buttons below 44px touch target | FIXED | Increased to `min-width: 44px; min-height: 44px` on mobile |
+
+### MEDIUM (15/17 Fixed, 1 Skipped, 1 Pending)
+
+| # | Issue | Status | Fix Summary |
+|---|-------|--------|-------------|
+| 06 | Weak password requirements | FIXED | 8+ chars, uppercase, number, special character required |
+| 07 | Save button not disabled during submit | FIXED | `disabled={saving \|\| uploading}` on Marketplace |
+| 08 | Price field accepts non-numeric input | SKIPPED | Intentional — price allows "Free", "Best Offer", "$25" text values |
+| 09 | No file size validation on uploads | FIXED | 5MB limit on gallery and profile image uploads |
+| 10 | Articles can publish empty content | FIXED | 50+ characters required to publish; drafts still allowed empty |
+| 14 | BookManager uses `<a>` for internal routes | FIXED | Converted to `<Link to="/pricing">` |
+| 17 | Like/Favorite no double-click protection | FIXED | `busyActions` guard prevents duplicate API calls |
+| 18 | Optimistic UI no rollback on failure | FIXED | `.catch()` reverts UI state for likes/favorites |
+| 19 | Comment form silent redirect to login | FIXED | Shows "Please log in to comment" message before redirect |
+| 20 | Lightbox buttons missing aria-labels | FIXED | Added `aria-label="Close"`, `"Previous image"`, `"Next image"` |
+| 21 | ImageEditor shape buttons missing aria-labels | FIXED | Added `aria-label={s.label}` to each shape button |
+| 22 | Clickable divs missing role/keyboard | FIXED | Added `role="button"`, `tabIndex={0}`, `onKeyDown` handler |
+| 23 | Modals missing Escape key handler | FIXED | Added `useEffect` keydown listener on ImageEditor |
+| 29 | MagazineEditor font sizes 9-10px | FIXED | Increased minimum to 12px |
+| 30 | Pricing grid overflows tablets | FIXED | 2-column grid at 900px breakpoint |
+| 31 | AdminDashboard form fixed 400px width | FIXED | Changed to `width: 100%; max-width: 400px` |
+| 33 | Chat sidebar 280px too wide on mobile | FIXED | Reduced to 220px on tablet, collapses on phone |
+
+> **PENDING ISSUE:**
+
+| # | Issue | Priority | Status | Details |
+|---|-------|----------|--------|---------|
+| **32** | **Inconsistent CSS breakpoints across files** | **MEDIUM** | **NOT FIXED** | Breakpoints vary across 30+ CSS files (600px, 700px, 768px, 860px, 1024px). Standardizing to consistent values (e.g., 480px, 768px, 1024px, 1280px) requires a large-scale refactor across every CSS file. **Risk: LOW** — existing breakpoints work correctly on each page, they're just not uniform. **Recommendation:** Address during a dedicated CSS cleanup sprint, not as a hotfix. |
+
+### LOW (2/3 Fixed, 1 Already Done)
+
+| # | Issue | Status | Fix Summary |
+|---|-------|--------|-------------|
+| 15 | Dead code — duplicate LoginPage.js | FIXED | Confirmed unused, deleted |
+| 24 | Empty gallery shows no message | ALREADY DONE | Was already implemented (`gv-empty` class) |
+
+### Overall Summary
+
+| Category | Total | Fixed | Skipped | Pending | Already Done |
+|----------|-------|-------|---------|---------|-------------|
+| CRITICAL | 5 | 5 | 0 | 0 | 0 |
+| HIGH | 8 | 8 | 0 | 0 | 0 |
+| MEDIUM | 17 | 15 | 1 | **1 (ISSUE-32)** | 0 |
+| LOW | 3 | 2 | 0 | 0 | 1 |
+| **TOTAL** | **33** | **30** | **1** | **1** | **1** |
+
+---
+
 ## TEST SIGN-OFF
 
 | Role | Name | Date | Signature |
