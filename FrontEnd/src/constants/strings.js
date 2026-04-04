@@ -169,7 +169,7 @@ export const en = {
   },
 
   login: {
-    brand: "Saat Saheli",
+    brand: "SAA7 SAHELI",
     tagline: "Your digital book platform",
     logInHeading: "Log In",
     createAccountHeading: "Create Account",

@@ -283,7 +283,7 @@ function Home() {
 
       {/* 1. Recently Added Books (top) */}
       {!loading && (
-        <div className="home-section">
+        <div className="home-section home-section-books">
           <h2 className="home-section-heading">Recently Added Books</h2>
 
           {recentBooks.length === 0 && (
@@ -385,7 +385,7 @@ function Home() {
 
       {/* 2. Photo Galleries */}
       {!loading && galleries.length > 0 && (
-        <div className="home-section">
+        <div className="home-section home-section-galleries">
           <h2 className="home-section-heading">Photo Galleries</h2>
           <div className="home-gallery-row">
             {galleries.map((gallery) => {
@@ -436,7 +436,7 @@ function Home() {
 
       {/* 3. Blogs & Articles */}
       {!loading && recentArticles.length > 0 && (
-        <div className="home-section">
+        <div className="home-section home-section-articles">
           <h2 className="home-section-heading">Blogs & Articles</h2>
           <div className="home-articles-row">
             {recentArticles.map((article) => {

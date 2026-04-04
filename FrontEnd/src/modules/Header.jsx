@@ -55,9 +55,9 @@ const Header = () => {
           <Link to="/" className="header-logo" onClick={closeMobileNav}>
             <img src={siteLogo} className="header-logo-img" alt={strings.header.logoAlt} />
             <div className="header-brand">
-              <span className="header-site-name">Saat Saheli</span>
-              <span className="header-site-name-hi">सात सहेली</span>
-              <span className="header-tagline">A Community for Passion and Creativity!</span>
+              <span className="header-site-name">{language === 'hi' ? '' : 'SAA7 SAHELI'}</span>
+              {language === 'hi' && <span className="header-site-name-hi">सात सहेली</span>}
+              <span className="header-tagline">{language === 'hi' ? 'जुनून और रचनात्मकता का समुदाय!' : 'A Community for Passion and Creativity!'}</span>
             </div>
           </Link>
           <button

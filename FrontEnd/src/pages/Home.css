@@ -23,19 +23,19 @@
 .home-tags {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px 18px;
+  gap: 2px 14px;
   justify-content: center;
-  margin-bottom: 32px;
+  margin-bottom: 20px;
 }
 
 .home-tag-link {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
+  gap: 4px;
   color: #997a1e;
-  font-size: 0.88rem;
-  font-weight: 700;
-  padding: 4px 0;
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 2px 0;
   text-decoration: none;
   border-bottom: 1px solid transparent;
   transition: color 0.2s, border-color 0.2s;
@@ -54,17 +54,63 @@
 }
 
 .home-tag-icon {
-  font-size: 1.1rem;
+  font-size: 0.95rem;
+  display: inline-flex;
 }
 
 /* ── Section (platform card) ── */
 .home-section {
   margin-bottom: 32px;
-  background: var(--bg-card);
   border: 1px solid var(--border-default);
   border-radius: 14px;
   padding: 24px 20px;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+  position: relative;
+  overflow: hidden;
+  background: var(--bg-card);
+}
+
+/* ── Books section — diamond lattice with warm glow ── */
+.home-section-books {
+  background-color: #fffcf7;
+  background-image:
+    linear-gradient(135deg, rgba(217, 119, 6, 0.08) 25%, transparent 25%),
+    linear-gradient(225deg, rgba(217, 119, 6, 0.08) 25%, transparent 25%),
+    linear-gradient(45deg, rgba(217, 119, 6, 0.08) 25%, transparent 25%),
+    linear-gradient(315deg, rgba(217, 119, 6, 0.08) 25%, transparent 25%),
+    radial-gradient(ellipse at 0% 100%, rgba(251, 191, 36, 0.15) 0%, transparent 60%),
+    radial-gradient(ellipse at 100% 0%, rgba(217, 119, 6, 0.1) 0%, transparent 60%);
+  background-size: 40px 40px, 40px 40px, 40px 40px, 40px 40px, 100% 100%, 100% 100%;
+  background-position: 0 0, 0 20px, 20px -20px, -20px 0px, 0 0, 0 0;
+  border-left: 4px solid #d97706;
+}
+
+/* ── Galleries section — hexagonal mosaic with emerald glow ── */
+.home-section-galleries {
+  background-color: #f7fdfb;
+  background-image:
+    radial-gradient(circle at 0% 50%, rgba(16, 185, 129, 0.12) 0%, transparent 50%),
+    radial-gradient(circle at 100% 50%, rgba(5, 150, 105, 0.08) 0%, transparent 50%),
+    radial-gradient(circle, rgba(16, 185, 129, 0.15) 2px, transparent 2px),
+    radial-gradient(circle, rgba(5, 150, 105, 0.1) 1.5px, transparent 1.5px),
+    linear-gradient(60deg, rgba(16, 185, 129, 0.04) 25%, transparent 25%, transparent 75%, rgba(16, 185, 129, 0.04) 75%),
+    linear-gradient(120deg, rgba(16, 185, 129, 0.04) 25%, transparent 25%, transparent 75%, rgba(16, 185, 129, 0.04) 75%);
+  background-size: 100% 100%, 100% 100%, 32px 32px, 32px 32px, 48px 28px, 48px 28px;
+  background-position: 0 0, 0 0, 0 0, 16px 16px, 0 0, 0 14px;
+  border-left: 4px solid #10b981;
+}
+
+/* ── Articles/Blogs section — overlapping circles with blue glow ── */
+.home-section-articles {
+  background-color: #f7f9ff;
+  background-image:
+    radial-gradient(ellipse at 100% 100%, rgba(37, 99, 235, 0.12) 0%, transparent 50%),
+    radial-gradient(ellipse at 0% 0%, rgba(99, 102, 241, 0.08) 0%, transparent 50%),
+    radial-gradient(circle at 50% 50%, transparent 20px, rgba(37, 99, 235, 0.04) 20px, rgba(37, 99, 235, 0.04) 21px, transparent 21px),
+    radial-gradient(circle at 0% 50%, transparent 20px, rgba(99, 102, 241, 0.04) 20px, rgba(99, 102, 241, 0.04) 21px, transparent 21px),
+    radial-gradient(circle at 50% 0%, transparent 20px, rgba(37, 99, 235, 0.04) 20px, rgba(37, 99, 235, 0.04) 21px, transparent 21px);
+  background-size: 100% 100%, 100% 100%, 50px 50px, 50px 50px, 50px 50px;
+  border-left: 4px solid #2563eb;
 }
 
 .home-section-heading {
@@ -580,9 +626,24 @@
     gap: 8px;
   }
 
+  .home-tags {
+    gap: 0px 10px;
+    margin-bottom: 12px;
+  }
+
   .home-tag-link {
+    font-size: 0.75rem;
+    padding: 0;
+    line-height: 1.2;
+  }
+
+  .home-tag-icon {
     font-size: 0.8rem;
-    padding: 6px 14px;
+  }
+
+  .home-tag-link svg {
+    width: 13px;
+    height: 13px;
   }
 
   .home-section-heading {

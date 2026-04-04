@@ -267,6 +267,11 @@
   padding: 20px 0;
 }
 
+.auth-welcome h1 {
+  font-family: 'Righteous', sans-serif;
+  letter-spacing: 0.05em;
+}
+
 .auth-welcome p {
   color: var(--text-muted);
   margin: 4px 0 0 0;
