@@ -429,12 +429,37 @@ const AdminDashboard = () => {
         );
     });
 
+    const handleExport = async (bookId, format) => {
+        setMessage(`Exporting ${format.toUpperCase()}...`);
+        try {
+            const res = await axios.get(`${API}/api/books/${bookId}/export/${format}`, {
+                responseType: 'blob',
+                headers: { Authorization: `Bearer ${user.token}` },
+            });
+            const url = window.URL.createObjectURL(new Blob([res.data]));
+            const link = document.createElement('a');
+            link.href = url;
+            const disposition = res.headers['content-disposition'];
+            const filename = disposition ? disposition.split('filename=')[1]?.replace(/"/g, '') : `book_${bookId}.${format}`;
+            link.setAttribute('download', filename);
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            window.URL.revokeObjectURL(url);
+            setMessage(`${format.toUpperCase()} downloaded!`);
+        } catch (err) {
+            setMessage(`Export failed: ${err.response?.data?.error || err.message}`);
+        }
+    };
+
     const handleBookAction = (bookId, action, status) => {
         switch (action) {
             case "archive": archiveBook(bookId); break;
             case "delete": deleteBook(bookId); break;
             case "recover": recoverBook(bookId); break;
             case "purge": purgeBook(bookId); break;
+            case "export-pdf": handleExport(bookId, "pdf"); break;
+            case "export-docx": handleExport(bookId, "docx"); break;
             default: break;
         }
     };
@@ -697,6 +722,12 @@ const AdminDashboard = () => {
                                                 )}
                                                 {isSuperAdmin && (
                                                     <option value="purge">Purge</option>
+                                                )}
+                                                {isSuperAdmin && (
+                                                    <>
+                                                        <option value="export-pdf">Export PDF</option>
+                                                        <option value="export-docx">Export DOCX</option>
+                                                    </>
                                                 )}
                                             </select>
                                         </td>

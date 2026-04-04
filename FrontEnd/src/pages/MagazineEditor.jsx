@@ -375,6 +375,31 @@ const MagazineEditor = () => {
     }
   };
 
+  /* ── Export magazine as PDF/DOCX ── */
+  const handleMagExport = async (format) => {
+    if (!magazine) return;
+    showMsg(`Exporting ${format.toUpperCase()}...`);
+    try {
+      const res = await axios.get(`${API}/api/books/${magazine.id}/export/${format}`, {
+        responseType: 'blob',
+        headers: { Authorization: `Bearer ${user.token}` },
+      });
+      const url = window.URL.createObjectURL(new Blob([res.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      const disposition = res.headers['content-disposition'];
+      const filename = disposition ? disposition.split('filename=')[1]?.replace(/"/g, '') : `magazine_${magazine.id}.${format}`;
+      link.setAttribute('download', filename);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+      showMsg(`${format.toUpperCase()} downloaded!`);
+    } catch (e) {
+      showMsg(`Export failed: ${e.response?.data?.error || e.message}`);
+    }
+  };
+
   /* ── Switch to a specific edition ── */
   const switchToEdition = async (editionId) => {
     try {
@@ -508,6 +533,12 @@ const MagazineEditor = () => {
             <button className="mag-btn mag-btn-danger" onClick={handleUnpublish}>{s.unpublish}</button>
           )}
           <button className="mag-btn mag-btn-sm" onClick={handleNewEdition}>{s.newEdition}</button>
+          {magazine && (
+            <>
+              <button className="mag-btn mag-btn-sm" onClick={() => handleMagExport("pdf")} title="Export PDF">PDF</button>
+              <button className="mag-btn mag-btn-sm" onClick={() => handleMagExport("docx")} title="Export DOCX">DOCX</button>
+            </>
+          )}
         </div>
       </div>
       {message && <div className="mag-message">{message}</div>}

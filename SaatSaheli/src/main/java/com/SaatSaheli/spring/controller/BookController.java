@@ -3,12 +3,17 @@ package com.SaatSaheli.spring.controller;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import com.SaatSaheli.spring.model.Page;
+import com.SaatSaheli.spring.model.User;
+import com.SaatSaheli.spring.repository.UserRepository;
+import com.SaatSaheli.spring.service.ExportService;
+import com.SaatSaheli.spring.util.RoleUtil;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 
 import com.SaatSaheli.spring.model.Book;
@@ -25,6 +30,12 @@ public class BookController {
 
     @Autowired
     private DocumentExtractionService documentExtractionService;
+
+    @Autowired
+    private ExportService exportService;
+
+    @Autowired
+    private UserRepository userRepo;
 
     @GetMapping("/search")
     public ResponseEntity<?> searchBooks(
@@ -277,6 +288,73 @@ public class BookController {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(errorMap("Failed to fetch magazines: " + e.getMessage()));
+        }
+    }
+
+    /**
+     * GET /api/books/{bookId}/export/pdf — Export book as PDF (SUPER_ADMIN only)
+     */
+    @GetMapping("/{bookId}/export/pdf")
+    public ResponseEntity<?> exportBookPdf(@PathVariable Long bookId, HttpServletRequest request) {
+        return exportBook(bookId, "pdf", request);
+    }
+
+    /**
+     * GET /api/books/{bookId}/export/docx — Export book as DOCX (SUPER_ADMIN only)
+     */
+    @GetMapping("/{bookId}/export/docx")
+    public ResponseEntity<?> exportBookDocx(@PathVariable Long bookId, HttpServletRequest request) {
+        return exportBook(bookId, "docx", request);
+    }
+
+    private ResponseEntity<?> exportBook(Long bookId, String format, HttpServletRequest request) {
+        try {
+            // Verify SUPER_ADMIN
+            Object val = request.getAttribute("jwtUserId");
+            Long callerUserId = val instanceof Long ? (Long) val : null;
+            if (callerUserId == null) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorMap("Authentication required"));
+            }
+            Optional<User> callerOpt = userRepo.findById(callerUserId);
+            if (callerOpt.isEmpty() || !RoleUtil.isSuperAdmin(callerOpt.get().getRole())) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorMap("Super Admin access required"));
+            }
+
+            Book book = bookService.getBook(bookId);
+            if (book == null) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorMap("Book not found"));
+            }
+
+            List<Page> pages = book.getPages();
+            if (pages == null || pages.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorMap("Book has no pages"));
+            }
+
+            byte[] data;
+            String contentType;
+            String extension;
+
+            if ("docx".equalsIgnoreCase(format)) {
+                data = exportService.exportToDocx(book, pages);
+                contentType = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+                extension = "docx";
+            } else {
+                data = exportService.exportToPdf(book, pages);
+                contentType = "application/pdf";
+                extension = "pdf";
+            }
+
+            String filename = book.getTitle().replaceAll("[^a-zA-Z0-9\\-_ ]", "").trim().replaceAll("\\s+", "_") + "." + extension;
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.parseMediaType(contentType));
+            headers.setContentDisposition(ContentDisposition.attachment().filename(filename).build());
+            headers.setContentLength(data.length);
+
+            return new ResponseEntity<>(data, headers, HttpStatus.OK);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(errorMap("Failed to export book: " + e.getMessage()));
         }
     }
 
