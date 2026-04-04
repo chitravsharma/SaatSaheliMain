@@ -434,7 +434,7 @@ const AdminDashboard = () => {
         try {
             const res = await axios.get(`${API}/api/books/${bookId}/export/${format}`, {
                 responseType: 'blob',
-                headers: { Authorization: `Bearer ${user.token}` },
+                headers: { "X-User-Id": String(user.userId) },
             });
             const url = window.URL.createObjectURL(new Blob([res.data]));
             const link = document.createElement('a');
@@ -448,7 +448,13 @@ const AdminDashboard = () => {
             window.URL.revokeObjectURL(url);
             setMessage(`${format.toUpperCase()} downloaded!`);
         } catch (err) {
-            setMessage(`Export failed: ${err.response?.data?.error || err.message}`);
+            let msg = err.message;
+            if (err.response?.data instanceof Blob) {
+                try { const text = await err.response.data.text(); const json = JSON.parse(text); msg = json.error || text; } catch {}
+            } else if (err.response?.data?.error) {
+                msg = err.response.data.error;
+            }
+            setMessage(`Export failed: ${msg}`);
         }
     };
 

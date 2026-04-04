@@ -382,7 +382,7 @@ const MagazineEditor = () => {
     try {
       const res = await axios.get(`${API}/api/books/${magazine.id}/export/${format}`, {
         responseType: 'blob',
-        headers: { Authorization: `Bearer ${user.token}` },
+        headers: { "X-User-Id": String(user.userId) },
       });
       const url = window.URL.createObjectURL(new Blob([res.data]));
       const link = document.createElement('a');
@@ -396,7 +396,13 @@ const MagazineEditor = () => {
       window.URL.revokeObjectURL(url);
       showMsg(`${format.toUpperCase()} downloaded!`);
     } catch (e) {
-      showMsg(`Export failed: ${e.response?.data?.error || e.message}`);
+      let msg = e.message;
+      if (e.response?.data instanceof Blob) {
+        try { const text = await e.response.data.text(); const json = JSON.parse(text); msg = json.error || text; } catch {}
+      } else if (e.response?.data?.error) {
+        msg = e.response.data.error;
+      }
+      showMsg(`Export failed: ${msg}`);
     }
   };
 
