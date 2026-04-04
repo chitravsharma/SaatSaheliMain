@@ -250,9 +250,13 @@ public class BookService {
     /** Get the most recent non-deleted magazine */
     public Book getMagazine() {
         List<Book> mags = bookRepo.findByCategoryIgnoreCaseOrderByModifiedDateDesc("MAGAZINE");
+        // Prioritize PUBLISHED magazines, then fall back to any non-deleted
         Book mag = mags.stream()
-                .filter(m -> !"DELETED".equalsIgnoreCase(m.getStatus()))
-                .findFirst().orElse(null);
+                .filter(m -> "PUBLISHED".equalsIgnoreCase(m.getStatus()))
+                .findFirst()
+                .orElse(mags.stream()
+                        .filter(m -> !"DELETED".equalsIgnoreCase(m.getStatus()))
+                        .findFirst().orElse(null));
         if (mag == null) return null;
         mag.setPages(pageRepo.findByBookIdOrderByPageNumberAsc(mag.getId()));
         enrichWithCoverImages(List.of(mag));
