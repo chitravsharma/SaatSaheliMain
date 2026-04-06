@@ -252,6 +252,9 @@ function Account() {
               {strings.account.viewPublicProfile}
             </Link>
           )}
+          <Link to="/help-support" className="acct-profile-link acct-profile-link-secondary">
+            Help & Support
+          </Link>
         </div>
       </div>
 

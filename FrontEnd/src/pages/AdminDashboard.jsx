@@ -170,6 +170,13 @@ const AdminDashboard = () => {
         ));
     };
 
+    // Support Queries state
+    const [supportQueries, setSupportQueries] = useState([]);
+    const [supportLoading, setSupportLoading] = useState(false);
+    const [supportFilter, setSupportFilter] = useState("ALL");
+    const [supportSearch, setSupportSearch] = useState("");
+    const [expandedQueryId, setExpandedQueryId] = useState(null);
+
     // Analytics state
     const [analytics, setAnalytics] = useState(null);
     const [analyticsDays, setAnalyticsDays] = useState(7);
@@ -225,6 +232,36 @@ const AdminDashboard = () => {
         setLoading(false);
     }, [user?.userId]);
 
+    const fetchSupportQueries = useCallback(async () => {
+        setSupportLoading(true);
+        try {
+            const res = await axios.get(`${API}/api/contact`, { headers });
+            setSupportQueries(Array.isArray(res.data) ? res.data : []);
+        } catch { /* ignore */ }
+        setSupportLoading(false);
+    }, [user?.userId]);
+
+    const updateQueryStatus = async (queryId, newStatus) => {
+        try {
+            await axios.put(`${API}/api/contact/${queryId}/status`, { status: newStatus }, { headers });
+            setMessage("Status updated to " + newStatus.replace(/_/g, " "));
+            fetchSupportQueries();
+        } catch {
+            setMessage("Failed to update status");
+        }
+    };
+
+    const deleteQuery = async (queryId) => {
+        if (!window.confirm("Delete this support query permanently?")) return;
+        try {
+            await axios.delete(`${API}/api/contact/${queryId}`, { headers });
+            setMessage("Support query deleted");
+            fetchSupportQueries();
+        } catch {
+            setMessage("Failed to delete query");
+        }
+    };
+
     useEffect(() => {
         fetchStats();
     }, [fetchStats]);
@@ -235,7 +272,8 @@ const AdminDashboard = () => {
         if (tab === "articles") fetchArticles();
         if (tab === "analytics") fetchAnalytics();
         if (tab === "advertisements") fetchAdvertisements();
-    }, [tab, fetchUsers, fetchBooks, fetchArticles, fetchAnalytics, fetchAdvertisements]);
+        if (tab === "support") fetchSupportQueries();
+    }, [tab, fetchUsers, fetchBooks, fetchArticles, fetchAnalytics, fetchAdvertisements, fetchSupportQueries]);
 
     const changeRole = async (userId, newRole) => {
         try {
@@ -493,6 +531,9 @@ const AdminDashboard = () => {
                 </button>
                 <button className={tab === "maintenance" ? "active" : ""} onClick={() => setTab("maintenance")}>
                     Maintenance
+                </button>
+                <button className={tab === "support" ? "active" : ""} onClick={() => setTab("support")}>
+                    Support Queries
                 </button>
                 <button className={tab === "magazine" ? "active" : ""} onClick={() => setTab("magazine")}>
                     Magazine
@@ -1294,6 +1335,142 @@ const AdminDashboard = () => {
                     </div>
                 </div>
             )}
+            {tab === "support" && (() => {
+                const STATUS_OPTIONS = [
+                    { value: "NEW", label: "New", color: "#3498db" },
+                    { value: "IN_PROGRESS", label: "In Progress", color: "#f39c12" },
+                    { value: "IN_REVIEW", label: "In Review", color: "#9b59b6" },
+                    { value: "APPOINTMENT_SETUP", label: "Appointment Setup", color: "#1abc9c" },
+                    { value: "COMPLETED", label: "Completed", color: "#27ae60" },
+                    { value: "CANCELLED", label: "Cancelled", color: "#e74c3c" },
+                ];
+                const filtered = supportQueries.filter(q => {
+                    if (supportFilter !== "ALL" && q.status !== supportFilter) return false;
+                    if (supportSearch) {
+                        const s = supportSearch.toLowerCase();
+                        return (q.name || "").toLowerCase().includes(s)
+                            || (q.email || "").toLowerCase().includes(s)
+                            || (q.subject || "").toLowerCase().includes(s);
+                    }
+                    return true;
+                });
+                const statusCounts = {};
+                supportQueries.forEach(q => { statusCounts[q.status] = (statusCounts[q.status] || 0) + 1; });
+
+                return (
+                    <div>
+                        <h2>Support Queries ({supportQueries.length})</h2>
+
+                        {/* Status summary cards */}
+                        <div className="admin-stats-grid" style={{ marginBottom: 16 }}>
+                            {STATUS_OPTIONS.map(opt => (
+                                <div key={opt.value} className="stat-card" style={{ cursor: "pointer", borderLeft: `4px solid ${opt.color}` }}
+                                     onClick={() => setSupportFilter(supportFilter === opt.value ? "ALL" : opt.value)}>
+                                    <div className="stat-value">{statusCounts[opt.value] || 0}</div>
+                                    <div className="stat-label" style={{ color: opt.color }}>{opt.label}</div>
+                                </div>
+                            ))}
+                        </div>
+
+                        {/* Search and filter */}
+                        <div style={{ display: "flex", gap: 12, marginBottom: 16, flexWrap: "wrap", alignItems: "center" }}>
+                            <input
+                                type="text"
+                                placeholder="Search by name, email, or subject..."
+                                value={supportSearch}
+                                onChange={(e) => setSupportSearch(e.target.value)}
+                                className="admin-search-input"
+                                style={{ flex: 1, minWidth: 200 }}
+                            />
+                            <select value={supportFilter} onChange={(e) => setSupportFilter(e.target.value)}
+                                    className="admin-select">
+                                <option value="ALL">All Statuses</option>
+                                {STATUS_OPTIONS.map(opt => (
+                                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                                ))}
+                            </select>
+                            <button className="admin-btn" onClick={fetchSupportQueries}>Refresh</button>
+                        </div>
+
+                        {supportLoading && <p>Loading...</p>}
+                        {!supportLoading && filtered.length === 0 && <p>No support queries found.</p>}
+                        {!supportLoading && filtered.length > 0 && (
+                            <table className="admin-table">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Name</th>
+                                        <th>Email</th>
+                                        <th>Subject</th>
+                                        <th>Date</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {filtered.map(q => {
+                                        const statusOpt = STATUS_OPTIONS.find(o => o.value === q.status) || STATUS_OPTIONS[0];
+                                        const isExpanded = expandedQueryId === q.id;
+                                        return (
+                                            <React.Fragment key={q.id}>
+                                                <tr style={{ cursor: "pointer" }} onClick={() => setExpandedQueryId(isExpanded ? null : q.id)}>
+                                                    <td>{q.id}</td>
+                                                    <td>{q.name}</td>
+                                                    <td><a href={`mailto:${q.email}`}>{q.email}</a></td>
+                                                    <td>{q.subject || "—"}</td>
+                                                    <td>{q.createdDate ? new Date(q.createdDate).toLocaleDateString() : "—"}</td>
+                                                    <td>
+                                                        <span className="admin-status-badge" style={{ background: statusOpt.color, color: "#fff", padding: "3px 10px", borderRadius: 12, fontSize: "0.8rem", fontWeight: 600 }}>
+                                                            {statusOpt.label}
+                                                        </span>
+                                                    </td>
+                                                    <td onClick={(e) => e.stopPropagation()}>
+                                                        <select
+                                                            value={q.status}
+                                                            onChange={(e) => updateQueryStatus(q.id, e.target.value)}
+                                                            className="admin-select"
+                                                            style={{ fontSize: "0.82rem", padding: "4px 8px" }}
+                                                        >
+                                                            {STATUS_OPTIONS.map(opt => (
+                                                                <option key={opt.value} value={opt.value}>{opt.label}</option>
+                                                            ))}
+                                                        </select>
+                                                        {isSuperAdmin && (
+                                                            <button
+                                                                className="admin-btn admin-btn-danger"
+                                                                style={{ marginLeft: 8, fontSize: "0.78rem", padding: "4px 10px" }}
+                                                                onClick={() => deleteQuery(q.id)}
+                                                            >
+                                                                Delete
+                                                            </button>
+                                                        )}
+                                                    </td>
+                                                </tr>
+                                                {isExpanded && (
+                                                    <tr>
+                                                        <td colSpan="7">
+                                                            <div className="support-query-detail">
+                                                                <div className="support-query-meta">
+                                                                    <span><strong>Submitted:</strong> {q.createdDate ? new Date(q.createdDate).toLocaleString() : "—"}</span>
+                                                                    {q.updatedDate && <span><strong>Last Updated:</strong> {new Date(q.updatedDate).toLocaleString()}</span>}
+                                                                </div>
+                                                                <div className="support-query-message">
+                                                                    <strong>Message:</strong>
+                                                                    <pre style={{ whiteSpace: "pre-wrap", fontFamily: "inherit", margin: "8px 0 0", lineHeight: 1.6 }}>{q.message}</pre>
+                                                                </div>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                )}
+                                            </React.Fragment>
+                                        );
+                                    })}
+                                </tbody>
+                            </table>
+                        )}
+                    </div>
+                );
+            })()}
             {tab === "magazine" && (
                 <MagazineEditor />
             )}

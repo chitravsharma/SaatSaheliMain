@@ -111,6 +111,9 @@ const Header = () => {
                   <Link to="/account" className="header-user-item" role="menuitem" onClick={() => { setUserMenuOpen(false); closeMobileNav(); }}>
                     {strings.header.myAccount}
                   </Link>
+                  <Link to="/help-support" className="header-user-item" role="menuitem" onClick={() => { setUserMenuOpen(false); closeMobileNav(); }}>
+                    Help & Support
+                  </Link>
                   <Link to="/pricing" className="header-user-item" role="menuitem" onClick={() => { setUserMenuOpen(false); closeMobileNav(); }}>
                     Upgrade
                   </Link>

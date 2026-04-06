@@ -582,3 +582,60 @@
         grid-template-columns: 1fr;
     }
 }
+
+/* Support Queries */
+.admin-btn {
+    padding: 6px 14px;
+    border-radius: 6px;
+    border: 1px solid var(--border-default);
+    background: var(--bg-card);
+    color: var(--text-primary);
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: 500;
+    transition: background 0.15s;
+}
+.admin-btn:hover {
+    background: var(--border-default);
+}
+.admin-btn-danger {
+    background: #e74c3c;
+    color: #fff;
+    border-color: #c0392b;
+}
+.admin-btn-danger:hover {
+    background: #c0392b;
+}
+.admin-select {
+    padding: 6px 10px;
+    border-radius: 6px;
+    border: 1px solid var(--border-default);
+    background: var(--bg-card);
+    color: var(--text-primary);
+    font-size: 0.85rem;
+    cursor: pointer;
+}
+.support-query-detail {
+    background: var(--bg-header);
+    border: 1px solid var(--border-default);
+    border-radius: 10px;
+    padding: 16px 20px;
+    margin: 8px 0;
+}
+.support-query-meta {
+    display: flex;
+    gap: 24px;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+}
+.support-query-message {
+    font-size: 0.9rem;
+    color: var(--text-primary);
+    line-height: 1.6;
+}
+.admin-status-badge {
+    display: inline-block;
+    white-space: nowrap;
+}

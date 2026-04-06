@@ -27,6 +27,13 @@ public class ContactMessage {
     @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime createdDate;
 
+    @Column(name = "status")
+    private String status = "NEW";
+
+    @Column(name = "updated_date")
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
+    private LocalDateTime updatedDate;
+
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
@@ -44,4 +51,10 @@ public class ContactMessage {
 
     public LocalDateTime getCreatedDate() { return createdDate; }
     public void setCreatedDate(LocalDateTime createdDate) { this.createdDate = createdDate; }
+
+    public String getStatus() { return status != null ? status : "NEW"; }
+    public void setStatus(String status) { this.status = status; }
+
+    public LocalDateTime getUpdatedDate() { return updatedDate; }
+    public void setUpdatedDate(LocalDateTime updatedDate) { this.updatedDate = updatedDate; }
 }

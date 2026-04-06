@@ -205,6 +205,20 @@ function BookManager() {
 
   // Help & Support state
   const [showHelp, setShowHelp] = useState(false);
+  const [supportName, setSupportName] = useState("");
+  const [supportEmail, setSupportEmail] = useState("");
+  const [supportPhone, setSupportPhone] = useState("");
+  const [supportRequestTypes, setSupportRequestTypes] = useState([]);
+  const [supportOtherType, setSupportOtherType] = useState("");
+  const [supportMessage, setSupportMessage] = useState("");
+  const [supportWantAppointment, setSupportWantAppointment] = useState("");
+  const [supportPrefDate, setSupportPrefDate] = useState("");
+  const [supportPrefTime, setSupportPrefTime] = useState("");
+  const [supportMeetingType, setSupportMeetingType] = useState("");
+  const [supportTimeline, setSupportTimeline] = useState("");
+  const [supportSending, setSupportSending] = useState(false);
+  const [supportSent, setSupportSent] = useState(false);
+  const [supportError, setSupportError] = useState("");
 
   // Helper: detect if a page number is the back page (last page in the book)
   const getBackPageNumber = () => {
@@ -637,6 +651,10 @@ function BookManager() {
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
               My Articles
             </button>
+            <button className="bm-btn bm-btn-help" onClick={() => bmNavigate("/help-support")}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+              Help & Support
+            </button>
           </div>
           </div>{/* end bm-section-card for buttons */}
 
@@ -770,31 +788,187 @@ function BookManager() {
           </div>
         )}
 
-        {/* Support / Appointment Google Form */}
+        {/* Help & Support / Content Creation Request Form */}
         <div className="bm-support-form-section">
-          <h3>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" strokeWidth="2" style={{ verticalAlign: "middle", marginRight: 6 }}>
-              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
-            </svg>
-            Need Help with Page Design? / पेज डिज़ाइन में मदद चाहिए?
-          </h3>
+          <h2 className="bm-support-form-title">Help & Support / Content Creation Request</h2>
           <p className="bm-support-desc">
-            Request support or set up an appointment for page design help. Our team will get back to you via the details you provide.
+            Need help or want to request content creation? Fill out the form below and our team will get back to you.
           </p>
-          <iframe
-            src="https://docs.google.com/forms/d/e/1FAIpQLSesmfGqG8Wz_HrmZdTJtDCcI8sF8DIIiJTuHjZJmSjc5YMl0A/viewform?embedded=true"
-            width="100%"
-            height="600"
-            frameBorder="0"
-            marginHeight="0"
-            marginWidth="0"
-            title="Support & Appointment Form"
-            className="bm-google-form-iframe"
-          >
-            Loading form...
-          </iframe>
+          {supportSent ? (
+            <div className="bm-support-sent">
+              Thank you for your request! We'll get back to you within 24-48 hours.
+              <button className="bm-btn bm-btn-back" style={{ marginTop: 12 }} onClick={() => setSupportSent(false)}>Submit Another Request</button>
+            </div>
+          ) : (
+            <form className="bm-contact-form" onSubmit={async (e) => {
+              e.preventDefault();
+              setSupportError("");
+              if (!supportName.trim() || !supportEmail.trim() || !supportMessage.trim()) {
+                setSupportError("Please fill in all required fields.");
+                return;
+              }
+              if (supportRequestTypes.length === 0) {
+                setSupportError("Please select at least one request type.");
+                return;
+              }
+              setSupportSending(true);
+              try {
+                const requestTypes = supportRequestTypes.includes("Other")
+                  ? [...supportRequestTypes.filter(t => t !== "Other"), `Other: ${supportOtherType}`].join(", ")
+                  : supportRequestTypes.join(", ");
+                const appointmentInfo = supportWantAppointment === "Yes"
+                  ? `\n\nAppointment Requested:\nDate: ${supportPrefDate}\nTime: ${supportPrefTime}\nMeeting Type: ${supportMeetingType}`
+                  : "\n\nAppointment: No";
+                const fullMessage = `Request Type: ${requestTypes}\nTimeline: ${supportTimeline || "Not specified"}\nPhone: ${supportPhone || "Not provided"}\n\nProject Details:\n${supportMessage.trim()}${appointmentInfo}`;
+                await axios.post(`${process.env.REACT_APP_API_URL}/api/contact`, {
+                  name: supportName.trim(),
+                  email: supportEmail.trim(),
+                  subject: `Help & Support: ${requestTypes}`,
+                  message: fullMessage,
+                });
+                setSupportSent(true);
+                setSupportName(""); setSupportEmail(""); setSupportPhone("");
+                setSupportRequestTypes([]); setSupportOtherType("");
+                setSupportMessage(""); setSupportWantAppointment(""); setSupportPrefDate("");
+                setSupportPrefTime(""); setSupportMeetingType(""); setSupportTimeline("");
+              } catch (err) {
+                setSupportError(err.response?.data?.error || "Failed to send. Please try again.");
+              } finally {
+                setSupportSending(false);
+              }
+            }}>
+              {supportError && <div className="bm-message" style={{ background: "#f8d7da", color: "#721c24", borderLeftColor: "#721c24" }}>{supportError}</div>}
+
+              {/* Section 1: Contact Information */}
+              <fieldset className="bm-form-section">
+                <legend className="bm-form-section-title">Section 1: Contact Information</legend>
+                <div className="bm-contact-field">
+                  <label htmlFor="support-name">Full Name *</label>
+                  <input id="support-name" type="text" className="bm-input" placeholder="Your full name" value={supportName} onChange={(e) => setSupportName(e.target.value)} required />
+                </div>
+                <div className="bm-contact-field">
+                  <label htmlFor="support-email">Email Address *</label>
+                  <input id="support-email" type="email" className="bm-input" placeholder="you@example.com" value={supportEmail} onChange={(e) => setSupportEmail(e.target.value)} required />
+                </div>
+                <div className="bm-contact-field">
+                  <label htmlFor="support-phone">Phone Number</label>
+                  <input id="support-phone" type="tel" className="bm-input" placeholder="Your phone number" value={supportPhone} onChange={(e) => setSupportPhone(e.target.value)} />
+                </div>
+              </fieldset>
+
+              {/* Section 2: Type of Request */}
+              <fieldset className="bm-form-section">
+                <legend className="bm-form-section-title">Section 2: Type of Request</legend>
+                <div className="bm-contact-field">
+                  <label>What do you need help with? * <span className="bm-field-hint">(Select one or more)</span></label>
+                  <div className="bm-checkbox-group">
+                    {["Content Creation (Book cover, poem, Article, blog posts)", "Technical Support (My account, Content Issue)"].map((option) => (
+                      <label key={option} className="bm-checkbox-label">
+                        <input
+                          type="checkbox"
+                          checked={supportRequestTypes.includes(option)}
+                          onChange={(e) => {
+                            if (e.target.checked) setSupportRequestTypes([...supportRequestTypes, option]);
+                            else setSupportRequestTypes(supportRequestTypes.filter(t => t !== option));
+                          }}
+                        />
+                        {option}
+                      </label>
+                    ))}
+                    <label className="bm-checkbox-label">
+                      <input
+                        type="checkbox"
+                        checked={supportRequestTypes.includes("Other")}
+                        onChange={(e) => {
+                          if (e.target.checked) setSupportRequestTypes([...supportRequestTypes, "Other"]);
+                          else { setSupportRequestTypes(supportRequestTypes.filter(t => t !== "Other")); setSupportOtherType(""); }
+                        }}
+                      />
+                      Other (please specify)
+                    </label>
+                    {supportRequestTypes.includes("Other") && (
+                      <input type="text" className="bm-input" placeholder="Please specify..." value={supportOtherType} onChange={(e) => setSupportOtherType(e.target.value)} style={{ marginTop: 6 }} />
+                    )}
+                  </div>
+                </div>
+              </fieldset>
+
+              {/* Section 3: Project Details */}
+              <fieldset className="bm-form-section">
+                <legend className="bm-form-section-title">Section 3: Project Details</legend>
+                <div className="bm-contact-field">
+                  <label htmlFor="support-message">Briefly describe your request *</label>
+                  <p className="bm-field-hint">Example: "Need help creating book cover" or "Help setting up my page"</p>
+                  <textarea id="support-message" className="bm-input bm-textarea" placeholder="Describe your request..." value={supportMessage} onChange={(e) => setSupportMessage(e.target.value)} required rows={5} />
+                </div>
+              </fieldset>
+
+              {/* Section 4: Appointment Request */}
+              <fieldset className="bm-form-section">
+                <legend className="bm-form-section-title">Section 4: Appointment Request</legend>
+                <div className="bm-contact-field">
+                  <label>Would you like to schedule a consultation?</label>
+                  <div className="bm-radio-group">
+                    <label className="bm-radio-label">
+                      <input type="radio" name="appointment" value="Yes" checked={supportWantAppointment === "Yes"} onChange={(e) => setSupportWantAppointment(e.target.value)} />
+                      Yes
+                    </label>
+                    <label className="bm-radio-label">
+                      <input type="radio" name="appointment" value="No" checked={supportWantAppointment === "No"} onChange={(e) => setSupportWantAppointment(e.target.value)} />
+                      No
+                    </label>
+                  </div>
+                </div>
+                {supportWantAppointment === "Yes" && (
+                  <div className="bm-appointment-details">
+                    <div className="bm-contact-field">
+                      <label htmlFor="support-date">Preferred Date</label>
+                      <input id="support-date" type="date" className="bm-input" value={supportPrefDate} onChange={(e) => setSupportPrefDate(e.target.value)} />
+                    </div>
+                    <div className="bm-contact-field">
+                      <label htmlFor="support-time">Preferred Time</label>
+                      <input id="support-time" type="time" className="bm-input" value={supportPrefTime} onChange={(e) => setSupportPrefTime(e.target.value)} />
+                    </div>
+                    <div className="bm-contact-field">
+                      <label>Meeting Type</label>
+                      <div className="bm-radio-group">
+                        <label className="bm-radio-label">
+                          <input type="radio" name="meetingType" value="Phone Call" checked={supportMeetingType === "Phone Call"} onChange={(e) => setSupportMeetingType(e.target.value)} />
+                          Phone Call
+                        </label>
+                        <label className="bm-radio-label">
+                          <input type="radio" name="meetingType" value="Video Call" checked={supportMeetingType === "Video Call"} onChange={(e) => setSupportMeetingType(e.target.value)} />
+                          Video Call
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </fieldset>
+
+              {/* Section 5: Timeline & Priority */}
+              <fieldset className="bm-form-section">
+                <legend className="bm-form-section-title">Section 5: Timeline & Priority</legend>
+                <div className="bm-contact-field">
+                  <label>When do you need this completed?</label>
+                  <div className="bm-radio-group">
+                    {["As soon as possible", "Within a week", "Flexible"].map((option) => (
+                      <label key={option} className="bm-radio-label">
+                        <input type="radio" name="timeline" value={option} checked={supportTimeline === option} onChange={(e) => setSupportTimeline(e.target.value)} />
+                        {option}
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              </fieldset>
+
+              <button type="submit" className="bm-btn bm-btn-create" disabled={supportSending}>
+                {supportSending ? "Sending..." : "Submit Request"}
+              </button>
+            </form>
+          )}
           <p className="bm-support-note">
-            <em>Responses are saved to our support sheet. We'll contact you within 24-48 hours.</em>
+            <em>Or email us directly at <strong>avikaventures.info@gmail.com</strong></em>
           </p>
         </div>
       </div>
@@ -874,7 +1048,25 @@ function BookManager() {
           <button className="bm-btn bm-btn-back" onClick={() => setView("menu")}>
             {strings.common.back}
           </button>
+          <button className="bm-btn bm-btn-help" onClick={() => setShowHelp(!showHelp)} type="button">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            Help & Support
+          </button>
         </div>
+
+        {showHelp && (
+          <div className="bm-help-panel">
+            <h3>How to Create from Document</h3>
+            <ol>
+              <li><strong>Enter a title</strong> for your book.</li>
+              <li><strong>Upload a PDF or Word document</strong> (.pdf, .docx, .doc).</li>
+              <li>Your document will be <strong>automatically split into pages</strong>.</li>
+              <li><strong>Edit and format</strong> each page as needed.</li>
+              <li><strong>Preview and publish</strong> when ready.</li>
+            </ol>
+            <p className="bm-help-contact">Need more help? Contact us at <strong>avikaventures.info@gmail.com</strong></p>
+          </div>
+        )}
       </div>
     );
   }

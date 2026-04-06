@@ -49,10 +49,22 @@ public class EmailService {
      * Send a notification when a contact form is submitted.
      */
     public void sendContactNotification(String senderName, String senderEmail, String msgSubject, String message) {
-        String subject = "SaatSaheli — New Contact Form Message from " + senderName;
+        String formType;
+        String heading;
+        if (msgSubject != null && msgSubject.startsWith("Help & Support:")) {
+            formType = "Help & Support Request";
+            heading = "New Help & Support Request";
+        } else if (msgSubject != null && msgSubject.toLowerCase().startsWith("feedback")) {
+            formType = "Feedback";
+            heading = "New Feedback Received";
+        } else {
+            formType = "Contact Us";
+            heading = "New Contact Us Message";
+        }
+        String subject = "SaatSaheli — " + formType + " from " + senderName;
         String body = """
                 <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 520px; margin: 0 auto; padding: 32px;">
-                  <h2 style="color: #2563eb;">New Contact Form Submission</h2>
+                  <h2 style="color: #2563eb;">%s</h2>
                   <table style="width: 100%%; border-collapse: collapse; margin: 16px 0;">
                     <tr><td style="padding: 8px 0; color: #6b7280; width: 80px;"><strong>From:</strong></td><td>%s</td></tr>
                     <tr><td style="padding: 8px 0; color: #6b7280;"><strong>Email:</strong></td><td><a href="mailto:%s">%s</a></td></tr>
@@ -62,7 +74,7 @@ public class EmailService {
                   <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 24px 0;" />
                   <p style="color: #9ca3af; font-size: 0.85rem;">Reply directly to the sender at <a href="mailto:%s">%s</a></p>
                 </div>
-                """.formatted(senderName, senderEmail, senderEmail, msgSubject, message, senderEmail, senderEmail);
+                """.formatted(heading, senderName, senderEmail, senderEmail, msgSubject, message, senderEmail, senderEmail);
 
         sendHtmlEmail(fromAddress, subject, body);
     }

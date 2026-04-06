@@ -93,9 +93,11 @@ public class ContactController {
      * GET /api/contact — List all contact messages (Admin only)
      */
     @GetMapping
-    public ResponseEntity<?> getContactMessages(HttpServletRequest request) {
+    public ResponseEntity<?> getContactMessages(
+            @RequestHeader(value = "X-User-Id", required = false) String headerUserId,
+            HttpServletRequest request) {
         try {
-            Long callerUserId = getAuthUserId(request);
+            Long callerUserId = resolveUserId(headerUserId, request);
             if (callerUserId == null) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorMap("Authentication required"));
             }
@@ -112,7 +114,92 @@ public class ContactController {
         }
     }
 
-    private Long getAuthUserId(HttpServletRequest request) {
+    private static final List<String> VALID_STATUSES = List.of(
+            "NEW", "IN_PROGRESS", "CANCELLED", "APPOINTMENT_SETUP", "COMPLETED", "IN_REVIEW"
+    );
+
+    /**
+     * PUT /api/contact/{id}/status — Update status of a contact message (Admin only)
+     */
+    @PutMapping("/{id}/status")
+    public ResponseEntity<?> updateContactStatus(
+            @PathVariable Long id,
+            @RequestBody Map<String, String> body,
+            @RequestHeader(value = "X-User-Id", required = false) String headerUserId,
+            HttpServletRequest request) {
+        try {
+            Long callerUserId = resolveUserId(headerUserId, request);
+            if (callerUserId == null) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorMap("Authentication required"));
+            }
+            Optional<User> callerOpt = userRepo.findById(callerUserId);
+            if (callerOpt.isEmpty() || !RoleUtil.isAdmin(callerOpt.get().getRole())) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorMap("Admin access required"));
+            }
+
+            String newStatus = body.get("status");
+            if (newStatus == null || !VALID_STATUSES.contains(newStatus)) {
+                return ResponseEntity.badRequest().body(errorMap("Invalid status. Valid values: " + VALID_STATUSES));
+            }
+
+            Optional<ContactMessage> msgOpt = contactRepo.findById(id);
+            if (msgOpt.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorMap("Contact message not found"));
+            }
+
+            ContactMessage msg = msgOpt.get();
+            msg.setStatus(newStatus);
+            msg.setUpdatedDate(LocalDateTime.now());
+            contactRepo.save(msg);
+
+            log.info("Contact message #{} status updated to {} by user #{}", id, newStatus, callerUserId);
+            return ResponseEntity.ok(msg);
+        } catch (Exception e) {
+            log.error("Failed to update contact message status", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(errorMap("Failed to update status"));
+        }
+    }
+
+    /**
+     * DELETE /api/contact/{id} — Delete a contact message (Admin only)
+     */
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> deleteContactMessage(
+            @PathVariable Long id,
+            @RequestHeader(value = "X-User-Id", required = false) String headerUserId,
+            HttpServletRequest request) {
+        try {
+            Long callerUserId = resolveUserId(headerUserId, request);
+            if (callerUserId == null) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorMap("Authentication required"));
+            }
+            Optional<User> callerOpt = userRepo.findById(callerUserId);
+            if (callerOpt.isEmpty() || !RoleUtil.isAdmin(callerOpt.get().getRole())) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorMap("Admin access required"));
+            }
+
+            if (!contactRepo.existsById(id)) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorMap("Contact message not found"));
+            }
+
+            contactRepo.deleteById(id);
+            log.info("Contact message #{} deleted by user #{}", id, callerUserId);
+
+            Map<String, String> response = new HashMap<>();
+            response.put("message", "Contact message deleted");
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            log.error("Failed to delete contact message", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(errorMap("Failed to delete message"));
+        }
+    }
+
+    private Long resolveUserId(String headerUserId, HttpServletRequest request) {
+        if (headerUserId != null && !headerUserId.isEmpty()) {
+            try { return Long.parseLong(headerUserId); } catch (NumberFormatException ignored) {}
+        }
         Object val = request.getAttribute("jwtUserId");
         return val instanceof Long ? (Long) val : null;
     }

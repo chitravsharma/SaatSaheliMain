@@ -17,7 +17,7 @@ const Contact = () => {
     e.preventDefault();
     setError('');
 
-    if (!name.trim() || !email.trim() || !message.trim()) {
+    if (!name.trim() || !email.trim() || !subject.trim() || !message.trim()) {
       setError('Please fill in all required fields.');
       return;
     }
@@ -92,13 +92,14 @@ const Contact = () => {
             </div>
 
             <div className="contact-field">
-              <label htmlFor="contact-subject">Subject</label>
+              <label htmlFor="contact-subject">Subject *</label>
               <input
                 id="contact-subject"
                 type="text"
                 placeholder="What is this about?"
                 value={subject}
                 onChange={(e) => setSubject(e.target.value)}
+                required
               />
             </div>
 

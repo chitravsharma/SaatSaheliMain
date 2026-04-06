@@ -36,6 +36,8 @@ import MaintenanceBanner from './components/MaintenanceBanner';
 import Checkout from './pages/Checkout';
 import Marketplace from './pages/Marketplace';
 import NotFound from './pages/NotFound';
+import HelpSupport from './pages/HelpSupport';
+import Feedback from './pages/Feedback';
 
 
 function BookManagerWrapper() {
@@ -57,6 +59,8 @@ function App() {
           <Route path="/register" element={<Login />} />
           <Route path="/" element={<Home />} />
           <Route path="/contacts" element={<Contacts />} />
+          <Route path="/help-support" element={<HelpSupport />} />
+          <Route path="/feedback" element={<Feedback />} />
           <Route path="/about" element={<About />} />
           <Route path="/books" element={<BookManagerWrapper />} />
           <Route path="/search" element={<SearchBooks />} />
