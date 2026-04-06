@@ -205,6 +205,14 @@ function Home() {
     if (!grouped[cat]) grouped[cat] = [];
     grouped[cat].push(book);
   });
+  // Sort magazines: English first, then Hindi
+  if (grouped[magLabel]) {
+    grouped[magLabel].sort((a, b) => {
+      const aIsHindi = a.language === "hi" ? 1 : 0;
+      const bIsHindi = b.language === "hi" ? 1 : 0;
+      return aIsHindi - bIsHindi;
+    });
+  }
 
   // Auto-dismiss action error after 4 seconds
   useEffect(() => {
