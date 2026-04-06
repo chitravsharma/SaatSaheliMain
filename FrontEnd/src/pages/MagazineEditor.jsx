@@ -375,6 +375,23 @@ const MagazineEditor = () => {
     }
   };
 
+  /* ── Create Hindi edition ── */
+  const handleCreateHindiEdition = async () => {
+    if (!magazine) return;
+    if (!window.confirm("Create a Hindi edition from the current magazine? All text will be auto-translated to Hindi.")) return;
+    showMsg("Creating Hindi edition — this may take a minute...");
+    try {
+      const res = await axios.post(`${API}/api/admin/magazine/${magazine.id}/create-hindi-edition`, {}, { headers });
+      await fetchAllEditions();
+      setMagazine(res.data);
+      setPages(res.data.pages || []);
+      setSelectedPageNum(null);
+      showMsg("Hindi edition created! You can review and edit the translated pages.");
+    } catch (e) {
+      showMsg("Failed: " + (e.response?.data?.error || e.message));
+    }
+  };
+
   /* ── Export magazine as PDF/DOCX ── */
   const handleMagExport = async (format) => {
     if (!magazine) return;
@@ -541,6 +558,7 @@ const MagazineEditor = () => {
           <button className="mag-btn mag-btn-sm" onClick={handleNewEdition}>{s.newEdition}</button>
           {magazine && (
             <>
+              <button className="mag-btn mag-btn-sm" onClick={handleCreateHindiEdition} title="Create Hindi Edition">हिंदी Edition</button>
               <button className="mag-btn mag-btn-sm" onClick={() => handleMagExport("pdf")} title="Export PDF">PDF</button>
               <button className="mag-btn mag-btn-sm" onClick={() => handleMagExport("docx")} title="Export DOCX">DOCX</button>
             </>
@@ -567,6 +585,7 @@ const MagazineEditor = () => {
                     <span className={`mag-edition-badge ${ed.status === "PUBLISHED" ? "mag-badge-pub" : "mag-badge-draft"}`}>
                       {ed.status}
                     </span>
+                    {ed.language === "hi" && <span className="mag-edition-badge" style={{background:"#c9a84c",color:"#1a1a2e"}}>हिंदी</span>}
                     {ed.modifiedDate && (
                       <span className="mag-edition-date">{new Date(ed.modifiedDate).toLocaleDateString()}</span>
                     )}

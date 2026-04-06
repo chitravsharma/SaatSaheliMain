@@ -342,6 +342,27 @@
   border-radius: 1px;
 }
 
+.home-book-lang-badge {
+  position: absolute;
+  bottom: 6px;
+  right: 6px;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  pointer-events: none;
+}
+.home-book-lang-badge.lang-en {
+  background: rgba(37, 99, 235, 0.85);
+  color: #fff;
+}
+.home-book-lang-badge.lang-hi {
+  background: rgba(201, 168, 76, 0.9);
+  color: #1a1a2e;
+}
+
 .home-book-cover-title {
   color: #fef3c7;
   font-size: 0.82rem;

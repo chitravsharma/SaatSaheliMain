@@ -15,4 +15,5 @@ public interface BookRepository extends JpaRepository<Book, Long> {
     long countByUserId(Long userId);
     Optional<Book> findFirstByCategoryIgnoreCaseOrderByModifiedDateDesc(String category);
     List<Book> findByCategoryIgnoreCaseOrderByModifiedDateDesc(String category);
+    List<Book> findByCategoryIgnoreCaseAndLanguageOrderByModifiedDateDesc(String category, String language);
 }

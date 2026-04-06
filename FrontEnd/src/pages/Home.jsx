@@ -318,6 +318,11 @@ function Home() {
                               ) : (
                                 <span className="home-book-cover-title">{book.title}</span>
                               )}
+                              {(book.category || "").toUpperCase() === "MAGAZINE" && book.language && (
+                                <span className={`home-book-lang-badge ${book.language === "hi" ? "lang-hi" : "lang-en"}`}>
+                                  {book.language === "hi" ? "हिंदी" : "English"}
+                                </span>
+                              )}
                             </div>
                             <div className="home-book-info">
                               <span className="home-book-title">{book.title}</span>

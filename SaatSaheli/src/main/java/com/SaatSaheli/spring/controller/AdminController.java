@@ -557,6 +557,24 @@ public class AdminController {
         }
     }
 
+    /** POST /api/admin/magazine/{magazineId}/create-hindi-edition — Clone magazine and translate to Hindi */
+    @PostMapping("/magazine/{magazineId}/create-hindi-edition")
+    public ResponseEntity<?> createHindiEdition(
+            @PathVariable Long magazineId,
+            @RequestHeader("X-User-Id") String callerUserId) {
+        User caller = verifyCaller(callerUserId, false);
+        if (caller == null) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorMap("Admin access required"));
+        }
+        try {
+            Book hindiEdition = bookService.createHindiEdition(magazineId, caller.getId());
+            return ResponseEntity.ok(hindiEdition);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(errorMap("Failed to create Hindi edition: " + e.getMessage()));
+        }
+    }
+
     /** POST /api/admin/magazine/upload-document — Upload PDF/Word to create magazine pages */
     @PostMapping("/magazine/upload-document")
     public ResponseEntity<?> uploadMagazineDocument(

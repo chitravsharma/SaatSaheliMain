@@ -31,6 +31,8 @@ public class Book {
 
     private String category; // e.g., "Art", "Music", "Writing", "Tech", "Creativity", "Community"
 
+    private String language; // "en", "hi", etc. — defaults to "en"
+
     @Transient
     private List<Page> pages = new ArrayList<>();
 
@@ -81,6 +83,9 @@ public class Book {
 
     public String getCoverImageUrl() { return coverImageUrl; }
     public void setCoverImageUrl(String coverImageUrl) { this.coverImageUrl = coverImageUrl; }
+
+    public String getLanguage() { return language; }
+    public void setLanguage(String language) { this.language = language; }
 
     @Override
     public String toString() {

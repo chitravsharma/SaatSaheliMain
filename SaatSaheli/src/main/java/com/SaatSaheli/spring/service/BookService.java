@@ -43,6 +43,9 @@ public class BookService {
     @Autowired
     private UserRepository userRepo;
 
+    @Autowired
+    private TranslationService translationService;
+
     @PostConstruct
     public void syncOrphanedPages() {
         try {
@@ -289,6 +292,88 @@ public class BookService {
     public Book createNewMagazineEdition(Long adminUserId, String title) {
         String editionTitle = (title != null && !title.trim().isEmpty()) ? title.trim() : "Saat Saheli Magazine";
         return createBook(editionTitle, adminUserId, "MAGAZINE");
+    }
+
+    /**
+     * Clone a published magazine and translate all text content to Hindi.
+     * Images are kept as-is; text content and text blocks in format JSON are translated.
+     */
+    @Transactional
+    public Book createHindiEdition(Long sourceMagazineId, Long adminUserId) {
+        Book source = bookRepo.findById(sourceMagazineId)
+                .orElseThrow(() -> new RuntimeException("Source magazine not found"));
+        if (!"MAGAZINE".equalsIgnoreCase(source.getCategory())) {
+            throw new RuntimeException("Source is not a magazine");
+        }
+
+        LocalDateTime now = LocalDateTime.now();
+        String hindiTitle = translationService.translateToHindi(source.getTitle());
+
+        Book hindi = new Book();
+        hindi.setTitle(hindiTitle + " — हिंदी संस्करण");
+        hindi.setUserId(adminUserId);
+        hindi.setCategory("MAGAZINE");
+        hindi.setLanguage("hi");
+        hindi.setStatus("DRAFT");
+        hindi.setCreatedDate(now);
+        hindi.setModifiedDate(now);
+        hindi = bookRepo.save(hindi);
+
+        // Clone and translate each page
+        List<Page> sourcePages = pageRepo.findByBookIdOrderByPageNumberAsc(sourceMagazineId);
+        for (Page sp : sourcePages) {
+            Page hp = new Page();
+            hp.setBookId(hindi.getId());
+            hp.setPageNumber(sp.getPageNumber());
+            hp.setImageUrl(sp.getImageUrl());
+            hp.setImageUrl2(sp.getImageUrl2());
+            hp.setCreatedDate(now);
+            hp.setModifiedDate(now);
+
+            // Translate page content
+            if (sp.getContent() != null && !sp.getContent().isBlank()) {
+                hp.setContent(translationService.translateToHindi(sp.getContent()));
+            }
+
+            // Translate text blocks inside format JSON
+            hp.setFormat(translateFormatJson(sp.getFormat()));
+
+            pageRepo.save(hp);
+        }
+
+        hindi.setPages(pageRepo.findByBookIdOrderByPageNumberAsc(hindi.getId()));
+        enrichWithCoverImages(List.of(hindi));
+        return hindi;
+    }
+
+    /** Translate textBlocks content inside a format JSON string */
+    private String translateFormatJson(String formatStr) {
+        if (formatStr == null || formatStr.isBlank()) return formatStr;
+        try {
+            com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+            com.fasterxml.jackson.databind.node.ObjectNode root = (com.fasterxml.jackson.databind.node.ObjectNode) mapper.readTree(formatStr);
+
+            if (root.has("textBlocks") && root.get("textBlocks").isArray()) {
+                com.fasterxml.jackson.databind.node.ArrayNode blocks = (com.fasterxml.jackson.databind.node.ArrayNode) root.get("textBlocks");
+                for (int i = 0; i < blocks.size(); i++) {
+                    com.fasterxml.jackson.databind.node.ObjectNode block = (com.fasterxml.jackson.databind.node.ObjectNode) blocks.get(i);
+                    if (block.has("content") && !block.get("content").asText("").isBlank()) {
+                        String translated = translationService.translateToHindi(block.get("content").asText());
+                        block.put("content", translated);
+                    }
+                }
+            }
+
+            // Translate pageContentHindi field if present, or add it
+            if (root.has("pageContentHindi") && !root.get("pageContentHindi").asText("").isBlank()) {
+                // Already has Hindi content, leave it
+            }
+
+            return mapper.writeValueAsString(root);
+        } catch (Exception e) {
+            log.warn("Failed to translate format JSON: {}", e.getMessage());
+            return formatStr;
+        }
     }
 
     public List<Book> getBooksByUser(Long userId) {
