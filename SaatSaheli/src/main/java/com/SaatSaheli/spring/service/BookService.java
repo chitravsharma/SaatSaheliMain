@@ -410,36 +410,57 @@ public class BookService {
         book.setModifiedDate(now);
         book = bookRepo.save(book);
 
-        // Cover page
-        Page cover = new Page();
-        cover.setBookId(book.getId());
-        cover.setPageNumber(1);
-        cover.setContent(title);
-        cover.setFormat("bold");
-        cover.setCreatedDate(now);
-        cover.setModifiedDate(now);
-        pageRepo.save(cover);
+        if (pageTexts.size() >= 2) {
+            // Cover page — use first page of the document
+            Page cover = new Page();
+            cover.setBookId(book.getId());
+            cover.setPageNumber(1);
+            cover.setContent(pageTexts.get(0));
+            cover.setFormat("bold");
+            cover.setCreatedDate(now);
+            cover.setModifiedDate(now);
+            pageRepo.save(cover);
 
-        // Content pages from extracted text
-        for (int i = 0; i < pageTexts.size(); i++) {
-            Page page = new Page();
-            page.setBookId(book.getId());
-            page.setPageNumber(i + 2);
-            page.setContent(pageTexts.get(i));
-            page.setCreatedDate(now);
-            page.setModifiedDate(now);
-            pageRepo.save(page);
+            // Middle content pages (skip first and last)
+            for (int i = 1; i < pageTexts.size() - 1; i++) {
+                Page page = new Page();
+                page.setBookId(book.getId());
+                page.setPageNumber(i + 1);
+                page.setContent(pageTexts.get(i));
+                page.setCreatedDate(now);
+                page.setModifiedDate(now);
+                pageRepo.save(page);
+            }
+
+            // Back cover — use last page of the document
+            Page back = new Page();
+            back.setBookId(book.getId());
+            back.setPageNumber(pageTexts.size());
+            back.setContent(pageTexts.get(pageTexts.size() - 1));
+            back.setFormat("italic");
+            back.setCreatedDate(now);
+            back.setModifiedDate(now);
+            pageRepo.save(back);
+        } else if (pageTexts.size() == 1) {
+            // Single page document — use it as cover, add "The End" back page
+            Page cover = new Page();
+            cover.setBookId(book.getId());
+            cover.setPageNumber(1);
+            cover.setContent(pageTexts.get(0));
+            cover.setFormat("bold");
+            cover.setCreatedDate(now);
+            cover.setModifiedDate(now);
+            pageRepo.save(cover);
+
+            Page back = new Page();
+            back.setBookId(book.getId());
+            back.setPageNumber(2);
+            back.setContent("The End");
+            back.setFormat("italic");
+            back.setCreatedDate(now);
+            back.setModifiedDate(now);
+            pageRepo.save(back);
         }
-
-        // Back page — placed right after the last content page
-        Page back = new Page();
-        back.setBookId(book.getId());
-        back.setPageNumber(pageTexts.size() + 2);
-        back.setContent("The End");
-        back.setFormat("italic");
-        back.setCreatedDate(now);
-        back.setModifiedDate(now);
-        pageRepo.save(back);
 
         book.setPages(pageRepo.findByBookIdOrderByPageNumberAsc(book.getId()));
         return book;
@@ -456,38 +477,62 @@ public class BookService {
         book.setModifiedDate(now);
         book = bookRepo.save(book);
 
-        // Cover page
-        Page cover = new Page();
-        cover.setBookId(book.getId());
-        cover.setPageNumber(1);
-        cover.setContent(title);
-        cover.setFormat("bold");
-        cover.setCreatedDate(now);
-        cover.setModifiedDate(now);
-        pageRepo.save(cover);
-
-        // Image pages from rendered PDF — full-page layout
         String fullPageFormat = "{\"layout\":{\"image1\":{\"x\":10,\"y\":0,\"width\":530,\"height\":700}}}";
-        for (int i = 0; i < imageUrls.size(); i++) {
-            Page page = new Page();
-            page.setBookId(book.getId());
-            page.setPageNumber(i + 2);
-            page.setImageUrl(imageUrls.get(i));
-            page.setFormat(fullPageFormat);
-            page.setCreatedDate(now);
-            page.setModifiedDate(now);
-            pageRepo.save(page);
-        }
 
-        // Back page — placed right after the last content page
-        Page back = new Page();
-        back.setBookId(book.getId());
-        back.setPageNumber(imageUrls.size() + 2);
-        back.setContent("The End");
-        back.setFormat("italic");
-        back.setCreatedDate(now);
-        back.setModifiedDate(now);
-        pageRepo.save(back);
+        if (imageUrls.size() >= 2) {
+            // Cover page — use first page of the PDF as cover image
+            Page cover = new Page();
+            cover.setBookId(book.getId());
+            cover.setPageNumber(1);
+            cover.setContent(title);
+            cover.setImageUrl(imageUrls.get(0));
+            cover.setFormat(fullPageFormat);
+            cover.setCreatedDate(now);
+            cover.setModifiedDate(now);
+            pageRepo.save(cover);
+
+            // Middle content pages (skip first and last)
+            for (int i = 1; i < imageUrls.size() - 1; i++) {
+                Page page = new Page();
+                page.setBookId(book.getId());
+                page.setPageNumber(i + 1);
+                page.setImageUrl(imageUrls.get(i));
+                page.setFormat(fullPageFormat);
+                page.setCreatedDate(now);
+                page.setModifiedDate(now);
+                pageRepo.save(page);
+            }
+
+            // Back cover — use last page of the PDF as back cover image
+            Page back = new Page();
+            back.setBookId(book.getId());
+            back.setPageNumber(imageUrls.size());
+            back.setImageUrl(imageUrls.get(imageUrls.size() - 1));
+            back.setFormat(fullPageFormat);
+            back.setCreatedDate(now);
+            back.setModifiedDate(now);
+            pageRepo.save(back);
+        } else if (imageUrls.size() == 1) {
+            // Single page PDF — use it as cover, add "The End" back page
+            Page cover = new Page();
+            cover.setBookId(book.getId());
+            cover.setPageNumber(1);
+            cover.setContent(title);
+            cover.setImageUrl(imageUrls.get(0));
+            cover.setFormat(fullPageFormat);
+            cover.setCreatedDate(now);
+            cover.setModifiedDate(now);
+            pageRepo.save(cover);
+
+            Page back = new Page();
+            back.setBookId(book.getId());
+            back.setPageNumber(2);
+            back.setContent("The End");
+            back.setFormat("italic");
+            back.setCreatedDate(now);
+            back.setModifiedDate(now);
+            pageRepo.save(back);
+        }
 
         book.setPages(pageRepo.findByBookIdOrderByPageNumberAsc(book.getId()));
         return book;
