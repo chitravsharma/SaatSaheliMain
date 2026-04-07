@@ -233,8 +233,19 @@ public class AuthController {
      * GET /api/auth/user/{userId}
      */
     @GetMapping("/user/{userId}")
-    public ResponseEntity<?> getUser(@PathVariable Long userId) {
+    public ResponseEntity<?> getUser(@PathVariable Long userId, HttpServletRequest request) {
         try {
+            Long callerUserId = getAuthUserId(request);
+            if (callerUserId == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorMap("Authentication required"));
+            }
+            // Users can only view their own profile, admins can view any
+            if (!callerUserId.equals(userId)) {
+                Optional<User> callerOpt = userRepo.findById(callerUserId);
+                if (callerOpt.isEmpty() || !RoleUtil.isAdmin(callerOpt.get().getRole())) {
+                    return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorMap("You can only view your own profile"));
+                }
+            }
             Optional<User> userOpt = userRepo.findById(userId);
             if (userOpt.isEmpty()) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorMap("User not found"));

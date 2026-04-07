@@ -150,7 +150,7 @@ const MagazineEditor = () => {
   const [canvasScale, setCanvasScale] = useState(1);
 
   const token = localStorage.getItem("saatSaheliToken");
-  const headers = { "X-User-Id": String(user?.userId || ""), Authorization: `Bearer ${token}` };
+  const headers = token ? { Authorization: `Bearer ${token}` } : {};
 
   useEffect(() => {
     const measure = () => {
@@ -399,7 +399,7 @@ const MagazineEditor = () => {
     try {
       const res = await axios.get(`${API}/api/books/${magazine.id}/export/${format}`, {
         responseType: 'blob',
-        headers: { "X-User-Id": String(user.userId) },
+        headers,
       });
       const url = window.URL.createObjectURL(new Blob([res.data]));
       const link = document.createElement('a');
@@ -448,7 +448,7 @@ const MagazineEditor = () => {
       formData.append("file", file);
       formData.append("magazineId", magazine.id);
       const res = await axios.post(`${API}/api/admin/magazine/upload-document`, formData, {
-        headers: { "X-User-Id": String(user?.userId || "") },
+        headers,
       });
       setMagazine(res.data);
       setPages(res.data.pages || []);
@@ -796,7 +796,7 @@ const MagazineEditor = () => {
                             const formData = new FormData();
                             formData.append("file", editedFile);
                             const res = await axios.post(`${API}/api/upload`, formData, {
-                              headers: { "X-User-Id": String(user?.userId || "") },
+                              headers,
                             });
                             updateImageBlock(blockId, "url", res.data.url || res.data);
                           } catch (err) {

@@ -31,17 +31,7 @@ public class JwtInterceptor implements HandlerInterceptor {
             }
         }
 
-        // Also support legacy X-User-Id header as fallback (for backward compat during transition)
-        if (request.getAttribute("jwtUserId") == null) {
-            String xUserId = request.getHeader("X-User-Id");
-            if (xUserId != null && !xUserId.isEmpty()) {
-                try {
-                    request.setAttribute("jwtUserId", Long.parseLong(xUserId));
-                } catch (NumberFormatException ignored) {}
-            }
-        }
-
-        // Always allow — individual endpoints decide if auth is required
+        // Individual endpoints decide if auth is required
         return true;
     }
 }

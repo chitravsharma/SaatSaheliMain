@@ -7,6 +7,7 @@ import com.SaatSaheli.spring.repository.ChatMessageRepository;
 import com.SaatSaheli.spring.repository.ChatRoomRepository;
 import com.SaatSaheli.spring.repository.UserRepository;
 import com.SaatSaheli.spring.util.RoleUtil;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -38,10 +39,19 @@ public class ChatController {
     @Autowired
     private UserRepository userRepo;
 
+    private Long getAuthUserId(HttpServletRequest request) {
+        Object val = request.getAttribute("jwtUserId");
+        return val instanceof Long ? (Long) val : null;
+    }
+
     /** GET /api/chat/rooms — List all chat rooms (auto-init if empty) */
     @GetMapping("/rooms")
-    public ResponseEntity<?> listRooms(@RequestHeader("X-User-Id") String callerUserId) {
+    public ResponseEntity<?> listRooms(HttpServletRequest request) {
         try {
+            Long userId = getAuthUserId(request);
+            if (userId == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorMap("Authentication required"));
+            }
             List<ChatRoom> rooms = roomRepo.findAll();
             if (rooms.isEmpty()) {
                 rooms = initializeDefaultRooms();
@@ -59,8 +69,12 @@ public class ChatController {
             @PathVariable Long roomId,
             @RequestParam(required = false) Long afterId,
             @RequestParam(defaultValue = "50") int limit,
-            @RequestHeader("X-User-Id") String callerUserId) {
+            HttpServletRequest request) {
         try {
+            Long userId = getAuthUserId(request);
+            if (userId == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorMap("Authentication required"));
+            }
             List<ChatMessage> messages;
             if (afterId != null) {
                 messages = messageRepo.findByRoomIdAndIdGreaterThan(roomId, afterId);
@@ -95,14 +109,17 @@ public class ChatController {
     public ResponseEntity<?> sendMessage(
             @PathVariable Long roomId,
             @RequestBody Map<String, String> body,
-            @RequestHeader("X-User-Id") String callerUserId) {
+            HttpServletRequest request) {
         try {
             String text = body.get("message");
             if (text == null || text.trim().isEmpty()) {
                 return ResponseEntity.badRequest().body(errorMap("Message cannot be empty"));
             }
 
-            Long userId = Long.parseLong(callerUserId);
+            Long userId = getAuthUserId(request);
+            if (userId == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorMap("Authentication required"));
+            }
             Optional<User> userOpt = userRepo.findById(userId);
             String senderName = "Unknown";
             if (userOpt.isPresent()) {
@@ -132,9 +149,12 @@ public class ChatController {
     @DeleteMapping("/messages/{messageId}")
     public ResponseEntity<?> deleteMessage(
             @PathVariable Long messageId,
-            @RequestHeader("X-User-Id") String callerUserId) {
+            HttpServletRequest request) {
         try {
-            Long userId = Long.parseLong(callerUserId);
+            Long userId = getAuthUserId(request);
+            if (userId == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorMap("Authentication required"));
+            }
             Optional<ChatMessage> msgOpt = messageRepo.findById(messageId);
             if (msgOpt.isEmpty()) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorMap("Message not found"));

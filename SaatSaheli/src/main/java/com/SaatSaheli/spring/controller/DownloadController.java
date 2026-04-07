@@ -3,6 +3,7 @@ package com.SaatSaheli.spring.controller;
 import com.SaatSaheli.spring.model.User;
 import com.SaatSaheli.spring.repository.UserRepository;
 import com.SaatSaheli.spring.util.RoleUtil;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -27,12 +28,18 @@ public class DownloadController {
 
     private final RestTemplate restTemplate = new RestTemplate();
 
+    private Long getAuthUserId(HttpServletRequest request) {
+        Object val = request.getAttribute("jwtUserId");
+        return val instanceof Long ? (Long) val : null;
+    }
+
     @GetMapping
     public ResponseEntity<?> downloadFile(
             @RequestParam("url") String fileUrl,
-            @RequestHeader(value = "X-User-Id", required = false) Long userId) {
+            HttpServletRequest request) {
 
-        // Verify user is SUPER_ADMIN
+        // Verify user is SUPER_ADMIN via JWT
+        Long userId = getAuthUserId(request);
         if (userId == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(Map.of("error", "Authentication required"));

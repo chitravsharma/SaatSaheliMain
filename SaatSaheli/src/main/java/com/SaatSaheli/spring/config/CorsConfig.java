@@ -26,7 +26,7 @@ public class CorsConfig {
                 registry.addMapping("/**")
                         .allowedOrigins(origins)
                         .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
-                        .allowedHeaders("*")
+                        .allowedHeaders("Authorization", "Content-Type", "Accept", "Origin", "X-Requested-With")
                         .exposedHeaders("Authorization")
                         .allowCredentials(true);
             }

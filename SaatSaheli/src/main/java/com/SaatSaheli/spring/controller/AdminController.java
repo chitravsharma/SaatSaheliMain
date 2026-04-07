@@ -15,6 +15,7 @@ import com.SaatSaheli.spring.service.ArticleService;
 import com.SaatSaheli.spring.service.BookService;
 import com.SaatSaheli.spring.service.DocumentExtractionService;
 import com.SaatSaheli.spring.util.RoleUtil;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -56,11 +57,16 @@ public class AdminController {
     @Autowired
     private DocumentExtractionService documentExtractionService;
 
+    private Long getAuthUserId(HttpServletRequest request) {
+        Object val = request.getAttribute("jwtUserId");
+        return val instanceof Long ? (Long) val : null;
+    }
+
     /** GET /api/admin/users — List all users with login info */
     @GetMapping("/users")
-    public ResponseEntity<?> listUsers(@RequestHeader("X-User-Id") String callerUserId) {
+    public ResponseEntity<?> listUsers(HttpServletRequest request) {
         try {
-            User caller = verifyCaller(callerUserId, false);
+            User caller = verifyCaller(getAuthUserId(request), false);
             if (caller == null) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorMap("Admin access required"));
             }
@@ -129,9 +135,9 @@ public class AdminController {
     public ResponseEntity<?> changeUserRole(
             @PathVariable Long userId,
             @RequestBody Map<String, String> body,
-            @RequestHeader("X-User-Id") String callerUserId) {
+            HttpServletRequest request) {
         try {
-            User caller = verifyCaller(callerUserId, true);
+            User caller = verifyCaller(getAuthUserId(request), true);
             if (caller == null) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorMap("Super Admin access required"));
             }
@@ -166,9 +172,9 @@ public class AdminController {
     public ResponseEntity<?> changeUserStatus(
             @PathVariable Long userId,
             @RequestBody Map<String, String> body,
-            @RequestHeader("X-User-Id") String callerUserId) {
+            HttpServletRequest request) {
         try {
-            User caller = verifyCaller(callerUserId, false);
+            User caller = verifyCaller(getAuthUserId(request), false);
             if (caller == null) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorMap("Admin access required"));
             }
@@ -196,9 +202,9 @@ public class AdminController {
 
     /** GET /api/admin/books — List all books */
     @GetMapping("/books")
-    public ResponseEntity<?> listBooks(@RequestHeader("X-User-Id") String callerUserId) {
+    public ResponseEntity<?> listBooks(HttpServletRequest request) {
         try {
-            User caller = verifyCaller(callerUserId, false);
+            User caller = verifyCaller(getAuthUserId(request), false);
             if (caller == null) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorMap("Admin access required"));
             }
@@ -214,9 +220,9 @@ public class AdminController {
     @DeleteMapping("/books/{bookId}")
     public ResponseEntity<?> deleteBook(
             @PathVariable Long bookId,
-            @RequestHeader("X-User-Id") String callerUserId) {
+            HttpServletRequest request) {
         try {
-            User caller = verifyCaller(callerUserId, false);
+            User caller = verifyCaller(getAuthUserId(request), false);
             if (caller == null) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorMap("Admin access required"));
             }
@@ -232,9 +238,9 @@ public class AdminController {
     @PutMapping("/books/{bookId}/archive")
     public ResponseEntity<?> archiveBook(
             @PathVariable Long bookId,
-            @RequestHeader("X-User-Id") String callerUserId) {
+            HttpServletRequest request) {
         try {
-            User caller = verifyCaller(callerUserId, false);
+            User caller = verifyCaller(getAuthUserId(request), false);
             if (caller == null) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorMap("Admin access required"));
             }
@@ -250,9 +256,9 @@ public class AdminController {
     @PutMapping("/books/{bookId}/recover")
     public ResponseEntity<?> recoverBook(
             @PathVariable Long bookId,
-            @RequestHeader("X-User-Id") String callerUserId) {
+            HttpServletRequest request) {
         try {
-            User caller = verifyCaller(callerUserId, false);
+            User caller = verifyCaller(getAuthUserId(request), false);
             if (caller == null) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorMap("Admin access required"));
             }
@@ -268,9 +274,9 @@ public class AdminController {
     @DeleteMapping("/books/{bookId}/purge")
     public ResponseEntity<?> purgeSingleBook(
             @PathVariable Long bookId,
-            @RequestHeader("X-User-Id") String callerUserId) {
+            HttpServletRequest request) {
         try {
-            User caller = verifyCaller(callerUserId, true);
+            User caller = verifyCaller(getAuthUserId(request), true);
             if (caller == null) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorMap("Super Admin access required"));
             }
@@ -284,9 +290,9 @@ public class AdminController {
 
     /** DELETE /api/admin/books/purge — Permanently delete all books with DELETED status (SUPER_ADMIN only) */
     @DeleteMapping("/books/purge")
-    public ResponseEntity<?> purgeDeletedBooks(@RequestHeader("X-User-Id") String callerUserId) {
+    public ResponseEntity<?> purgeDeletedBooks(HttpServletRequest request) {
         try {
-            User caller = verifyCaller(callerUserId, true);
+            User caller = verifyCaller(getAuthUserId(request), true);
             if (caller == null) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorMap("Super Admin access required"));
             }
@@ -302,9 +308,9 @@ public class AdminController {
 
     /** GET /api/admin/articles — List all articles */
     @GetMapping("/articles")
-    public ResponseEntity<?> listArticles(@RequestHeader("X-User-Id") String callerUserId) {
+    public ResponseEntity<?> listArticles(HttpServletRequest request) {
         try {
-            User caller = verifyCaller(callerUserId, false);
+            User caller = verifyCaller(getAuthUserId(request), false);
             if (caller == null) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorMap("Admin access required"));
             }
@@ -333,9 +339,9 @@ public class AdminController {
     @DeleteMapping("/articles/{articleId}")
     public ResponseEntity<?> deleteArticle(
             @PathVariable Long articleId,
-            @RequestHeader("X-User-Id") String callerUserId) {
+            HttpServletRequest request) {
         try {
-            User caller = verifyCaller(callerUserId, false);
+            User caller = verifyCaller(getAuthUserId(request), false);
             if (caller == null) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorMap("Admin access required"));
             }
@@ -352,9 +358,9 @@ public class AdminController {
     public ResponseEntity<?> changeArticleStatus(
             @PathVariable Long articleId,
             @RequestBody Map<String, String> body,
-            @RequestHeader("X-User-Id") String callerUserId) {
+            HttpServletRequest request) {
         try {
-            User caller = verifyCaller(callerUserId, false);
+            User caller = verifyCaller(getAuthUserId(request), false);
             if (caller == null) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorMap("Admin access required"));
             }
@@ -379,9 +385,9 @@ public class AdminController {
 
     /** DELETE /api/admin/articles/purge — Permanently delete all DRAFT articles (SUPER_ADMIN only) */
     @DeleteMapping("/articles/purge")
-    public ResponseEntity<?> purgeDraftArticles(@RequestHeader("X-User-Id") String callerUserId) {
+    public ResponseEntity<?> purgeDraftArticles(HttpServletRequest request) {
         try {
-            User caller = verifyCaller(callerUserId, true);
+            User caller = verifyCaller(getAuthUserId(request), true);
             if (caller == null) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorMap("Super Admin access required"));
             }
@@ -397,9 +403,9 @@ public class AdminController {
 
     /** GET /api/admin/stats — Dashboard stats */
     @GetMapping("/stats")
-    public ResponseEntity<?> getStats(@RequestHeader("X-User-Id") String callerUserId) {
+    public ResponseEntity<?> getStats(HttpServletRequest request) {
         try {
-            User caller = verifyCaller(callerUserId, false);
+            User caller = verifyCaller(getAuthUserId(request), false);
             if (caller == null) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorMap("Admin access required"));
             }
@@ -454,8 +460,8 @@ public class AdminController {
     // ── Magazine endpoints ──
 
     @GetMapping("/magazine")
-    public ResponseEntity<?> getOrCreateMagazine(@RequestHeader("X-User-Id") String callerUserId) {
-        User caller = verifyCaller(callerUserId, false);
+    public ResponseEntity<?> getOrCreateMagazine(HttpServletRequest request) {
+        User caller = verifyCaller(getAuthUserId(request), false);
         if (caller == null) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorMap("Admin access required"));
         }
@@ -470,8 +476,8 @@ public class AdminController {
 
     /** GET /api/admin/magazines — List all magazine editions (latest first) */
     @GetMapping("/magazines")
-    public ResponseEntity<?> listMagazines(@RequestHeader("X-User-Id") String callerUserId) {
-        User caller = verifyCaller(callerUserId, false);
+    public ResponseEntity<?> listMagazines(HttpServletRequest request) {
+        User caller = verifyCaller(getAuthUserId(request), false);
         if (caller == null) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorMap("Admin access required"));
         }
@@ -486,9 +492,9 @@ public class AdminController {
     /** POST /api/admin/magazine/new — Create a new magazine edition */
     @PostMapping("/magazine/new")
     public ResponseEntity<?> createNewMagazineEdition(
-            @RequestHeader("X-User-Id") String callerUserId,
+            HttpServletRequest request,
             @RequestBody(required = false) Map<String, String> body) {
-        User caller = verifyCaller(callerUserId, false);
+        User caller = verifyCaller(getAuthUserId(request), false);
         if (caller == null) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorMap("Admin access required"));
         }
@@ -503,8 +509,8 @@ public class AdminController {
     }
 
     @PutMapping("/magazine/publish")
-    public ResponseEntity<?> publishMagazine(@RequestHeader("X-User-Id") String callerUserId) {
-        User caller = verifyCaller(callerUserId, false);
+    public ResponseEntity<?> publishMagazine(HttpServletRequest request) {
+        User caller = verifyCaller(getAuthUserId(request), false);
         if (caller == null) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorMap("Admin access required"));
         }
@@ -525,8 +531,8 @@ public class AdminController {
     @PutMapping("/magazine/{magazineId}/unpublish")
     public ResponseEntity<?> unpublishMagazine(
             @PathVariable Long magazineId,
-            @RequestHeader("X-User-Id") String callerUserId) {
-        User caller = verifyCaller(callerUserId, false);
+            HttpServletRequest request) {
+        User caller = verifyCaller(getAuthUserId(request), false);
         if (caller == null) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorMap("Admin access required"));
         }
@@ -543,8 +549,8 @@ public class AdminController {
     @PutMapping("/magazine/{magazineId}/publish")
     public ResponseEntity<?> publishMagazineById(
             @PathVariable Long magazineId,
-            @RequestHeader("X-User-Id") String callerUserId) {
-        User caller = verifyCaller(callerUserId, false);
+            HttpServletRequest request) {
+        User caller = verifyCaller(getAuthUserId(request), false);
         if (caller == null) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorMap("Admin access required"));
         }
@@ -561,8 +567,8 @@ public class AdminController {
     @PostMapping("/magazine/{magazineId}/create-hindi-edition")
     public ResponseEntity<?> createHindiEdition(
             @PathVariable Long magazineId,
-            @RequestHeader("X-User-Id") String callerUserId) {
-        User caller = verifyCaller(callerUserId, false);
+            HttpServletRequest request) {
+        User caller = verifyCaller(getAuthUserId(request), false);
         if (caller == null) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorMap("Admin access required"));
         }
@@ -581,8 +587,8 @@ public class AdminController {
             @RequestParam("file") MultipartFile file,
             @RequestParam(value = "magazineId", required = false) Long magazineId,
             @RequestParam(value = "title", required = false) String title,
-            @RequestHeader("X-User-Id") String callerUserId) {
-        User caller = verifyCaller(callerUserId, false);
+            HttpServletRequest request) {
+        User caller = verifyCaller(getAuthUserId(request), false);
         if (caller == null) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorMap("Admin access required"));
         }
@@ -659,10 +665,10 @@ public class AdminController {
                 .replace("\n", "\\n").replace("\r", "\\r").replace("\t", "\\t") + "\"";
     }
 
-    private User verifyCaller(String callerUserId, boolean requireSuperAdmin) {
+    private User verifyCaller(Long callerUserId, boolean requireSuperAdmin) {
         try {
-            if (callerUserId == null || callerUserId.isEmpty()) return null;
-            Optional<User> callerOpt = userRepo.findById(Long.parseLong(callerUserId));
+            if (callerUserId == null) return null;
+            Optional<User> callerOpt = userRepo.findById(callerUserId);
             if (callerOpt.isEmpty()) return null;
             User caller = callerOpt.get();
             if (requireSuperAdmin && !RoleUtil.isSuperAdmin(caller.getRole())) return null;

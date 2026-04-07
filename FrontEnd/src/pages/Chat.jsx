@@ -24,7 +24,8 @@ const Chat = () => {
     const lastMessageIdRef = useRef(null);
     const pollRef = useRef(null);
 
-    const headers = { "X-User-Id": String(user?.userId || "") };
+    const token = localStorage.getItem("saatSaheliToken");
+    const headers = token ? { Authorization: `Bearer ${token}` } : {};
 
     // Fetch rooms
     useEffect(() => {

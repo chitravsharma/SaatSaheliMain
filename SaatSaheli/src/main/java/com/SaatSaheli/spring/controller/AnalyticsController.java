@@ -5,6 +5,7 @@ import com.SaatSaheli.spring.model.User;
 import com.SaatSaheli.spring.repository.SiteVisitRepository;
 import com.SaatSaheli.spring.repository.UserRepository;
 import com.SaatSaheli.spring.util.RoleUtil;
+import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,6 +28,11 @@ public class AnalyticsController {
 
     @Autowired
     private UserRepository userRepo;
+
+    private Long getAuthUserId(HttpServletRequest request) {
+        Object val = request.getAttribute("jwtUserId");
+        return val instanceof Long ? (Long) val : null;
+    }
 
     /**
      * POST /api/analytics/visit — Track a page visit (called from frontend on every page load)
@@ -61,9 +67,9 @@ public class AnalyticsController {
     @GetMapping("/summary")
     public ResponseEntity<?> getSummary(
             @RequestParam(defaultValue = "7") int days,
-            @RequestHeader("X-User-Id") String callerUserId) {
+            HttpServletRequest request) {
         try {
-            User caller = verifyCaller(callerUserId);
+            User caller = verifyCaller(getAuthUserId(request));
             if (caller == null) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", "Admin access required"));
             }
@@ -137,9 +143,9 @@ public class AnalyticsController {
     @GetMapping("/recent")
     public ResponseEntity<?> getRecentVisits(
             @RequestParam(defaultValue = "50") int limit,
-            @RequestHeader("X-User-Id") String callerUserId) {
+            HttpServletRequest request) {
         try {
-            User caller = verifyCaller(callerUserId);
+            User caller = verifyCaller(getAuthUserId(request));
             if (caller == null) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", "Admin access required"));
             }
@@ -157,10 +163,10 @@ public class AnalyticsController {
         }
     }
 
-    private User verifyCaller(String callerUserId) {
+    private User verifyCaller(Long callerUserId) {
         try {
-            if (callerUserId == null || callerUserId.isEmpty()) return null;
-            Optional<User> callerOpt = userRepo.findById(Long.parseLong(callerUserId));
+            if (callerUserId == null) return null;
+            Optional<User> callerOpt = userRepo.findById(callerUserId);
             if (callerOpt.isEmpty()) return null;
             User caller = callerOpt.get();
             if (!RoleUtil.isAdmin(caller.getRole())) return null;

@@ -183,7 +183,8 @@ const AdminDashboard = () => {
     const [recentVisits, setRecentVisits] = useState([]);
     const [analyticsLoading, setAnalyticsLoading] = useState(false);
 
-    const headers = { "X-User-Id": String(user?.userId || "") };
+    const token = localStorage.getItem("saatSaheliToken");
+    const headers = token ? { Authorization: `Bearer ${token}` } : {};
 
     const fetchAnalytics = useCallback(async () => {
         setAnalyticsLoading(true);
@@ -472,7 +473,7 @@ const AdminDashboard = () => {
         try {
             const res = await axios.get(`${API}/api/books/${bookId}/export/${format}`, {
                 responseType: 'blob',
-                headers: { "X-User-Id": String(user.userId) },
+                headers,
             });
             const url = window.URL.createObjectURL(new Blob([res.data]));
             const link = document.createElement('a');

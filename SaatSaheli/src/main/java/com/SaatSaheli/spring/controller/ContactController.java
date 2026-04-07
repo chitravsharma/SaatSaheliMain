@@ -35,6 +35,11 @@ public class ContactController {
     @Autowired
     private EmailService emailService;
 
+    private Long getAuthUserId(HttpServletRequest request) {
+        Object val = request.getAttribute("jwtUserId");
+        return val instanceof Long ? (Long) val : null;
+    }
+
     /**
      * POST /api/contact — Submit a contact form message (public endpoint)
      */
@@ -93,11 +98,9 @@ public class ContactController {
      * GET /api/contact — List all contact messages (Admin only)
      */
     @GetMapping
-    public ResponseEntity<?> getContactMessages(
-            @RequestHeader(value = "X-User-Id", required = false) String headerUserId,
-            HttpServletRequest request) {
+    public ResponseEntity<?> getContactMessages(HttpServletRequest request) {
         try {
-            Long callerUserId = resolveUserId(headerUserId, request);
+            Long callerUserId = getAuthUserId(request);
             if (callerUserId == null) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorMap("Authentication required"));
             }
@@ -125,10 +128,9 @@ public class ContactController {
     public ResponseEntity<?> updateContactStatus(
             @PathVariable Long id,
             @RequestBody Map<String, String> body,
-            @RequestHeader(value = "X-User-Id", required = false) String headerUserId,
             HttpServletRequest request) {
         try {
-            Long callerUserId = resolveUserId(headerUserId, request);
+            Long callerUserId = getAuthUserId(request);
             if (callerUserId == null) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorMap("Authentication required"));
             }
@@ -167,10 +169,9 @@ public class ContactController {
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteContactMessage(
             @PathVariable Long id,
-            @RequestHeader(value = "X-User-Id", required = false) String headerUserId,
             HttpServletRequest request) {
         try {
-            Long callerUserId = resolveUserId(headerUserId, request);
+            Long callerUserId = getAuthUserId(request);
             if (callerUserId == null) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorMap("Authentication required"));
             }
@@ -194,14 +195,6 @@ public class ContactController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(errorMap("Failed to delete message"));
         }
-    }
-
-    private Long resolveUserId(String headerUserId, HttpServletRequest request) {
-        if (headerUserId != null && !headerUserId.isEmpty()) {
-            try { return Long.parseLong(headerUserId); } catch (NumberFormatException ignored) {}
-        }
-        Object val = request.getAttribute("jwtUserId");
-        return val instanceof Long ? (Long) val : null;
     }
 
     private Map<String, String> errorMap(String message) {
