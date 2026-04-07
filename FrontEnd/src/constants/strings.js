@@ -552,6 +552,8 @@ export const en = {
     loading: "Loading magazine...",
     notFound: "Magazine is not available yet.",
     pageOf: (current, total) => `Page ${current} of ${total}`,
+    pickEdition: "Choose an edition to read",
+    backToList: "Back to Magazines",
   },
 
   magazineEditor: {
@@ -1180,6 +1182,8 @@ export const hi = {
     loading: "पत्रिका लोड हो रही है...",
     notFound: "पत्रिका अभी उपलब्ध नहीं है।",
     pageOf: (current, total) => `पृष्ठ ${current} / ${total}`,
+    pickEdition: "पढ़ने के लिए एक संस्करण चुनें",
+    backToList: "पत्रिकाओं पर वापस जाएं",
   },
 
   magazineEditor: {

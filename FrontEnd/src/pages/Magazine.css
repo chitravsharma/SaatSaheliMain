@@ -22,3 +22,35 @@
   font-size: 1.1rem;
   margin-top: 32px;
 }
+
+.magazine-subtitle {
+  color: var(--text-secondary, #666);
+  font-size: 1.05rem;
+  margin-bottom: 24px;
+}
+
+.magazine-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  justify-content: center;
+}
+
+.magazine-action-error {
+  background: #fef2f2;
+  color: #b91c1c;
+  padding: 8px 16px;
+  border-radius: 8px;
+  margin: 8px 0 16px;
+  text-align: center;
+  font-size: 14px;
+}
+
+.magazine-error-dismiss {
+  margin-left: 12px;
+  background: none;
+  border: none;
+  color: #b91c1c;
+  cursor: pointer;
+  font-weight: bold;
+}
