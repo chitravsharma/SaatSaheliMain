@@ -14,6 +14,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import org.springframework.data.domain.PageRequest;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
@@ -66,11 +67,16 @@ public class ContactController {
                 return ResponseEntity.badRequest().body(errorMap("Please enter a valid email address"));
             }
 
+            String rating = body.get("rating");
+            String category = body.get("category");
+
             ContactMessage contact = new ContactMessage();
             contact.setName(name.trim());
             contact.setEmail(email.trim());
             contact.setSubject(subject != null ? subject.trim() : "");
             contact.setMessage(message.trim());
+            contact.setRating(rating != null && !rating.trim().isEmpty() ? rating.trim() : null);
+            contact.setCategory(category != null && !category.trim().isEmpty() ? category.trim() : null);
             contact.setCreatedDate(LocalDateTime.now());
             contactRepo.save(contact);
 
@@ -91,6 +97,35 @@ public class ContactController {
             log.error("Failed to save contact message", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(errorMap("Failed to send message. Please try again later."));
+        }
+    }
+
+    /**
+     * GET /api/contact/reviews — Public endpoint: recent feedback with ratings (name + rating + message only)
+     */
+    @GetMapping("/reviews")
+    public ResponseEntity<?> getRecentReviews(@RequestParam(defaultValue = "10") int limit) {
+        try {
+            int safeLimit = Math.min(Math.max(limit, 1), 20);
+            List<ContactMessage> reviews = contactRepo.findByRatingIsNotNullAndStatusOrderByCreatedDateDesc(
+                    "COMPLETED", PageRequest.of(0, safeLimit));
+
+            // Return only safe public fields (no email)
+            List<Map<String, Object>> publicReviews = reviews.stream().map(r -> {
+                Map<String, Object> m = new HashMap<>();
+                m.put("name", r.getName());
+                m.put("rating", r.getRating());
+                m.put("category", r.getCategory());
+                m.put("message", r.getMessage());
+                m.put("createdDate", r.getCreatedDate());
+                return m;
+            }).toList();
+
+            return ResponseEntity.ok(publicReviews);
+        } catch (Exception e) {
+            log.error("Failed to fetch recent reviews", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(errorMap("Failed to fetch reviews"));
         }
     }
 

@@ -30,6 +30,12 @@ public class ContactMessage {
     @Column(name = "status")
     private String status = "NEW";
 
+    @Column(name = "rating")
+    private String rating;
+
+    @Column(name = "category")
+    private String category;
+
     @Column(name = "updated_date")
     @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime updatedDate;
@@ -54,6 +60,12 @@ public class ContactMessage {
 
     public String getStatus() { return status != null ? status : "NEW"; }
     public void setStatus(String status) { this.status = status; }
+
+    public String getRating() { return rating; }
+    public void setRating(String rating) { this.rating = rating; }
+
+    public String getCategory() { return category; }
+    public void setCategory(String category) { this.category = category; }
 
     public LocalDateTime getUpdatedDate() { return updatedDate; }
     public void setUpdatedDate(LocalDateTime updatedDate) { this.updatedDate = updatedDate; }

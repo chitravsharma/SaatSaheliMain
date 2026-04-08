@@ -9,4 +9,5 @@ import java.util.List;
 @Repository
 public interface ContactMessageRepository extends JpaRepository<ContactMessage, Long> {
     List<ContactMessage> findAllByOrderByCreatedDateDesc();
+    List<ContactMessage> findByRatingIsNotNullAndStatusOrderByCreatedDateDesc(String status, org.springframework.data.domain.Pageable pageable);
 }

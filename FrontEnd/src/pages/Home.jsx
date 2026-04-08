@@ -32,12 +32,20 @@ function Home() {
   const [advertisements, setAdvertisements] = useState([]);
   const [actionError, setActionError] = useState("");
   const [busyActions, setBusyActions] = useState(new Set());
+  const [testimonials, setTestimonials] = useState([]);
 
   // Fetch active advertisements from API
   useEffect(() => {
     api.get(`${API}/api/advertisements/active`)
       .then(res => setAdvertisements(Array.isArray(res.data) ? res.data : []))
       .catch((err) => { console.error("Failed to fetch advertisements:", err); });
+  }, []);
+
+  // Fetch testimonials (recent feedback with ratings)
+  useEffect(() => {
+    api.get(`${API}/api/contact/reviews?limit=6`)
+      .then(res => setTestimonials(Array.isArray(res.data) ? res.data : []))
+      .catch(() => setTestimonials([]));
   }, []);
 
   useEffect(() => {
@@ -485,6 +493,38 @@ function Home() {
             <Link to="/articles/poems" className="ss-btn ss-btn-outline" style={{ marginRight: 8 }}>Poems</Link>
             <Link to="/articles/blogs" className="ss-btn ss-btn-outline" style={{ marginRight: 8 }}>Blogs</Link>
             <Link to="/articles/articles" className="ss-btn ss-btn-outline">Articles</Link>
+          </div>
+        </div>
+      )}
+
+      {/* Testimonials - What Our Readers Say */}
+      {!loading && testimonials.length > 0 && (
+        <div className="home-section home-section-testimonials">
+          <h2 className="home-section-heading">What Our Readers Say</h2>
+          <div className="home-testimonials-row">
+            {testimonials.map((t, idx) => {
+              const stars = t.rating === "Excellent" ? 5
+                : t.rating === "Good" ? 4
+                : t.rating === "Average" ? 3
+                : t.rating === "Poor" ? 2 : 1;
+              return (
+                <div key={idx} className="home-testimonial-card">
+                  <div className="home-testimonial-stars">
+                    {Array.from({ length: 5 }, (_, i) => (
+                      <span key={i} className={i < stars ? "star-filled" : "star-empty"}>★</span>
+                    ))}
+                  </div>
+                  <p className="home-testimonial-message">"{t.message}"</p>
+                  <div className="home-testimonial-footer">
+                    <span className="home-testimonial-name">— {t.name}</span>
+                    {t.category && <span className="home-testimonial-category">{t.category}</span>}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+          <div className="home-section-more">
+            <Link to="/feedback" className="ss-btn ss-btn-outline">Share Your Feedback</Link>
           </div>
         </div>
       )}

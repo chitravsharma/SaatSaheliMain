@@ -35,13 +35,13 @@ const Feedback = () => {
 
     setSending(true);
     try {
-      const fullMessage = `Category: ${category || "General"}\nRating: ${rating || "Not provided"}\n\nFeedback:\n${message.trim()}`;
-
       await axios.post(`${API_BASE}/api/contact`, {
         name: name.trim(),
         email: email.trim(),
         subject: `Feedback: ${category || "General"}`,
-        message: fullMessage,
+        message: message.trim(),
+        rating: rating || null,
+        category: category || null,
       });
       setSent(true);
       setName(''); setEmail(''); setCategory('');

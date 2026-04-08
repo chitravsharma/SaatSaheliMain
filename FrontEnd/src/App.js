@@ -4,6 +4,7 @@ import React from "react";
 
 import Header from './modules/Header';
 import Footer from './modules/Footer';
+import Sidebar from './modules/Sidebar';
 import ServerWakeUp from './components/ServerWakeUp';
 import { Routes, Route, useLocation } from 'react-router-dom';
 import Home from './pages/Home';
@@ -46,12 +47,15 @@ function BookManagerWrapper() {
 }
 
 function App() {
+  const [sidebarOpen, setSidebarOpen] = React.useState(false);
+
   return (
     <ServerWakeUp>
     <div className="App">
       <VisitorTracker />
       <MaintenanceBanner />
       <Header />
+      <Sidebar isOpen={sidebarOpen} toggleSidebar={() => setSidebarOpen(prev => !prev)} />
       <main id="main-content">
         <DownloadProtection>
         <Routes>
