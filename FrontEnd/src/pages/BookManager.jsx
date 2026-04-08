@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useLocation, Link, useNavigate } from "react-router-dom";
-import axios from "axios";
+import api from "../utils/api";
 import FlipBook from "../FlipBook";
 import PageLayoutEditor from "../PageLayoutEditor";
 import CoverPageDesigner from "../components/CoverPageDesigner";
@@ -25,7 +25,7 @@ function PublicBooks() {
   useEffect(() => {
     const fetchPublished = async () => {
       try {
-        const res = await axios.get(`${API}/search?status=PUBLISHED`);
+        const res = await api.get(`${API}/search?status=PUBLISHED`);
         const allBooks = Array.isArray(res.data) ? res.data : [];
         setBooks(allBooks.filter((b) => (b.category || "").toUpperCase() !== "MAGAZINE"));
       } catch {
@@ -158,7 +158,7 @@ function BookManager() {
     if (!user) return;
     const fetchPublished = async () => {
       try {
-        const res = await axios.get(`${API}/search?status=PUBLISHED&userId=${userId}`);
+        const res = await api.get(`${API}/search?status=PUBLISHED&userId=${userId}`);
         const allBooks = Array.isArray(res.data) ? res.data : [];
         setPublishedBooks(allBooks.filter((b) => (b.category || "").toUpperCase() !== "MAGAZINE"));
       } catch {
@@ -238,9 +238,9 @@ function BookManager() {
     if (editBookId) {
       const openBook = async () => {
         try {
-          const res = await axios.get(`${API}/${editBookId}`);
+          const res = await api.get(`${API}/${editBookId}`);
           setSelectedBook(res.data);
-          const pagesRes = await axios.get(`${API}/${editBookId}/pages`);
+          const pagesRes = await api.get(`${API}/${editBookId}/pages`);
           setPages(Array.isArray(pagesRes.data) ? pagesRes.data : []);
           setView("edit");
         } catch {
@@ -282,7 +282,7 @@ function BookManager() {
     try {
       const formData = new FormData();
       formData.append("file", file);
-      const res = await axios.post(UPLOAD_API, formData, {
+      const res = await api.post(UPLOAD_API, formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
       setUrl(res.data.url);
@@ -303,7 +303,7 @@ function BookManager() {
     }
     setGeneratingState(true);
     try {
-      const res = await axios.post(GENERATE_API, { prompt: prompt.trim(), style: imageStyle }, { timeout: 90000 });
+      const res = await api.post(GENERATE_API, { prompt: prompt.trim(), style: imageStyle }, { timeout: 90000 });
       setUrl(res.data.url);
       showMessage(strings.bookManager.msgImageGenerated);
     } catch (err) {
@@ -316,7 +316,7 @@ function BookManager() {
   const fetchBooks = async () => {
     try {
       setLoading(true);
-      const res = await axios.get(`${API}/user/${userId}`);
+      const res = await api.get(`${API}/user/${userId}`);
       setBooks(Array.isArray(res.data) ? res.data : []);
     } catch (err) {
       setBooks([]);
@@ -328,7 +328,7 @@ function BookManager() {
   const fetchDrafts = async () => {
     try {
       setLoading(true);
-      const res = await axios.get(`${API}/user/${userId}/drafts`);
+      const res = await api.get(`${API}/user/${userId}/drafts`);
       setBooks(Array.isArray(res.data) ? res.data : []);
     } catch (err) {
       setBooks([]);
@@ -339,7 +339,7 @@ function BookManager() {
 
   const fetchBookPages = async (bookId) => {
     try {
-      const res = await axios.get(`${API}/${bookId}/pages`);
+      const res = await api.get(`${API}/${bookId}/pages`);
       setPages(Array.isArray(res.data) ? res.data : []);
     } catch (err) {
       setPages([]);
@@ -353,7 +353,7 @@ function BookManager() {
     }
     try {
       setLoading(true);
-      const res = await axios.post(`${API}/create`, { title: newTitle, userId });
+      const res = await api.post(`${API}/create`, { title: newTitle, userId });
       setSelectedBook(res.data);
       setPages(res.data.pages || []);
       setNewTitle("");
@@ -375,7 +375,7 @@ function BookManager() {
   const handleUpdateTitle = async () => {
     if (!selectedBook) return;
     try {
-      const res = await axios.put(`${API}/${selectedBook.id}`, { title: selectedBook.title, userId: String(userId) });
+      const res = await api.put(`${API}/${selectedBook.id}`, { title: selectedBook.title, userId: String(userId) });
       setSelectedBook(res.data);
       showMessage(strings.bookManager.msgTitleUpdated);
     } catch (err) {
@@ -386,7 +386,7 @@ function BookManager() {
   const handlePublish = async () => {
     if (!selectedBook) return;
     try {
-      const res = await axios.put(`${API}/${selectedBook.id}/publish?userId=${userId}`);
+      const res = await api.put(`${API}/${selectedBook.id}/publish?userId=${userId}`);
       setSelectedBook(res.data);
       showMessage(strings.bookManager.msgPublished);
     } catch (err) {
@@ -397,7 +397,7 @@ function BookManager() {
   const handleSaveDraft = async () => {
     if (!selectedBook) return;
     try {
-      const res = await axios.put(`${API}/${selectedBook.id}/draft?userId=${userId}`);
+      const res = await api.put(`${API}/${selectedBook.id}/draft?userId=${userId}`);
       setSelectedBook(res.data);
       showMessage(strings.bookManager.msgDraftSaved);
     } catch (err) {
@@ -408,7 +408,7 @@ function BookManager() {
   const handleDeleteBook = async (bookId) => {
     if (!window.confirm(strings.bookManager.confirmDeleteBook)) return;
     try {
-      await axios.delete(`${API}/${bookId}?userId=${userId}`);
+      await api.delete(`${API}/${bookId}?userId=${userId}`);
       showMessage(strings.bookManager.msgBookDeleted);
       setSelectedBook(null);
       setPages([]);
@@ -429,7 +429,7 @@ function BookManager() {
       const formatJson = isSpecialPage
         ? JSON.stringify({ fontFamily: "sans-serif", fontSize: "16px", color: "#1a1a2e", coverDesign: coverDesignData, layout: {} })
         : buildFormatJson(formatFontFamily, formatFontSize, formatColor, pageLayout);
-      await axios.post(`${API}/${selectedBook.id}/page?userId=${userId}`, {
+      await api.post(`${API}/${selectedBook.id}/page?userId=${userId}`, {
         pageNumber: parseInt(pageNumber),
         content: pageContent,
         format: formatJson,
@@ -455,7 +455,7 @@ function BookManager() {
   const handleUpdatePage = async () => {
     if (!editingPage) return;
     try {
-      await axios.put(`${API}/page/${editingPage.id}?userId=${userId}`, {
+      await api.put(`${API}/page/${editingPage.id}?userId=${userId}`, {
         pageNumber: editingPage.pageNumber,
         content: editingPage.content,
         format: editingPage.format,
@@ -473,7 +473,7 @@ function BookManager() {
   const handleDeletePage = async (pageId) => {
     if (!window.confirm(strings.bookManager.confirmDeletePage)) return;
     try {
-      await axios.delete(`${API}/page/${pageId}?userId=${userId}`);
+      await api.delete(`${API}/page/${pageId}?userId=${userId}`);
       showMessage(strings.bookManager.msgPageDeleted);
       await fetchBookPages(selectedBook.id);
     } catch (err) {
@@ -820,7 +820,7 @@ function BookManager() {
                   ? `\n\nAppointment Requested:\nDate: ${supportPrefDate}\nTime: ${supportPrefTime}\nMeeting Type: ${supportMeetingType}`
                   : "\n\nAppointment: No";
                 const fullMessage = `Request Type: ${requestTypes}\nTimeline: ${supportTimeline || "Not specified"}\nPhone: ${supportPhone || "Not provided"}\n\nProject Details:\n${supportMessage.trim()}${appointmentInfo}`;
-                await axios.post(`${process.env.REACT_APP_API_URL}/api/contact`, {
+                await api.post(`${process.env.REACT_APP_API_URL}/api/contact`, {
                   name: supportName.trim(),
                   email: supportEmail.trim(),
                   subject: `Help & Support: ${requestTypes}`,
@@ -992,7 +992,7 @@ function BookManager() {
         formData.append("file", docFile);
         formData.append("title", newTitle.trim());
         formData.append("userId", userId);
-        const res = await axios.post(`${API}/upload-document`, formData, {
+        const res = await api.post(`${API}/upload-document`, formData, {
           headers: { "Content-Type": "multipart/form-data" },
         });
         const book = res.data;

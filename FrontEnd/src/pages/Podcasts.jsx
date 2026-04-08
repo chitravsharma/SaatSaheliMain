@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import axios from "axios";
+import api from "../utils/api";
 import { useAuth } from "../AuthContext";
 import "./Podcasts.css";
 
@@ -46,7 +46,7 @@ function Podcasts() {
 
   const fetchPodcasts = async () => {
     try {
-      const res = await axios.get(`${API}/api/podcasts`);
+      const res = await api.get(`${API}/api/podcasts`);
       setPodcasts(Array.isArray(res.data) ? res.data : []);
     } catch {
       setPodcasts([]);
@@ -58,7 +58,7 @@ function Podcasts() {
   const fetchMyPodcasts = async () => {
     if (!userId) return;
     try {
-      const res = await axios.get(`${API}/api/podcasts/user/${userId}`);
+      const res = await api.get(`${API}/api/podcasts/user/${userId}`);
       setMyPodcasts(Array.isArray(res.data) ? res.data : []);
     } catch {
       setMyPodcasts([]);
@@ -77,7 +77,7 @@ function Podcasts() {
     try {
       const formData = new FormData();
       formData.append("file", file);
-      const res = await axios.post(`${API}/api/upload`, formData, {
+      const res = await api.post(`${API}/api/upload`, formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
       setAudioUrl(res.data.url);
@@ -95,7 +95,7 @@ function Podcasts() {
     try {
       const formData = new FormData();
       formData.append("file", file);
-      const res = await axios.post(`${API}/api/upload`, formData, {
+      const res = await api.post(`${API}/api/upload`, formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
       setCoverImageUrl(res.data.url);
@@ -117,10 +117,10 @@ function Podcasts() {
         audioUrl, coverImageUrl, language, category: category || null, status,
       };
       if (editingId) {
-        await axios.put(`${API}/api/podcasts/${editingId}`, body);
+        await api.put(`${API}/api/podcasts/${editingId}`, body);
         showMsg("Podcast updated!");
       } else {
-        await axios.post(`${API}/api/podcasts`, body);
+        await api.post(`${API}/api/podcasts`, body);
         showMsg(`Podcast ${publishOnSave ? "published" : "saved as draft"}!`);
       }
       resetForm();
@@ -136,7 +136,7 @@ function Podcasts() {
   const handleDelete = async (id) => {
     if (!window.confirm("Delete this podcast?")) return;
     try {
-      await axios.delete(`${API}/api/podcasts/${id}?userId=${userId}`);
+      await api.delete(`${API}/api/podcasts/${id}?userId=${userId}`);
       showMsg("Deleted!");
       fetchPodcasts();
       fetchMyPodcasts();
@@ -198,7 +198,7 @@ function Podcasts() {
   const togglePublish = async (podcast) => {
     const newStatus = podcast.status === "PUBLISHED" ? "DRAFT" : "PUBLISHED";
     try {
-      await axios.put(`${API}/api/podcasts/${podcast.id}`, { userId, status: newStatus });
+      await api.put(`${API}/api/podcasts/${podcast.id}`, { userId, status: newStatus });
       showMsg(newStatus === "PUBLISHED" ? "Published!" : "Moved to draft");
       fetchMyPodcasts();
       fetchPodcasts();

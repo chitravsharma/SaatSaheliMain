@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import axios from "axios";
+import api from "../utils/api";
 import { useAuth } from "../AuthContext";
 import "./Marketplace.css";
 
@@ -38,7 +38,7 @@ export default function Marketplace() {
   const fetchListings = async () => {
     setLoading(true);
     try {
-      const res = await axios.get(`${API}/api/marketplace/active`);
+      const res = await api.get(`${API}/api/marketplace/active`);
       setListings(Array.isArray(res.data) ? res.data : []);
     } catch { /* ignore */ }
     setLoading(false);
@@ -47,7 +47,7 @@ export default function Marketplace() {
   const fetchMyListings = async () => {
     if (!userId) return;
     try {
-      const res = await axios.get(`${API}/api/marketplace/user/${userId}`);
+      const res = await api.get(`${API}/api/marketplace/user/${userId}`);
       setMyListings(Array.isArray(res.data) ? res.data : []);
     } catch { /* ignore */ }
   };
@@ -67,7 +67,7 @@ export default function Marketplace() {
     try {
       const formData = new FormData();
       formData.append("file", file);
-      const res = await axios.post(`${API}/api/upload`, formData);
+      const res = await api.post(`${API}/api/upload`, formData);
       setImage(res.data.url);
     } catch {
       setMessage("Failed to upload image");
@@ -102,10 +102,10 @@ export default function Marketplace() {
 
     try {
       if (editingId) {
-        await axios.put(`${API}/api/marketplace/${editingId}`, body);
+        await api.put(`${API}/api/marketplace/${editingId}`, body);
         setMessage("Listing updated");
       } else {
-        await axios.post(`${API}/api/marketplace`, body);
+        await api.post(`${API}/api/marketplace`, body);
         setMessage("Listing created");
       }
       resetForm();
@@ -121,7 +121,7 @@ export default function Marketplace() {
   const handleDelete = async (id) => {
     if (!window.confirm("Remove this listing?")) return;
     try {
-      await axios.delete(`${API}/api/marketplace/${id}?userId=${userId}`);
+      await api.delete(`${API}/api/marketplace/${id}?userId=${userId}`);
       setMessage("Listing removed");
       fetchListings();
       fetchMyListings();

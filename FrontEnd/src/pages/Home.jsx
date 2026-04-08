@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import axios from "axios";
+import api from "../utils/api";
 import { useAuth } from "../AuthContext";
 import { useStrings } from "../LanguageContext";
 import "./Home.css";
@@ -35,7 +35,7 @@ function Home() {
 
   // Fetch active advertisements from API
   useEffect(() => {
-    axios.get(`${API}/api/advertisements/active`)
+    api.get(`${API}/api/advertisements/active`)
       .then(res => setAdvertisements(Array.isArray(res.data) ? res.data : []))
       .catch((err) => { console.error("Failed to fetch advertisements:", err); });
   }, []);
@@ -44,11 +44,11 @@ function Home() {
     const fetchData = async () => {
       try {
         const [booksRes, galleriesRes, articlesRes, bookCountsRes, galleryCountsRes] = await Promise.all([
-          axios.get(`${API}/api/books/search?status=PUBLISHED`),
-          axios.get(`${API}/api/galleries`),
-          axios.get(`${API}/api/articles`).catch(() => ({ data: [] })),
-          axios.get(`${API}/api/social/counts?targetType=BOOK`).catch(() => ({ data: { likes: {}, comments: {} } })),
-          axios.get(`${API}/api/social/counts?targetType=GALLERY`).catch(() => ({ data: { likes: {}, comments: {} } })),
+          api.get(`${API}/api/books/search?status=PUBLISHED`),
+          api.get(`${API}/api/galleries`),
+          api.get(`${API}/api/articles`).catch(() => ({ data: [] })),
+          api.get(`${API}/api/social/counts?targetType=BOOK`).catch(() => ({ data: { likes: {}, comments: {} } })),
+          api.get(`${API}/api/social/counts?targetType=GALLERY`).catch(() => ({ data: { likes: {}, comments: {} } })),
         ]);
 
         const books = Array.isArray(booksRes.data) ? booksRes.data : [];
@@ -96,8 +96,8 @@ function Home() {
     const fetchUserSocial = async () => {
       try {
         const [bookFavs, galleryFavs] = await Promise.all([
-          axios.get(`${API}/api/social/favorites?userId=${user.userId}&targetType=BOOK`),
-          axios.get(`${API}/api/social/favorites?userId=${user.userId}&targetType=GALLERY`),
+          api.get(`${API}/api/social/favorites?userId=${user.userId}&targetType=BOOK`),
+          api.get(`${API}/api/social/favorites?userId=${user.userId}&targetType=GALLERY`),
         ]);
         const favMap = {};
         (bookFavs.data || []).forEach(f => { favMap[`BOOK_${f.targetId}`] = true; });
@@ -124,7 +124,7 @@ function Home() {
     const prevLiked = userLikes[key];
     setUserLikes(prev => ({ ...prev, [key]: !prevLiked }));
     try {
-      const res = await axios.post(`${API}/api/social/like`, { userId: user.userId, targetType, targetId });
+      const res = await api.post(`${API}/api/social/like`, { userId: user.userId, targetType, targetId });
       setUserLikes(prev => ({ ...prev, [key]: res.data.liked }));
       if (targetType === "BOOK") {
         setBookCounts(prev => ({ ...prev, likes: { ...prev.likes, [targetId]: res.data.count } }));
@@ -155,7 +155,7 @@ function Home() {
     const prevFav = userFavorites[key];
     setUserFavorites(prev => ({ ...prev, [key]: !prevFav }));
     try {
-      const res = await axios.post(`${API}/api/social/favorite`, { userId: user.userId, targetType, targetId });
+      const res = await api.post(`${API}/api/social/favorite`, { userId: user.userId, targetType, targetId });
       setUserFavorites(prev => ({ ...prev, [key]: res.data.favorited }));
     } catch {
       setUserFavorites(prev => ({ ...prev, [key]: prevFav }));

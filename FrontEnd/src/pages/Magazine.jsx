@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
+import api from "../utils/api";
 import { Link } from "react-router-dom";
 import { useAuth } from "../AuthContext";
 import { useStrings } from "../LanguageContext";
@@ -32,8 +32,8 @@ const Magazine = () => {
     const fetchData = async () => {
       try {
         const [magRes, countsRes] = await Promise.all([
-          axios.get(`${API}/api/books/magazines`),
-          axios.get(`${API}/api/social/counts?targetType=BOOK`).catch(() => ({ data: { likes: {}, comments: {} } })),
+          api.get(`${API}/api/books/magazines`),
+          api.get(`${API}/api/social/counts?targetType=BOOK`).catch(() => ({ data: { likes: {}, comments: {} } })),
         ]);
         setMagazines(Array.isArray(magRes.data) ? magRes.data : []);
         setBookCounts(countsRes.data || { likes: {}, comments: {} });
@@ -67,7 +67,7 @@ const Magazine = () => {
     const fetchUserSocial = async () => {
       try {
         const [bookFavs] = await Promise.all([
-          axios.get(`${API}/api/social/favorites?userId=${user.userId}&targetType=BOOK`),
+          api.get(`${API}/api/social/favorites?userId=${user.userId}&targetType=BOOK`),
         ]);
         const favMap = {};
         (bookFavs.data || []).forEach(f => { favMap[`BOOK_${f.targetId}`] = true; });
@@ -92,7 +92,7 @@ const Magazine = () => {
     const prevLiked = userLikes[key];
     setUserLikes(prev => ({ ...prev, [key]: !prevLiked }));
     try {
-      const res = await axios.post(`${API}/api/social/like`, { userId: user.userId, targetType: "BOOK", targetId });
+      const res = await api.post(`${API}/api/social/like`, { userId: user.userId, targetType: "BOOK", targetId });
       setUserLikes(prev => ({ ...prev, [key]: res.data.liked }));
       setBookCounts(prev => ({ ...prev, likes: { ...prev.likes, [targetId]: res.data.count } }));
     } catch {
@@ -118,7 +118,7 @@ const Magazine = () => {
     const prevFav = userFavorites[key];
     setUserFavorites(prev => ({ ...prev, [key]: !prevFav }));
     try {
-      const res = await axios.post(`${API}/api/social/favorite`, { userId: user.userId, targetType: "BOOK", targetId });
+      const res = await api.post(`${API}/api/social/favorite`, { userId: user.userId, targetType: "BOOK", targetId });
       setUserFavorites(prev => ({ ...prev, [key]: res.data.favorited }));
     } catch {
       setUserFavorites(prev => ({ ...prev, [key]: prevFav }));

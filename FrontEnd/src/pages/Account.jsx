@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import axios from "axios";
+import api from "../utils/api";
 import { useAuth } from "../AuthContext";
 import { useStrings } from "../LanguageContext";
 import TermsGate from "../components/TermsGate";
@@ -37,10 +37,10 @@ function Account() {
         setLoading(true);
         setError("");
         const [booksRes, profileRes, galleriesRes, articlesRes] = await Promise.all([
-          axios.get(`${API_BOOKS}/user/${user.userId}`),
-          axios.get(`${API_AUTH}/user/${user.userId}`),
-          axios.get(`${API_GALLERIES}/user/${user.userId}`),
-          axios.get(`${API_ARTICLES}/user/${user.userId}`).catch(() => ({ data: [] })),
+          api.get(`${API_BOOKS}/user/${user.userId}`).catch(() => ({ data: [] })),
+          api.get(`${API_AUTH}/user/${user.userId}`),
+          api.get(`${API_GALLERIES}/user/${user.userId}`).catch(() => ({ data: [] })),
+          api.get(`${API_ARTICLES}/user/${user.userId}`).catch(() => ({ data: [] })),
         ]);
         setBooks(Array.isArray(booksRes.data) ? booksRes.data : []);
         setArticles(Array.isArray(articlesRes.data) ? articlesRes.data : []);
@@ -64,7 +64,7 @@ function Account() {
   const handleCreateGallery = async () => {
     if (!newGalleryTitle.trim()) return;
     try {
-      const res = await axios.post(API_GALLERIES, { title: newGalleryTitle.trim(), userId: user.userId });
+      const res = await api.post(API_GALLERIES, { title: newGalleryTitle.trim(), userId: user.userId });
       setGalleries([res.data, ...galleries]);
       setSelectedGalleryId(res.data.id);
       setGalleryImages([]);
@@ -94,7 +94,7 @@ function Account() {
         formData.append("file", file);
         formData.append("userId", user.userId);
         formData.append("caption", file.name);
-        const res = await axios.post(`${API_GALLERIES}/${selectedGalleryId}/images`, formData);
+        const res = await api.post(`${API_GALLERIES}/${selectedGalleryId}/images`, formData);
         setGalleryImages(prev => [...prev, res.data]);
         uploaded++;
       } catch (err) {
@@ -111,7 +111,7 @@ function Account() {
 
   const removeGalleryImage = async (imageId) => {
     try {
-      await axios.delete(`${API_GALLERIES}/images/${imageId}?userId=${user.userId}`);
+      await api.delete(`${API_GALLERIES}/images/${imageId}?userId=${user.userId}`);
       setGalleryImages(galleryImages.filter(img => img.id !== imageId));
     } catch (err) {
       console.error("Failed to remove gallery image:", err);
@@ -128,7 +128,7 @@ function Account() {
   const handleDeleteGallery = async (galleryId) => {
     if (!window.confirm("Delete this gallery?")) return;
     try {
-      await axios.delete(`${API_GALLERIES}/${galleryId}?userId=${user.userId}`);
+      await api.delete(`${API_GALLERIES}/${galleryId}?userId=${user.userId}`);
       const updated = galleries.filter(g => g.id !== galleryId);
       setGalleries(updated);
       if (selectedGalleryId === galleryId) {

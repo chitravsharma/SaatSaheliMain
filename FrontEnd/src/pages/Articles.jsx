@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate, Link, useParams } from "react-router-dom";
-import axios from "axios";
+import api from "../utils/api";
 import { useAuth } from "../AuthContext";
 import ImageEditor from "../components/ImageEditor";
 import "../Articles.css";
@@ -69,7 +69,7 @@ function Articles() {
 
   const fetchArticles = async () => {
     try {
-      const res = await axios.get(`${API}/api/articles/user/${userId}`);
+      const res = await api.get(`${API}/api/articles/user/${userId}`);
       setArticles(Array.isArray(res.data) ? res.data : []);
     } catch {
       setArticles([]);
@@ -80,7 +80,7 @@ function Articles() {
 
   const fetchPublicArticles = async () => {
     try {
-      const res = await axios.get(`${API}/api/articles`);
+      const res = await api.get(`${API}/api/articles`);
       setPublicArticles(Array.isArray(res.data) ? res.data : []);
     } catch {
       setPublicArticles([]);
@@ -90,11 +90,11 @@ function Articles() {
   const fetchSocialForArticle = async (articleId) => {
     try {
       const [likeRes, favRes, commentsRes] = await Promise.all([
-        axios.get(`${API}/api/social/like?targetType=ARTICLE&targetId=${articleId}${userId ? `&userId=${userId}` : ""}`),
+        api.get(`${API}/api/social/like?targetType=ARTICLE&targetId=${articleId}${userId ? `&userId=${userId}` : ""}`),
         userId
-          ? axios.get(`${API}/api/social/favorite?targetType=ARTICLE&targetId=${articleId}&userId=${userId}`)
+          ? api.get(`${API}/api/social/favorite?targetType=ARTICLE&targetId=${articleId}&userId=${userId}`)
           : Promise.resolve({ data: { favorited: false } }),
-        axios.get(`${API}/api/social/comments?targetType=ARTICLE&targetId=${articleId}`),
+        api.get(`${API}/api/social/comments?targetType=ARTICLE&targetId=${articleId}`),
       ]);
       setSocialData((prev) => ({
         ...prev,
@@ -130,7 +130,7 @@ function Articles() {
     try {
       const formData = new FormData();
       formData.append("file", file);
-      const res = await axios.post(`${API}/api/upload`, formData, {
+      const res = await api.post(`${API}/api/upload`, formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
       setImageUrl(res.data.url);
@@ -161,7 +161,7 @@ function Articles() {
     try {
       const status = publishOnSave ? "PUBLISHED" : "DRAFT";
       if (editingId) {
-        await axios.put(`${API}/api/articles/${editingId}`, {
+        await api.put(`${API}/api/articles/${editingId}`, {
           userId,
           headline: headline.trim(),
           content: content.trim(),
@@ -172,7 +172,7 @@ function Articles() {
         });
         showMsg(`${contentType} updated!`);
       } else {
-        await axios.post(`${API}/api/articles`, {
+        await api.post(`${API}/api/articles`, {
           userId,
           headline: headline.trim(),
           content: content.trim(),
@@ -196,7 +196,7 @@ function Articles() {
   const togglePublish = async (article) => {
     const newStatus = article.status === "PUBLISHED" ? "DRAFT" : "PUBLISHED";
     try {
-      await axios.put(`${API}/api/articles/${article.id}`, {
+      await api.put(`${API}/api/articles/${article.id}`, {
         userId,
         status: newStatus,
       });
@@ -211,7 +211,7 @@ function Articles() {
   const handleDelete = async (id) => {
     if (!window.confirm("Delete this content?")) return;
     try {
-      await axios.delete(`${API}/api/articles/${id}?userId=${userId}`);
+      await api.delete(`${API}/api/articles/${id}?userId=${userId}`);
       showMsg("Deleted!");
       fetchArticles();
       fetchPublicArticles();
@@ -255,7 +255,7 @@ function Articles() {
       return;
     }
     try {
-      const res = await axios.post(`${API}/api/social/like`, {
+      const res = await api.post(`${API}/api/social/like`, {
         userId, targetType: "ARTICLE", targetId: articleId,
       });
       setSocialData((prev) => ({
@@ -277,7 +277,7 @@ function Articles() {
       return;
     }
     try {
-      const res = await axios.post(`${API}/api/social/favorite`, {
+      const res = await api.post(`${API}/api/social/favorite`, {
         userId, targetType: "ARTICLE", targetId: articleId,
       });
       setSocialData((prev) => ({
@@ -292,7 +292,7 @@ function Articles() {
     if (!userId) { showMsg("Please log in to comment."); return navigate("/Login"); }
     if (!newComment.trim()) return;
     try {
-      const res = await axios.post(`${API}/api/social/comment`, {
+      const res = await api.post(`${API}/api/social/comment`, {
         userId, targetType: "ARTICLE", targetId: articleId, content: newComment.trim(),
       });
       setSocialData((prev) => ({
@@ -308,7 +308,7 @@ function Articles() {
 
   const handleDeleteComment = async (commentId, articleId) => {
     try {
-      await axios.delete(`${API}/api/social/comment/${commentId}?userId=${userId}`);
+      await api.delete(`${API}/api/social/comment/${commentId}?userId=${userId}`);
       setSocialData((prev) => ({
         ...prev,
         [articleId]: {

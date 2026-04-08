@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
-import axios from "axios";
+import api from "../utils/api";
 import { useAuth } from "../AuthContext";
 import { useStrings } from "../LanguageContext";
 import "./CategoryPage.css";
@@ -59,8 +59,8 @@ function CategoryPage() {
             setLoading(true);
             try {
                 const [booksRes, articlesRes] = await Promise.all([
-                    axios.get(`${API}/category/${catKey}`),
-                    axios.get(`${ARTICLES_API}/category/${catKey}`).catch(() => ({ data: [] })),
+                    api.get(`${API}/category/${catKey}`),
+                    api.get(`${ARTICLES_API}/category/${catKey}`).catch(() => ({ data: [] })),
                 ]);
                 setPublishedBooks(Array.isArray(booksRes.data) ? booksRes.data : []);
                 setCategoryArticles(Array.isArray(articlesRes.data) ? articlesRes.data : []);
@@ -78,7 +78,7 @@ function CategoryPage() {
     const fetchAllBooks = async () => {
         setLoading(true);
         try {
-            const res = await axios.get(`${API}/search?status=PUBLISHED`);
+            const res = await api.get(`${API}/search?status=PUBLISHED`);
             setAllBooks(Array.isArray(res.data) ? res.data : []);
         } catch {
             setAllBooks([]);
@@ -91,7 +91,7 @@ function CategoryPage() {
         if (!userId) return;
         setLoading(true);
         try {
-            const res = await axios.get(`${API}/category/${catKey}/user/${userId}`);
+            const res = await api.get(`${API}/category/${catKey}/user/${userId}`);
             setMyBooks(Array.isArray(res.data) ? res.data : []);
         } catch {
             setMyBooks([]);
@@ -106,7 +106,7 @@ function CategoryPage() {
         }
         setCreating(true);
         try {
-            await axios.post(`${API}/create`, {
+            await api.post(`${API}/create`, {
                 title: newTitle.trim(),
                 userId,
                 category: catKey,
@@ -124,7 +124,7 @@ function CategoryPage() {
     const handleDelete = async (bookId) => {
         if (!window.confirm(s.confirmDelete || "Delete this book?")) return;
         try {
-            await axios.delete(`${API}/${bookId}?userId=${userId}`);
+            await api.delete(`${API}/${bookId}?userId=${userId}`);
             showMessage(s.bookDeleted || "Book deleted!");
             fetchMyBooks();
         } catch {
@@ -134,7 +134,7 @@ function CategoryPage() {
 
     const handlePublish = async (bookId) => {
         try {
-            await axios.put(`${API}/${bookId}/publish?userId=${userId}`);
+            await api.put(`${API}/${bookId}/publish?userId=${userId}`);
             showMessage(s.bookPublished || "Book published!");
             fetchMyBooks();
         } catch {

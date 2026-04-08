@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import api from "../utils/api";
 import { useAuth } from "../AuthContext";
 import { useStrings } from "../LanguageContext";
 import "./Chat.css";
@@ -24,14 +24,11 @@ const Chat = () => {
     const lastMessageIdRef = useRef(null);
     const pollRef = useRef(null);
 
-    const token = localStorage.getItem("saatSaheliToken");
-    const headers = token ? { Authorization: `Bearer ${token}` } : {};
-
     // Fetch rooms
     useEffect(() => {
         const fetchRooms = async () => {
             try {
-                const res = await axios.get(`${API}/api/chat/rooms`, { headers });
+                const res = await api.get(`${API}/api/chat/rooms`);
                 setRooms(res.data);
                 if (res.data.length > 0 && !selectedRoom) {
                     setSelectedRoom(res.data[0]);
@@ -48,9 +45,8 @@ const Chat = () => {
             const afterParam = isPolling && lastMessageIdRef.current
                 ? `?afterId=${lastMessageIdRef.current}&limit=50`
                 : "?limit=50";
-            const res = await axios.get(
-                `${API}/api/chat/rooms/${selectedRoom.id}/messages${afterParam}`,
-                { headers }
+            const res = await api.get(
+                `${API}/api/chat/rooms/${selectedRoom.id}/messages${afterParam}`
             );
             if (isPolling && lastMessageIdRef.current && res.data.length > 0) {
                 setMessages(prev => [...prev, ...res.data]);
@@ -88,10 +84,9 @@ const Chat = () => {
         setSending(true);
         setError("");
         try {
-            const res = await axios.post(
+            const res = await api.post(
                 `${API}/api/chat/rooms/${selectedRoom.id}/messages`,
-                { message: newMessage.trim() },
-                { headers }
+                { message: newMessage.trim() }
             );
             setMessages(prev => [...prev, res.data]);
             lastMessageIdRef.current = res.data.id;
@@ -105,7 +100,7 @@ const Chat = () => {
 
     const handleDelete = async (messageId) => {
         try {
-            await axios.delete(`${API}/api/chat/messages/${messageId}`, { headers });
+            await api.delete(`${API}/api/chat/messages/${messageId}`);
             setMessages(prev =>
                 prev.map(m => m.id === messageId ? { ...m, message: "[deleted]", isDeleted: true } : m)
             );

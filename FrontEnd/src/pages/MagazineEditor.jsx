@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
-import axios from "axios";
+import api from "../utils/api";
 import { useAuth } from "../AuthContext";
 import { useStrings } from "../LanguageContext";
 import FlipBook from "../FlipBook";
@@ -149,9 +149,6 @@ const MagazineEditor = () => {
   const canvasWrapRef = useRef(null);
   const [canvasScale, setCanvasScale] = useState(1);
 
-  const token = localStorage.getItem("saatSaheliToken");
-  const headers = token ? { Authorization: `Bearer ${token}` } : {};
-
   useEffect(() => {
     const measure = () => {
       if (canvasWrapRef.current) {
@@ -166,7 +163,7 @@ const MagazineEditor = () => {
 
   const fetchMagazine = useCallback(async () => {
     try {
-      const res = await axios.get(`${API}/api/admin/magazine`, { headers });
+      const res = await api.get(`${API}/api/admin/magazine`);
       setMagazine(res.data);
       setPages(res.data.pages || []);
     } catch (e) {
@@ -178,7 +175,7 @@ const MagazineEditor = () => {
 
   const fetchAllEditions = useCallback(async () => {
     try {
-      const res = await axios.get(`${API}/api/admin/magazines`, { headers });
+      const res = await api.get(`${API}/api/admin/magazines`);
       setAllEditions(res.data || []);
     } catch { /* ignore */ }
   }, []);
@@ -236,17 +233,17 @@ const MagazineEditor = () => {
       const existingPage = getPage(selectedPageNum);
       const format = buildFormat();
       if (existingPage) {
-        await axios.put(`${API}/api/books/page/${existingPage.id}`, {
+        await api.put(`${API}/api/books/page/${existingPage.id}`, {
           content: pageContent || null,
           pageNumber: selectedPageNum,
           format,
-        }, { headers, params: { userId: user.userId } });
+        }, { params: { userId: user.userId } });
       } else {
-        await axios.post(`${API}/api/books/${magazine.id}/page`, {
+        await api.post(`${API}/api/books/${magazine.id}/page`, {
           content: pageContent || null,
           pageNumber: selectedPageNum,
           format,
-        }, { headers, params: { userId: user.userId } });
+        }, { params: { userId: user.userId } });
       }
       showMsg(s.saveSuccess || "Page saved!");
       await fetchMagazine();
@@ -262,7 +259,7 @@ const MagazineEditor = () => {
     if (!existingPage) return;
     if (!window.confirm(`Delete page ${selectedPageNum}?`)) return;
     try {
-      await axios.delete(`${API}/api/books/page/${existingPage.id}`, { headers, params: { userId: user.userId } });
+      await api.delete(`${API}/api/books/page/${existingPage.id}`, { params: { userId: user.userId } });
       showMsg(s.deleteSuccess || "Page deleted!");
       setSelectedPageNum(null);
       await fetchMagazine();
@@ -302,14 +299,14 @@ const MagazineEditor = () => {
       // Use a temporary high offset to avoid unique constraint conflicts
       const offset = TOTAL_PAGES + 100;
       for (const u of updates) {
-        await axios.put(`${API}/api/books/page/${u.id}`, {
+        await api.put(`${API}/api/books/page/${u.id}`, {
           pageNumber: u.pageNumber + offset,
-        }, { headers, params: { userId: user.userId } });
+        }, { params: { userId: user.userId } });
       }
       for (const u of updates) {
-        await axios.put(`${API}/api/books/page/${u.id}`, {
+        await api.put(`${API}/api/books/page/${u.id}`, {
           pageNumber: u.pageNumber,
-        }, { headers, params: { userId: user.userId } });
+        }, { params: { userId: user.userId } });
       }
       showMsg(`Page ${fromNum} moved to position ${toNum}`);
       await fetchMagazine();
@@ -326,7 +323,7 @@ const MagazineEditor = () => {
   const handlePublish = async () => {
     if (!magazine) return;
     try {
-      await axios.put(`${API}/api/admin/magazine/${magazine.id}/publish`, {}, { headers });
+      await api.put(`${API}/api/admin/magazine/${magazine.id}/publish`, {});
       showMsg(s.publishSuccess || "Magazine published!");
       await fetchMagazine();
       await fetchAllEditions();
@@ -338,7 +335,7 @@ const MagazineEditor = () => {
   const handleUnpublish = async () => {
     if (!magazine) return;
     try {
-      await axios.put(`${API}/api/admin/magazine/${magazine.id}/unpublish`, {}, { headers });
+      await api.put(`${API}/api/admin/magazine/${magazine.id}/unpublish`, {});
       showMsg(s.unpublishSuccess || "Magazine unpublished (back to draft)");
       await fetchMagazine();
       await fetchAllEditions();
@@ -350,7 +347,7 @@ const MagazineEditor = () => {
   const handleSaveDraft = async () => {
     if (!magazine) return;
     try {
-      await axios.put(`${API}/api/books/${magazine.id}/draft`, null, { headers, params: { userId: user.userId } });
+      await api.put(`${API}/api/books/${magazine.id}/draft`, null, { params: { userId: user.userId } });
       showMsg(s.draftSaved || "Draft saved!");
       await fetchMagazine();
       await fetchAllEditions();
@@ -364,7 +361,7 @@ const MagazineEditor = () => {
     const title = window.prompt(s.newEditionPrompt || "Enter title for new magazine edition:", "Saat Saheli Magazine");
     if (title === null) return;
     try {
-      const res = await axios.post(`${API}/api/admin/magazine/new`, { title: title || undefined }, { headers });
+      const res = await api.post(`${API}/api/admin/magazine/new`, { title: title || undefined });
       setMagazine(res.data);
       setPages(res.data.pages || []);
       setSelectedPageNum(null);
@@ -381,7 +378,7 @@ const MagazineEditor = () => {
     if (!window.confirm("Create a Hindi edition from the current magazine? All text will be auto-translated to Hindi.")) return;
     showMsg("Creating Hindi edition — this may take a minute...");
     try {
-      const res = await axios.post(`${API}/api/admin/magazine/${magazine.id}/create-hindi-edition`, {}, { headers });
+      const res = await api.post(`${API}/api/admin/magazine/${magazine.id}/create-hindi-edition`, {});
       await fetchAllEditions();
       setMagazine(res.data);
       setPages(res.data.pages || []);
@@ -397,9 +394,8 @@ const MagazineEditor = () => {
     if (!magazine) return;
     showMsg(`Exporting ${format.toUpperCase()}...`);
     try {
-      const res = await axios.get(`${API}/api/books/${magazine.id}/export/${format}`, {
+      const res = await api.get(`${API}/api/books/${magazine.id}/export/${format}`, {
         responseType: 'blob',
-        headers,
       });
       const url = window.URL.createObjectURL(new Blob([res.data]));
       const link = document.createElement('a');
@@ -426,9 +422,9 @@ const MagazineEditor = () => {
   /* ── Switch to a specific edition ── */
   const switchToEdition = async (editionId) => {
     try {
-      const res = await axios.get(`${API}/api/books/${editionId}`, { headers });
+      const res = await api.get(`${API}/api/books/${editionId}`);
       const book = res.data;
-      const pagesRes = await axios.get(`${API}/api/books/${editionId}/pages`, { headers });
+      const pagesRes = await api.get(`${API}/api/books/${editionId}/pages`);
       book.pages = pagesRes.data || [];
       setMagazine(book);
       setPages(book.pages);
@@ -447,9 +443,7 @@ const MagazineEditor = () => {
       const formData = new FormData();
       formData.append("file", file);
       formData.append("magazineId", magazine.id);
-      const res = await axios.post(`${API}/api/admin/magazine/upload-document`, formData, {
-        headers,
-      });
+      const res = await api.post(`${API}/api/admin/magazine/upload-document`, formData);
       setMagazine(res.data);
       setPages(res.data.pages || []);
       showMsg(s.docImported || "Document pages imported!");
@@ -487,7 +481,7 @@ const MagazineEditor = () => {
     try {
       const formData = new FormData();
       formData.append("file", file);
-      const res = await axios.post(`${API}/api/upload`, formData);
+      const res = await api.post(`${API}/api/upload`, formData);
       const url = res.data.url || res.data;
       const id = `ib${Date.now()}`;
       setImageBlocks((prev) => [...prev, { id, url, x: 20, y: 100, width: 300, height: 200 }]);
@@ -795,9 +789,7 @@ const MagazineEditor = () => {
                           try {
                             const formData = new FormData();
                             formData.append("file", editedFile);
-                            const res = await axios.post(`${API}/api/upload`, formData, {
-                              headers,
-                            });
+                            const res = await api.post(`${API}/api/upload`, formData);
                             updateImageBlock(blockId, "url", res.data.url || res.data);
                           } catch (err) {
                             showMsg("Upload failed: " + (err.response?.data?.error || err.message));

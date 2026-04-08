@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
-import axios from "axios";
+import api from "../utils/api";
 import FlipBook from "../FlipBook";
 import { useAuth } from "../AuthContext";
 import { useStrings } from "../LanguageContext";
@@ -28,7 +28,7 @@ function ReadBook() {
   // Fetch book info
   useEffect(() => {
     if (!bookId) return;
-    axios.get(`${API}/api/books/${bookId}`)
+    api.get(`${API}/api/books/${bookId}`)
       .then(res => setBook(res.data))
       .catch(err => console.error("Failed to fetch book:", err));
   }, [bookId]);
@@ -39,9 +39,9 @@ function ReadBook() {
     const fetchSocial = async () => {
       try {
         const [likeRes, favRes, commentsRes] = await Promise.all([
-          axios.get(`${API}/api/social/like?targetType=BOOK&targetId=${bookId}${user ? `&userId=${user.userId}` : ""}`),
-          user ? axios.get(`${API}/api/social/favorite?targetType=BOOK&targetId=${bookId}&userId=${user.userId}`) : Promise.resolve({ data: { favorited: false } }),
-          axios.get(`${API}/api/social/comments?targetType=BOOK&targetId=${bookId}`),
+          api.get(`${API}/api/social/like?targetType=BOOK&targetId=${bookId}${user ? `&userId=${user.userId}` : ""}`),
+          user ? api.get(`${API}/api/social/favorite?targetType=BOOK&targetId=${bookId}&userId=${user.userId}`) : Promise.resolve({ data: { favorited: false } }),
+          api.get(`${API}/api/social/comments?targetType=BOOK&targetId=${bookId}`),
         ]);
         // For anonymous users, restore like/fav state from localStorage
         if (!user) {
@@ -68,7 +68,7 @@ function ReadBook() {
       return;
     }
     try {
-      const res = await axios.post(`${API}/api/social/like`, { userId: user.userId, targetType: "BOOK", targetId: Number(bookId) });
+      const res = await api.post(`${API}/api/social/like`, { userId: user.userId, targetType: "BOOK", targetId: Number(bookId) });
       setLiked(res.data.liked);
       setLikeCount(res.data.count);
     } catch (err) {
@@ -87,7 +87,7 @@ function ReadBook() {
       return;
     }
     try {
-      const res = await axios.post(`${API}/api/social/favorite`, { userId: user.userId, targetType: "BOOK", targetId: Number(bookId) });
+      const res = await api.post(`${API}/api/social/favorite`, { userId: user.userId, targetType: "BOOK", targetId: Number(bookId) });
       setFavorited(res.data.favorited);
     } catch (err) {
       console.error("Failed to toggle favorite:", err);
@@ -100,7 +100,7 @@ function ReadBook() {
     if (!user) { setError("Please log in to comment."); return navigate("/Login"); }
     if (!newComment.trim()) return;
     try {
-      const res = await axios.post(`${API}/api/social/comment`, {
+      const res = await api.post(`${API}/api/social/comment`, {
         userId: user.userId, targetType: "BOOK", targetId: Number(bookId), content: newComment.trim(),
       });
       setComments([res.data, ...comments]);
@@ -128,7 +128,7 @@ function ReadBook() {
 
   const handleDeleteComment = async (commentId) => {
     try {
-      await axios.delete(`${API}/api/social/comment/${commentId}?userId=${user.userId}`);
+      await api.delete(`${API}/api/social/comment/${commentId}?userId=${user.userId}`);
       setComments(comments.filter(c => c.id !== commentId));
     } catch (err) {
       console.error("Failed to delete comment:", err);

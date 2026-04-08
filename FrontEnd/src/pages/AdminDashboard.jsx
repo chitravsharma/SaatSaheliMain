@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import axios from "axios";
+import api from "../utils/api";
 import { useAuth } from "../AuthContext";
 import { useStrings } from "../LanguageContext";
 import MagazineEditor from "./MagazineEditor";
@@ -50,7 +50,7 @@ const AdminDashboard = () => {
 
     const fetchAdvertisements = useCallback(async () => {
         try {
-            const res = await axios.get(`${API}/api/advertisements`, { headers });
+            const res = await api.get(`${API}/api/advertisements`);
             setAdvertisements(Array.isArray(res.data) ? res.data : []);
         } catch { /* ignore */ }
     }, [user?.userId]);
@@ -62,7 +62,7 @@ const AdminDashboard = () => {
         try {
             const formData = new FormData();
             formData.append("file", file);
-            const res = await axios.post(`${API}/api/upload`, formData);
+            const res = await api.post(`${API}/api/upload`, formData);
             setAdImageUrl(res.data.url);
             setAdImageFile(file);
         } catch {
@@ -85,7 +85,7 @@ const AdminDashboard = () => {
             return;
         }
         try {
-            await axios.post(`${API}/api/advertisements`, {
+            await api.post(`${API}/api/advertisements`, {
                 userId: user.userId,
                 title: adTitle,
                 contentType: adContentType,
@@ -94,7 +94,7 @@ const AdminDashboard = () => {
                 linkUrl: adLinkUrl,
                 animation: adAnimation,
                 active: adActive,
-            }, { headers });
+            });
             setAdTitle(""); setAdHtmlContent(""); setAdImageUrl(""); setAdImageFile(null);
             setAdLinkUrl(""); setAdAnimation("static"); setAdActive(true); setAdContentType("text");
             setMessage("Advertisement added successfully");
@@ -107,7 +107,7 @@ const AdminDashboard = () => {
     const removeAdvertisement = async (id) => {
         if (!window.confirm("Remove this advertisement?")) return;
         try {
-            await axios.delete(`${API}/api/advertisements/${id}`, { headers });
+            await api.delete(`${API}/api/advertisements/${id}`);
             setMessage("Advertisement removed");
             fetchAdvertisements();
         } catch {
@@ -117,7 +117,7 @@ const AdminDashboard = () => {
 
     const toggleAdActive = async (id) => {
         try {
-            await axios.put(`${API}/api/advertisements/${id}/toggle`, {}, { headers });
+            await api.put(`${API}/api/advertisements/${id}/toggle`, {});
             fetchAdvertisements();
         } catch {
             setMessage("Failed to toggle advertisement status");
@@ -183,15 +183,12 @@ const AdminDashboard = () => {
     const [recentVisits, setRecentVisits] = useState([]);
     const [analyticsLoading, setAnalyticsLoading] = useState(false);
 
-    const token = localStorage.getItem("saatSaheliToken");
-    const headers = token ? { Authorization: `Bearer ${token}` } : {};
-
     const fetchAnalytics = useCallback(async () => {
         setAnalyticsLoading(true);
         try {
             const [summaryRes, recentRes] = await Promise.all([
-                axios.get(`${API}/api/analytics/summary?days=${analyticsDays}`, { headers }),
-                axios.get(`${API}/api/analytics/recent?limit=30`, { headers }),
+                api.get(`${API}/api/analytics/summary?days=${analyticsDays}`),
+                api.get(`${API}/api/analytics/recent?limit=30`),
             ]);
             setAnalytics(summaryRes.data);
             setRecentVisits(Array.isArray(recentRes.data) ? recentRes.data : []);
@@ -201,7 +198,7 @@ const AdminDashboard = () => {
 
     const fetchStats = useCallback(async () => {
         try {
-            const res = await axios.get(`${API}/api/admin/stats`, { headers });
+            const res = await api.get(`${API}/api/admin/stats`);
             setStats(res.data);
         } catch { /* ignore */ }
     }, [user?.userId]);
@@ -209,7 +206,7 @@ const AdminDashboard = () => {
     const fetchUsers = useCallback(async () => {
         setLoading(true);
         try {
-            const res = await axios.get(`${API}/api/admin/users`, { headers });
+            const res = await api.get(`${API}/api/admin/users`);
             setUsers(res.data);
         } catch { /* ignore */ }
         setLoading(false);
@@ -218,7 +215,7 @@ const AdminDashboard = () => {
     const fetchBooks = useCallback(async () => {
         setLoading(true);
         try {
-            const res = await axios.get(`${API}/api/admin/books`, { headers });
+            const res = await api.get(`${API}/api/admin/books`);
             setBooks(res.data);
         } catch { /* ignore */ }
         setLoading(false);
@@ -227,7 +224,7 @@ const AdminDashboard = () => {
     const fetchArticles = useCallback(async () => {
         setLoading(true);
         try {
-            const res = await axios.get(`${API}/api/admin/articles`, { headers });
+            const res = await api.get(`${API}/api/admin/articles`);
             setArticles(Array.isArray(res.data) ? res.data : []);
         } catch { /* ignore */ }
         setLoading(false);
@@ -236,7 +233,7 @@ const AdminDashboard = () => {
     const fetchSupportQueries = useCallback(async () => {
         setSupportLoading(true);
         try {
-            const res = await axios.get(`${API}/api/contact`, { headers });
+            const res = await api.get(`${API}/api/contact`);
             setSupportQueries(Array.isArray(res.data) ? res.data : []);
         } catch { /* ignore */ }
         setSupportLoading(false);
@@ -244,7 +241,7 @@ const AdminDashboard = () => {
 
     const updateQueryStatus = async (queryId, newStatus) => {
         try {
-            await axios.put(`${API}/api/contact/${queryId}/status`, { status: newStatus }, { headers });
+            await api.put(`${API}/api/contact/${queryId}/status`, { status: newStatus });
             setMessage("Status updated to " + newStatus.replace(/_/g, " "));
             fetchSupportQueries();
         } catch {
@@ -255,7 +252,7 @@ const AdminDashboard = () => {
     const deleteQuery = async (queryId) => {
         if (!window.confirm("Delete this support query permanently?")) return;
         try {
-            await axios.delete(`${API}/api/contact/${queryId}`, { headers });
+            await api.delete(`${API}/api/contact/${queryId}`);
             setMessage("Support query deleted");
             fetchSupportQueries();
         } catch {
@@ -278,7 +275,7 @@ const AdminDashboard = () => {
 
     const changeRole = async (userId, newRole) => {
         try {
-            await axios.put(`${API}/api/admin/users/${userId}/role`, { role: newRole }, { headers });
+            await api.put(`${API}/api/admin/users/${userId}/role`, { role: newRole });
             setMessage(s.roleUpdated || "Role updated");
             fetchUsers();
         } catch {
@@ -288,7 +285,7 @@ const AdminDashboard = () => {
 
     const changeStatus = async (userId, newStatus) => {
         try {
-            await axios.put(`${API}/api/admin/users/${userId}/status`, { status: newStatus }, { headers });
+            await api.put(`${API}/api/admin/users/${userId}/status`, { status: newStatus });
             setMessage(s.statusUpdated || "Status updated");
             fetchUsers();
         } catch {
@@ -299,7 +296,7 @@ const AdminDashboard = () => {
     const deleteBook = async (bookId) => {
         if (!window.confirm(s.confirmDeleteBook || "Delete this book?")) return;
         try {
-            await axios.delete(`${API}/api/admin/books/${bookId}`, { headers });
+            await api.delete(`${API}/api/admin/books/${bookId}`);
             setMessage(s.bookDeleted || "Book deleted");
             fetchBooks();
             fetchStats();
@@ -311,7 +308,7 @@ const AdminDashboard = () => {
     const purgeDeletedBooks = async () => {
         if (!window.confirm("Permanently delete ALL books marked as deleted? This cannot be undone.")) return;
         try {
-            const res = await axios.delete(`${API}/api/admin/books/purge`, { headers });
+            const res = await api.delete(`${API}/api/admin/books/purge`);
             setMessage(`Purged ${res.data.count} deleted books permanently.`);
             fetchBooks();
             fetchStats();
@@ -322,7 +319,7 @@ const AdminDashboard = () => {
 
     const archiveBook = async (bookId) => {
         try {
-            await axios.put(`${API}/api/admin/books/${bookId}/archive`, {}, { headers });
+            await api.put(`${API}/api/admin/books/${bookId}/archive`, {});
             setMessage("Book archived");
             fetchBooks();
             fetchStats();
@@ -333,7 +330,7 @@ const AdminDashboard = () => {
 
     const recoverBook = async (bookId) => {
         try {
-            await axios.put(`${API}/api/admin/books/${bookId}/recover`, {}, { headers });
+            await api.put(`${API}/api/admin/books/${bookId}/recover`, {});
             setMessage("Book recovered to Draft");
             fetchBooks();
             fetchStats();
@@ -345,7 +342,7 @@ const AdminDashboard = () => {
     const purgeBook = async (bookId) => {
         if (!window.confirm("Permanently purge this book and all its pages? This cannot be undone.")) return;
         try {
-            await axios.delete(`${API}/api/admin/books/${bookId}/purge`, { headers });
+            await api.delete(`${API}/api/admin/books/${bookId}/purge`);
             setMessage("Book permanently purged");
             fetchBooks();
             fetchStats();
@@ -358,7 +355,7 @@ const AdminDashboard = () => {
     const deleteArticle = async (articleId) => {
         if (!window.confirm("Delete this article/blog/poem?")) return;
         try {
-            await axios.delete(`${API}/api/admin/articles/${articleId}`, { headers });
+            await api.delete(`${API}/api/admin/articles/${articleId}`);
             setMessage("Article deleted");
             fetchArticles();
             fetchStats();
@@ -369,7 +366,7 @@ const AdminDashboard = () => {
 
     const changeArticleStatus = async (articleId, newStatus) => {
         try {
-            await axios.put(`${API}/api/admin/articles/${articleId}/status`, { status: newStatus }, { headers });
+            await api.put(`${API}/api/admin/articles/${articleId}/status`, { status: newStatus });
             setMessage(`Article ${newStatus === "PUBLISHED" ? "published" : "unpublished"}`);
             fetchArticles();
             fetchStats();
@@ -381,7 +378,7 @@ const AdminDashboard = () => {
     const purgeAllDraftArticles = async () => {
         if (!window.confirm("Permanently delete ALL draft articles? This cannot be undone.")) return;
         try {
-            const res = await axios.delete(`${API}/api/admin/articles/purge`, { headers });
+            const res = await api.delete(`${API}/api/admin/articles/purge`);
             setMessage(`Purged ${res.data.count} draft articles permanently.`);
             fetchArticles();
             fetchStats();
@@ -443,7 +440,7 @@ const AdminDashboard = () => {
             return;
         }
         try {
-            await axios.put(`${API}/api/auth/admin-reset-password/${resetPasswordUserId}`, { newPassword: resetNewPassword }, { headers });
+            await api.put(`${API}/api/auth/admin-reset-password/${resetPasswordUserId}`, { newPassword: resetNewPassword });
             setMessage("Password reset successfully");
             setResetPasswordUserId(null);
             setResetNewPassword("");
@@ -471,9 +468,8 @@ const AdminDashboard = () => {
     const handleExport = async (bookId, format) => {
         setMessage(`Exporting ${format.toUpperCase()}...`);
         try {
-            const res = await axios.get(`${API}/api/books/${bookId}/export/${format}`, {
+            const res = await api.get(`${API}/api/books/${bookId}/export/${format}`, {
                 responseType: 'blob',
-                headers,
             });
             const url = window.URL.createObjectURL(new Blob([res.data]));
             const link = document.createElement('a');

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
-import axios from "axios";
+import api from "../utils/api";
 import { useStrings } from "../LanguageContext";
 import "../PublicProfile.css";
 
@@ -22,8 +22,8 @@ function PublicProfile() {
     const fetchData = async () => {
       try {
         const [profileRes, booksRes] = await Promise.all([
-          axios.get(`${API}/api/auth/user/${userId}`),
-          axios.get(`${API}/api/books/user/${userId}`),
+          api.get(`${API}/api/auth/user/${userId}`),
+          api.get(`${API}/api/books/user/${userId}`),
         ]);
         setProfile(profileRes.data);
         const published = (Array.isArray(booksRes.data) ? booksRes.data : [])

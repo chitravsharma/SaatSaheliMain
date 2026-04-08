@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
-import axios from "axios";
+import api from "../utils/api";
 import { useAuth } from "../AuthContext";
 import { useStrings } from "../LanguageContext";
 import "./GalleryView.css";
@@ -28,7 +28,7 @@ function GalleryView() {
   useEffect(() => {
     const fetchGallery = async () => {
       try {
-        const res = await axios.get(`${API}/api/galleries/${galleryId}`);
+        const res = await api.get(`${API}/api/galleries/${galleryId}`);
         setGallery(res.data);
         setLikeCount(res.data.likeCount || 0);
       } catch (err) {
@@ -45,9 +45,9 @@ function GalleryView() {
     const fetchSocial = async () => {
       try {
         const [likeRes, favRes, commentsRes] = await Promise.all([
-          axios.get(`${API}/api/social/like?targetType=GALLERY&targetId=${galleryId}${user ? `&userId=${user.userId}` : ""}`),
-          user ? axios.get(`${API}/api/social/favorite?targetType=GALLERY&targetId=${galleryId}&userId=${user.userId}`) : Promise.resolve({ data: { favorited: false } }),
-          axios.get(`${API}/api/social/comments?targetType=GALLERY&targetId=${galleryId}`),
+          api.get(`${API}/api/social/like?targetType=GALLERY&targetId=${galleryId}${user ? `&userId=${user.userId}` : ""}`),
+          user ? api.get(`${API}/api/social/favorite?targetType=GALLERY&targetId=${galleryId}&userId=${user.userId}`) : Promise.resolve({ data: { favorited: false } }),
+          api.get(`${API}/api/social/comments?targetType=GALLERY&targetId=${galleryId}`),
         ]);
         if (!user) {
           setLiked(localStorage.getItem(`anon_like_GALLERY_${galleryId}`) === "true");
@@ -74,7 +74,7 @@ function GalleryView() {
       return;
     }
     try {
-      const res = await axios.post(`${API}/api/social/like`, { userId: user.userId, targetType: "GALLERY", targetId: Number(galleryId) });
+      const res = await api.post(`${API}/api/social/like`, { userId: user.userId, targetType: "GALLERY", targetId: Number(galleryId) });
       setLiked(res.data.liked);
       setLikeCount(res.data.count);
     } catch (err) {
@@ -91,7 +91,7 @@ function GalleryView() {
       return;
     }
     try {
-      const res = await axios.post(`${API}/api/social/favorite`, { userId: user.userId, targetType: "GALLERY", targetId: Number(galleryId) });
+      const res = await api.post(`${API}/api/social/favorite`, { userId: user.userId, targetType: "GALLERY", targetId: Number(galleryId) });
       setFavorited(res.data.favorited);
     } catch (err) {
       setError("Failed to update favorite. Please try again.");
@@ -103,7 +103,7 @@ function GalleryView() {
     if (!user) return navigate("/Login");
     if (!newComment.trim()) return;
     try {
-      const res = await axios.post(`${API}/api/social/comment`, {
+      const res = await api.post(`${API}/api/social/comment`, {
         userId: user.userId, targetType: "GALLERY", targetId: Number(galleryId), content: newComment.trim(),
       });
       setComments([res.data, ...comments]);
@@ -115,7 +115,7 @@ function GalleryView() {
 
   const handleDeleteComment = async (commentId) => {
     try {
-      await axios.delete(`${API}/api/social/comment/${commentId}?userId=${user.userId}`);
+      await api.delete(`${API}/api/social/comment/${commentId}?userId=${user.userId}`);
       setComments(comments.filter(c => c.id !== commentId));
     } catch (err) {
       setError("Failed to delete comment. Please try again.");

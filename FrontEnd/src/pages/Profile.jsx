@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import api from "../utils/api";
 import { useAuth } from "../AuthContext";
 import { useStrings } from "../LanguageContext";
 import ImageEditor from "../components/ImageEditor";
@@ -34,7 +34,7 @@ function Profile() {
     if (!user) return;
     const fetchProfile = async () => {
       try {
-        const res = await axios.get(`${API}/api/auth/user/${user.userId}`);
+        const res = await api.get(`${API}/api/auth/user/${user.userId}`);
         const data = res.data;
         setForm({
           displayName: data.displayName || "",
@@ -72,7 +72,7 @@ function Profile() {
     try {
       const formData = new FormData();
       formData.append("file", file);
-      const res = await axios.post(`${API}/api/upload`, formData);
+      const res = await api.post(`${API}/api/upload`, formData);
       setProfileImageUrl(res.data.url);
       setMessage(s.imageUploaded);
     } catch {
@@ -105,7 +105,7 @@ function Profile() {
     setError("");
     setMessage("");
     try {
-      await axios.put(`${API}/api/auth/user/${user.userId}`, {
+      await api.put(`${API}/api/auth/user/${user.userId}`, {
         displayName: form.displayName,
         headline: form.headline,
         location: form.location,
