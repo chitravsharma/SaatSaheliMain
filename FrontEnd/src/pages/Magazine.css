@@ -54,3 +54,20 @@
   cursor: pointer;
   font-weight: bold;
 }
+
+.magazine-submit-cta {
+  display: inline-block;
+  padding: 12px 28px;
+  background: linear-gradient(135deg, #3a3a55, #5a5a7a);
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 600;
+  border-radius: 10px;
+  text-decoration: none;
+  transition: opacity 0.2s, transform 0.15s;
+}
+
+.magazine-submit-cta:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}

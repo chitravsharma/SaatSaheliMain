@@ -51,7 +51,10 @@ public class EmailService {
     public void sendContactNotification(String senderName, String senderEmail, String msgSubject, String message) {
         String formType;
         String heading;
-        if (msgSubject != null && msgSubject.startsWith("Help & Support:")) {
+        if (msgSubject != null && msgSubject.startsWith("Magazine Submission:")) {
+            formType = "Magazine Submission";
+            heading = "New Magazine Submission";
+        } else if (msgSubject != null && msgSubject.startsWith("Help & Support:")) {
             formType = "Help & Support Request";
             heading = "New Help & Support Request";
         } else if (msgSubject != null && msgSubject.toLowerCase().startsWith("feedback")) {

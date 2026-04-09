@@ -165,6 +165,12 @@ const Magazine = () => {
       <h2 className="magazine-heading">{strings.magazine.heading}</h2>
       <p className="magazine-subtitle">{strings.magazine.pickEdition}</p>
 
+      <div style={{ textAlign: 'center', margin: '18px 0 24px' }}>
+        <Link to="/magazine/submit" className="magazine-submit-cta">
+          Submit Your Creative Work for the Next Edition
+        </Link>
+      </div>
+
       {actionError && (
         <div className="magazine-action-error" role="alert">
           {actionError}

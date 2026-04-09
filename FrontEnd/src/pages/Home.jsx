@@ -4,6 +4,7 @@ import api from "../utils/api";
 import { useAuth } from "../AuthContext";
 import { useStrings } from "../LanguageContext";
 import "./Home.css";
+import "./Magazine.css";
 
 const API = process.env.REACT_APP_API_URL;
 
@@ -364,6 +365,13 @@ function Home() {
                       );
                     })}
                   </div>
+                  {category === magLabel && (
+                    <div style={{ textAlign: 'center', margin: '16px 0 8px' }}>
+                      <Link to="/magazine/submit" className="magazine-submit-cta">
+                        Submit Your Creative Work for the Next Magazine Edition
+                      </Link>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>

@@ -38,6 +38,7 @@ import Checkout from './pages/Checkout';
 import Marketplace from './pages/Marketplace';
 import NotFound from './pages/NotFound';
 import HelpSupport from './pages/HelpSupport';
+import MagazineSubmit from './pages/MagazineSubmit';
 import Feedback from './pages/Feedback';
 
 
@@ -81,6 +82,7 @@ function App() {
           <Route path="/articles/:contentType" element={<Articles />} />
           <Route path="/podcasts" element={<Podcasts />} />
           <Route path="/magazine" element={<Magazine />} />
+          <Route path="/magazine/submit" element={<MagazineSubmit />} />
           <Route path="/gallery/:galleryId" element={<GalleryView />} />
           <Route path="/pricing" element={<Pricing />} />
           <Route path="/marketplace" element={<Marketplace />} />
