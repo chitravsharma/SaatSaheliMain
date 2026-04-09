@@ -366,7 +366,7 @@ function Home() {
                     })}
                   </div>
                   {category === magLabel && (
-                    <div style={{ textAlign: 'center', margin: '16px 0 8px' }}>
+                    <div style={{ textAlign: 'left', margin: '16px 0 8px' }}>
                       <Link to="/magazine/submit" className="magazine-submit-cta">
                         Submit Your Creative Work for the Next Magazine Edition
                       </Link>
