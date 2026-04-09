@@ -12,6 +12,7 @@ const Contact = () => {
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
   const [error, setError] = useState('');
+  const [honeypot, setHoneypot] = useState('');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -29,6 +30,7 @@ const Contact = () => {
         email: email.trim(),
         subject: subject.trim(),
         message: message.trim(),
+        website: honeypot,
       });
       setSent(true);
       setName('');
@@ -66,6 +68,12 @@ const Contact = () => {
         ) : (
           <form className="contact-form" onSubmit={handleSubmit}>
             {error && <div className="auth-error" role="alert">{error}</div>}
+
+            {/* Honeypot — hidden from real users, bots auto-fill it */}
+            <div style={{ position: 'absolute', left: '-9999px' }} aria-hidden="true">
+              <input type="text" name="confirm_email_hp" tabIndex="-1" autoComplete="off"
+                value={honeypot} onChange={(e) => setHoneypot(e.target.value)} />
+            </div>
 
             <div className="contact-field">
               <label htmlFor="contact-name">Name *</label>

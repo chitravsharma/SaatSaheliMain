@@ -91,6 +91,7 @@ public class EmailService {
             log.info("Email sent to {} — subject: {}", to, subject);
         } catch (MessagingException e) {
             log.error("Failed to send email to {} — {}", to, e.getMessage());
+            throw new RuntimeException("Email delivery failed", e);
         }
     }
 }

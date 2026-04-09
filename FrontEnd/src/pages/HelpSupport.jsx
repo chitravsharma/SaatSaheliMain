@@ -24,6 +24,7 @@ const HelpSupport = () => {
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
   const [error, setError] = useState('');
+  const [honeypot, setHoneypot] = useState('');
 
   const toggleRequestType = (type) => {
     setRequestTypes(prev =>
@@ -60,6 +61,7 @@ const HelpSupport = () => {
         email: email.trim(),
         subject: `Help & Support: ${types}`,
         message: fullMessage,
+        website: honeypot,
       });
       setSent(true);
       setName(''); setEmail(''); setPhone('');
@@ -100,6 +102,12 @@ const HelpSupport = () => {
         ) : (
           <form className="hs-form" onSubmit={handleSubmit}>
             {error && <div className="hs-error" role="alert">{error}</div>}
+
+            {/* Honeypot */}
+            <div style={{ position: 'absolute', left: '-9999px' }} aria-hidden="true">
+              <input type="text" name="confirm_email_hp" tabIndex="-1" autoComplete="off"
+                value={honeypot} onChange={(e) => setHoneypot(e.target.value)} />
+            </div>
 
             {/* Section 1: Contact Information */}
             <fieldset className="hs-section">

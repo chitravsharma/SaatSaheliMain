@@ -5,6 +5,7 @@ import com.SaatSaheli.spring.model.User;
 import com.SaatSaheli.spring.repository.ContactMessageRepository;
 import com.SaatSaheli.spring.repository.UserRepository;
 import com.SaatSaheli.spring.service.EmailService;
+import com.SaatSaheli.spring.util.RateLimiter;
 import com.SaatSaheli.spring.util.RoleUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
@@ -36,6 +37,9 @@ public class ContactController {
     @Autowired
     private EmailService emailService;
 
+    @Autowired
+    private RateLimiter rateLimiter;
+
     private Long getAuthUserId(HttpServletRequest request) {
         Object val = request.getAttribute("jwtUserId");
         return val instanceof Long ? (Long) val : null;
@@ -45,8 +49,23 @@ public class ContactController {
      * POST /api/contact — Submit a contact form message (public endpoint)
      */
     @PostMapping
-    public ResponseEntity<?> submitContactForm(@RequestBody Map<String, String> body) {
+    public ResponseEntity<?> submitContactForm(@RequestBody Map<String, String> body, HttpServletRequest request) {
         try {
+            // Honeypot check — bots fill hidden fields, real users don't
+            String honeypot = body.get("website");
+            if (honeypot != null && !honeypot.trim().isEmpty()) {
+                log.warn("Honeypot field filled from IP {} — possible bot or autofill", request.getRemoteAddr());
+                return ResponseEntity.badRequest()
+                        .body(errorMap("Something went wrong with your submission. Please clear the form and try again."));
+            }
+
+            // Rate limit: 5 submissions per 15 minutes per IP
+            String clientIp = request.getRemoteAddr();
+            if (!rateLimiter.tryAcquire("contact_" + clientIp)) {
+                return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+                        .body(errorMap("Too many submissions. Please try again in a few minutes."));
+            }
+
             String name = body.get("name");
             String email = body.get("email");
             String subject = body.get("subject");
@@ -87,6 +106,8 @@ public class ContactController {
                 emailService.sendContactNotification(name.trim(), email.trim(), contact.getSubject(), message.trim());
             } catch (Exception emailErr) {
                 log.warn("Failed to send contact notification email: {}", emailErr.getMessage());
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                        .body(errorMap("Your message was saved but we couldn't send the notification email. Please try again later or email us directly."));
             }
 
             Map<String, String> response = new HashMap<>();

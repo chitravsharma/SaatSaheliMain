@@ -136,7 +136,7 @@ const Header = () => {
             onChange={(e) => setLanguage(e.target.value)}
             aria-label={strings.header.language}
           >
-            <option value="en">EN</option>
+            <option value="en">English</option>
             <option value="hi">हिंदी</option>
             <option value="bn">বাংলা</option>
             <option value="ta">தமிழ்</option>
