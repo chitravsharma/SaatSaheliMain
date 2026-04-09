@@ -26,6 +26,8 @@
     margin-bottom: 1.5rem;
     border-bottom: 2px solid var(--border-default);
     padding-bottom: 0.5rem;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
 }
 
 .admin-tabs button {
@@ -37,6 +39,8 @@
     border-radius: 6px 6px 0 0;
     color: var(--text-muted);
     transition: all 0.2s;
+    white-space: nowrap;
+    flex-shrink: 0;
 }
 
 .admin-tabs button.active {
