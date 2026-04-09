@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Sarayu - Technical Support Document</title>
+<title>Saat Saheli - Technical Support Document</title>
 <style>
   @page { margin: 0.7in; size: A4; }
   body {
@@ -97,6 +97,8 @@
   .toc ul { list-style: none; padding-left: 0; }
   .toc li { padding: 6px 0; border-bottom: 1px dotted #ccc; font-size: 15px; }
   .toc li span { color: #6c3483; font-weight: 600; margin-right: 8px; }
+  .toc a { color: #1a1a2e; text-decoration: none; }
+  .toc a:hover { color: #6c3483; text-decoration: underline; }
   .section { page-break-before: auto; }
   .footer { text-align: center; font-size: 11px; color: #999; margin-top: 60px; padding-top: 15px; border-top: 1px solid #ddd; }
   ul { padding-left: 20px; }
@@ -107,16 +109,16 @@
 
 <!-- COVER PAGE -->
 <div class="cover">
-  <h1>Sarayu</h1>
+  <h1>Saat Saheli</h1>
   <div class="subtitle">Technical Support Document</div>
   <div class="badge">INTERNAL &amp; OPERATIONS USE</div>
   <div class="meta">
-    <strong>Version:</strong> 1.0<br>
-    <strong>Date:</strong> March 25, 2026<br>
+    <strong>Version:</strong> 2.0<br>
+    <strong>Date:</strong> April 8, 2026<br>
     <strong>Platform:</strong> Web Application (React + Spring Boot)<br>
     <strong>Database:</strong> PostgreSQL (Neon Cloud)<br>
     <strong>AI Engine:</strong> Hugging Face Inference API (Stable Diffusion XL)<br>
-    <strong>Prepared by:</strong> Sarayu Development Team
+    <strong>Prepared by:</strong> Saat Saheli Development Team
   </div>
 </div>
 
@@ -124,31 +126,37 @@
 <div class="toc">
   <h1>Table of Contents</h1>
   <ul>
-    <li><span>1.</span> Platform Overview</li>
-    <li><span>2.</span> System Architecture</li>
-    <li><span>3.</span> Technical Support &mdash; Server &amp; Deployment</li>
-    <li><span>4.</span> User Support &mdash; Account &amp; Access Issues</li>
-    <li><span>5.</span> Database Support &mdash; PostgreSQL / Neon</li>
-    <li><span>6.</span> Admin Support &mdash; Admin Panel Operations</li>
-    <li><span>7.</span> Super Admin Support &mdash; Elevated Operations</li>
-    <li><span>8.</span> AI &amp; Image Generation Support</li>
-    <li><span>9.</span> File Upload &amp; Storage Support</li>
-    <li><span>10.</span> Chat &amp; Community Support</li>
-    <li><span>11.</span> Payments &amp; Subscription Support (Stripe)</li>
-    <li><span>12.</span> Security &amp; Authentication</li>
-    <li><span>13.</span> API Reference &mdash; Quick Lookup</li>
-    <li><span>14.</span> Error Code Reference</li>
-    <li><span>15.</span> Environment Variables Reference</li>
-    <li><span>16.</span> Troubleshooting Guide</li>
-    <li><span>17.</span> Escalation Matrix &amp; Contact</li>
-    <li><span>18.</span> Rebranding Migration &mdash; SaatSaheli to Sarayu</li>
+    <li><span>1.</span> <a href="#section-1">Platform Overview</a></li>
+    <li><span>2.</span> <a href="#section-2">System Architecture</a></li>
+    <li><span>3.</span> <a href="#section-3">Technical Support &mdash; Server &amp; Deployment</a></li>
+    <li><span>4.</span> <a href="#section-4">User Support &mdash; Account &amp; Access Issues</a></li>
+    <li><span>5.</span> <a href="#section-5">Database Support &mdash; PostgreSQL / Neon</a></li>
+    <li><span>6.</span> <a href="#section-6">Admin Support &mdash; Admin Panel Operations</a></li>
+    <li><span>7.</span> <a href="#section-7">Super Admin Support &mdash; Elevated Operations</a></li>
+    <li><span>8.</span> <a href="#section-8">AI &amp; Image Generation Support</a></li>
+    <li><span>9.</span> <a href="#section-9">File Upload &amp; Storage Support</a></li>
+    <li><span>10.</span> <a href="#section-10">Chat &amp; Community Support</a></li>
+    <li><span>11.</span> <a href="#section-11">Payments &amp; Subscription Support (Stripe)</a></li>
+    <li><span>12.</span> <a href="#section-12">Security &amp; Authentication</a></li>
+    <li><span>13.</span> <a href="#section-13">API Reference &mdash; Quick Lookup</a></li>
+    <li><span>14.</span> <a href="#section-14">Error Code Reference</a></li>
+    <li><span>15.</span> <a href="#section-15">Environment Variables Reference</a></li>
+    <li><span>16.</span> <a href="#section-16">Troubleshooting Guide</a></li>
+    <li><span>17.</span> <a href="#section-17">Escalation Matrix &amp; Contact</a></li>
+    <li><span>18.</span> <a href="#section-18">Platform Capacity &amp; Concurrency Limits</a></li>
+    <li><span>19.</span> <a href="#section-19">Browser Compatibility &amp; System Requirements</a></li>
+    <li><span>20.</span> <a href="#section-20">Backup, Recovery &amp; Data Retention</a></li>
+    <li><span>21.</span> <a href="#section-21">Performance Monitoring &amp; Optimization</a></li>
+    <li><span>22.</span> <a href="#section-22">Session &amp; Token Management Support</a></li>
+    <li><span>23.</span> <a href="#section-23">Email &amp; Notification Support</a></li>
+    <li><span>24.</span> <a href="#section-24">Rebranding History</a></li>
   </ul>
 </div>
 
 <!-- SECTION 1 -->
-<div class="section">
+<div class="section" id="section-1">
 <h1>1. Platform Overview</h1>
-<p><strong>Sarayu</strong> (formerly SaatSaheli) is a full-stack creative publishing and community platform that enables users to create, publish, and share digital books, articles, and image galleries. The platform features AI-powered content generation with multilingual (Hindi/English) support.</p>
+<p><strong>Saat Saheli</strong> is a full-stack creative publishing and community platform that enables users to create, publish, and share digital books, articles, and image galleries. The platform features AI-powered content generation with multilingual (Hindi/English) support.</p>
 
 <h2>1.1 Key Features</h2>
 <ul>
@@ -179,7 +187,7 @@
 </div>
 
 <!-- SECTION 2 -->
-<div class="section">
+<div class="section" id="section-2">
 <h1>2. System Architecture</h1>
 
 <h2>2.1 High-Level Architecture</h2>
@@ -221,7 +229,7 @@ com.SaatSaheli.spring/
 </div>
 
 <!-- SECTION 3 -->
-<div class="section">
+<div class="section" id="section-3">
 <h1>3. Technical Support &mdash; Server &amp; Deployment</h1>
 
 <h2>3.1 Starting the Backend</h2>
@@ -265,7 +273,7 @@ npm start
 </div>
 
 <!-- SECTION 4 -->
-<div class="section">
+<div class="section" id="section-4">
 <h1>4. User Support &mdash; Account &amp; Access Issues</h1>
 
 <h2>4.1 User Registration</h2>
@@ -320,7 +328,7 @@ npm start
 </div>
 
 <!-- SECTION 5 -->
-<div class="section">
+<div class="section" id="section-5">
 <h1>5. Database Support &mdash; PostgreSQL / Neon</h1>
 
 <h2>5.1 Connection Details</h2>
@@ -393,7 +401,7 @@ FROM pg_stat_user_tables ORDER BY n_live_tup DESC;
 </div>
 
 <!-- SECTION 6 -->
-<div class="section">
+<div class="section" id="section-6">
 <h1>6. Admin Support &mdash; Admin Panel Operations</h1>
 
 <h2>6.1 Admin Role Capabilities</h2>
@@ -445,7 +453,7 @@ Body: { "status": "ACTIVE" }
 </div>
 
 <!-- SECTION 7 -->
-<div class="section">
+<div class="section" id="section-7">
 <h1>7. Super Admin Support &mdash; Elevated Operations</h1>
 
 <div class="danger-box">
@@ -495,7 +503,7 @@ Body: { "role": "ADMIN" }
 </div>
 
 <!-- SECTION 8 -->
-<div class="section">
+<div class="section" id="section-8">
 <h1>8. AI &amp; Image Generation Support</h1>
 
 <h2>8.1 AI Image Generation</h2>
@@ -548,14 +556,14 @@ Body: { "role": "ADMIN" }
 </div>
 
 <!-- SECTION 9 -->
-<div class="section">
+<div class="section" id="section-9">
 <h1>9. File Upload &amp; Storage Support</h1>
 
 <h2>9.1 Upload Configuration</h2>
 <table>
   <tr><th>Setting</th><th>Value</th></tr>
   <tr><td>Max File Size</td><td>10 MB per file</td></tr>
-  <tr><td>Max Request Size</td><td>50 MB per request</td></tr>
+  <tr><td>Max Request Size</td><td>10 MB per request</td></tr>
   <tr><td>Supported Formats</td><td>PDF, DOCX, DOC, JPEG, PNG, GIF, WebP, BMP, TIFF</td></tr>
   <tr><td>Storage Provider</td><td>Cloudinary</td></tr>
 </table>
@@ -578,7 +586,7 @@ Body: { "role": "ADMIN" }
 </div>
 
 <!-- SECTION 10 -->
-<div class="section">
+<div class="section" id="section-10">
 <h1>10. Chat &amp; Community Support</h1>
 
 <h2>10.1 Default Chat Rooms</h2>
@@ -603,7 +611,7 @@ Body: { "role": "ADMIN" }
 </div>
 
 <!-- SECTION 11 -->
-<div class="section">
+<div class="section" id="section-11">
 <h1>11. Payments &amp; Subscription Support (Stripe)</h1>
 
 <h2>11.1 Subscription Plans</h2>
@@ -633,7 +641,7 @@ Body: { "role": "ADMIN" }
 </div>
 
 <!-- SECTION 12 -->
-<div class="section">
+<div class="section" id="section-12">
 <h1>12. Security &amp; Authentication</h1>
 
 <h2>12.1 JWT Authentication</h2>
@@ -642,7 +650,6 @@ Body: { "role": "ADMIN" }
   <tr><td>Algorithm</td><td>HS256 (HMAC-SHA256)</td></tr>
   <tr><td>Token Expiry</td><td>24 hours</td></tr>
   <tr><td>Header</td><td><code>Authorization: Bearer {token}</code></td></tr>
-  <tr><td>Fallback Header</td><td><code>X-User-Id</code> (legacy support)</td></tr>
   <tr><td>Secret</td><td><code>${JWT_SECRET}</code> environment variable</td></tr>
 </table>
 
@@ -675,7 +682,7 @@ Body: { "role": "ADMIN" }
 </div>
 
 <!-- SECTION 13 -->
-<div class="section">
+<div class="section" id="section-13">
 <h1>13. API Reference &mdash; Quick Lookup</h1>
 
 <table>
@@ -696,7 +703,7 @@ Body: { "role": "ADMIN" }
 </div>
 
 <!-- SECTION 14 -->
-<div class="section">
+<div class="section" id="section-14">
 <h1>14. Error Code Reference</h1>
 
 <table>
@@ -723,7 +730,7 @@ Body: { "role": "ADMIN" }
 </div>
 
 <!-- SECTION 15 -->
-<div class="section">
+<div class="section" id="section-15">
 <h1>15. Environment Variables Reference</h1>
 
 <table>
@@ -749,7 +756,7 @@ Body: { "role": "ADMIN" }
 </div>
 
 <!-- SECTION 16 -->
-<div class="section">
+<div class="section" id="section-16">
 <h1>16. Troubleshooting Guide</h1>
 
 <h2>16.1 Backend Won't Start</h2>
@@ -762,7 +769,16 @@ Body: { "role": "ADMIN" }
   <tr><td>Compilation error</td><td>Check build output</td><td>Use <code>./mvnw clean</code> before build</td></tr>
 </table>
 
-<h2>16.2 Frontend Won't Start</h2>
+<h2>16.2 Neon DB Connection Fails in Production (Render)</h2>
+<table>
+  <tr><th>Symptom</th><th>Check</th><th>Fix</th></tr>
+  <tr><td><code>UnknownHostException</code> for Neon DB hostname on Render</td><td>Check Render service logs for DNS resolution errors</td><td>Restart the service on Render dashboard. Neon free-tier auto-suspends idle compute endpoints after ~5 minutes; a restart triggers a new connection that wakes it up.</td></tr>
+  <tr><td>Restart doesn't fix it</td><td>Test DB connectivity from local machine using <code>nslookup</code> or a TCP connection test</td><td>If DB is reachable locally but not from Render, do a <strong>Manual Deploy</strong> (not just restart) from the Render dashboard to force a fresh container.</td></tr>
+  <tr><td>Repeated occurrences</td><td>Check if Neon compute endpoint is being suspended frequently</td><td>Add HikariCP keepalive settings in <code>application.properties</code>:<br><code>spring.datasource.hikari.keepalive-time=120000</code><br><code>spring.datasource.hikari.connection-timeout=30000</code></td></tr>
+</table>
+<p><strong>Note:</strong> This issue was first observed on 2026-04-09. Neon free-tier suspends compute after idle periods, and Render free-tier instances can experience transient DNS failures during cold starts. The combination of both can cause intermittent <code>UnknownHostException</code> errors.</p>
+
+<h2>16.3 Frontend Won't Start</h2>
 <table>
   <tr><th>Symptom</th><th>Check</th><th>Fix</th></tr>
   <tr><td>Port 3000 in use</td><td><code>lsof -i :3000</code></td><td>Kill existing process</td></tr>
@@ -771,7 +787,7 @@ Body: { "role": "ADMIN" }
   <tr><td>API calls fail</td><td>Check <code>REACT_APP_API_URL</code></td><td>Set correct backend URL</td></tr>
 </table>
 
-<h2>16.3 AI Image Generation Fails</h2>
+<h2>16.4 AI Image Generation Fails</h2>
 <table>
   <tr><th>Symptom</th><th>Check</th><th>Fix</th></tr>
   <tr><td>503 errors persist</td><td>HF model status</td><td>Wait for model to load; check HF status page</td></tr>
@@ -779,7 +795,7 @@ Body: { "role": "ADMIN" }
   <tr><td>Empty response</td><td>Cloudinary config</td><td>Verify Cloudinary credentials</td></tr>
 </table>
 
-<h2>16.4 Payment Issues</h2>
+<h2>16.5 Payment Issues</h2>
 <table>
   <tr><th>Symptom</th><th>Check</th><th>Fix</th></tr>
   <tr><td>Checkout fails</td><td>Stripe key validity</td><td>Verify <code>STRIPE_SECRET_KEY</code></td></tr>
@@ -789,7 +805,7 @@ Body: { "role": "ADMIN" }
 </div>
 
 <!-- SECTION 17 -->
-<div class="section">
+<div class="section" id="section-17">
 <h1>17. Escalation Matrix &amp; Contact</h1>
 
 <h2>17.1 Support Tiers</h2>
@@ -836,144 +852,321 @@ psql "${NEON_DB_URL}" -c "SELECT 1;"
 </div>
 
 <!-- SECTION 18 -->
-<div class="section">
-<h1>18. Rebranding Migration &mdash; SaatSaheli to Sarayu</h1>
+<div class="section" id="section-18">
+<h1>18. Platform Capacity &amp; Concurrency Limits</h1>
 
-<p>On March 27, 2026, the platform was rebranded from <strong>SaatSaheli</strong> to <strong>Sarayu</strong>. This section documents all changes made and steps required for a complete migration.</p>
-
-<h2>18.1 Summary of Changes</h2>
+<h2>18.1 Server Capacity Overview</h2>
 <table>
-  <tr><th>Area</th><th>What Changed</th><th>Status</th></tr>
-  <tr><td>Site name &amp; branding</td><td>All user-visible text &ldquo;Saat Saheli&rdquo; / &ldquo;SaatSaheli&rdquo; &rarr; &ldquo;Sarayu&rdquo;</td><td>Done</td></tr>
-  <tr><td>Logo</td><td>Replaced <code>SaatSaheliLogo.jpg</code> with <code>sarayu-logo.png</code> (cropped)</td><td>Done</td></tr>
-  <tr><td>Header</td><td>Dark gradient background, Cormorant Garamond font, slogan &ldquo;Sarayu, where silence speaks&rdquo;</td><td>Done</td></tr>
-  <tr><td>Footer</td><td>Dark gradient background, matching header theme</td><td>Done</td></tr>
-  <tr><td>Page background</td><td>Changed from <code>#f8fafc</code> to warm off-white <code>#f5f0eb</code></td><td>Done</td></tr>
-  <tr><td>Contact email</td><td><code>support@saatsaheli.com</code> &rarr; <code>avikaventures.info@gmail.com</code></td><td>Done</td></tr>
-  <tr><td>Contact/Feedback forms</td><td>Now link to Google Forms (footer opens in new tab)</td><td>Done</td></tr>
-  <tr><td>Production API URL</td><td><code>.env.production</code>: <code>saatsaheli.onrender.com</code> &rarr; <code>sarayu.onrender.com</code></td><td>Done</td></tr>
-  <tr><td>HTML meta tags</td><td>Title, OG, Twitter cards updated to &ldquo;Sarayu&rdquo;</td><td>Done</td></tr>
-  <tr><td>manifest.json</td><td>short_name and name updated to &ldquo;Sarayu&rdquo;</td><td>Done</td></tr>
-  <tr><td>Java package names</td><td><code>com.SaatSaheli.spring.*</code> &mdash; NOT changed (internal only, no user impact)</td><td>Skipped</td></tr>
-  <tr><td>localStorage keys</td><td><code>saatSaheliUser</code>, <code>saatSaheliToken</code>, etc. &mdash; NOT changed (would log out existing users)</td><td>Skipped</td></tr>
-  <tr><td>Cloudinary folder</td><td><code>&quot;saatsaheli&quot;</code> folder &mdash; NOT changed (storage internal, no user impact)</td><td>Skipped</td></tr>
+  <tr><th>Resource</th><th>Current Limit</th><th>Notes</th></tr>
+  <tr><td>Tomcat Max Threads</td><td>200 (Spring Boot default)</td><td>Max concurrent HTTP requests the server can process simultaneously</td></tr>
+  <tr><td>Tomcat Min Spare Threads</td><td>10 (default)</td><td>Threads kept alive for immediate request handling</td></tr>
+  <tr><td>HikariCP Max Pool Size</td><td><strong>5 connections</strong></td><td>Primary bottleneck &mdash; limited by Neon free tier</td></tr>
+  <tr><td>HikariCP Connection Timeout</td><td>20 seconds</td><td>Max wait time to acquire a DB connection from pool</td></tr>
 </table>
 
-<h2>18.2 Files Modified in Rebranding</h2>
-<h3>Frontend</h3>
+<h2>18.2 Active Users &mdash; How Many Can Be Served?</h2>
+<div class="info-box">
+  <strong>Estimated Concurrent User Capacity: ~50&ndash;100 active users</strong> for typical browsing, reading, and content creation. This estimate assumes mixed workload (not all users hitting the database simultaneously).
+</div>
+
+<h3>Capacity Breakdown</h3>
+<table>
+  <tr><th>Activity</th><th>Concurrent Users Supported</th><th>Limiting Factor</th></tr>
+  <tr><td>Browsing / Reading books</td><td>~100+</td><td>Tomcat threads (200); DB queries are fast (few ms)</td></tr>
+  <tr><td>Creating / Editing content</td><td>~50&ndash;80</td><td>DB writes hold connections slightly longer</td></tr>
+  <tr><td>AI Image Generation</td><td>~10&ndash;20</td><td>HF API latency (5&ndash;30s per request); Tomcat threads held during wait</td></tr>
+  <tr><td>Document Upload + Processing</td><td>~5&ndash;10</td><td>CPU-intensive PDF/Word parsing + DB + Cloudinary upload</td></tr>
+  <tr><td>Chat (polling every 5s)</td><td>~50&ndash;80</td><td>Each poll is a lightweight DB query</td></tr>
+</table>
+
+<h3>Why 5 DB Connections Is the Bottleneck</h3>
+<p>With only <strong>5 HikariCP connections</strong>, any request requiring database access will queue once all 5 are in use. Most DB operations complete in under 10ms, so under normal load the pool recycles quickly. However, under heavy concurrent load (e.g., 20+ users simultaneously uploading documents or generating AI images), the 20-second connection timeout may trigger, returning <code>500</code> errors to users.</p>
+
+<h2>18.3 Document Upload Capacity</h2>
+<table>
+  <tr><th>Setting</th><th>Value</th></tr>
+  <tr><td>Max File Size</td><td>10 MB per file</td></tr>
+  <tr><td>Max Request Size</td><td>10 MB per request</td></tr>
+  <tr><td>Concurrent Uploads Supported</td><td>~5&ndash;10 simultaneous uploads</td></tr>
+</table>
+<div class="warning-box">
+  <strong>Upload bottleneck:</strong> Each document upload holds a Tomcat thread for the full duration of processing (file parsing + page creation + Cloudinary image upload). A large PDF with many pages can take 10&ndash;30 seconds, blocking one of the 5 DB connections throughout. More than ~5 simultaneous uploads may cause pool exhaustion.
+</div>
+
+<h2>18.4 Rate Limiting Summary</h2>
+<table>
+  <tr><th>Endpoint</th><th>Rate Limit</th><th>Window</th><th>Scope</th></tr>
+  <tr><td>Signup (<code>/api/auth/signup</code>)</td><td>10 attempts</td><td>15 minutes</td><td>Per IP address</td></tr>
+  <tr><td>Login (<code>/api/auth/login</code>)</td><td>10 attempts</td><td>15 minutes</td><td>Per email / IP</td></tr>
+  <tr><td>Forgot Password (<code>/api/auth/forgot-password</code>)</td><td>10 attempts</td><td>15 minutes</td><td>Per IP address</td></tr>
+</table>
+<div class="info-box">
+  Rate limits are stored <strong>in-memory</strong> using ConcurrentHashMap. They reset automatically on server restart.
+</div>
+
+<h2>18.5 Scaling Recommendations</h2>
+<p>To increase the number of concurrent users supported:</p>
+<table>
+  <tr><th>Action</th><th>Impact</th><th>Effort</th></tr>
+  <tr><td>Increase HikariCP pool size to 10&ndash;20</td><td>Doubles/triples DB throughput</td><td>Low &mdash; requires Neon paid plan or connection pooler (PgBouncer)</td></tr>
+  <tr><td>Enable Neon connection pooling</td><td>Supports more app-level connections without hitting Neon limits</td><td>Low &mdash; toggle in Neon dashboard, use pooled connection string</td></tr>
+  <tr><td>Tune Tomcat thread pool</td><td>Handle more concurrent HTTP requests</td><td>Low &mdash; add <code>server.tomcat.threads.max=300</code> in application.properties</td></tr>
+  <tr><td>Async AI image generation</td><td>Free up Tomcat threads during HF API calls</td><td>Medium &mdash; requires code refactor to async/reactive</td></tr>
+  <tr><td>Add Redis caching for read-heavy endpoints</td><td>Reduce DB load for public content</td><td>Medium &mdash; new dependency + caching layer</td></tr>
+  <tr><td>Horizontal scaling (multiple instances)</td><td>Linearly increases capacity</td><td>High &mdash; requires sticky sessions or stateless auth (already JWT-based)</td></tr>
+</table>
+
+<h2>18.6 Capacity Monitoring</h2>
+<pre>
+-- Check active database connections (run in Neon SQL editor)
+SELECT count(*) FROM pg_stat_activity WHERE state = 'active';
+
+-- Check connection pool status (in application logs)
+-- HikariCP logs pool stats at DEBUG level:
+--   "HikariPool-1 - Pool stats (total=5, active=3, idle=2, waiting=0)"
+
+# Check Tomcat thread usage (add to application.properties for metrics)
+# management.endpoints.web.exposure.include=health,metrics
+# Then: GET /actuator/metrics/tomcat.threads.busy
+</pre>
+</div>
+
+<!-- SECTION 19 -->
+<div class="section" id="section-19">
+<h1>19. Browser Compatibility &amp; System Requirements</h1>
+
+<h2>19.1 Supported Browsers</h2>
+<table>
+  <tr><th>Browser</th><th>Minimum Version</th><th>Notes</th></tr>
+  <tr><td>Google Chrome</td><td>90+</td><td>Recommended for best experience</td></tr>
+  <tr><td>Mozilla Firefox</td><td>88+</td><td>Fully supported</td></tr>
+  <tr><td>Safari</td><td>14+</td><td>Fully supported (macOS &amp; iOS)</td></tr>
+  <tr><td>Microsoft Edge</td><td>90+ (Chromium-based)</td><td>Fully supported</td></tr>
+  <tr><td>Internet Explorer</td><td>&mdash;</td><td>Not supported</td></tr>
+</table>
+
+<h2>19.2 Device Requirements</h2>
+<table>
+  <tr><th>Device Type</th><th>Supported</th><th>Notes</th></tr>
+  <tr><td>Desktop / Laptop</td><td>Yes</td><td>Primary supported platform</td></tr>
+  <tr><td>Tablet</td><td>Yes</td><td>Responsive layout supported</td></tr>
+  <tr><td>Mobile Phone</td><td>Yes</td><td>Responsive; flipbook reader may have limited experience on small screens</td></tr>
+</table>
+
+<h2>19.3 Network Requirements</h2>
 <ul>
-  <li><code>FrontEnd/.env.production</code> &mdash; API URL</li>
-  <li><code>FrontEnd/public/index.html</code> &mdash; title, meta, OG tags, Google Font import</li>
-  <li><code>FrontEnd/public/manifest.json</code> &mdash; app name</li>
-  <li><code>FrontEnd/src/constants/strings.js</code> &mdash; all user-visible strings</li>
-  <li><code>FrontEnd/src/modules/Header.jsx</code> &mdash; logo import, tagline</li>
-  <li><code>FrontEnd/src/modules/Header.css</code> &mdash; dark gradient, font styles, layout</li>
-  <li><code>FrontEnd/src/modules/Footer.jsx</code> &mdash; Google Form links</li>
-  <li><code>FrontEnd/src/modules/Footer.css</code> &mdash; dark gradient</li>
-  <li><code>FrontEnd/src/modules/Sidebar.jsx</code> &mdash; logo import</li>
-  <li><code>FrontEnd/src/modules/sarayu-logo.png</code> &mdash; new logo file</li>
-  <li><code>FrontEnd/src/index.css</code> &mdash; background color</li>
-  <li><code>FrontEnd/src/components/ServerWakeUp.jsx</code> &mdash; wakeup message</li>
-  <li><code>FrontEnd/src/components/TermsGate.jsx</code> &mdash; terms text</li>
-  <li><code>FrontEnd/src/pages/Home.jsx</code> &mdash; share text, creator program</li>
-  <li><code>FrontEnd/src/pages/BookManager.jsx</code> &mdash; contact email</li>
-  <li><code>FrontEnd/src/pages/Contacts.jsx</code> &mdash; redirect to Google Form</li>
-  <li><code>FrontEnd/src/pages/SitePolicies.jsx</code> &mdash; marketplace disclaimer</li>
-  <li><code>FrontEnd/src/pages/UserManual.jsx</code> &mdash; manual text</li>
-  <li><code>FrontEnd/src/pages/AdminManual.jsx</code> &mdash; admin manual text</li>
-  <li><code>FrontEnd/src/pages/Pricing.jsx</code> &mdash; watermark text</li>
-  <li><code>FrontEnd/src/pages/Marketplace.jsx</code> &mdash; share text, disclaimer</li>
-  <li><code>FrontEnd/src/pages/Articles.jsx</code> &mdash; share text</li>
-  <li><code>FrontEnd/src/pages/Podcasts.jsx</code> &mdash; share text</li>
-  <li><code>FrontEnd/src/pages/ReadBook.jsx</code> &mdash; share text</li>
-  <li><code>FrontEnd/src/FlipBook.js</code> &mdash; copyright footer</li>
+  <li>Stable internet connection required (platform is fully cloud-hosted)</li>
+  <li>Minimum recommended bandwidth: 1 Mbps for browsing, 5 Mbps for document uploads and AI generation</li>
+  <li>WebSocket or long-polling not required (chat uses HTTP polling every 5 seconds)</li>
 </ul>
 
-<h2>18.3 Render.com Configuration</h2>
-<ol>
-  <li>Go to <strong>Render Dashboard</strong> &rarr; your service &rarr; <strong>Settings</strong> &rarr; <strong>General</strong></li>
-  <li>Change <strong>Name</strong> from <code>SaatSaheli</code> to <code>sarayu</code></li>
-  <li>Save &mdash; URL becomes <code>https://sarayu.onrender.com</code></li>
-  <li>If <code>CORS_ALLOWED_ORIGINS</code> is set in Environment, update it to include <code>https://sarayu.onrender.com</code></li>
-  <li>Trigger a <strong>Manual Deploy</strong> to rebuild with updated code</li>
-</ol>
-
-<h2>18.4 Google Cloud Console &mdash; OAuth 2.0 Client ID Updates</h2>
-<div class="warning-box">
-  <strong>Critical:</strong> Google OAuth login will break if these steps are not completed after the Render URL change.
-</div>
-<ol>
-  <li>Go to <a href="https://console.cloud.google.com/">Google Cloud Console</a></li>
-  <li>Select the project (e.g., <code>chproject-487021</code>)</li>
-  <li>Navigate to <strong>APIs &amp; Services</strong> &rarr; <strong>Credentials</strong></li>
-  <li>Click on the <strong>OAuth 2.0 Client ID</strong> used by the app</li>
-  <li>Under <strong>Authorized JavaScript origins</strong>, update:
-    <ul>
-      <li>Remove: <code>https://saatsaheli.onrender.com</code></li>
-      <li>Add: <code>https://sarayu.onrender.com</code></li>
-      <li>Keep: <code>http://localhost:3000</code> (for local development)</li>
-    </ul>
-  </li>
-  <li>Under <strong>Authorized redirect URIs</strong>, update:
-    <ul>
-      <li>Remove: <code>https://saatsaheli.onrender.com</code></li>
-      <li>Add: <code>https://sarayu.onrender.com</code></li>
-      <li>Remove: <code>https://saatsaheli.onrender.com/Login</code></li>
-      <li>Add: <code>https://sarayu.onrender.com/Login</code></li>
-      <li>Keep: <code>http://localhost:3000</code> and <code>http://localhost:3000/Login</code></li>
-    </ul>
-  </li>
-  <li>Click <strong>Save</strong></li>
-  <li>Changes may take up to 5 minutes to propagate</li>
-</ol>
-
-<h2>18.5 OAuth Consent Screen Updates</h2>
-<ol>
-  <li>In Google Cloud Console, go to <strong>APIs &amp; Services</strong> &rarr; <strong>OAuth consent screen</strong></li>
-  <li>Update <strong>Application name</strong> from &ldquo;SaatSaheli&rdquo; to &ldquo;Sarayu&rdquo;</li>
-  <li>Update <strong>Application home page</strong> to <code>https://sarayu.onrender.com</code></li>
-  <li>Update <strong>Authorized domains</strong>: add <code>sarayu.onrender.com</code>, remove old domain</li>
-  <li>Update <strong>Privacy policy link</strong> to <code>https://sarayu.onrender.com/policies</code></li>
-  <li>Save changes</li>
-</ol>
-
-<h2>18.6 Stripe Dashboard Updates</h2>
-<ol>
-  <li>Go to <a href="https://dashboard.stripe.com/">Stripe Dashboard</a></li>
-  <li>Navigate to <strong>Developers</strong> &rarr; <strong>Webhooks</strong></li>
-  <li>Update the webhook endpoint URL from <code>https://saatsaheli.onrender.com/api/payments/webhook</code> to <code>https://sarayu.onrender.com/api/payments/webhook</code></li>
-  <li>Verify the webhook secret (<code>STRIPE_WEBHOOK_SECRET</code>) remains the same or update in Render env vars</li>
-</ol>
-
-<h2>18.7 Items NOT Changed (By Design)</h2>
+<h2>19.4 Common Browser Issues</h2>
 <table>
-  <tr><th>Item</th><th>Current Value</th><th>Reason Not Changed</th></tr>
+  <tr><th>Issue</th><th>Cause</th><th>Resolution</th></tr>
+  <tr><td>Page not loading after update</td><td>Cached old version</td><td>Hard refresh: Ctrl+Shift+R (Windows) or Cmd+Shift+R (Mac)</td></tr>
+  <tr><td>Google login popup blocked</td><td>Browser popup blocker</td><td>Allow popups for the Saat Saheli domain</td></tr>
+  <tr><td>PDF upload fails silently</td><td>Browser extension interference</td><td>Try in incognito/private mode</td></tr>
+  <tr><td>Flipbook not rendering</td><td>JavaScript disabled</td><td>Enable JavaScript in browser settings</td></tr>
+  <tr><td>Images not loading</td><td>Ad blocker blocking Cloudinary</td><td>Whitelist <code>res.cloudinary.com</code></td></tr>
+</table>
+</div>
+
+<!-- SECTION 20 -->
+<div class="section" id="section-20">
+<h1>20. Backup, Recovery &amp; Data Retention</h1>
+
+<h2>20.1 Database Backups</h2>
+<table>
+  <tr><th>Aspect</th><th>Details</th></tr>
+  <tr><td>Provider</td><td>Neon Cloud PostgreSQL</td></tr>
+  <tr><td>Automatic Backups</td><td>Neon provides point-in-time recovery (PITR) based on plan tier</td></tr>
+  <tr><td>Backup Frequency</td><td>Continuous WAL archiving (Neon managed)</td></tr>
+  <tr><td>Retention Period</td><td>Depends on Neon plan (free tier: 7 days; paid: up to 30 days)</td></tr>
+</table>
+
+<h2>20.2 Manual Backup Procedure</h2>
+<pre>
+# Export full database backup
+pg_dump "${NEON_DB_URL}" --format=custom --file=saatsaheli_backup_$(date +%Y%m%d).dump
+
+# Export specific table
+pg_dump "${NEON_DB_URL}" --table=books --format=custom --file=books_backup.dump
+
+# Restore from backup
+pg_restore --dbname="${NEON_DB_URL}" --clean saatsaheli_backup_20260408.dump
+</pre>
+
+<h2>20.3 File Storage Backups</h2>
+<div class="info-box">
+  <strong>Cloudinary</strong> manages all uploaded images and generated covers. Cloudinary provides its own redundancy. For critical data, use the Cloudinary Admin API to export asset lists periodically.
+</div>
+
+<h2>20.4 Data Retention Policies</h2>
+<table>
+  <tr><th>Data Type</th><th>Retention</th><th>Notes</th></tr>
+  <tr><td>User accounts</td><td>Indefinite (soft-delete)</td><td>DELETED status accounts remain in DB</td></tr>
+  <tr><td>Books (deleted)</td><td>Until purged by Super Admin</td><td>Soft-deleted; recoverable until purge</td></tr>
+  <tr><td>Chat messages (deleted)</td><td>Indefinite</td><td>Soft-deleted; content replaced with "[deleted]"</td></tr>
+  <tr><td>JWT tokens</td><td>24 hours</td><td>Stateless; not stored server-side</td></tr>
+  <tr><td>Rate limit records</td><td>Until server restart</td><td>In-memory only; not persisted</td></tr>
+</table>
+
+<h2>20.5 Disaster Recovery Steps</h2>
+<ol>
+  <li><strong>Database corruption/loss:</strong> Use Neon PITR to restore to a point before the incident</li>
+  <li><strong>Accidental bulk delete:</strong> Restore from most recent pg_dump backup or use Neon branching to create a recovery branch</li>
+  <li><strong>Cloudinary data loss:</strong> Re-upload from local copies if available; contact Cloudinary support</li>
+  <li><strong>Complete server failure:</strong> Redeploy from GitHub repo; database is hosted externally on Neon</li>
+</ol>
+</div>
+
+<!-- SECTION 21 -->
+<div class="section" id="section-21">
+<h1>21. Performance Monitoring &amp; Optimization</h1>
+
+<h2>21.1 Key Performance Indicators</h2>
+<table>
+  <tr><th>Metric</th><th>Healthy Range</th><th>Warning Threshold</th></tr>
+  <tr><td>API response time (avg)</td><td>&lt; 500ms</td><td>&gt; 2 seconds</td></tr>
+  <tr><td>Database query time (avg)</td><td>&lt; 50ms</td><td>&gt; 500ms</td></tr>
+  <tr><td>HikariCP active connections</td><td>0&ndash;3</td><td>5 (pool exhausted)</td></tr>
+  <tr><td>Tomcat busy threads</td><td>&lt; 50</td><td>&gt; 150</td></tr>
+  <tr><td>AI image generation time</td><td>5&ndash;15 seconds</td><td>&gt; 60 seconds (model cold start)</td></tr>
+  <tr><td>Upload processing time</td><td>&lt; 10 seconds</td><td>&gt; 30 seconds</td></tr>
+</table>
+
+<h2>21.2 Common Performance Issues</h2>
+<table>
+  <tr><th>Symptom</th><th>Likely Cause</th><th>Resolution</th></tr>
+  <tr><td>All API calls slow</td><td>DB connection pool exhaustion</td><td>Check for connection leaks; restart backend; consider increasing pool size</td></tr>
+  <tr><td>Specific queries slow</td><td>Missing database index</td><td>Analyze with <code>EXPLAIN ANALYZE</code>; add appropriate index</td></tr>
+  <tr><td>Frontend slow to load</td><td>Large bundle size or slow backend</td><td>Check network tab; verify backend health endpoint responds quickly</td></tr>
+  <tr><td>AI generation timeout</td><td>HF model cold start</td><td>Auto-retries handle this; consider pre-warming the model with a test request</td></tr>
+  <tr><td>Memory usage growing</td><td>Rate limiter ConcurrentHashMap not cleaned up</td><td>Restart backend periodically; entries expire after 15 min but old keys persist</td></tr>
+</table>
+
+<h2>21.3 Database Performance Queries</h2>
+<pre>
+-- Find slow queries
+SELECT query, mean_exec_time, calls
+FROM pg_stat_statements
+ORDER BY mean_exec_time DESC LIMIT 10;
+
+-- Check index usage
+SELECT relname, seq_scan, idx_scan
+FROM pg_stat_user_tables
+ORDER BY seq_scan DESC;
+
+-- Check table bloat
+SELECT relname, n_dead_tup, n_live_tup,
+  round(n_dead_tup::numeric / NULLIF(n_live_tup, 0) * 100, 2) AS dead_pct
+FROM pg_stat_user_tables
+ORDER BY n_dead_tup DESC;
+</pre>
+
+<h2>21.4 Render.com Performance Tips</h2>
+<ul>
+  <li>Free tier instances <strong>spin down after 15 minutes of inactivity</strong> &mdash; first request after idle takes 30&ndash;60 seconds (cold start)</li>
+  <li>The <code>ServerWakeUp</code> component in the frontend displays a loading message during backend cold start</li>
+  <li>To avoid cold starts: upgrade to a paid Render plan, or set up an external health check ping (e.g., UptimeRobot) to keep the instance warm</li>
+</ul>
+</div>
+
+<!-- SECTION 22 -->
+<div class="section" id="section-22">
+<h1>22. Session &amp; Token Management Support</h1>
+
+<h2>22.1 JWT Token Lifecycle</h2>
+<table>
+  <tr><th>Event</th><th>Details</th></tr>
+  <tr><td>Token issued</td><td>On successful login (email/password or Google OAuth)</td></tr>
+  <tr><td>Token stored</td><td>Client-side in <code>localStorage</code> (key: <code>saatSaheliToken</code>)</td></tr>
+  <tr><td>Token sent</td><td><code>Authorization: Bearer {token}</code> header on every API request</td></tr>
+  <tr><td>Token validated</td><td>Server-side by <code>JwtInterceptor</code> on every protected endpoint</td></tr>
+  <tr><td>Token expires</td><td>24 hours after issuance</td></tr>
+  <tr><td>Token refresh</td><td>Not supported &mdash; user must re-login after expiry</td></tr>
+</table>
+
+<h2>22.2 Common Session Issues</h2>
+<table>
+  <tr><th>Issue</th><th>Cause</th><th>User-Facing Message</th><th>Resolution</th></tr>
+  <tr><td>Suddenly logged out</td><td>JWT expired (24h)</td><td>401 Unauthorized</td><td>Log in again</td></tr>
+  <tr><td>Logged out after clearing browser data</td><td>localStorage cleared</td><td>Redirected to login</td><td>Log in again (expected behavior)</td></tr>
+  <tr><td>Logged in on one tab but not another</td><td>Different browser or incognito</td><td>&mdash;</td><td>Log in separately in each browser/profile</td></tr>
+  <tr><td>Token rejected after server restart</td><td>JWT_SECRET changed</td><td>401 Unauthorized</td><td>All users must re-login; ensure JWT_SECRET is stable across restarts</td></tr>
+  <tr><td>"Session expired" on mobile</td><td>Browser killed background tab, cleared storage</td><td>401 Unauthorized</td><td>Log in again</td></tr>
+</table>
+
+<h2>22.3 Security Note</h2>
+<div class="danger-box">
+  <strong>April 2026 Security Update:</strong> The legacy <code>X-User-Id</code> header bypass has been removed. All endpoints now exclusively use JWT authentication. Any client or tool relying on X-User-Id headers must be updated to send a valid JWT Bearer token instead.
+</div>
+</div>
+
+<!-- SECTION 23 -->
+<div class="section" id="section-23">
+<h1>23. Email &amp; Notification Support</h1>
+
+<h2>23.1 Email Configuration</h2>
+<table>
+  <tr><th>Setting</th><th>Value</th></tr>
+  <tr><td>SMTP Host</td><td><code>smtp.gmail.com</code> (configurable via <code>MAIL_HOST</code>)</td></tr>
+  <tr><td>SMTP Port</td><td>587 (TLS)</td></tr>
+  <tr><td>Authentication</td><td>Required (SMTP auth + STARTTLS)</td></tr>
+  <tr><td>Sender Account</td><td>Configured via <code>MAIL_USERNAME</code> env var</td></tr>
+</table>
+
+<h2>23.2 Email Use Cases</h2>
+<table>
+  <tr><th>Trigger</th><th>Email Sent?</th><th>Notes</th></tr>
+  <tr><td>Password reset request</td><td>Yes</td><td>Sends temporary password to user's registered email</td></tr>
+  <tr><td>Account registration</td><td>No</td><td>No verification email currently sent</td></tr>
+  <tr><td>Subscription change</td><td>No (Stripe handles)</td><td>Stripe sends receipts directly to user</td></tr>
+</table>
+
+<h2>23.3 Common Email Issues</h2>
+<table>
+  <tr><th>Issue</th><th>Cause</th><th>Resolution</th></tr>
+  <tr><td>Password reset email not received</td><td>Gmail SMTP credentials expired or blocked</td><td>Check <code>MAIL_USERNAME</code> and <code>MAIL_PASSWORD</code> env vars; regenerate Gmail App Password if using 2FA</td></tr>
+  <tr><td>Email goes to spam</td><td>Gmail sender reputation</td><td>Ask user to check spam/junk folder; consider adding SPF/DKIM records if using custom domain</td></tr>
+  <tr><td>SMTP connection timeout</td><td>Port 587 blocked by hosting provider</td><td>Verify Render allows outbound SMTP; try port 465 (SSL) as alternative</td></tr>
+  <tr><td>"Authentication failed" in logs</td><td>Gmail requires App Password (not regular password) when 2FA is enabled</td><td>Generate App Password at <code>myaccount.google.com/apppasswords</code></td></tr>
+</table>
+
+<h2>23.4 Future Notification Recommendations</h2>
+<ul>
+  <li>Add email verification on registration to reduce spam accounts</li>
+  <li>Add notification for new comments/likes on user's content</li>
+  <li>Consider a notification center in the frontend (in-app notifications)</li>
+</ul>
+</div>
+
+<!-- SECTION 24 -->
+<div class="section" id="section-24">
+<h1>24. Rebranding History</h1>
+
+<p>This section documents the branding changes the platform has undergone.</p>
+
+<h2>24.1 Timeline</h2>
+<table>
+  <tr><th>Date</th><th>Event</th></tr>
+  <tr><td>Original launch</td><td>Platform launched as <strong>Saat Saheli</strong></td></tr>
+  <tr><td>March 27, 2026</td><td>Temporarily rebranded to <strong>Sarayu</strong> (frontend, meta tags, Render URL, Stripe, OAuth)</td></tr>
+  <tr><td>April 2026</td><td>Reverted branding back to <strong>Saat Saheli</strong></td></tr>
+</table>
+
+<h2>24.2 Internal References That Retain Legacy Naming</h2>
+<table>
+  <tr><th>Item</th><th>Current Value</th><th>Reason Unchanged</th></tr>
   <tr><td>Java package</td><td><code>com.SaatSaheli.spring</code></td><td>Internal only; massive refactor with no user benefit</td></tr>
   <tr><td>localStorage keys</td><td><code>saatSaheliUser</code>, <code>saatSaheliToken</code>, <code>saatSaheliLang</code></td><td>Changing would force-logout all existing users</td></tr>
   <tr><td>Cloudinary folder</td><td><code>&quot;saatsaheli&quot;</code></td><td>Storage folder name; no user visibility</td></tr>
   <tr><td>GitHub repo name</td><td><code>SaatSaheliMain</code></td><td>Can be renamed later; would require Render relink</td></tr>
-  <tr><td>JWT default secret</td><td>Contains &ldquo;SaatSaheli&rdquo;</td><td>Overridden by <code>JWT_SECRET</code> env var in production</td></tr>
 </table>
-
-<h2>18.8 Post-Migration Verification Checklist</h2>
-<ol>
-  <li>Verify <code>https://sarayu.onrender.com</code> loads the homepage</li>
-  <li>Verify header shows Sarayu logo and &ldquo;Sarayu, where silence speaks&rdquo;</li>
-  <li>Verify browser tab title shows &ldquo;Sarayu &mdash; A Community for Passion and Creativity&rdquo;</li>
-  <li>Verify Google OAuth login works (redirects back to new URL)</li>
-  <li>Verify email/password login works</li>
-  <li>Verify footer &ldquo;Contact Us&rdquo; opens Google Form in new tab</li>
-  <li>Verify footer &ldquo;Feedback&rdquo; opens Google Form in new tab</li>
-  <li>Verify About page shows &ldquo;About Sarayu&rdquo;</li>
-  <li>Verify Site Policies page shows &ldquo;Sarayu&rdquo; throughout</li>
-  <li>Verify Stripe checkout flow works with new webhook URL</li>
-  <li>Verify book share links reference &ldquo;Sarayu&rdquo;</li>
-  <li>Verify the old URL <code>saatsaheli.onrender.com</code> no longer resolves (or redirects)</li>
-</ol>
 </div>
 
 <div class="footer">
-  <p><strong>Sarayu Technical Support Document</strong> | Version 1.1 | March 27, 2026</p>
+  <p><strong>Saat Saheli Technical Support Document</strong> | Version 2.0 | April 8, 2026</p>
   <p>This document is for internal and operational use. Keep credentials and access details confidential.</p>
 </div>
 
