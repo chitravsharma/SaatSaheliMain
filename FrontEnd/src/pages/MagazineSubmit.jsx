@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import axios from 'axios';
 import './HelpSupport.css';
 
@@ -45,38 +45,68 @@ const MagazineSubmit = () => {
   const [originalWork, setOriginalWork] = useState('');
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
+  const [trackingId, setTrackingId] = useState('');
   const [error, setError] = useState('');
   const [honeypot, setHoneypot] = useState('');
+  // Synchronous guard so a fast double-click can't fire two POSTs before
+  // the `sending` state has propagated to the disabled-button render.
+  const submittingRef = useRef(false);
+
+  // Refs for focusing the first invalid field on validation failure.
+  const nameRef = useRef(null);
+  const emailRef = useRef(null);
+  const countryRef = useRef(null);
+  const cityRef = useRef(null);
+  const otherCityRef = useRef(null);
+  const submissionTypeRef = useRef(null);
+  const otherTypeRef = useRef(null);
+  const titleRef = useRef(null);
+  const descriptionRef = useRef(null);
+  const publishedBeforeRef = useRef(null);
+  const originalWorkRef = useRef(null);
+
+  const failValidation = (ref) => {
+    setError('Please try again.');
+    if (ref && ref.current) {
+      ref.current.focus();
+      if (typeof ref.current.scrollIntoView === 'function') {
+        ref.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }
+  };
+
+  // All required fields filled? — used to enable/disable the submit button.
+  const isFormValid =
+    name.trim() !== '' &&
+    email.trim() !== '' &&
+    country !== '' &&
+    city !== '' &&
+    (city !== 'Other' || otherCity.trim() !== '') &&
+    submissionType !== '' &&
+    (submissionType !== 'Other' || otherType.trim() !== '') &&
+    title.trim() !== '' &&
+    description.trim() !== '' &&
+    publishedBefore !== '' &&
+    originalWork === 'Yes';
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (submittingRef.current) return;
     setError('');
 
-    if (!name.trim() || !email.trim() || !country || !city || !title.trim() || !description.trim()) {
-      setError('Please fill in all required fields.');
-      return;
-    }
-    if (city === 'Other' && !otherCity.trim()) {
-      setError('Please specify your city.');
-      return;
-    }
-    if (!submissionType) {
-      setError('Please select a submission type.');
-      return;
-    }
-    if (submissionType === 'Other' && !otherType.trim()) {
-      setError('Please specify your submission type.');
-      return;
-    }
-    if (!publishedBefore) {
-      setError('Please indicate if you have been previously published.');
-      return;
-    }
-    if (originalWork !== 'Yes') {
-      setError('Please confirm that this is your original work before submitting.');
-      return;
-    }
+    if (!name.trim())              { failValidation(nameRef);            return; }
+    if (!email.trim())             { failValidation(emailRef);           return; }
+    if (!country)                  { failValidation(countryRef);         return; }
+    if (!city)                     { failValidation(cityRef);            return; }
+    if (city === 'Other' && !otherCity.trim())             { failValidation(otherCityRef);       return; }
+    if (!submissionType)           { failValidation(submissionTypeRef);  return; }
+    if (submissionType === 'Other' && !otherType.trim())   { failValidation(otherTypeRef);       return; }
+    if (!title.trim())             { failValidation(titleRef);           return; }
+    if (!description.trim())       { failValidation(descriptionRef);     return; }
+    if (!publishedBefore)          { failValidation(publishedBeforeRef); return; }
+    if (originalWork !== 'Yes')    { failValidation(originalWorkRef);    return; }
 
+    submittingRef.current = true;
     setSending(true);
     try {
       const type = submissionType === 'Other' ? `Other: ${otherType.trim()}` : submissionType;
@@ -93,22 +123,24 @@ const MagazineSubmit = () => {
         description.trim(),
       ].join('\n');
 
-      await axios.post(`${API_BASE}/api/contact`, {
+      const res = await axios.post(`${API_BASE}/api/contact`, {
         name: name.trim(),
         email: email.trim(),
         subject: `Magazine Submission: ${type} — ${title.trim()}`,
         message: fullMessage,
         confirm_email_hp: honeypot,
       });
+      setTrackingId(res?.data?.trackingId || '');
       setSent(true);
       setName(''); setEmail(''); setPhone(''); setCountry(''); setCity(''); setOtherCity('');
       setSubmissionType(''); setOtherType(''); setTitle('');
       setDescription(''); setPublishedBefore(''); setSocial('');
       setOriginalWork('');
     } catch (err) {
-      setError(err.response?.data?.error || 'Failed to send. Please try again.');
+      setError('Failed to send. Please try later.');
     } finally {
       setSending(false);
+      submittingRef.current = false;
     }
   };
 
@@ -131,13 +163,29 @@ const MagazineSubmit = () => {
       <div className="hs-form-card">
         {sent ? (
           <div className="hs-sent">
-            Thank you for your submission! We'll review it and get back to you soon.
-            <br />
-            Don't forget to email your full content to <strong>avikaventures.info@gmail.com</strong>.
-            <br />
-            <button className="hs-submit" style={{ marginTop: 16 }} onClick={() => setSent(false)}>
-              Submit Another
-            </button>
+            <div className="hs-sent-icon" aria-hidden="true">✓</div>
+            <h3 className="hs-sent-title">Submission Received</h3>
+            <p className="hs-sent-subtitle">Thank you for your submission! We'll review it and get back to you soon.</p>
+            {trackingId && (
+              <>
+                <div className="hs-tracking-box">
+                  <span className="hs-tracking-label">Your Tracking ID</span>
+                  <span className="hs-tracking-id">{trackingId}</span>
+                </div>
+                <p className="hs-tracking-hint">
+                  Please save this ID — quote it in any follow-up email so we can locate your submission.
+                </p>
+              </>
+            )}
+            <div className="hs-sent-note">
+              <strong>Next step:</strong> Email your full content (Word/PDF/images) to{' '}
+              <a href="mailto:avikaventures.info@gmail.com">avikaventures.info@gmail.com</a>
+            </div>
+            <div className="hs-sent-actions">
+              <button className="hs-submit" onClick={() => { setSent(false); setTrackingId(''); }}>
+                Submit Another
+              </button>
+            </div>
           </div>
         ) : (
           <form className="hs-form" onSubmit={handleSubmit}>
@@ -155,11 +203,13 @@ const MagazineSubmit = () => {
               <div className="hs-field">
                 <label htmlFor="ms-name">Full Name *</label>
                 <input id="ms-name" type="text" placeholder="Your full name"
+                  ref={nameRef}
                   value={name} onChange={(e) => setName(e.target.value)} required />
               </div>
               <div className="hs-field">
                 <label htmlFor="ms-email">Email Address *</label>
                 <input id="ms-email" type="email" placeholder="you@example.com"
+                  ref={emailRef}
                   value={email} onChange={(e) => setEmail(e.target.value)} required />
               </div>
               <div className="hs-field">
@@ -170,6 +220,7 @@ const MagazineSubmit = () => {
               <div className="hs-field">
                 <label htmlFor="ms-country">Country *</label>
                 <select id="ms-country" value={country}
+                  ref={countryRef}
                   onChange={(e) => { setCountry(e.target.value); setCity(''); setOtherCity(''); }}
                   required style={{ padding: '12px 14px', border: '1px solid var(--border-strong)', borderRadius: 10, fontSize: '1rem', fontFamily: 'inherit', color: 'var(--text-primary)', background: 'var(--bg-body)' }}>
                   <option value="">Select Country</option>
@@ -179,6 +230,7 @@ const MagazineSubmit = () => {
               <div className="hs-field">
                 <label htmlFor="ms-city">City *</label>
                 <select id="ms-city" value={city}
+                  ref={cityRef}
                   onChange={(e) => { setCity(e.target.value); if (e.target.value !== 'Other') setOtherCity(''); }}
                   required disabled={!country}
                   style={{ padding: '12px 14px', border: '1px solid var(--border-strong)', borderRadius: 10, fontSize: '1rem', fontFamily: 'inherit', color: 'var(--text-primary)', background: 'var(--bg-body)' }}>
@@ -187,6 +239,7 @@ const MagazineSubmit = () => {
                 </select>
                 {city === 'Other' && (
                   <input type="text" placeholder="Enter your city..." value={otherCity}
+                    ref={otherCityRef}
                     onChange={(e) => setOtherCity(e.target.value)} className="hs-other-input" />
                 )}
               </div>
@@ -198,6 +251,7 @@ const MagazineSubmit = () => {
               <div className="hs-field">
                 <label htmlFor="ms-type">Type of Submission *</label>
                 <select id="ms-type" value={submissionType}
+                  ref={submissionTypeRef}
                   onChange={(e) => { setSubmissionType(e.target.value); if (e.target.value !== 'Other') setOtherType(''); }}
                   required style={{ padding: '12px 14px', border: '1px solid var(--border-strong)', borderRadius: 10, fontSize: '1rem', fontFamily: 'inherit', color: 'var(--text-primary)', background: 'var(--bg-body)' }}>
                   <option value="">Select</option>
@@ -206,17 +260,20 @@ const MagazineSubmit = () => {
                 </select>
                 {submissionType === 'Other' && (
                   <input type="text" placeholder="Please specify..." value={otherType}
+                    ref={otherTypeRef}
                     onChange={(e) => setOtherType(e.target.value)} className="hs-other-input" />
                 )}
               </div>
               <div className="hs-field">
                 <label htmlFor="ms-title">Title of Your Submission *</label>
                 <input id="ms-title" type="text" placeholder="Title of your work"
+                  ref={titleRef}
                   value={title} onChange={(e) => setTitle(e.target.value)} required />
               </div>
               <div className="hs-field">
                 <label htmlFor="ms-desc">Description / Summary *</label>
                 <textarea id="ms-desc" placeholder="Briefly describe your submission..."
+                  ref={descriptionRef}
                   value={description} onChange={(e) => setDescription(e.target.value)} required rows={5} />
               </div>
             </fieldset>
@@ -229,6 +286,7 @@ const MagazineSubmit = () => {
                 <div className="hs-radio-group">
                   <label className="hs-radio-label">
                     <input type="radio" name="publishedBefore" value="Yes"
+                      ref={publishedBeforeRef}
                       checked={publishedBefore === "Yes"}
                       onChange={(e) => setPublishedBefore(e.target.value)} />
                     Yes
@@ -256,6 +314,7 @@ const MagazineSubmit = () => {
                 <div className="hs-radio-group">
                   <label className="hs-radio-label">
                     <input type="radio" name="originalWork" value="Yes"
+                      ref={originalWorkRef}
                       checked={originalWork === "Yes"}
                       onChange={(e) => setOriginalWork(e.target.value)} />
                     Yes, I confirm
@@ -280,8 +339,8 @@ const MagazineSubmit = () => {
               </p>
             </div>
 
-            <button type="submit" className="hs-submit" disabled={sending || originalWork !== 'Yes'}>
-              {sending ? 'Submitting...' : 'Submit Details'}
+            <button type="submit" className="hs-submit" disabled={sending || !isFormValid}>
+              {sending ? (<><span className="hs-spinner" aria-hidden="true" />Submitting...</>) : 'Submit Details'}
             </button>
           </form>
         )}

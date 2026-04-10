@@ -176,6 +176,7 @@ const AdminDashboard = () => {
     const [supportFilter, setSupportFilter] = useState("ALL");
     const [supportSearch, setSupportSearch] = useState("");
     const [expandedQueryId, setExpandedQueryId] = useState(null);
+    const [selectedQueryIds, setSelectedQueryIds] = useState(() => new Set());
 
     // Analytics state
     const [analytics, setAnalytics] = useState(null);
@@ -235,6 +236,7 @@ const AdminDashboard = () => {
         try {
             const res = await api.get(`${API}/api/contact`);
             setSupportQueries(Array.isArray(res.data) ? res.data : []);
+            setSelectedQueryIds(new Set());
         } catch { /* ignore */ }
         setSupportLoading(false);
     }, [user?.userId]);
@@ -257,6 +259,53 @@ const AdminDashboard = () => {
             fetchSupportQueries();
         } catch {
             setMessage("Failed to delete query");
+        }
+    };
+
+    // Display ID derived from subject + raw db id. Classification mirrors
+    // EmailService.sendContactNotification so the prefix matches the form type:
+    //   M00026   — Magazine Submission
+    //   HS00027  — Help & Support
+    //   FE00028  — Feedback
+    //   CU00029  — Contact Us (anything else)
+    // DB primary key stays unchanged — this is purely display formatting.
+    const formatQueryId = (q) => {
+        const padded = String(q.id).padStart(5, "0");
+        const subj = q.subject || "";
+        if (subj.startsWith("Magazine Submission:")) return `M${padded}`;
+        if (subj.startsWith("Help & Support:")) return `HS${padded}`;
+        if (subj.toLowerCase().startsWith("feedback")) return `FE${padded}`;
+        return `CU${padded}`;
+    };
+
+    const toggleQuerySelection = (queryId) => {
+        setSelectedQueryIds(prev => {
+            const next = new Set(prev);
+            if (next.has(queryId)) next.delete(queryId);
+            else next.add(queryId);
+            return next;
+        });
+    };
+
+    const bulkDeleteSelectedQueries = async () => {
+        if (selectedQueryIds.size === 0) return;
+        // Build a confirmation message that lists each row's id and subject so the
+        // admin can verify exactly what they're about to delete.
+        const selectedRows = supportQueries.filter(q => selectedQueryIds.has(q.id));
+        const lines = selectedRows.map(q => `  ${formatQueryId(q)}  —  ${q.subject || "(no subject)"}`).join("\n");
+        const confirmMsg =
+            `Delete the following ${selectedRows.length} support ${selectedRows.length === 1 ? "query" : "queries"} permanently?\n\n` +
+            lines +
+            `\n\nThis cannot be undone.`;
+        if (!window.confirm(confirmMsg)) return;
+        try {
+            const ids = Array.from(selectedQueryIds);
+            const res = await api.post(`${API}/api/contact/bulk-delete`, { ids });
+            setMessage(res?.data?.message || `Deleted ${ids.length} support queries`);
+            setSelectedQueryIds(new Set());
+            fetchSupportQueries();
+        } catch {
+            setMessage("Failed to delete selected queries");
         }
     };
 
@@ -1347,7 +1396,10 @@ const AdminDashboard = () => {
                         const s = supportSearch.toLowerCase();
                         return (q.name || "").toLowerCase().includes(s)
                             || (q.email || "").toLowerCase().includes(s)
-                            || (q.subject || "").toLowerCase().includes(s);
+                            || (q.subject || "").toLowerCase().includes(s)
+                            || formatQueryId(q).toLowerCase().includes(s)
+                            // Legacy random tracking ids (e.g. SS-MAG-WHXYBN) on pre-cleanup rows.
+                            || (q.trackingId || "").toLowerCase().includes(s);
                     }
                     return true;
                 });
@@ -1373,7 +1425,7 @@ const AdminDashboard = () => {
                         <div style={{ display: "flex", gap: 12, marginBottom: 16, flexWrap: "wrap", alignItems: "center" }}>
                             <input
                                 type="text"
-                                placeholder="Search by name, email, or subject..."
+                                placeholder="Search by ID, name, email, or subject..."
                                 value={supportSearch}
                                 onChange={(e) => setSupportSearch(e.target.value)}
                                 className="admin-search-input"
@@ -1387,6 +1439,14 @@ const AdminDashboard = () => {
                                 ))}
                             </select>
                             <button className="admin-btn" onClick={fetchSupportQueries}>Refresh</button>
+                            {isSuperAdmin && selectedQueryIds.size > 0 && (
+                                <button
+                                    className="admin-btn admin-btn-danger"
+                                    onClick={bulkDeleteSelectedQueries}
+                                >
+                                    Delete Selected ({selectedQueryIds.size})
+                                </button>
+                            )}
                         </div>
 
                         {supportLoading && <p>Loading...</p>}
@@ -1395,6 +1455,22 @@ const AdminDashboard = () => {
                             <table className="admin-table">
                                 <thead>
                                     <tr>
+                                        {isSuperAdmin && (
+                                            <th style={{ width: 36 }}>
+                                                <input
+                                                    type="checkbox"
+                                                    aria-label="Select all visible"
+                                                    checked={filtered.length > 0 && filtered.every(q => selectedQueryIds.has(q.id))}
+                                                    onChange={(e) => {
+                                                        if (e.target.checked) {
+                                                            setSelectedQueryIds(new Set(filtered.map(q => q.id)));
+                                                        } else {
+                                                            setSelectedQueryIds(new Set());
+                                                        }
+                                                    }}
+                                                />
+                                            </th>
+                                        )}
                                         <th>ID</th>
                                         <th>Name</th>
                                         <th>Email</th>
@@ -1411,11 +1487,37 @@ const AdminDashboard = () => {
                                         return (
                                             <React.Fragment key={q.id}>
                                                 <tr style={{ cursor: "pointer" }} onClick={() => setExpandedQueryId(isExpanded ? null : q.id)}>
-                                                    <td>{q.id}</td>
+                                                    {isSuperAdmin && (
+                                                        <td onClick={(e) => e.stopPropagation()}>
+                                                            <input
+                                                                type="checkbox"
+                                                                aria-label={`Select query ${q.id}`}
+                                                                checked={selectedQueryIds.has(q.id)}
+                                                                onChange={() => toggleQuerySelection(q.id)}
+                                                            />
+                                                        </td>
+                                                    )}
+                                                    <td style={{ fontFamily: "monospace", fontWeight: 600 }}>{formatQueryId(q)}</td>
                                                     <td>{q.name}</td>
                                                     <td><a href={`mailto:${q.email}`}>{q.email}</a></td>
                                                     <td>{q.subject || "—"}</td>
-                                                    <td>{q.createdDate ? new Date(q.createdDate).toLocaleDateString() : "—"}</td>
+                                                    <td style={{ whiteSpace: "nowrap", fontSize: "0.85rem" }}>
+                                                        {q.createdDate ? (() => {
+                                                            // Backend stores UTC; format in America/Los_Angeles so
+                                                            // every admin sees the same wall-clock time. timeZoneName:
+                                                            // "short" yields "PDT" in summer / "PST" in winter automatically.
+                                                            const d = new Date(q.createdDate);
+                                                            const tz = "America/Los_Angeles";
+                                                            const date = d.toLocaleDateString("en-US", { timeZone: tz, year: "numeric", month: "short", day: "2-digit" });
+                                                            const time = d.toLocaleTimeString("en-US", { timeZone: tz, hour: "2-digit", minute: "2-digit", timeZoneName: "short" });
+                                                            return (
+                                                                <>
+                                                                    {date}<br />
+                                                                    <span style={{ color: "var(--text-muted)", fontSize: "0.78rem" }}>{time}</span>
+                                                                </>
+                                                            );
+                                                        })() : "—"}
+                                                    </td>
                                                     <td>
                                                         <span className="admin-status-badge" style={{ background: statusOpt.color, color: "#fff", padding: "3px 10px", borderRadius: 12, fontSize: "0.8rem", fontWeight: 600 }}>
                                                             {statusOpt.label}
@@ -1445,11 +1547,14 @@ const AdminDashboard = () => {
                                                 </tr>
                                                 {isExpanded && (
                                                     <tr>
-                                                        <td colSpan="7">
+                                                        <td colSpan={isSuperAdmin ? 8 : 7}>
                                                             <div className="support-query-detail">
                                                                 <div className="support-query-meta">
-                                                                    <span><strong>Submitted:</strong> {q.createdDate ? new Date(q.createdDate).toLocaleString() : "—"}</span>
-                                                                    {q.updatedDate && <span><strong>Last Updated:</strong> {new Date(q.updatedDate).toLocaleString()}</span>}
+                                                                    {q.trackingId && q.trackingId !== formatQueryId(q) && (
+                                                                        <span><strong>Legacy Tracking ID:</strong> <code>{q.trackingId}</code></span>
+                                                                    )}
+                                                                    <span><strong>Submitted:</strong> {q.createdDate ? new Date(q.createdDate).toLocaleString("en-US", { timeZone: "America/Los_Angeles", timeZoneName: "short" }) : "—"}</span>
+                                                                    {q.updatedDate && <span><strong>Last Updated:</strong> {new Date(q.updatedDate).toLocaleString("en-US", { timeZone: "America/Los_Angeles", timeZoneName: "short" })}</span>}
                                                                 </div>
                                                                 <div className="support-query-message">
                                                                     <strong>Message:</strong>

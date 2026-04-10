@@ -450,6 +450,52 @@ Body: { "status": "ACTIVE" }
   <li><strong>Recover:</strong> Restores a deleted/archived book to DRAFT status</li>
   <li><strong>Chat moderation:</strong> Admin can delete any chat message (soft delete &mdash; shows as "[deleted]")</li>
 </ul>
+
+<h2>6.6 Support Queries &mdash; Display ID Convention</h2>
+<p>
+  All public form submissions (Magazine Submission, Help &amp; Support, Feedback, and Contact Us) are
+  persisted to the <code>contact_messages</code> table and surfaced in the Admin Dashboard under the
+  <strong>Support Queries</strong> tab. To make rows easier to reference verbally and in follow-up emails,
+  the admin UI displays a prefixed, zero-padded ID derived from the form type and the database row id.
+  The database primary key itself is unchanged &mdash; this is purely a display convention.
+</p>
+<table>
+  <tr>
+    <th>Form</th>
+    <th>Subject Pattern</th>
+    <th>Display ID Prefix</th>
+    <th>Example</th>
+  </tr>
+  <tr>
+    <td>Magazine Submission</td>
+    <td>starts with <code>Magazine Submission:</code></td>
+    <td><code>M</code></td>
+    <td><code>M00026</code></td>
+  </tr>
+  <tr>
+    <td>Help &amp; Support</td>
+    <td>starts with <code>Help &amp; Support:</code></td>
+    <td><code>HS</code></td>
+    <td><code>HS00027</code></td>
+  </tr>
+  <tr>
+    <td>Feedback</td>
+    <td>starts with <code>feedback</code> (case-insensitive)</td>
+    <td><code>FE</code></td>
+    <td><code>FE00028</code></td>
+  </tr>
+  <tr>
+    <td>Contact Us</td>
+    <td>anything else (fallback)</td>
+    <td><code>CU</code></td>
+    <td><code>CU00029</code></td>
+  </tr>
+</table>
+<ul>
+  <li><strong>Tracking ID vs Display ID &mdash;</strong> A separate, randomly-generated tracking ID (e.g. <code>SS-MAG-A4F2K9</code>) is also issued at submission time and shown to the user on the success screen. Users can quote either the tracking ID or the display ID in any follow-up email.</li>
+  <li><strong>Search &mdash;</strong> The Support Queries search box matches against name, email, subject, tracking ID, and the formatted display ID, so admins can paste any of these to locate a row.</li>
+  <li><strong>Consistency &mdash;</strong> Classification mirrors <code>EmailService.sendContactNotification</code>, so the prefix shown in the table always matches the form type used to label admin notification emails.</li>
+</ul>
 </div>
 
 <!-- SECTION 7 -->

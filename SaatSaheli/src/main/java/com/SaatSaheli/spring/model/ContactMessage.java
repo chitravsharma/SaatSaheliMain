@@ -23,8 +23,11 @@ public class ContactMessage {
     @Column(columnDefinition = "TEXT", nullable = false)
     private String message;
 
+    // Stored in UTC. The 'Z' literal in the JSON pattern marks the serialized
+    // string as UTC so the browser parses it correctly and can re-format it
+    // into any display timezone (the admin UI shows it as PST).
     @Column(name = "created_date")
-    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss'Z'", timezone = "UTC")
     private LocalDateTime createdDate;
 
     @Column(name = "status")
@@ -37,8 +40,13 @@ public class ContactMessage {
     private String category;
 
     @Column(name = "updated_date")
-    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss'Z'", timezone = "UTC")
     private LocalDateTime updatedDate;
+
+    // Public-facing reference users can quote when following up on a submission.
+    // Format: SS-MAG-XXXXXX (magazine), SS-SUP-XXXXXX (help & support), SS-MSG-XXXXXX (other).
+    @Column(name = "tracking_id", length = 32)
+    private String trackingId;
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
@@ -69,4 +77,7 @@ public class ContactMessage {
 
     public LocalDateTime getUpdatedDate() { return updatedDate; }
     public void setUpdatedDate(LocalDateTime updatedDate) { this.updatedDate = updatedDate; }
+
+    public String getTrackingId() { return trackingId; }
+    public void setTrackingId(String trackingId) { this.trackingId = trackingId; }
 }

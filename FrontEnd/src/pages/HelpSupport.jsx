@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import axios from 'axios';
 import './HelpSupport.css';
 
@@ -23,8 +23,20 @@ const HelpSupport = () => {
   const [timeline, setTimeline] = useState('');
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
+  const [trackingId, setTrackingId] = useState('');
   const [error, setError] = useState('');
   const [honeypot, setHoneypot] = useState('');
+  // Synchronous guard so a fast double-click can't fire two POSTs before
+  // the `sending` state has propagated to the disabled-button render.
+  const submittingRef = useRef(false);
+
+  // All required fields filled? — used to enable/disable the submit button.
+  const isFormValid =
+    name.trim() !== '' &&
+    email.trim() !== '' &&
+    message.trim() !== '' &&
+    requestTypes.length > 0 &&
+    (!requestTypes.includes('Other') || otherType.trim() !== '');
 
   const toggleRequestType = (type) => {
     setRequestTypes(prev =>
@@ -35,6 +47,7 @@ const HelpSupport = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (submittingRef.current) return;
     setError('');
 
     if (!name.trim() || !email.trim() || !message.trim()) {
@@ -46,6 +59,7 @@ const HelpSupport = () => {
       return;
     }
 
+    submittingRef.current = true;
     setSending(true);
     try {
       const types = requestTypes.includes("Other")
@@ -56,22 +70,24 @@ const HelpSupport = () => {
         : "\n\nAppointment: No";
       const fullMessage = `Request Type: ${types}\nTimeline: ${timeline || "Not specified"}\nPhone: ${phone || "Not provided"}\n\nProject Details:\n${message.trim()}${appointmentInfo}`;
 
-      await axios.post(`${API_BASE}/api/contact`, {
+      const res = await axios.post(`${API_BASE}/api/contact`, {
         name: name.trim(),
         email: email.trim(),
         subject: `Help & Support: ${types}`,
         message: fullMessage,
         website: honeypot,
       });
+      setTrackingId(res?.data?.trackingId || '');
       setSent(true);
       setName(''); setEmail(''); setPhone('');
       setRequestTypes([]); setOtherType('');
       setMessage(''); setWantAppointment(''); setPrefDate('');
       setPrefTime(''); setMeetingType(''); setTimeline('');
     } catch (err) {
-      setError(err.response?.data?.error || 'Failed to send. Please try again.');
+      setError('Failed to send. Please try later.');
     } finally {
       setSending(false);
+      submittingRef.current = false;
     }
   };
 
@@ -93,11 +109,25 @@ const HelpSupport = () => {
       <div className="hs-form-card">
         {sent ? (
           <div className="hs-sent">
-            Thank you for your request! We'll get back to you within 24-48 hours.
-            <br />
-            <button className="hs-submit" style={{ marginTop: 16 }} onClick={() => setSent(false)}>
-              Submit Another Request
-            </button>
+            <div className="hs-sent-icon" aria-hidden="true">✓</div>
+            <h3 className="hs-sent-title">Request Received</h3>
+            <p className="hs-sent-subtitle">Thank you for your request! We'll get back to you within 24-48 hours.</p>
+            {trackingId && (
+              <>
+                <div className="hs-tracking-box">
+                  <span className="hs-tracking-label">Your Tracking ID</span>
+                  <span className="hs-tracking-id">{trackingId}</span>
+                </div>
+                <p className="hs-tracking-hint">
+                  Please save this ID — quote it in any follow-up email so we can locate your request.
+                </p>
+              </>
+            )}
+            <div className="hs-sent-actions">
+              <button className="hs-submit" onClick={() => { setSent(false); setTrackingId(''); }}>
+                Submit Another Request
+              </button>
+            </div>
           </div>
         ) : (
           <form className="hs-form" onSubmit={handleSubmit}>
@@ -239,8 +269,8 @@ const HelpSupport = () => {
               </div>
             </fieldset>
 
-            <button type="submit" className="hs-submit" disabled={sending}>
-              {sending ? 'Sending...' : 'Submit Request'}
+            <button type="submit" className="hs-submit" disabled={sending || !isFormValid}>
+              {sending ? (<><span className="hs-spinner" aria-hidden="true" />Sending...</>) : 'Submit Request'}
             </button>
           </form>
         )}

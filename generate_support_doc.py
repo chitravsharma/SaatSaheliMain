@@ -521,6 +521,44 @@ doc.add_paragraph()
 doc.add_paragraph('In short: Admin handles routine moderation, while Super Admin handles sensitive, irreversible operations like role changes and permanent deletions.')
 
 # ═══════════════════════════════════════
+# 6.6 SUPPORT QUERIES — DISPLAY ID CONVENTION
+# ═══════════════════════════════════════
+add_heading_styled('6.6 Support Queries — Display ID Convention', 2)
+doc.add_paragraph(
+    'All public form submissions (Magazine Submission, Help & Support, Feedback, and Contact Us) '
+    'are persisted to the contact_messages table and surfaced in the Admin Dashboard under the '
+    '"Support Queries" tab. To make rows easier to reference verbally and in follow-up emails, the '
+    'admin UI displays a prefixed, zero-padded ID derived from the form type and the database row id. '
+    'The database primary key itself is unchanged — this is purely a display convention.'
+)
+add_table(
+    ['Form', 'Subject Pattern', 'Display ID Prefix', 'Example'],
+    [
+        ['Magazine Submission', 'starts with "Magazine Submission:"', 'M',  'M00026'],
+        ['Help & Support',      'starts with "Help & Support:"',      'HS', 'HS00027'],
+        ['Feedback',            'starts with "feedback" (case-insensitive)', 'FE', 'FE00028'],
+        ['Contact Us',          'anything else (fallback)',            'CU', 'CU00029'],
+    ]
+)
+add_bullet(
+    'A separate, randomly-generated tracking ID (e.g. SS-MAG-A4F2K9) is also issued at submission time '
+    'and shown to the user on the success screen. Users can quote either the tracking ID or the display ID '
+    'in any follow-up email.',
+    'Tracking ID vs Display ID — '
+)
+add_bullet(
+    'The Support Queries search box matches against name, email, subject, tracking ID, and the formatted '
+    'display ID, so admins can paste any of these to locate a row.',
+    'Search — '
+)
+add_bullet(
+    'Classification mirrors EmailService.sendContactNotification, so the prefix shown in the table always '
+    'matches the form type used to label admin notification emails.',
+    'Consistency — '
+)
+doc.add_paragraph()
+
+# ═══════════════════════════════════════
 # 7. SUPER ADMIN SUPPORT
 # ═══════════════════════════════════════
 add_heading_styled('7. Super Admin Support — Elevated Operations', 1)

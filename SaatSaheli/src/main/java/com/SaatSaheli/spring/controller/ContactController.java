@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 
 import org.springframework.data.domain.PageRequest;
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -89,29 +90,52 @@ public class ContactController {
             String rating = body.get("rating");
             String category = body.get("category");
 
+            String trimmedEmail = email.trim();
+            String trimmedSubject = subject != null ? subject.trim() : "";
+
+            // Idempotency: skip if an identical submission landed within the last 60 seconds.
+            // Catches double-clicks, proxy/CDN retries on 5xx, and rapid user re-submits.
+            LocalDateTime dedupeWindowStart = LocalDateTime.now(ZoneOffset.UTC).minusSeconds(60);
+            Optional<ContactMessage> recentDuplicate = contactRepo
+                    .findFirstByEmailAndSubjectAndCreatedDateAfterOrderByCreatedDateDesc(
+                            trimmedEmail, trimmedSubject, dedupeWindowStart);
+            if (recentDuplicate.isPresent()) {
+                ContactMessage existing = recentDuplicate.get();
+                log.info("Duplicate contact submission suppressed for {} (subject: {})", trimmedEmail, trimmedSubject);
+                Map<String, String> response = new HashMap<>();
+                response.put("message", "Thank you for reaching out! We'll get back to you soon.");
+                response.put("trackingId", formatTrackingId(existing.getId(), existing.getSubject()));
+                return ResponseEntity.ok(response);
+            }
+
             ContactMessage contact = new ContactMessage();
             contact.setName(name.trim());
-            contact.setEmail(email.trim());
-            contact.setSubject(subject != null ? subject.trim() : "");
+            contact.setEmail(trimmedEmail);
+            contact.setSubject(trimmedSubject);
             contact.setMessage(message.trim());
             contact.setRating(rating != null && !rating.trim().isEmpty() ? rating.trim() : null);
             contact.setCategory(category != null && !category.trim().isEmpty() ? category.trim() : null);
-            contact.setCreatedDate(LocalDateTime.now());
+            contact.setCreatedDate(LocalDateTime.now(ZoneOffset.UTC));
             contactRepo.save(contact);
 
-            log.info("Contact form submission from {} ({})", name.trim(), email.trim());
+            // Tracking id is derived from the auto-generated row id + subject — single
+            // source of truth, no separate column to keep in sync.
+            String trackingId = formatTrackingId(contact.getId(), trimmedSubject);
+            log.info("Contact form submission from {} ({}) — tracking {}", name.trim(), trimmedEmail, trackingId);
 
-            // Notify admin via email
+            // Notify admin via email. The submission is already persisted, so an email
+            // failure must NOT fail the request — otherwise the client retries and we
+            // end up with duplicate rows in the support queries table.
             try {
-                emailService.sendContactNotification(name.trim(), email.trim(), contact.getSubject(), message.trim());
+                emailService.sendContactNotification(name.trim(), trimmedEmail, contact.getSubject(), message.trim());
             } catch (Exception emailErr) {
-                log.warn("Failed to send contact notification email: {}", emailErr.getMessage());
-                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                        .body(errorMap("Your message was saved but we couldn't send the notification email. Please try again later or email us directly."));
+                log.warn("Failed to send contact notification email (submission #{} still saved): {}",
+                        contact.getId(), emailErr.getMessage());
             }
 
             Map<String, String> response = new HashMap<>();
             response.put("message", "Thank you for reaching out! We'll get back to you soon.");
+            response.put("trackingId", trackingId);
             return ResponseEntity.ok(response);
 
         } catch (Exception e) {
@@ -207,7 +231,7 @@ public class ContactController {
 
             ContactMessage msg = msgOpt.get();
             msg.setStatus(newStatus);
-            msg.setUpdatedDate(LocalDateTime.now());
+            msg.setUpdatedDate(LocalDateTime.now(ZoneOffset.UTC));
             contactRepo.save(msg);
 
             log.info("Contact message #{} status updated to {} by user #{}", id, newStatus, callerUserId);
@@ -253,9 +277,74 @@ public class ContactController {
         }
     }
 
+    /**
+     * POST /api/contact/bulk-delete — Delete multiple contact messages in one call (Admin only)
+     * Body: { "ids": [1, 2, 3] }
+     */
+    @PostMapping("/bulk-delete")
+    public ResponseEntity<?> bulkDeleteContactMessages(
+            @RequestBody Map<String, Object> body,
+            HttpServletRequest request) {
+        try {
+            Long callerUserId = getAuthUserId(request);
+            if (callerUserId == null) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorMap("Authentication required"));
+            }
+            Optional<User> callerOpt = userRepo.findById(callerUserId);
+            if (callerOpt.isEmpty() || !RoleUtil.isAdmin(callerOpt.get().getRole())) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorMap("Admin access required"));
+            }
+
+            Object idsObj = body.get("ids");
+            if (!(idsObj instanceof List<?>)) {
+                return ResponseEntity.badRequest().body(errorMap("Request must include an 'ids' array"));
+            }
+            List<?> rawIds = (List<?>) idsObj;
+            List<Long> ids = new java.util.ArrayList<>();
+            for (Object o : rawIds) {
+                if (o instanceof Number) {
+                    ids.add(((Number) o).longValue());
+                } else if (o instanceof String) {
+                    try { ids.add(Long.parseLong((String) o)); } catch (NumberFormatException ignored) { /* skip */ }
+                }
+            }
+            if (ids.isEmpty()) {
+                return ResponseEntity.badRequest().body(errorMap("No valid ids provided"));
+            }
+
+            contactRepo.deleteAllById(ids);
+            log.info("Bulk-deleted {} contact messages by user #{}: {}", ids.size(), callerUserId, ids);
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("message", "Deleted " + ids.size() + " support " + (ids.size() == 1 ? "query" : "queries"));
+            response.put("deletedCount", ids.size());
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            log.error("Failed to bulk-delete contact messages", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(errorMap("Failed to delete messages"));
+        }
+    }
+
     private Map<String, String> errorMap(String message) {
         Map<String, String> map = new HashMap<>();
         map.put("error", message);
         return map;
+    }
+
+    // Tracking-ID format. Derived from the auto-generated database id + the form type
+    // (inferred from the subject prefix) so the value the user sees matches the display
+    // id shown in the admin Support Queries table:
+    //   M00026   — Magazine Submission
+    //   HS00027  — Help & Support
+    //   FE00028  — Feedback
+    //   CU00029  — Contact Us (fallback)
+    // Classification mirrors EmailService.sendContactNotification.
+    private String formatTrackingId(Long id, String subject) {
+        String padded = String.format("%05d", id);
+        if (subject != null && subject.startsWith("Magazine Submission:")) return "M" + padded;
+        if (subject != null && subject.startsWith("Help & Support:")) return "HS" + padded;
+        if (subject != null && subject.toLowerCase().startsWith("feedback")) return "FE" + padded;
+        return "CU" + padded;
     }
 }
