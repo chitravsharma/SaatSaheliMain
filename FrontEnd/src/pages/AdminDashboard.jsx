@@ -177,6 +177,10 @@ const AdminDashboard = () => {
     const [supportSearch, setSupportSearch] = useState("");
     const [expandedQueryId, setExpandedQueryId] = useState(null);
     const [selectedQueryIds, setSelectedQueryIds] = useState(() => new Set());
+    // Rows whose status was just changed — kept visible in the table for ~6 seconds
+    // even if the active filter would otherwise hide them, so admins can see the
+    // change persist instead of thinking the row was deleted.
+    const [recentlyUpdatedQueryIds, setRecentlyUpdatedQueryIds] = useState(() => new Set());
 
     // Analytics state
     const [analytics, setAnalytics] = useState(null);
@@ -244,8 +248,22 @@ const AdminDashboard = () => {
     const updateQueryStatus = async (queryId, newStatus) => {
         try {
             await api.put(`${API}/api/contact/${queryId}/status`, { status: newStatus });
+            // Optimistically patch the row in local state so the badge updates instantly,
+            // and mark it as recently-updated so the filter keeps it visible.
+            setSupportQueries(prev => prev.map(q => q.id === queryId ? { ...q, status: newStatus } : q));
+            setRecentlyUpdatedQueryIds(prev => {
+                const next = new Set(prev);
+                next.add(queryId);
+                return next;
+            });
+            setTimeout(() => {
+                setRecentlyUpdatedQueryIds(prev => {
+                    const next = new Set(prev);
+                    next.delete(queryId);
+                    return next;
+                });
+            }, 6000);
             setMessage("Status updated to " + newStatus.replace(/_/g, " "));
-            fetchSupportQueries();
         } catch {
             setMessage("Failed to update status");
         }
@@ -1391,6 +1409,10 @@ const AdminDashboard = () => {
                     { value: "CANCELLED", label: "Cancelled", color: "#e74c3c" },
                 ];
                 const filtered = supportQueries.filter(q => {
+                    // Always show rows the admin just changed, even if the active
+                    // filter would otherwise hide them — prevents the "row is gone"
+                    // surprise after a status change.
+                    if (recentlyUpdatedQueryIds.has(q.id)) return true;
                     if (supportFilter !== "ALL" && q.status !== supportFilter) return false;
                     if (supportSearch) {
                         const s = supportSearch.toLowerCase();
@@ -1486,7 +1508,14 @@ const AdminDashboard = () => {
                                         const isExpanded = expandedQueryId === q.id;
                                         return (
                                             <React.Fragment key={q.id}>
-                                                <tr style={{ cursor: "pointer" }} onClick={() => setExpandedQueryId(isExpanded ? null : q.id)}>
+                                                <tr
+                                                    style={{
+                                                        cursor: "pointer",
+                                                        background: recentlyUpdatedQueryIds.has(q.id) ? "rgba(217, 119, 6, 0.08)" : undefined,
+                                                        transition: "background 0.4s ease",
+                                                    }}
+                                                    onClick={() => setExpandedQueryId(isExpanded ? null : q.id)}
+                                                >
                                                     {isSuperAdmin && (
                                                         <td onClick={(e) => e.stopPropagation()}>
                                                             <input
