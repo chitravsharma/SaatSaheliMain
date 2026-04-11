@@ -83,10 +83,14 @@
 
 .admin-table-wrap {
     overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    width: 100%;
+    max-width: 100%;
 }
 
 .admin-table {
     width: 100%;
+    min-width: 720px;
     border-collapse: collapse;
     font-size: 0.9rem;
 }

@@ -1346,6 +1346,7 @@ const AdminDashboard = () => {
                         {advertisements.length === 0 ? (
                             <p className="admin-maint-empty">No advertisements created yet.</p>
                         ) : (
+                            <div className="admin-table-wrap">
                             <table className="admin-table">
                                 <thead>
                                     <tr>
@@ -1395,6 +1396,7 @@ const AdminDashboard = () => {
                                     ))}
                                 </tbody>
                             </table>
+                            </div>
                         )}
                     </div>
                 </div>
@@ -1474,6 +1476,7 @@ const AdminDashboard = () => {
                         {supportLoading && <p>Loading...</p>}
                         {!supportLoading && filtered.length === 0 && <p>No support queries found.</p>}
                         {!supportLoading && filtered.length > 0 && (
+                            <div className="admin-table-wrap">
                             <table className="admin-table">
                                 <thead>
                                     <tr>
@@ -1598,6 +1601,7 @@ const AdminDashboard = () => {
                                     })}
                                 </tbody>
                             </table>
+                            </div>
                         )}
                     </div>
                 );

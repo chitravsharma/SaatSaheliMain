@@ -301,8 +301,6 @@ function Home() {
       {/* 1. Recently Added Books (top) */}
       {!loading && (
         <div className="home-section home-section-books">
-          <h2 className="home-section-heading">Recently Added Books</h2>
-
           {recentBooks.length === 0 && (
             <p className="home-empty">No published content yet. Be the first to create!</p>
           )}

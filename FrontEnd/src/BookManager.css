@@ -1711,3 +1711,81 @@ p.bm-field-hint {
   font-size: 0.8rem;
   margin-top: 10px;
 }
+
+/* ──────────────────────────────────────────────────────────
+   Published Books section — mirrors Home page Sage & Terracotta theme
+   Scoped under .bm-published-section so other bm-book-card uses
+   (e.g. user's own book list) keep their existing look.
+   ────────────────────────────────────────────────────────── */
+.bm-published-section {
+  background:
+    radial-gradient(ellipse 420px 280px at 14% 18%, rgba(198, 107, 61, 0.18) 0%, transparent 65%),
+    radial-gradient(ellipse 460px 320px at 86% 30%, rgba(135, 169, 107, 0.20) 0%, transparent 60%),
+    radial-gradient(ellipse 520px 280px at 28% 92%, rgba(232, 164, 122, 0.14) 0%, transparent 65%),
+    radial-gradient(ellipse 340px 240px at 80% 88%, rgba(180, 199, 156, 0.18) 0%, transparent 60%),
+    linear-gradient(135deg, #fafbfc 0%, #e3dcd4 35%, #d9d4d0 60%, #eaecef 100%);
+  border-left: 4px solid #c66b3d;
+  position: relative;
+  overflow: hidden;
+}
+
+.bm-published-section .bm-published-heading {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #a0532b;
+  margin: 0 0 18px 0;
+  padding-top: 0;
+  border-top: none;
+  font-family: 'Georgia', 'Times New Roman', serif;
+  letter-spacing: 0.2px;
+}
+
+/* Reset the brown shelf-spine look — match Home book card */
+.bm-published-section .bm-book-card {
+  background: var(--bg-card, #fff);
+  border: none;
+  border-left: none;
+  border-radius: 2px 8px 8px 2px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  min-width: 155px;
+  max-width: 170px;
+  flex-shrink: 0;
+  scroll-snap-align: start;
+  position: relative;
+  padding: 0;
+  margin-bottom: 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  transition: box-shadow 0.2s, transform 0.2s;
+}
+.bm-published-section .bm-book-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+}
+/* Remove the spine highlight pseudo-element */
+.bm-published-section .bm-book-card::before {
+  content: none;
+}
+
+/* Beige cover instead of brown */
+.bm-published-section .bm-book-cover {
+  background: linear-gradient(180deg, #f5ebe0, #faf5ee);
+  aspect-ratio: 3 / 4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  position: relative;
+}
+.bm-published-section .bm-book-cover-img {
+  object-fit: contain;
+}
+.bm-published-section .bm-book-cover-title {
+  color: #3e2723;
+  text-shadow: none;
+}
+.bm-published-section .bm-book-info {
+  padding: 8px 10px;
+  background: linear-gradient(180deg, #f5ebe0, #faf5ee);
+}

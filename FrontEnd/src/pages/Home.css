@@ -1,4 +1,4 @@
-/* Home page - Dark artistic theme */
+/* Home page - Sage & Terracotta theme */
 
 
 .home-container {
@@ -32,7 +32,7 @@
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  color: #997a1e;
+  color: #a0532b;
   font-size: 0.85rem;
   font-weight: 600;
   padding: 2px 0;
@@ -42,8 +42,8 @@
   font-family: 'Segoe UI', system-ui, sans-serif;
 }
 .home-tag-link:hover {
-  color: var(--accent-blue, #2563eb);
-  border-bottom-color: var(--accent-blue, #2563eb);
+  color: #5f7e48;
+  border-bottom-color: #5f7e48;
 }
 .home-tag-link svg {
   vertical-align: middle;
@@ -70,55 +70,42 @@
   background: var(--bg-card);
 }
 
-/* ── Books section — diamond lattice with warm glow ── */
+/* ── Books section — grey gradient w/ terracotta tint & sage blobs ── */
 .home-section-books {
-  background-color: #fffcf7;
-  background-image:
-    linear-gradient(135deg, rgba(217, 119, 6, 0.08) 25%, transparent 25%),
-    linear-gradient(225deg, rgba(217, 119, 6, 0.08) 25%, transparent 25%),
-    linear-gradient(45deg, rgba(217, 119, 6, 0.08) 25%, transparent 25%),
-    linear-gradient(315deg, rgba(217, 119, 6, 0.08) 25%, transparent 25%),
-    radial-gradient(ellipse at 0% 100%, rgba(251, 191, 36, 0.15) 0%, transparent 60%),
-    radial-gradient(ellipse at 100% 0%, rgba(217, 119, 6, 0.1) 0%, transparent 60%);
-  background-size: 40px 40px, 40px 40px, 40px 40px, 40px 40px, 100% 100%, 100% 100%;
-  background-position: 0 0, 0 20px, 20px -20px, -20px 0px, 0 0, 0 0;
-  border-left: 4px solid #d97706;
+  background:
+    radial-gradient(ellipse 420px 280px at 14% 18%, rgba(198, 107, 61, 0.18) 0%, transparent 65%),
+    radial-gradient(ellipse 460px 320px at 86% 30%, rgba(135, 169, 107, 0.20) 0%, transparent 60%),
+    radial-gradient(ellipse 520px 280px at 28% 92%, rgba(232, 164, 122, 0.14) 0%, transparent 65%),
+    radial-gradient(ellipse 340px 240px at 80% 88%, rgba(180, 199, 156, 0.18) 0%, transparent 60%),
+    linear-gradient(135deg, #fafbfc 0%, #e3dcd4 35%, #d9d4d0 60%, #eaecef 100%);
+  border-left: 4px solid #c66b3d;
 }
 
-/* ── Galleries section — hexagonal mosaic with emerald glow ── */
+/* ── Galleries section — grey gradient w/ sage tint ── */
 .home-section-galleries {
-  background-color: #f7fdfb;
-  background-image:
-    radial-gradient(circle at 0% 50%, rgba(16, 185, 129, 0.12) 0%, transparent 50%),
-    radial-gradient(circle at 100% 50%, rgba(5, 150, 105, 0.08) 0%, transparent 50%),
-    radial-gradient(circle, rgba(16, 185, 129, 0.15) 2px, transparent 2px),
-    radial-gradient(circle, rgba(5, 150, 105, 0.1) 1.5px, transparent 1.5px),
-    linear-gradient(60deg, rgba(16, 185, 129, 0.04) 25%, transparent 25%, transparent 75%, rgba(16, 185, 129, 0.04) 75%),
-    linear-gradient(120deg, rgba(16, 185, 129, 0.04) 25%, transparent 25%, transparent 75%, rgba(16, 185, 129, 0.04) 75%);
-  background-size: 100% 100%, 100% 100%, 32px 32px, 32px 32px, 48px 28px, 48px 28px;
-  background-position: 0 0, 0 0, 0 0, 16px 16px, 0 0, 0 14px;
-  border-left: 4px solid #10b981;
+  background:
+    radial-gradient(ellipse at 0% 100%, rgba(135, 169, 107, 0.16) 0%, transparent 55%),
+    radial-gradient(ellipse at 100% 0%, rgba(198, 107, 61, 0.08) 0%, transparent 50%),
+    linear-gradient(135deg, #fafbfc 0%, #d9e0d2 45%, #e6e9eb 100%);
+  border-left: 4px solid #87a96b;
 }
 
-/* ── Articles/Blogs section — overlapping circles with blue glow ── */
+/* ── Articles/Blogs section — grey gradient w/ terracotta tint ── */
 .home-section-articles {
-  background-color: #f7f9ff;
-  background-image:
-    radial-gradient(ellipse at 100% 100%, rgba(37, 99, 235, 0.12) 0%, transparent 50%),
-    radial-gradient(ellipse at 0% 0%, rgba(99, 102, 241, 0.08) 0%, transparent 50%),
-    radial-gradient(circle at 50% 50%, transparent 20px, rgba(37, 99, 235, 0.04) 20px, rgba(37, 99, 235, 0.04) 21px, transparent 21px),
-    radial-gradient(circle at 0% 50%, transparent 20px, rgba(99, 102, 241, 0.04) 20px, rgba(99, 102, 241, 0.04) 21px, transparent 21px),
-    radial-gradient(circle at 50% 0%, transparent 20px, rgba(37, 99, 235, 0.04) 20px, rgba(37, 99, 235, 0.04) 21px, transparent 21px);
-  background-size: 100% 100%, 100% 100%, 50px 50px, 50px 50px, 50px 50px;
-  border-left: 4px solid #2563eb;
+  background:
+    radial-gradient(ellipse at 100% 100%, rgba(198, 107, 61, 0.14) 0%, transparent 55%),
+    radial-gradient(ellipse at 0% 0%, rgba(135, 169, 107, 0.10) 0%, transparent 50%),
+    linear-gradient(135deg, #fafbfc 0%, #e6d8cc 45%, #e6e9eb 100%);
+  border-left: 4px solid #a0532b;
 }
 
 .home-section-heading {
   font-size: 1.5rem;
   font-weight: 700;
-  color: var(--accent-gold);
+  color: #a0532b;
   margin: 0 0 18px 0;
   font-family: 'Georgia', 'Times New Roman', serif;
+  letter-spacing: 0.2px;
 }
 
 .home-empty {
@@ -159,9 +146,9 @@
   scroll-snap-align: start;
 }
 .home-gallery-card:hover {
-  box-shadow: 0 6px 24px rgba(37, 99, 235, 0.25);
+  box-shadow: 0 6px 24px rgba(135, 169, 107, 0.30);
   transform: translateY(-2px);
-  border-color: var(--accent-blue);
+  border-color: #87a96b;
 }
 
 .home-gallery-link {
@@ -446,18 +433,18 @@
 }
 
 .home-article-type-blog {
-  background: #f5f3ff;
-  color: #7c3aed;
+  background: #f4ead8;
+  color: #a0532b;
 }
 
 .home-article-type-article {
-  background: #ecfdf5;
-  color: #059669;
+  background: #eef1e6;
+  color: #5f7e48;
 }
 
 .home-article-type-poetry {
-  background: #eff6ff;
-  color: var(--accent-blue-pale);
+  background: #f7e9dc;
+  color: #c66b3d;
 }
 
 .home-article-title {
@@ -482,13 +469,13 @@
   margin-top: 12px;
 }
 
-/* ── Testimonials Section ── */
+/* ── Testimonials section — grey gradient w/ sage & terracotta accents ── */
 .home-section-testimonials {
-  background-color: #fdf8f0;
-  background-image:
-    radial-gradient(ellipse at 20% 80%, rgba(217, 119, 6, 0.08) 0%, transparent 50%),
-    radial-gradient(ellipse at 80% 20%, rgba(108, 52, 131, 0.06) 0%, transparent 50%);
-  border-left: 4px solid #d4a017;
+  background:
+    radial-gradient(ellipse at 0% 0%, rgba(135, 169, 107, 0.14) 0%, transparent 55%),
+    radial-gradient(ellipse at 100% 100%, rgba(198, 107, 61, 0.12) 0%, transparent 55%),
+    linear-gradient(135deg, #fafbfc 0%, #dde1d8 45%, #e6e9eb 100%);
+  border-left: 4px solid #87a96b;
 }
 
 .home-testimonials-row {
@@ -499,8 +486,8 @@
 }
 
 .home-testimonial-card {
-  background: rgba(255, 255, 255, 0.7);
-  border: 1px solid rgba(212, 160, 23, 0.2);
+  background: rgba(255, 252, 246, 0.85);
+  border: 1px solid rgba(135, 169, 107, 0.28);
   border-radius: 12px;
   padding: 18px 20px;
   display: flex;
@@ -511,7 +498,8 @@
 
 .home-testimonial-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(212, 160, 23, 0.15);
+  box-shadow: 0 6px 20px rgba(135, 169, 107, 0.20);
+  border-color: rgba(198, 107, 61, 0.35);
 }
 
 .home-testimonial-stars {
@@ -521,7 +509,7 @@
 }
 
 .home-testimonial-stars .star-filled {
-  color: #d4a017;
+  color: #c66b3d;
 }
 
 .home-testimonial-stars .star-empty {
@@ -551,13 +539,13 @@
 .home-testimonial-name {
   font-size: 0.82rem;
   font-weight: 700;
-  color: #6c3483;
+  color: #5f7e48;
 }
 
 .home-testimonial-category {
   font-size: 0.68rem;
-  color: #997a1e;
-  background: rgba(212, 160, 23, 0.12);
+  color: #a0532b;
+  background: rgba(198, 107, 61, 0.14);
   padding: 2px 10px;
   border-radius: 10px;
   font-weight: 600;

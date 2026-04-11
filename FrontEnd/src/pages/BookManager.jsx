@@ -658,7 +658,7 @@ function BookManager() {
           </div>
           </div>{/* end bm-section-card for buttons */}
 
-          <div className="bm-section-card">
+          <div className="bm-section-card bm-published-section">
           <h2 className="bm-published-heading">{strings.publicBooks.heading}</h2>
           {publishedLoading && <p>{strings.publicBooks.loading}</p>}
           {!publishedLoading && publishedBooks.length === 0 && (
