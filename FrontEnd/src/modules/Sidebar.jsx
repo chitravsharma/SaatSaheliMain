@@ -1,23 +1,29 @@
 import React from 'react';
-import saraswati from './saraswati.png';
-import './sidebar.css'; // Import the CSS file for styling
+import { Link } from 'react-router-dom';
+import siteLogo from './SaatSaheliLogo.jpg';
+import './sidebar.css';
 
 const Sidebar = ({ isOpen, toggleSidebar }) => {
   return (
     <div className={`sidebar ${isOpen ? 'open' : ''}`}>
       <button className="toggle-button" onClick={toggleSidebar}>
-        {isOpen ? 'Close' : 'Open'} Menu
+        {isOpen ? '✕' : '☰'}
       </button>
-      <nav>
-		  <div className="grid-item">
-	  		  <img src={saraswati} className="App-logo2" alt="saraswati-logo" />
-	  	 </div>
-        <ul className="grid-item">
-          <li><a href="/">Home</a></li>
-          <li><a href="/about">About</a></li>
-          <li><a href="/contact">Contact</a></li>
-        </ul>
-      </nav>
+
+      <div className="sidebar-content">
+        {/* Logo & Nav */}
+        <nav className="sidebar-nav">
+          <div className="sidebar-logo-wrap">
+            <img src={siteLogo} className="sidebar-logo" alt="Saat Saheli logo" />
+          </div>
+          <ul className="sidebar-links">
+            <li><Link to="/" onClick={toggleSidebar}>Home</Link></li>
+            <li><Link to="/about" onClick={toggleSidebar}>About</Link></li>
+            <li><Link to="/contacts" onClick={toggleSidebar}>Contact</Link></li>
+            <li><Link to="/feedback" onClick={toggleSidebar}>Give Feedback</Link></li>
+          </ul>
+        </nav>
+      </div>
     </div>
   );
 };

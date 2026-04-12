@@ -1,0 +1,228 @@
+.img-editor-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(4px);
+}
+
+.img-editor-modal {
+  background: #1a1a2e;
+  border-radius: 16px;
+  padding: 20px;
+  max-width: 520px;
+  width: 95vw;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(201, 168, 76, 0.3);
+}
+
+.img-editor-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.img-editor-header h3 {
+  margin: 0;
+  color: #c9a84c;
+  font-size: 1.2rem;
+  font-family: 'Segoe UI', system-ui, sans-serif;
+}
+
+.img-editor-close {
+  background: none;
+  border: none;
+  color: #94a3b8;
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 0 4px;
+  line-height: 1;
+}
+.img-editor-close:hover {
+  color: #ef4444;
+}
+
+.img-editor-preview {
+  background: #0f172a;
+  border-radius: 12px;
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+  margin-bottom: 16px;
+  border: 1px solid rgba(148, 163, 184, 0.15);
+}
+
+.img-editor-canvas {
+  max-width: 100%;
+  max-height: 360px;
+  border-radius: 4px;
+}
+
+.img-editor-loading {
+  color: #94a3b8;
+  font-style: italic;
+}
+
+.img-editor-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.img-editor-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(15, 23, 42, 0.6);
+  padding: 8px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(148, 163, 184, 0.1);
+}
+
+.img-editor-group-wide {
+  flex-basis: 100%;
+  flex-wrap: wrap;
+}
+
+.img-editor-group-label {
+  color: #94a3b8;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-right: 4px;
+  white-space: nowrap;
+}
+
+.img-editor-btn {
+  background: rgba(51, 65, 85, 0.8);
+  color: #e2e8f0;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+.img-editor-btn:hover {
+  background: rgba(71, 85, 105, 0.9);
+  border-color: rgba(201, 168, 76, 0.4);
+}
+.img-editor-btn.active {
+  background: rgba(201, 168, 76, 0.25);
+  border-color: #c9a84c;
+  color: #c9a84c;
+}
+
+.img-editor-slider {
+  flex: 1;
+  min-width: 120px;
+  accent-color: #c9a84c;
+  cursor: pointer;
+}
+
+.img-editor-shapes {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.img-editor-shape-btn {
+  background: rgba(51, 65, 85, 0.8);
+  color: #e2e8f0;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 8px;
+  width: 40px;
+  height: 40px;
+  font-size: 1.2rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+.img-editor-shape-btn:hover {
+  background: rgba(71, 85, 105, 0.9);
+  border-color: rgba(201, 168, 76, 0.4);
+}
+.img-editor-shape-btn.active {
+  background: rgba(201, 168, 76, 0.25);
+  border-color: #c9a84c;
+  color: #c9a84c;
+  box-shadow: 0 0 8px rgba(201, 168, 76, 0.3);
+}
+
+.img-editor-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.img-editor-btn-reset {
+  margin-right: auto;
+  background: rgba(100, 116, 139, 0.4);
+  color: #94a3b8;
+}
+.img-editor-btn-reset:hover {
+  background: rgba(100, 116, 139, 0.6);
+  color: #e2e8f0;
+}
+
+.img-editor-btn-skip {
+  background: rgba(59, 130, 246, 0.2);
+  color: #60a5fa;
+  border-color: rgba(59, 130, 246, 0.3);
+}
+.img-editor-btn-skip:hover {
+  background: rgba(59, 130, 246, 0.35);
+}
+
+.img-editor-btn-cancel {
+  background: rgba(239, 68, 68, 0.2);
+  color: #f87171;
+  border-color: rgba(239, 68, 68, 0.3);
+}
+.img-editor-btn-cancel:hover {
+  background: rgba(239, 68, 68, 0.35);
+}
+
+.img-editor-btn-apply {
+  background: linear-gradient(135deg, #c9a84c, #b8942e);
+  color: #1a1a2e;
+  border: none;
+  font-weight: 700;
+  padding: 8px 24px;
+}
+.img-editor-btn-apply:hover {
+  background: linear-gradient(135deg, #d4b85c, #c9a84c);
+  box-shadow: 0 4px 12px rgba(201, 168, 76, 0.4);
+}
+
+@media (max-width: 500px) {
+  .img-editor-modal {
+    padding: 14px;
+    border-radius: 12px;
+  }
+  .img-editor-shape-btn {
+    width: 34px;
+    height: 34px;
+    font-size: 1rem;
+  }
+  .img-editor-btn {
+    padding: 5px 8px;
+    font-size: 0.8rem;
+  }
+}

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams, useLocation, Link } from "react-router-dom";
 import { GoogleLogin, GoogleOAuthProvider } from "@react-oauth/google";
 import axios from "axios";
 import { useAuth } from "../AuthContext";
@@ -11,9 +11,13 @@ const GOOGLE_CLIENT_ID = process.env.REACT_APP_GOOGLE_CLIENT_ID;
 
 export default function Login() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const [searchParams] = useSearchParams();
   const { login: authLogin } = useAuth();
   const strings = useStrings();
-  const [mode, setMode] = useState("login"); // "login" | "signup"
+  const isRegisterPath = location.pathname.toLowerCase() === "/register";
+  const initialMode = (isRegisterPath || searchParams.get("mode") === "signup") ? "signup" : "login";
+  const [mode, setMode] = useState(initialMode); // "login" | "signup" | "forgot" | "changePassword"
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
@@ -22,6 +26,15 @@ export default function Login() {
   const [loginEmail, setLoginEmail] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
 
+  // Forgot password fields
+  const [forgotEmail, setForgotEmail] = useState("");
+  const [forgotSent, setForgotSent] = useState(false);
+
+  // Change password fields (after temp password login)
+  const [changeNewPassword, setChangeNewPassword] = useState("");
+  const [changeConfirmPassword, setChangeConfirmPassword] = useState("");
+  const [pendingUserData, setPendingUserData] = useState(null);
+
   // Signup fields
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -29,6 +42,8 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState("Free");
 
   const saveUserAndRedirect = (data) => {
     const userData = {
@@ -38,7 +53,18 @@ export default function Login() {
       email: data.email,
       role: data.role,
       provider: data.provider,
+      plan: data.plan || "Free",
+      token: data.token,
     };
+
+    if (data.mustChangePassword) {
+      setPendingUserData(userData);
+      setMode("changePassword");
+      setError("");
+      setSuccess("");
+      return;
+    }
+
     authLogin(userData);
     navigate("/");
   };
@@ -78,12 +104,42 @@ export default function Login() {
       setError(strings.login.errorSignupRequired);
       return;
     }
+    // Email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email.trim())) {
+      setError(strings.login.errorInvalidEmail || "Please enter a valid email address.");
+      return;
+    }
+    // Phone validation (if provided, must be 10+ digits)
+    if (phoneNumber.trim()) {
+      const digits = phoneNumber.replace(/\D/g, "");
+      if (digits.length < 10) {
+        setError(strings.login.errorInvalidPhone || "Please enter a valid phone number (at least 10 digits).");
+        return;
+      }
+    }
+    if (!acceptedTerms) {
+      setError(strings.login.errorTermsRequired || "You must accept the Terms and Conditions to create an account.");
+      return;
+    }
     if (password !== confirmPassword) {
       setError(strings.login.errorPasswordMismatch);
       return;
     }
-    if (password.length < 6) {
-      setError(strings.login.errorPasswordLength);
+    if (password.length < 8) {
+      setError("Password must be at least 8 characters long.");
+      return;
+    }
+    if (!/[A-Z]/.test(password)) {
+      setError("Password must contain at least one uppercase letter.");
+      return;
+    }
+    if (!/[0-9]/.test(password)) {
+      setError("Password must contain at least one number.");
+      return;
+    }
+    if (!/[!@#$%^&*()_+=[\]{};':"\\|,.<>/?-]/.test(password)) {
+      setError("Password must contain at least one special character.");
       return;
     }
 
@@ -96,11 +152,73 @@ export default function Login() {
         password: password,
         phoneNumber: phoneNumber.trim(),
         provider: "email",
+        plan: selectedPlan,
       });
       saveUserAndRedirect(res.data);
     } catch (err) {
       const msg = err.response?.data?.error || strings.login.errorSignupFailed;
       setError(msg);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleForgotPassword = async (e) => {
+    e.preventDefault();
+    setError("");
+    setSuccess("");
+    if (!forgotEmail.trim()) {
+      setError("Please enter your email address.");
+      return;
+    }
+    setLoading(true);
+    try {
+      await axios.post(`${API_BASE}/forgot-password`, { email: forgotEmail.trim() });
+      setForgotSent(true);
+      setSuccess("If an account with that email exists, you will receive password reset instructions via email.");
+    } catch (err) {
+      setError(err.response?.data?.error || "Failed to process request.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleChangePassword = async (e) => {
+    e.preventDefault();
+    setError("");
+    setSuccess("");
+    if (changeNewPassword.length < 8) {
+      setError("Password must be at least 8 characters long.");
+      return;
+    }
+    if (!/[A-Z]/.test(changeNewPassword)) {
+      setError("Password must contain at least one uppercase letter.");
+      return;
+    }
+    if (!/[0-9]/.test(changeNewPassword)) {
+      setError("Password must contain at least one number.");
+      return;
+    }
+    if (!/[!@#$%^&*()_+=[\]{};':"\\|,.<>/?-]/.test(changeNewPassword)) {
+      setError("Password must contain at least one special character.");
+      return;
+    }
+    if (changeNewPassword !== changeConfirmPassword) {
+      setError("Passwords do not match.");
+      return;
+    }
+    setLoading(true);
+    try {
+      await axios.post(`${API_BASE}/reset-password`, {
+        email: pendingUserData.email,
+        newPassword: changeNewPassword,
+      }, {
+        headers: { Authorization: `Bearer ${pendingUserData.token}` },
+      });
+      authLogin(pendingUserData);
+      navigate("/");
+    } catch (err) {
+      setError(err.response?.data?.error || "Failed to update password.");
     } finally {
       setLoading(false);
     }
@@ -221,12 +339,103 @@ export default function Login() {
                 />
               </div>
 
+              <div className="auth-forgot">
+                <button onClick={() => switchMode("forgot")}>
+                  Forgot Password?
+                </button>
+              </div>
+
               <div className="auth-switch">
                 {strings.login.noAccount}{" "}
                 <button onClick={() => switchMode("signup")}>
                   {strings.login.switchToSignup}
                 </button>
               </div>
+            </>
+          )}
+
+          {mode === "forgot" && (
+            <>
+              <h2>Reset Password</h2>
+              {forgotSent ? (
+                <div className="auth-form">
+                  {success && <div className="auth-success" role="status">{success}</div>}
+                  <p className="auth-forgot-info">
+                    Check your email for password reset instructions. If you don't see it, check your spam folder.
+                  </p>
+                  <div className="auth-switch">
+                    <button onClick={() => { switchMode("login"); setForgotSent(false); }}>
+                      Back to Login
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <form className="auth-form" onSubmit={handleForgotPassword}>
+                  {error && <div className="auth-error" role="alert">{error}</div>}
+                  <p className="auth-forgot-info">Enter your email address and we'll send you password reset instructions.</p>
+                  <div className="auth-field">
+                    <label htmlFor="forgot-email">Email</label>
+                    <input
+                      id="forgot-email"
+                      type="email"
+                      placeholder="you@example.com"
+                      value={forgotEmail}
+                      onChange={(e) => setForgotEmail(e.target.value)}
+                      required
+                      autoComplete="email"
+                    />
+                  </div>
+                  <button type="submit" className="auth-btn auth-btn-primary" disabled={loading}>
+                    {loading ? "Sending..." : "Send Reset Link"}
+                  </button>
+                  <div className="auth-switch">
+                    <button onClick={() => switchMode("login")}>
+                      Back to Login
+                    </button>
+                  </div>
+                </form>
+              )}
+            </>
+          )}
+
+          {mode === "changePassword" && (
+            <>
+              <h2>Create Your New Password</h2>
+              <form className="auth-form" onSubmit={handleChangePassword}>
+                {error && <div className="auth-error" role="alert">{error}</div>}
+                {success && <div className="auth-success" role="status">{success}</div>}
+                <p className="auth-forgot-info">
+                  You logged in with a temporary password. Please create a new password to secure your account.
+                </p>
+                <div className="auth-field">
+                  <label htmlFor="change-new-password">New Password</label>
+                  <input
+                    id="change-new-password"
+                    type="password"
+                    placeholder="Min 8 chars, uppercase, number, special char"
+                    value={changeNewPassword}
+                    onChange={(e) => setChangeNewPassword(e.target.value)}
+                    required
+                    minLength={8}
+                    autoComplete="new-password"
+                  />
+                </div>
+                <div className="auth-field">
+                  <label htmlFor="change-confirm-password">Confirm New Password</label>
+                  <input
+                    id="change-confirm-password"
+                    type="password"
+                    placeholder="Re-enter your new password"
+                    value={changeConfirmPassword}
+                    onChange={(e) => setChangeConfirmPassword(e.target.value)}
+                    required
+                    autoComplete="new-password"
+                  />
+                </div>
+                <button type="submit" className="auth-btn auth-btn-primary" disabled={loading}>
+                  {loading ? "Updating..." : "Set New Password"}
+                </button>
+              </form>
             </>
           )}
 
@@ -289,6 +498,25 @@ export default function Login() {
                 </div>
 
                 <div className="auth-field">
+                  <label htmlFor="signup-plan">Registration Plan</label>
+                  <select
+                    id="signup-plan"
+                    value={selectedPlan}
+                    onChange={(e) => setSelectedPlan(e.target.value)}
+                    className="auth-plan-select"
+                  >
+                    <option value="Free">Free (Starter)</option>
+                    <option value="Premium">Premium — $9/month</option>
+                    <option value="Gold">Gold Member — $19/month</option>
+                    <option value="Creator">Creator / Pro — $39/month</option>
+                  </select>
+                  {selectedPlan !== "Free" && (
+                    <p className="auth-plan-note">Paid plans require manual activation. Contact us at <a href="mailto:avikaventures.info@gmail.com">avikaventures.info@gmail.com</a> after signup.</p>
+                  )}
+                  <Link to="/pricing" className="auth-plan-link">View plan details</Link>
+                </div>
+
+                <div className="auth-field">
                   <label htmlFor="signup-password">{strings.login.labelSignupPassword}</label>
                   <input
                     id="signup-password"
@@ -313,6 +541,18 @@ export default function Login() {
                     required
                     autoComplete="new-password"
                   />
+                </div>
+
+                <div className="auth-terms">
+                  <label className="auth-terms-label">
+                    <input
+                      type="checkbox"
+                      checked={acceptedTerms}
+                      onChange={(e) => setAcceptedTerms(e.target.checked)}
+                      className="auth-terms-checkbox"
+                    />
+                    <span>I accept the <Link to="/policies">Terms and Conditions</Link> and <Link to="/policies">Content Creation Policy</Link></span>
+                  </label>
                 </div>
 
                 <button

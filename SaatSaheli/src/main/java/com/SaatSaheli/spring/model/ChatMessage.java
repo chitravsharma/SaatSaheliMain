@@ -1,12 +1,34 @@
 package com.SaatSaheli.spring.model;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+import jakarta.persistence.*;
+import java.time.LocalDateTime;
+
+@Entity
+@Table(name = "chat_messages")
 public class ChatMessage {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Column(name = "room_id")
     private Long roomId;
+
+    @Column(name = "sender_id")
     private Long senderId;
+
+    @Column(name = "sender_name")
     private String senderName;
+
+    @Column(columnDefinition = "TEXT")
     private String message;
-    private String createdDate;
+
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    @Column(name = "created_date")
+    private LocalDateTime createdDate;
+
+    @Column(name = "is_deleted")
     private boolean isDeleted;
 
     public Long getId() { return id; }
@@ -24,8 +46,8 @@ public class ChatMessage {
     public String getMessage() { return message; }
     public void setMessage(String message) { this.message = message; }
 
-    public String getCreatedDate() { return createdDate; }
-    public void setCreatedDate(String createdDate) { this.createdDate = createdDate; }
+    public LocalDateTime getCreatedDate() { return createdDate; }
+    public void setCreatedDate(LocalDateTime createdDate) { this.createdDate = createdDate; }
 
     public boolean getIsDeleted() { return isDeleted; }
     public void setIsDeleted(boolean isDeleted) { this.isDeleted = isDeleted; }

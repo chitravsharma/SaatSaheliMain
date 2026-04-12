@@ -1,4 +1,4 @@
-/* Dropdown - Contemporary theme with ADA/WCAG 2.1 AA compliance */
+/* Dropdown - Dark theme with ADA/WCAG 2.1 AA compliance */
 
 .dropdown {
   position: relative;
@@ -27,7 +27,7 @@
   color: #d4a017;
 }
 .dropdown-toggle:focus-visible {
-  outline: 3px solid #d4a017;
+  outline: 3px solid var(--accent-gold-hover);
   outline-offset: 2px;
 }
 
@@ -36,11 +36,11 @@
   right: 0;
   top: 100%;
   margin-top: 4px;
-  background-color: #ffffff;
+  background-color: var(--bg-card);
   min-width: 180px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 4px 16px rgba(37, 99, 235, 0.15);
   border-radius: 8px;
-  border: 2px solid #e5e7eb;
+  border: 2px solid var(--border-default);
   z-index: 100;
   list-style-type: none;
   padding: 6px 0;
@@ -52,7 +52,7 @@
   text-decoration: none;
   display: block;
   cursor: pointer;
-  color: #1a1a2e;
+  color: var(--text-primary);
   font-size: 0.9375rem;
   font-weight: 500;
   min-height: 44px;
@@ -61,11 +61,11 @@
   transition: background-color 0.15s;
 }
 .dropdown-menu li:hover {
-  background-color: #eff6ff;
-  color: #0f3460;
+  background-color: var(--bg-card-alt);
+  color: var(--accent-gold);
 }
 .dropdown-menu li:focus-visible {
-  outline: 3px solid #0f3460;
+  outline: 3px solid var(--accent-gold-hover);
   outline-offset: -3px;
 }
 

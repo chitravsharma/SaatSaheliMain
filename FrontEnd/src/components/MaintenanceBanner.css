@@ -1,0 +1,85 @@
+/* Maintenance Banner - displayed above the header */
+.maintenance-banner {
+  width: 100%;
+  padding: 10px 20px;
+  text-align: center;
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  font-size: 0.88rem;
+  z-index: 1001;
+  position: relative;
+}
+
+.maintenance-active {
+  background: #fef2f2;
+  border-bottom: 2px solid #dc2626;
+  color: #991b1b;
+}
+
+.maintenance-upcoming {
+  background: #fffbeb;
+  border-bottom: 2px solid #d97706;
+  color: #92400e;
+}
+
+.maintenance-banner-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  max-width: 1200px;
+  margin: 0 auto;
+  flex-wrap: wrap;
+}
+
+.maintenance-icon {
+  flex-shrink: 0;
+}
+
+.maintenance-active .maintenance-icon {
+  stroke: #dc2626;
+}
+
+.maintenance-upcoming .maintenance-icon {
+  stroke: #d97706;
+}
+
+.maintenance-text {
+  line-height: 1.4;
+}
+
+.maintenance-text strong {
+  font-weight: 700;
+}
+
+.maintenance-dismiss {
+  background: none;
+  border: none;
+  font-size: 1.3rem;
+  cursor: pointer;
+  padding: 2px 8px;
+  border-radius: 4px;
+  line-height: 1;
+  flex-shrink: 0;
+  transition: background 0.2s;
+}
+
+.maintenance-active .maintenance-dismiss {
+  color: #991b1b;
+}
+.maintenance-active .maintenance-dismiss:hover {
+  background: rgba(220, 38, 38, 0.1);
+}
+
+.maintenance-upcoming .maintenance-dismiss {
+  color: #92400e;
+}
+.maintenance-upcoming .maintenance-dismiss:hover {
+  background: rgba(217, 119, 6, 0.1);
+}
+
+@media (max-width: 600px) {
+  .maintenance-banner {
+    font-size: 0.8rem;
+    padding: 8px 12px;
+  }
+}

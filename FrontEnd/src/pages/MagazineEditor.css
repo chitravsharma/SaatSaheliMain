@@ -1,0 +1,603 @@
+.mag-editor {
+  padding: 0;
+}
+
+.mag-editor-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.mag-editor-header h2 {
+  margin: 0;
+  font-size: 1.4rem;
+  color: var(--text-primary, #1a1a2e);
+}
+
+.mag-editor-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.mag-status {
+  font-size: 0.85rem;
+  color: var(--text-secondary, #666);
+  font-style: italic;
+}
+
+.mag-message {
+  background: #e8f5e9;
+  color: #2e7d32;
+  padding: 8px 14px;
+  border-radius: 6px;
+  margin-bottom: 12px;
+  font-size: 0.9rem;
+}
+
+.mag-editor-body {
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
+}
+
+/* ── Sidebar (editions + pages) ── */
+.mag-sidebar {
+  flex-shrink: 0;
+  width: 210px;
+}
+
+/* ── Editions list ── */
+.mag-editions {
+  margin-bottom: 14px;
+}
+
+.mag-editions h4 {
+  margin: 0 0 6px;
+  font-size: 0.9rem;
+}
+
+.mag-editions-list {
+  max-height: 200px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.mag-edition-item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  padding: 6px 8px;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  background: #fafafa;
+  cursor: pointer;
+  font-size: 0.72rem;
+  transition: all 0.12s;
+  text-align: left;
+  width: 100%;
+}
+
+.mag-edition-item:hover {
+  border-color: #c9a84c;
+  background: #fffdf5;
+}
+
+.mag-edition-active {
+  background: #e8f0fe !important;
+  border-color: #90b4e8 !important;
+}
+
+.mag-edition-title {
+  font-weight: 600;
+  font-size: 0.76rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.mag-edition-badge {
+  font-size: 0.75rem;
+  padding: 1px 5px;
+  border-radius: 3px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.mag-badge-pub {
+  background: #e8f5e9;
+  color: #2e7d32;
+}
+
+.mag-badge-draft {
+  background: #fff3e0;
+  color: #e65100;
+}
+
+.mag-edition-date {
+  font-size: 0.75rem;
+  color: #999;
+}
+
+/* ── Document upload ── */
+.mag-doc-upload {
+  margin-bottom: 12px;
+}
+
+.mag-doc-btn {
+  width: 100%;
+  text-align: center;
+  display: block;
+}
+
+/* ── Page list ── */
+.mag-page-list {
+  flex-shrink: 0;
+}
+
+.mag-page-list h3 {
+  margin: 0 0 10px;
+  font-size: 1rem;
+}
+
+.mag-page-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 4px;
+  max-height: 500px;
+  overflow-y: auto;
+}
+
+.mag-page-slot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 2px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background: #fafafa;
+  cursor: pointer;
+  font-size: 0.7rem;
+  min-height: 42px;
+  transition: all 0.15s;
+}
+
+.mag-page-slot:hover {
+  border-color: #c9a84c;
+  background: #fffdf5;
+}
+
+.mag-page-filled {
+  background: #e8f0fe;
+  border-color: #90b4e8;
+}
+
+.mag-page-selected {
+  background: #c9a84c !important;
+  color: #fff !important;
+  border-color: #b08930 !important;
+}
+
+.mag-page-selected .mag-page-label {
+  color: #fff;
+}
+
+.mag-page-num {
+  font-weight: 600;
+  font-size: 0.75rem;
+}
+
+.mag-page-label {
+  font-size: 0.75rem;
+  color: #999;
+}
+
+/* ── Page editor panel ── */
+.mag-page-editor {
+  flex: 1;
+  min-width: 0;
+}
+
+.mag-page-editor h3 {
+  margin: 0 0 12px;
+  font-size: 1.1rem;
+}
+
+/* ── Toolbar ── */
+.mag-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  background: #f5f5f5;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  margin-bottom: 10px;
+}
+
+.mag-toolbar-label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.78rem;
+  color: var(--text-secondary, #555);
+}
+
+.mag-toolbar-label select,
+.mag-toolbar-label input[type="number"] {
+  padding: 2px 4px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 0.8rem;
+}
+
+.mag-toolbar-sep {
+  width: 1px;
+  height: 20px;
+  background: #d0d0d0;
+  margin: 0 4px;
+}
+
+/* ── Properties panel ── */
+.mag-props-panel {
+  background: #fafafa;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-bottom: 10px;
+}
+
+.mag-props-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+
+.mag-props-row:last-child {
+  margin-bottom: 0;
+}
+
+.mag-props-row label {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 0.78rem;
+  color: var(--text-secondary, #555);
+}
+
+.mag-props-row label select,
+.mag-props-row label input[type="text"],
+.mag-props-row label input[type="number"] {
+  padding: 3px 5px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 0.8rem;
+}
+
+.mag-props-textarea {
+  flex: 1;
+  min-width: 200px;
+  padding: 6px 8px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 0.88rem;
+  resize: vertical;
+  font-family: inherit;
+}
+
+.mag-props-thumb {
+  width: 60px;
+  height: 44px;
+  object-fit: cover;
+  border-radius: 4px;
+  border: 1px solid #ddd;
+}
+
+.mag-props-info {
+  display: flex;
+  flex-direction: column;
+  font-size: 0.78rem;
+  color: #666;
+}
+
+/* Format buttons */
+.mag-fmt-btn {
+  width: 30px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background: #fff;
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: all 0.12s;
+}
+
+.mag-fmt-btn:hover {
+  background: #eee;
+}
+
+.mag-fmt-active {
+  background: #c9a84c;
+  color: #fff;
+  border-color: #b08930;
+}
+
+/* ── Interactive canvas ── */
+.mag-canvas-wrap {
+  margin-bottom: 14px;
+}
+
+.mag-canvas-hint {
+  font-size: 0.72rem;
+  color: #999;
+  margin-bottom: 4px;
+}
+
+.mag-canvas {
+  position: relative;
+  overflow: hidden;
+  border-radius: 4px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+  touch-action: none;
+}
+
+.mag-canvas-page-num {
+  position: absolute;
+  bottom: 4px;
+  right: 6px;
+  font-size: 12px;
+  color: #999;
+  pointer-events: none;
+}
+
+/* Draggable block */
+.mag-canvas-block {
+  border: 1px dashed transparent;
+  box-sizing: border-box;
+  transition: border-color 0.1s;
+}
+
+.mag-canvas-block:hover {
+  border-color: rgba(201, 168, 76, 0.5);
+}
+
+.mag-block-selected {
+  border-color: #c9a84c !important;
+  box-shadow: 0 0 0 2px rgba(201, 168, 76, 0.25);
+}
+
+.mag-block-active {
+  border-color: #c9a84c !important;
+  opacity: 0.9;
+}
+
+.mag-block-type-label {
+  position: absolute;
+  top: -8px;
+  left: 4px;
+  font-size: 12px;
+  background: #c9a84c;
+  color: #fff;
+  padding: 0 4px;
+  border-radius: 3px;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.mag-canvas-block:hover .mag-block-type-label,
+.mag-block-selected .mag-block-type-label {
+  opacity: 1;
+}
+
+.mag-resize-handle {
+  position: absolute;
+  right: -4px;
+  bottom: -4px;
+  width: 12px;
+  height: 12px;
+  background: #c9a84c;
+  border: 1px solid #b08930;
+  border-radius: 2px;
+  cursor: nwse-resize;
+  opacity: 0;
+  transition: opacity 0.15s;
+  touch-action: none;
+}
+
+.mag-canvas-block:hover .mag-resize-handle,
+.mag-block-selected .mag-resize-handle {
+  opacity: 1;
+}
+
+.mag-block-dims {
+  position: absolute;
+  bottom: -18px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 12px;
+  color: #666;
+  background: rgba(255, 255, 255, 0.9);
+  padding: 1px 5px;
+  border-radius: 3px;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+/* ── Section & textarea ── */
+.mag-editor-section {
+  margin-bottom: 16px;
+}
+
+.mag-section-label {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text-secondary, #555);
+  margin-bottom: 4px;
+}
+
+.mag-textarea {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  resize: vertical;
+  font-family: inherit;
+}
+
+/* ── Buttons ── */
+.mag-btn {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 500;
+  transition: opacity 0.15s;
+}
+
+.mag-btn:hover { opacity: 0.85; }
+.mag-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.mag-btn-primary {
+  background: #c9a84c;
+  color: #fff;
+}
+
+.mag-btn-publish {
+  background: #2e7d32;
+  color: #fff;
+}
+
+.mag-btn-danger {
+  background: #c62828;
+  color: #fff;
+  padding: 4px 10px;
+  font-size: 0.78rem;
+}
+
+.mag-btn-xs {
+  padding: 3px 8px;
+  font-size: 0.72rem;
+}
+
+.mag-btn-sm {
+  padding: 5px 12px;
+  font-size: 0.78rem;
+  background: #546e7a;
+  color: #fff;
+}
+
+.mag-upload-btn {
+  cursor: pointer;
+}
+
+.mag-editor-actions-bottom {
+  display: flex;
+  gap: 10px;
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid #eee;
+}
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+  .mag-editor-body {
+    flex-direction: column;
+  }
+  .mag-sidebar {
+    width: 100%;
+  }
+  .mag-page-grid {
+    grid-template-columns: repeat(2, 1fr);
+    max-height: 200px;
+  }
+  .mag-editions-list {
+    flex-direction: row;
+    overflow-x: auto;
+    max-height: none;
+  }
+  .mag-edition-item {
+    min-width: 120px;
+  }
+  .mag-block-type-label {
+    font-size: 12px;
+  }
+  .mag-block-dims {
+    font-size: 12px;
+  }
+  .mag-canvas-page-num {
+    font-size: 12px;
+  }
+  .mag-edition-badge {
+    font-size: 0.7rem;
+  }
+  .mag-edition-date {
+    font-size: 0.7rem;
+  }
+  .mag-page-label {
+    font-size: 0.7rem;
+  }
+  .mag-toolbar {
+    gap: 6px;
+    padding: 6px 8px;
+  }
+}
+
+@media (max-width: 480px) {
+  .mag-page-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Move page controls */
+.mag-move-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+  padding: 10px 12px;
+  background: rgba(15, 23, 42, 0.5);
+  border-radius: 10px;
+  border: 1px solid rgba(148, 163, 184, 0.15);
+  flex-wrap: wrap;
+}
+
+.mag-move-label {
+  color: #94a3b8;
+  font-size: 0.82rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.mag-move-input {
+  width: 52px;
+  padding: 4px 6px;
+  border-radius: 6px;
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  background: rgba(15, 23, 42, 0.8);
+  color: #e2e8f0;
+  font-size: 0.85rem;
+  text-align: center;
+}
+.mag-move-input:focus {
+  outline: none;
+  border-color: #c9a84c;
+}

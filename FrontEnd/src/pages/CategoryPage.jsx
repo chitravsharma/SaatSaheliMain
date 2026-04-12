@@ -1,12 +1,21 @@
 import React, { useState, useEffect } from "react";
-import { useParams, Link } from "react-router-dom";
-import axios from "axios";
-import FlipBook from "../FlipBook";
+import { useParams, Link, useNavigate } from "react-router-dom";
+import api from "../utils/api";
 import { useAuth } from "../AuthContext";
 import { useStrings } from "../LanguageContext";
 import "./CategoryPage.css";
 
-const API = `${process.env.REACT_APP_API_URL}/api/books`;
+const BASE_API = process.env.REACT_APP_API_URL;
+const API = `${BASE_API}/api/books`;
+const ARTICLES_API = `${BASE_API}/api/articles`;
+
+function resolveImageUrl(url) {
+  if (!url) return null;
+  if (url.startsWith("/uploads/")) return `${BASE_API}${url}`;
+  const match = url.match(/\/file\/d\/([^/]+)\//);
+  if (match) return `https://drive.google.com/thumbnail?id=${match[1]}&sz=w200`;
+  return url;
+}
 
 const categoryIcons = {
     art: "\uD83C\uDFA8",
@@ -21,6 +30,7 @@ function CategoryPage() {
     const { category } = useParams();
     const { user } = useAuth();
     const strings = useStrings();
+    const navigate = useNavigate();
     const s = strings.categoryPage || {};
     const catKey = category.toLowerCase();
     const title = category.charAt(0).toUpperCase() + category.slice(1);
@@ -28,43 +38,60 @@ function CategoryPage() {
 
     const userId = user?.userId || null;
 
-    const [view, setView] = useState("browse"); // browse | create | mybooks | reading
+    const [view, setView] = useState("browse"); // browse | create | mybooks | allbooks
     const [publishedBooks, setPublishedBooks] = useState([]);
+    const [allBooks, setAllBooks] = useState([]);
     const [myBooks, setMyBooks] = useState([]);
+    const [categoryArticles, setCategoryArticles] = useState([]);
     const [loading, setLoading] = useState(true);
     const [newTitle, setNewTitle] = useState("");
     const [creating, setCreating] = useState(false);
     const [message, setMessage] = useState("");
-    const [readingBookId, setReadingBookId] = useState(null);
 
     const showMessage = (msg) => {
         setMessage(msg);
         setTimeout(() => setMessage(""), 3000);
     };
 
-    // Fetch published books for this category
+    // Fetch published books and articles for this category
     useEffect(() => {
         const fetchPublished = async () => {
             setLoading(true);
             try {
-                const res = await axios.get(`${API}/category/${catKey}`);
-                setPublishedBooks(Array.isArray(res.data) ? res.data : []);
+                const [booksRes, articlesRes] = await Promise.all([
+                    api.get(`${API}/category/${catKey}`),
+                    api.get(`${ARTICLES_API}/category/${catKey}`).catch(() => ({ data: [] })),
+                ]);
+                setPublishedBooks(Array.isArray(booksRes.data) ? booksRes.data : []);
+                setCategoryArticles(Array.isArray(articlesRes.data) ? articlesRes.data : []);
             } catch {
                 setPublishedBooks([]);
+                setCategoryArticles([]);
             }
             setLoading(false);
         };
         fetchPublished();
         setView("browse");
-        setReadingBookId(null);
     }, [catKey]);
+
+    // Fetch all published books (across all categories)
+    const fetchAllBooks = async () => {
+        setLoading(true);
+        try {
+            const res = await api.get(`${API}/search?status=PUBLISHED`);
+            setAllBooks(Array.isArray(res.data) ? res.data : []);
+        } catch {
+            setAllBooks([]);
+        }
+        setLoading(false);
+    };
 
     // Fetch my books for this category
     const fetchMyBooks = async () => {
         if (!userId) return;
         setLoading(true);
         try {
-            const res = await axios.get(`${API}/category/${catKey}/user/${userId}`);
+            const res = await api.get(`${API}/category/${catKey}/user/${userId}`);
             setMyBooks(Array.isArray(res.data) ? res.data : []);
         } catch {
             setMyBooks([]);
@@ -79,7 +106,7 @@ function CategoryPage() {
         }
         setCreating(true);
         try {
-            await axios.post(`${API}/create`, {
+            await api.post(`${API}/create`, {
                 title: newTitle.trim(),
                 userId,
                 category: catKey,
@@ -97,7 +124,7 @@ function CategoryPage() {
     const handleDelete = async (bookId) => {
         if (!window.confirm(s.confirmDelete || "Delete this book?")) return;
         try {
-            await axios.delete(`${API}/${bookId}?userId=${userId}`);
+            await api.delete(`${API}/${bookId}?userId=${userId}`);
             showMessage(s.bookDeleted || "Book deleted!");
             fetchMyBooks();
         } catch {
@@ -107,39 +134,13 @@ function CategoryPage() {
 
     const handlePublish = async (bookId) => {
         try {
-            await axios.put(`${API}/${bookId}/publish?userId=${userId}`);
+            await api.put(`${API}/${bookId}/publish?userId=${userId}`);
             showMessage(s.bookPublished || "Book published!");
             fetchMyBooks();
         } catch {
             showMessage(s.publishFailed || "Failed to publish");
         }
     };
-
-    // Reading view
-    if (readingBookId) {
-        const currentIndex = publishedBooks.findIndex((b) => b.id === readingBookId);
-        const hasPrev = currentIndex > 0;
-        const hasNext = currentIndex < publishedBooks.length - 1;
-
-        return (
-            <div className="cat-page">
-                <div className="cat-reader-nav">
-                    <button className="cat-btn cat-btn-back" onClick={() => setReadingBookId(null)}>
-                        {s.backToBrowse || "Back"}
-                    </button>
-                    <button className="cat-btn cat-btn-back" disabled={!hasPrev}
-                        onClick={() => hasPrev && setReadingBookId(publishedBooks[currentIndex - 1].id)}>
-                        {strings.readBook.prevBook}
-                    </button>
-                    <button className="cat-btn cat-btn-back" disabled={!hasNext}
-                        onClick={() => hasNext && setReadingBookId(publishedBooks[currentIndex + 1].id)}>
-                        {strings.readBook.nextBook}
-                    </button>
-                </div>
-                <FlipBook bookId={readingBookId} />
-            </div>
-        );
-    }
 
     return (
         <div className="cat-page">
@@ -151,12 +152,15 @@ function CategoryPage() {
                 </p>
             </div>
 
-            {message && <div className="cat-message" onClick={() => setMessage("")}>{message}</div>}
+            {message && <div className="cat-message" onClick={() => setMessage("")} role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") setMessage(""); }}>{message}</div>}
 
             {/* Navigation tabs */}
             <div className="cat-tabs">
                 <button className={view === "browse" ? "active" : ""} onClick={() => setView("browse")}>
                     {s.tabBrowse || "Browse"}
+                </button>
+                <button className={view === "allbooks" ? "active" : ""} onClick={() => { setView("allbooks"); fetchAllBooks(); }}>
+                    Books
                 </button>
                 {user && (
                     <>
@@ -193,14 +197,92 @@ function CategoryPage() {
                                 <button
                                     key={book.id}
                                     className="cat-book-card"
-                                    onClick={() => setReadingBookId(book.id)}
+                                    onClick={() => navigate(`/read/${book.id}`)}
                                 >
                                     <div className="cat-book-cover">
-                                        <span className="cat-book-icon">{icon}</span>
-                                        <span className="cat-book-title">{book.title}</span>
+                                        {book.coverImageUrl ? (
+                                            <img src={resolveImageUrl(book.coverImageUrl)} alt={book.title} className="cat-book-cover-img" />
+                                        ) : (
+                                            <>
+                                                <span className="cat-book-icon">{icon}</span>
+                                                <span className="cat-book-title">{book.title}</span>
+                                            </>
+                                        )}
                                     </div>
                                     {book.authorName && (
                                         <span className="cat-book-author">{book.authorName}</span>
+                                    )}
+                                    <span className="cat-book-read">{strings.publicBooks.readButton}</span>
+                                </button>
+                            ))}
+                        </div>
+                    )}
+
+                    {/* Published articles/blogs/poems in this category */}
+                    {categoryArticles.length > 0 && (
+                        <>
+                            {[
+                                { type: "Blog", label: "Blogs", icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg> },
+                                { type: "Article", label: "Articles", icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg> },
+                                { type: "Poetry", label: "Poems", icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 3a2.828 2.828 0 114 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg> },
+                            ].map(sec => {
+                                const items = categoryArticles.filter(a => a.contentType === sec.type);
+                                if (items.length === 0) return null;
+                                return (
+                                    <div key={sec.type} className="cat-articles-section">
+                                        <h3 className="cat-articles-heading">{sec.icon} {sec.label}</h3>
+                                        <ul className="cat-articles-list">
+                                            {items.map(article => (
+                                                <li key={article.id} className="cat-articles-item">
+                                                    <Link to={`/articles/${sec.type === "Poetry" ? "poems" : sec.type === "Blog" ? "blogs" : "articles"}`} className="cat-articles-link">
+                                                        <span className={`cat-articles-dot cat-articles-dot-${sec.type.toLowerCase()}`} />
+                                                        <span className="cat-articles-title">{article.headline}</span>
+                                                        {article.authorName && <span className="cat-articles-author">by {article.authorName}</span>}
+                                                    </Link>
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    </div>
+                                );
+                            })}
+                        </>
+                    )}
+                </div>
+            )}
+
+            {/* All published books */}
+            {view === "allbooks" && (
+                <div className="cat-section">
+                    <h2 className="cat-section-heading">All Published Books</h2>
+                    {loading ? (
+                        <p className="cat-loading">{strings.common.loading}</p>
+                    ) : allBooks.length === 0 ? (
+                        <div className="cat-empty">
+                            <p>No published books yet.</p>
+                        </div>
+                    ) : (
+                        <div className="cat-book-grid">
+                            {allBooks.map((book) => (
+                                <button
+                                    key={book.id}
+                                    className="cat-book-card"
+                                    onClick={() => navigate(`/read/${book.id}`)}
+                                >
+                                    <div className="cat-book-cover">
+                                        {book.coverImageUrl ? (
+                                            <img src={resolveImageUrl(book.coverImageUrl)} alt={book.title} className="cat-book-cover-img" />
+                                        ) : (
+                                            <>
+                                                <span className="cat-book-icon">{categoryIcons[book.category?.toLowerCase()] || "\uD83D\uDCDA"}</span>
+                                                <span className="cat-book-title">{book.title}</span>
+                                            </>
+                                        )}
+                                    </div>
+                                    {book.authorName && (
+                                        <span className="cat-book-author">{book.authorName}</span>
+                                    )}
+                                    {book.category && (
+                                        <span className="cat-book-category">{book.category}</span>
                                     )}
                                     <span className="cat-book-read">{strings.publicBooks.readButton}</span>
                                 </button>

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import axios from "axios";
+import api from "./utils/api";
 import HTMLFlipBook from "react-pageflip";
 
 const API = `${process.env.REACT_APP_API_URL}/api/books`;
@@ -21,7 +21,7 @@ function AddBook() {
     const handleCreateBook = async () => {
         if (!title.trim()) return;
         try {
-            const res = await axios.post(API, { title: title.trim() });
+            const res = await api.post(API, { title: title.trim() });
             setBook(res.data);
             setMessage(`Book "${res.data.title}" created with ID ${res.data.id}`);
         } catch (err) {
@@ -32,7 +32,7 @@ function AddBook() {
     const handleAddPage = async () => {
         if (!pageNumber) return;
         try {
-            const res = await axios.post(`${API}/${book.id}/page`, {
+            const res = await api.post(`${API}/${book.id}/page`, {
                 pageNumber: parseInt(pageNumber),
                 content,
                 imageUrl,
@@ -54,7 +54,7 @@ function AddBook() {
 
     const handlePublish = async (publish) => {
         try {
-            const res = await axios.put(`${API}/${book.id}/publish`, { published: publish });
+            const res = await api.put(`${API}/${book.id}/publish`, { published: publish });
             setBook(res.data);
             setStatus(publish ? "published" : "draft");
             setMessage(publish ? "Book published!" : "Book set to draft.");

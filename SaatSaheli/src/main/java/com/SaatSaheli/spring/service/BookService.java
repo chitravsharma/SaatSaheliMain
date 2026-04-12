@@ -11,12 +11,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import jakarta.annotation.PostConstruct;
 
-import java.io.IOException;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -27,7 +26,6 @@ import java.util.stream.Collectors;
 public class BookService {
 
     private static final Logger log = LoggerFactory.getLogger(BookService.class);
-    private static final DateTimeFormatter DTF = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     private static final String[] RANDOM_TITLES = {
             "Untitled Story", "My Adventures", "A New Beginning", "The Journey",
@@ -44,6 +42,9 @@ public class BookService {
 
     @Autowired
     private UserRepository userRepo;
+
+    @Autowired
+    private TranslationService translationService;
 
     @PostConstruct
     public void syncOrphanedPages() {
@@ -65,35 +66,19 @@ public class BookService {
                 return;
             }
 
-            log.info("Found {} orphaned bookIds in Pages table: {}", orphanedBookIds.size(), orphanedBookIds);
-
-            String now = LocalDateTime.now().format(DTF);
-            int created = 0;
-            for (Long bookId : orphanedBookIds) {
-                String title = RANDOM_TITLES[(int) (bookId % RANDOM_TITLES.length)];
-                Book book = new Book();
-                book.setId(bookId);
-                book.setTitle(title + " #" + bookId);
-                book.setUserId(1L);
-                book.setStatus("DRAFT");
-                book.setCreatedDate(now);
-                book.setModifiedDate(now);
-                bookRepo.saveWithId(book);
-                created++;
-                log.info("Created missing book: id={}, title='{}'", bookId, book.getTitle());
-            }
-            log.info("Sync complete - created {} missing books", created);
+            log.warn("Found {} orphaned bookIds in Pages table: {}. These pages reference non-existent books.", orphanedBookIds.size(), orphanedBookIds);
         } catch (Exception e) {
-            log.error("Failed to sync orphaned pages: {}", e.getMessage(), e);
+            log.error("Failed to check orphaned pages: {}", e.getMessage(), e);
         }
     }
 
-    public Book createBook(String title, Long userId) throws IOException {
+    public Book createBook(String title, Long userId) {
         return createBook(title, userId, null);
     }
 
-    public Book createBook(String title, Long userId, String category) throws IOException {
-        String now = LocalDateTime.now().format(DTF);
+    @Transactional
+    public Book createBook(String title, Long userId, String category) {
+        LocalDateTime now = LocalDateTime.now();
         Book book = new Book();
         book.setTitle(title);
         book.setUserId(userId);
@@ -115,7 +100,7 @@ public class BookService {
 
         Page back = new Page();
         back.setBookId(book.getId());
-        back.setPageNumber(99);
+        back.setPageNumber(50);
         back.setContent("The End");
         back.setFormat("italic");
         back.setCreatedDate(now);
@@ -126,15 +111,19 @@ public class BookService {
         return book;
     }
 
-    public Book getBook(Long id) throws IOException {
+    public Book getBook(Long id) {
         Optional<Book> bookOpt = bookRepo.findById(id);
         if (bookOpt.isEmpty()) throw new RuntimeException("Book not found");
         Book book = bookOpt.get();
-        book.setPages(pageRepo.findByBookIdOrderByPageNumberAsc(id));
+        List<Page> pages = pageRepo.findByBookIdOrderByPageNumberAsc(id);
+        book.setPages(pages);
+        if (!pages.isEmpty() && pages.get(0).getImageUrl() != null && !pages.get(0).getImageUrl().isEmpty()) {
+            book.setCoverImageUrl(pages.get(0).getImageUrl());
+        }
         return book;
     }
 
-    public Book updateBook(Long id, String title, String status, Long requestUserId) throws IOException {
+    public Book updateBook(Long id, String title, String status, Long requestUserId) {
         Optional<Book> bookOpt = bookRepo.findById(id);
         if (bookOpt.isEmpty()) throw new RuntimeException("Book not found");
         Book book = bookOpt.get();
@@ -143,19 +132,41 @@ public class BookService {
         }
         if (title != null) book.setTitle(title);
         if (status != null) book.setStatus(status);
-        book.setModifiedDate(LocalDateTime.now().format(DTF));
+        book.setModifiedDate(LocalDateTime.now());
         return bookRepo.save(book);
     }
 
-    public Book publishBook(Long id, Long requestUserId) throws IOException {
+    public Book publishBook(Long id, Long requestUserId) {
+        // Renumber back page to be right after the last content page
+        renumberBackPage(id);
         return updateBook(id, null, "PUBLISHED", requestUserId);
     }
 
-    public Book saveDraft(Long id, Long requestUserId) throws IOException {
+    /**
+     * Finds the back page (highest page number) and renumbers it
+     * to be sequentially after the last content page.
+     */
+    private void renumberBackPage(Long bookId) {
+        List<Page> pages = pageRepo.findByBookIdOrderByPageNumberAsc(bookId);
+        if (pages.size() < 2) return;
+
+        Page lastPage = pages.get(pages.size() - 1);
+        Page secondLast = pages.get(pages.size() - 2);
+
+        // Only renumber if there's a gap (back page number > secondLast + 1)
+        int expectedNumber = secondLast.getPageNumber() + 1;
+        if (lastPage.getPageNumber() > expectedNumber) {
+            lastPage.setPageNumber(expectedNumber);
+            lastPage.setModifiedDate(LocalDateTime.now());
+            pageRepo.save(lastPage);
+        }
+    }
+
+    public Book saveDraft(Long id, Long requestUserId) {
         return updateBook(id, null, "DRAFT", requestUserId);
     }
 
-    public void deleteBook(Long id, Long requestUserId) throws IOException {
+    public void deleteBook(Long id, Long requestUserId) {
         Optional<Book> bookOpt = bookRepo.findById(id);
         if (bookOpt.isPresent()) {
             Book book = bookOpt.get();
@@ -163,13 +174,47 @@ public class BookService {
                 throw new RuntimeException("Only the author can delete this book");
             }
             book.setStatus("DELETED");
-            book.setModifiedDate(LocalDateTime.now().format(DTF));
+            book.setModifiedDate(LocalDateTime.now());
             bookRepo.save(book);
         }
     }
 
+    /** Archive a book (soft status change) */
+    public void archiveBook(Long id) {
+        Optional<Book> bookOpt = bookRepo.findById(id);
+        if (bookOpt.isPresent()) {
+            Book book = bookOpt.get();
+            book.setStatus("ARCHIVED");
+            book.setModifiedDate(LocalDateTime.now());
+            bookRepo.save(book);
+        }
+    }
+
+    /** Recover a deleted or archived book back to DRAFT */
+    public void recoverBook(Long id) {
+        Optional<Book> bookOpt = bookRepo.findById(id);
+        if (bookOpt.isPresent()) {
+            Book book = bookOpt.get();
+            book.setStatus("DRAFT");
+            book.setModifiedDate(LocalDateTime.now());
+            bookRepo.save(book);
+        }
+    }
+
+    /** Permanently purge a single book and its pages */
+    @Transactional
+    public void purgeBook(Long id) {
+        Optional<Book> bookOpt = bookRepo.findById(id);
+        if (bookOpt.isPresent()) {
+            List<Page> pages = pageRepo.findByBookIdOrderByPageNumberAsc(id);
+            pageRepo.deleteAll(pages);
+            bookRepo.delete(bookOpt.get());
+            log.info("Permanently purged book {} and {} pages", id, pages.size());
+        }
+    }
+
     /** Role-aware updateBook: admins skip ownership check */
-    public Book updateBook(Long id, String title, String status, Long requestUserId, String requestUserRole) throws IOException {
+    public Book updateBook(Long id, String title, String status, Long requestUserId, String requestUserRole) {
         if (RoleUtil.isAdmin(requestUserRole)) {
             return updateBook(id, title, status, null);
         }
@@ -177,7 +222,7 @@ public class BookService {
     }
 
     /** Role-aware deleteBook: admins skip ownership check */
-    public void deleteBook(Long id, Long requestUserId, String requestUserRole) throws IOException {
+    public void deleteBook(Long id, Long requestUserId, String requestUserRole) {
         if (RoleUtil.isAdmin(requestUserRole)) {
             deleteBook(id, null);
         } else {
@@ -186,7 +231,7 @@ public class BookService {
     }
 
     /** Get all books (for admin dashboard) */
-    public List<Book> getAllBooks() throws IOException {
+    public List<Book> getAllBooks() {
         List<Book> books = bookRepo.findAll();
         List<User> allUsers = userRepo.findAll();
         Map<Long, User> userMap = allUsers.stream()
@@ -194,26 +239,156 @@ public class BookService {
         for (Book book : books) {
             if (book.getUserId() != null && userMap.containsKey(book.getUserId())) {
                 User u = userMap.get(book.getUserId());
-                String name = (u.getFirstName() != null ? u.getFirstName() : "")
-                        + (u.getLastName() != null ? " " + u.getLastName() : "");
-                book.setAuthorName(name.trim());
+                String name = (u.getDisplayName() != null && !u.getDisplayName().isEmpty())
+                        ? u.getDisplayName()
+                        : ((u.getFirstName() != null ? u.getFirstName() : "")
+                        + (u.getLastName() != null ? " " + u.getLastName() : "")).trim();
+                book.setAuthorName(name);
             }
         }
+        enrichWithCoverImages(books);
         return books;
     }
 
-    public List<Book> getBooksByUser(Long userId) throws IOException {
+    /** Get the most recent non-deleted magazine */
+    public Book getMagazine() {
+        List<Book> mags = bookRepo.findByCategoryIgnoreCaseOrderByModifiedDateDesc("MAGAZINE");
+        // Prioritize PUBLISHED magazines, then fall back to any non-deleted
+        Book mag = mags.stream()
+                .filter(m -> "PUBLISHED".equalsIgnoreCase(m.getStatus()))
+                .findFirst()
+                .orElse(mags.stream()
+                        .filter(m -> !"DELETED".equalsIgnoreCase(m.getStatus()))
+                        .findFirst().orElse(null));
+        if (mag == null) return null;
+        mag.setPages(pageRepo.findByBookIdOrderByPageNumberAsc(mag.getId()));
+        enrichWithCoverImages(List.of(mag));
+        return mag;
+    }
+
+    /** Get all magazine editions ordered by most recent first (excludes deleted) */
+    public List<Book> getAllMagazines() {
+        List<Book> mags = bookRepo.findByCategoryIgnoreCaseOrderByModifiedDateDesc("MAGAZINE").stream()
+                .filter(m -> !"DELETED".equalsIgnoreCase(m.getStatus()))
+                .collect(Collectors.toList());
+        for (Book mag : mags) {
+            mag.setPages(pageRepo.findByBookIdOrderByPageNumberAsc(mag.getId()));
+        }
+        enrichWithCoverImages(mags);
+        return mags;
+    }
+
+    /** Get or create the current magazine (for admin use) — returns the most recent one regardless of status */
+    @Transactional
+    public Book getOrCreateMagazine(Long adminUserId) {
+        Book mag = getMagazine();
+        if (mag != null) return mag;
+        // No magazine exists at all — create one
+        return createBook("Saat Saheli Magazine", adminUserId, "MAGAZINE");
+    }
+
+    /** Create a new magazine edition (always a new draft) */
+    @Transactional
+    public Book createNewMagazineEdition(Long adminUserId, String title) {
+        String editionTitle = (title != null && !title.trim().isEmpty()) ? title.trim() : "Saat Saheli Magazine";
+        return createBook(editionTitle, adminUserId, "MAGAZINE");
+    }
+
+    /**
+     * Clone a published magazine and translate all text content to Hindi.
+     * Images are kept as-is; text content and text blocks in format JSON are translated.
+     */
+    @Transactional
+    public Book createHindiEdition(Long sourceMagazineId, Long adminUserId) {
+        Book source = bookRepo.findById(sourceMagazineId)
+                .orElseThrow(() -> new RuntimeException("Source magazine not found"));
+        if (!"MAGAZINE".equalsIgnoreCase(source.getCategory())) {
+            throw new RuntimeException("Source is not a magazine");
+        }
+
+        LocalDateTime now = LocalDateTime.now();
+        String hindiTitle = translationService.translateToHindi(source.getTitle());
+
+        Book hindi = new Book();
+        hindi.setTitle(hindiTitle + " — हिंदी संस्करण");
+        hindi.setUserId(adminUserId);
+        hindi.setCategory("MAGAZINE");
+        hindi.setLanguage("hi");
+        hindi.setStatus("DRAFT");
+        hindi.setCreatedDate(now);
+        hindi.setModifiedDate(now);
+        hindi = bookRepo.save(hindi);
+
+        // Clone and translate each page
+        List<Page> sourcePages = pageRepo.findByBookIdOrderByPageNumberAsc(sourceMagazineId);
+        for (Page sp : sourcePages) {
+            Page hp = new Page();
+            hp.setBookId(hindi.getId());
+            hp.setPageNumber(sp.getPageNumber());
+            hp.setImageUrl(sp.getImageUrl());
+            hp.setImageUrl2(sp.getImageUrl2());
+            hp.setCreatedDate(now);
+            hp.setModifiedDate(now);
+
+            // Translate page content
+            if (sp.getContent() != null && !sp.getContent().isBlank()) {
+                hp.setContent(translationService.translateToHindi(sp.getContent()));
+            }
+
+            // Translate text blocks inside format JSON
+            hp.setFormat(translateFormatJson(sp.getFormat()));
+
+            pageRepo.save(hp);
+        }
+
+        hindi.setPages(pageRepo.findByBookIdOrderByPageNumberAsc(hindi.getId()));
+        enrichWithCoverImages(List.of(hindi));
+        return hindi;
+    }
+
+    /** Translate textBlocks content inside a format JSON string */
+    private String translateFormatJson(String formatStr) {
+        if (formatStr == null || formatStr.isBlank()) return formatStr;
+        try {
+            com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+            com.fasterxml.jackson.databind.node.ObjectNode root = (com.fasterxml.jackson.databind.node.ObjectNode) mapper.readTree(formatStr);
+
+            if (root.has("textBlocks") && root.get("textBlocks").isArray()) {
+                com.fasterxml.jackson.databind.node.ArrayNode blocks = (com.fasterxml.jackson.databind.node.ArrayNode) root.get("textBlocks");
+                for (int i = 0; i < blocks.size(); i++) {
+                    com.fasterxml.jackson.databind.node.ObjectNode block = (com.fasterxml.jackson.databind.node.ObjectNode) blocks.get(i);
+                    if (block.has("content") && !block.get("content").asText("").isBlank()) {
+                        String translated = translationService.translateToHindi(block.get("content").asText());
+                        block.put("content", translated);
+                    }
+                }
+            }
+
+            // Translate pageContentHindi field if present, or add it
+            if (root.has("pageContentHindi") && !root.get("pageContentHindi").asText("").isBlank()) {
+                // Already has Hindi content, leave it
+            }
+
+            return mapper.writeValueAsString(root);
+        } catch (Exception e) {
+            log.warn("Failed to translate format JSON: {}", e.getMessage());
+            return formatStr;
+        }
+    }
+
+    public List<Book> getBooksByUser(Long userId) {
         List<Book> books = bookRepo.findByUserId(userId).stream()
                 .filter(b -> !"DELETED".equalsIgnoreCase(b.getStatus()))
                 .collect(Collectors.toList());
         for (Book book : books) {
             book.setPages(pageRepo.findByBookIdOrderByPageNumberAsc(book.getId()));
         }
+        enrichWithCoverImages(books);
         return books;
     }
 
     /** Get published books by category, enriched with author names */
-    public List<Book> getPublishedBooksByCategory(String category) throws IOException {
+    public List<Book> getPublishedBooksByCategory(String category) {
         List<Book> books = bookRepo.findAll().stream()
                 .filter(b -> category.equalsIgnoreCase(b.getCategory()))
                 .filter(b -> "PUBLISHED".equalsIgnoreCase(b.getStatus()))
@@ -224,27 +399,30 @@ public class BookService {
         for (Book book : books) {
             if (book.getUserId() != null && userMap.containsKey(book.getUserId())) {
                 User u = userMap.get(book.getUserId());
-                String name = (u.getFirstName() != null ? u.getFirstName() : "")
-                        + (u.getLastName() != null ? " " + u.getLastName() : "");
-                book.setAuthorName(name.trim());
+                String name = (u.getDisplayName() != null && !u.getDisplayName().isEmpty())
+                        ? u.getDisplayName()
+                        : ((u.getFirstName() != null ? u.getFirstName() : "")
+                        + (u.getLastName() != null ? " " + u.getLastName() : "")).trim();
+                book.setAuthorName(name);
             }
         }
+        enrichWithCoverImages(books);
         return books;
     }
 
     /** Get books by user and category (for "my books in this category") */
-    public List<Book> getBooksByUserAndCategory(Long userId, String category) throws IOException {
+    public List<Book> getBooksByUserAndCategory(Long userId, String category) {
         return bookRepo.findByUserId(userId).stream()
                 .filter(b -> category.equalsIgnoreCase(b.getCategory()))
                 .filter(b -> !"DELETED".equalsIgnoreCase(b.getStatus()))
                 .collect(Collectors.toList());
     }
 
-    public List<Book> getDraftsByUser(Long userId) throws IOException {
-        return bookRepo.findByUserIdAndStatus(userId, "DRAFT");
+    public List<Book> getDraftsByUser(Long userId) {
+        return bookRepo.findByUserIdAndStatusIgnoreCase(userId, "DRAFT");
     }
 
-    public List<Book> searchBooks(Long id, String title, String author, String status, Long requestUserId) throws IOException {
+    public List<Book> searchBooks(Long id, String title, String author, String status, Long requestUserId, String category) {
         List<Book> books = bookRepo.findAll();
 
         // Build a userId->User lookup for author enrichment
@@ -260,7 +438,8 @@ public class BookService {
                     .filter(u -> {
                         String first = u.getFirstName() != null ? u.getFirstName().toLowerCase() : "";
                         String last = u.getLastName() != null ? u.getLastName().toLowerCase() : "";
-                        return first.contains(authorLower) || last.contains(authorLower);
+                        String display = u.getDisplayName() != null ? u.getDisplayName().toLowerCase() : "";
+                        return first.contains(authorLower) || last.contains(authorLower) || display.contains(authorLower);
                     })
                     .map(User::getId)
                     .collect(Collectors.toSet());
@@ -285,23 +464,30 @@ public class BookService {
                         || status.trim().equalsIgnoreCase(b.getStatus()))
                 .filter(b -> finalAuthorMatchIds == null
                         || (b.getUserId() != null && finalAuthorMatchIds.contains(b.getUserId())))
+                .filter(b -> category == null || category.trim().isEmpty()
+                        || category.trim().equalsIgnoreCase(b.getCategory()))
                 .collect(Collectors.toList());
 
-        // Enrich with author name
+        // Enrich with author name and pages
         for (Book book : filtered) {
             if (book.getUserId() != null && userMap.containsKey(book.getUserId())) {
                 User u = userMap.get(book.getUserId());
-                String name = (u.getFirstName() != null ? u.getFirstName() : "")
-                        + (u.getLastName() != null ? " " + u.getLastName() : "");
-                book.setAuthorName(name.trim());
+                String name = (u.getDisplayName() != null && !u.getDisplayName().isEmpty())
+                        ? u.getDisplayName()
+                        : ((u.getFirstName() != null ? u.getFirstName() : "")
+                        + (u.getLastName() != null ? " " + u.getLastName() : "")).trim();
+                book.setAuthorName(name);
             }
+            book.setPages(pageRepo.findByBookIdOrderByPageNumberAsc(book.getId()));
         }
+        enrichWithCoverImages(filtered);
 
         return filtered;
     }
 
-    public Book createBookFromDocument(String title, Long userId, List<String> pageTexts) throws IOException {
-        String now = LocalDateTime.now().format(DTF);
+    @Transactional
+    public Book createBookFromDocument(String title, Long userId, List<String> pageTexts) {
+        LocalDateTime now = LocalDateTime.now();
         Book book = new Book();
         book.setTitle(title);
         book.setUserId(userId);
@@ -310,43 +496,65 @@ public class BookService {
         book.setModifiedDate(now);
         book = bookRepo.save(book);
 
-        // Cover page
-        Page cover = new Page();
-        cover.setBookId(book.getId());
-        cover.setPageNumber(1);
-        cover.setContent(title);
-        cover.setFormat("bold");
-        cover.setCreatedDate(now);
-        cover.setModifiedDate(now);
-        pageRepo.save(cover);
+        if (pageTexts.size() >= 2) {
+            // Cover page — use first page of the document
+            Page cover = new Page();
+            cover.setBookId(book.getId());
+            cover.setPageNumber(1);
+            cover.setContent(pageTexts.get(0));
+            cover.setFormat("bold");
+            cover.setCreatedDate(now);
+            cover.setModifiedDate(now);
+            pageRepo.save(cover);
 
-        // Content pages from extracted text
-        for (int i = 0; i < pageTexts.size(); i++) {
-            Page page = new Page();
-            page.setBookId(book.getId());
-            page.setPageNumber(i + 2);
-            page.setContent(pageTexts.get(i));
-            page.setCreatedDate(now);
-            page.setModifiedDate(now);
-            pageRepo.save(page);
+            // Middle content pages (skip first and last)
+            for (int i = 1; i < pageTexts.size() - 1; i++) {
+                Page page = new Page();
+                page.setBookId(book.getId());
+                page.setPageNumber(i + 1);
+                page.setContent(pageTexts.get(i));
+                page.setCreatedDate(now);
+                page.setModifiedDate(now);
+                pageRepo.save(page);
+            }
+
+            // Back cover — use last page of the document
+            Page back = new Page();
+            back.setBookId(book.getId());
+            back.setPageNumber(pageTexts.size());
+            back.setContent(pageTexts.get(pageTexts.size() - 1));
+            back.setFormat("italic");
+            back.setCreatedDate(now);
+            back.setModifiedDate(now);
+            pageRepo.save(back);
+        } else if (pageTexts.size() == 1) {
+            // Single page document — use it as cover, add "The End" back page
+            Page cover = new Page();
+            cover.setBookId(book.getId());
+            cover.setPageNumber(1);
+            cover.setContent(pageTexts.get(0));
+            cover.setFormat("bold");
+            cover.setCreatedDate(now);
+            cover.setModifiedDate(now);
+            pageRepo.save(cover);
+
+            Page back = new Page();
+            back.setBookId(book.getId());
+            back.setPageNumber(2);
+            back.setContent("The End");
+            back.setFormat("italic");
+            back.setCreatedDate(now);
+            back.setModifiedDate(now);
+            pageRepo.save(back);
         }
-
-        // Back page
-        Page back = new Page();
-        back.setBookId(book.getId());
-        back.setPageNumber(99);
-        back.setContent("The End");
-        back.setFormat("italic");
-        back.setCreatedDate(now);
-        back.setModifiedDate(now);
-        pageRepo.save(back);
 
         book.setPages(pageRepo.findByBookIdOrderByPageNumberAsc(book.getId()));
         return book;
     }
 
-    public Book createBookFromPdfImages(String title, Long userId, List<String> imageUrls) throws IOException {
-        String now = LocalDateTime.now().format(DTF);
+    @Transactional
+    public Book createBookFromPdfImages(String title, Long userId, List<String> imageUrls) {
+        LocalDateTime now = LocalDateTime.now();
         Book book = new Book();
         book.setTitle(title);
         book.setUserId(userId);
@@ -355,53 +563,139 @@ public class BookService {
         book.setModifiedDate(now);
         book = bookRepo.save(book);
 
-        // Cover page
-        Page cover = new Page();
-        cover.setBookId(book.getId());
-        cover.setPageNumber(1);
-        cover.setContent(title);
-        cover.setFormat("bold");
-        cover.setCreatedDate(now);
-        cover.setModifiedDate(now);
-        pageRepo.save(cover);
-
-        // Image pages from rendered PDF — full-page layout
         String fullPageFormat = "{\"layout\":{\"image1\":{\"x\":10,\"y\":0,\"width\":530,\"height\":700}}}";
-        for (int i = 0; i < imageUrls.size(); i++) {
-            Page page = new Page();
-            page.setBookId(book.getId());
-            page.setPageNumber(i + 2);
-            page.setImageUrl(imageUrls.get(i));
-            page.setFormat(fullPageFormat);
-            page.setCreatedDate(now);
-            page.setModifiedDate(now);
-            pageRepo.save(page);
-        }
 
-        // Back page
-        Page back = new Page();
-        back.setBookId(book.getId());
-        back.setPageNumber(99);
-        back.setContent("The End");
-        back.setFormat("italic");
-        back.setCreatedDate(now);
-        back.setModifiedDate(now);
-        pageRepo.save(back);
+        if (imageUrls.size() >= 2) {
+            // Cover page — use first page of the PDF as cover image
+            Page cover = new Page();
+            cover.setBookId(book.getId());
+            cover.setPageNumber(1);
+            cover.setContent(title);
+            cover.setImageUrl(imageUrls.get(0));
+            cover.setFormat(fullPageFormat);
+            cover.setCreatedDate(now);
+            cover.setModifiedDate(now);
+            pageRepo.save(cover);
+
+            // Middle content pages (skip first and last)
+            for (int i = 1; i < imageUrls.size() - 1; i++) {
+                Page page = new Page();
+                page.setBookId(book.getId());
+                page.setPageNumber(i + 1);
+                page.setImageUrl(imageUrls.get(i));
+                page.setFormat(fullPageFormat);
+                page.setCreatedDate(now);
+                page.setModifiedDate(now);
+                pageRepo.save(page);
+            }
+
+            // Back cover — use last page of the PDF as back cover image
+            Page back = new Page();
+            back.setBookId(book.getId());
+            back.setPageNumber(imageUrls.size());
+            back.setImageUrl(imageUrls.get(imageUrls.size() - 1));
+            back.setFormat(fullPageFormat);
+            back.setCreatedDate(now);
+            back.setModifiedDate(now);
+            pageRepo.save(back);
+        } else if (imageUrls.size() == 1) {
+            // Single page PDF — use it as cover, add "The End" back page
+            Page cover = new Page();
+            cover.setBookId(book.getId());
+            cover.setPageNumber(1);
+            cover.setContent(title);
+            cover.setImageUrl(imageUrls.get(0));
+            cover.setFormat(fullPageFormat);
+            cover.setCreatedDate(now);
+            cover.setModifiedDate(now);
+            pageRepo.save(cover);
+
+            Page back = new Page();
+            back.setBookId(book.getId());
+            back.setPageNumber(2);
+            back.setContent("The End");
+            back.setFormat("italic");
+            back.setCreatedDate(now);
+            back.setModifiedDate(now);
+            pageRepo.save(back);
+        }
 
         book.setPages(pageRepo.findByBookIdOrderByPageNumberAsc(book.getId()));
         return book;
     }
 
-    public List<Page> getPagesByBookId(Long bookId) throws IOException {
+    /** Enrich books with cover image URL from their first page (page 1) */
+    private void enrichWithCoverImages(List<Book> books) {
+        for (Book book : books) {
+            List<Page> pages = book.getPages();
+            if (pages == null || pages.isEmpty()) {
+                pages = pageRepo.findByBookIdOrderByPageNumberAsc(book.getId());
+            }
+            if (pages != null && !pages.isEmpty()) {
+                Page firstPage = pages.get(0);
+                if (firstPage.getImageUrl() != null && !firstPage.getImageUrl().isEmpty()) {
+                    book.setCoverImageUrl(firstPage.getImageUrl());
+                } else {
+                    // Try to extract image URL from format JSON (magazine-style pages store images in imageBlocks)
+                    String coverUrl = extractFirstImageFromFormat(firstPage.getFormat());
+                    if (coverUrl != null) {
+                        book.setCoverImageUrl(coverUrl);
+                    }
+                }
+            }
+        }
+    }
+
+    /** Extract the first image URL from a page's format JSON (imageBlocks array) */
+    private String extractFirstImageFromFormat(String format) {
+        if (format == null || format.isEmpty() || !format.startsWith("{")) return null;
+        try {
+            com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+            com.fasterxml.jackson.databind.JsonNode root = mapper.readTree(format);
+            com.fasterxml.jackson.databind.JsonNode imageBlocks = root.get("imageBlocks");
+            if (imageBlocks != null && imageBlocks.isArray() && imageBlocks.size() > 0) {
+                com.fasterxml.jackson.databind.JsonNode url = imageBlocks.get(0).get("url");
+                if (url != null && !url.asText().isEmpty()) {
+                    return url.asText();
+                }
+            }
+        } catch (Exception e) {
+            // ignore parse errors
+        }
+        return null;
+    }
+
+    /** Permanently delete all books with DELETED status and their pages */
+    @Transactional
+    public int purgeDeletedBooks() {
+        List<Book> deletedBooks = bookRepo.findByStatusIgnoreCase("DELETED");
+        int count = deletedBooks.size();
+        for (Book book : deletedBooks) {
+            List<Page> pages = pageRepo.findByBookIdOrderByPageNumberAsc(book.getId());
+            pageRepo.deleteAll(pages);
+            bookRepo.delete(book);
+        }
+        log.info("Permanently purged {} deleted books and their pages", count);
+        return count;
+    }
+
+    /** Count books created by a user (excluding DELETED) */
+    public long countBooksByUser(Long userId) {
+        return bookRepo.findByUserId(userId).stream()
+                .filter(b -> !"DELETED".equalsIgnoreCase(b.getStatus()))
+                .count();
+    }
+
+    public List<Page> getPagesByBookId(Long bookId) {
         return pageRepo.findByBookIdOrderByPageNumberAsc(bookId);
     }
 
-    public Page addPage(Long bookId, Page page, Long requestUserId) throws IOException {
+    public Page addPage(Long bookId, Page page, Long requestUserId) {
         Optional<Book> bookOpt = bookRepo.findById(bookId);
         if (bookOpt.isPresent() && requestUserId != null && !requestUserId.equals(bookOpt.get().getUserId())) {
             throw new RuntimeException("Only the author can add pages to this book");
         }
-        String now = LocalDateTime.now().format(DTF);
+        LocalDateTime now = LocalDateTime.now();
         page.setBookId(bookId);
         page.setCreatedDate(now);
         page.setModifiedDate(now);
@@ -415,7 +709,7 @@ public class BookService {
         return saved;
     }
 
-    public Page updatePage(Long pageId, Page updated, Long requestUserId) throws IOException {
+    public Page updatePage(Long pageId, Page updated, Long requestUserId) {
         Optional<Page> pageOpt = pageRepo.findById(pageId);
         if (pageOpt.isEmpty()) throw new RuntimeException("Page not found");
         Page page = pageOpt.get();
@@ -431,11 +725,11 @@ public class BookService {
         if (updated.getImageUrl2() != null) page.setImageUrl2(updated.getImageUrl2());
         if (updated.getFormat() != null) page.setFormat(updated.getFormat());
         if (updated.getPageNumber() > 0) page.setPageNumber(updated.getPageNumber());
-        page.setModifiedDate(LocalDateTime.now().format(DTF));
+        page.setModifiedDate(LocalDateTime.now());
         return pageRepo.save(page);
     }
 
-    public void deletePage(Long pageId, Long requestUserId) throws IOException {
+    public void deletePage(Long pageId, Long requestUserId) {
         Optional<Page> pageOpt = pageRepo.findById(pageId);
         if (pageOpt.isPresent() && requestUserId != null && pageOpt.get().getBookId() != null) {
             Optional<Book> bookOpt = bookRepo.findById(pageOpt.get().getBookId());

@@ -1,22 +1,49 @@
 package com.SaatSaheli.spring.model;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import jakarta.persistence.*;
+import java.time.LocalDateTime;
 
+@Entity
+@Table(name = "logins")
 public class Login {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Column(name = "user_id", unique = true)
     private Long userId;
+
+    @Column(unique = true)
     private String email;
 
     @JsonIgnore
     private String password;
 
     private String status; // ACTIVE, INACTIVE, DISABLED, DELETED, BLOCKED
-    private String accountCreatedDate;
-    private String lastLoginDate;
-    private String createdDate;
 
-    // For API responses — include user details
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    @Column(name = "account_created_date")
+    private LocalDateTime accountCreatedDate;
+
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    @Column(name = "last_login_date")
+    private LocalDateTime lastLoginDate;
+
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    @Column(name = "created_date")
+    private LocalDateTime createdDate;
+
     private String provider; // "email", "google", "apple"
+
+    @Column(name = "must_change_password")
+    private Boolean mustChangePassword = false;
+
+    @JsonIgnore
+    @Column(name = "temp_password")
+    private String tempPassword;
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
@@ -33,17 +60,23 @@ public class Login {
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
 
-    public String getAccountCreatedDate() { return accountCreatedDate; }
-    public void setAccountCreatedDate(String accountCreatedDate) { this.accountCreatedDate = accountCreatedDate; }
+    public LocalDateTime getAccountCreatedDate() { return accountCreatedDate; }
+    public void setAccountCreatedDate(LocalDateTime accountCreatedDate) { this.accountCreatedDate = accountCreatedDate; }
 
-    public String getLastLoginDate() { return lastLoginDate; }
-    public void setLastLoginDate(String lastLoginDate) { this.lastLoginDate = lastLoginDate; }
+    public LocalDateTime getLastLoginDate() { return lastLoginDate; }
+    public void setLastLoginDate(LocalDateTime lastLoginDate) { this.lastLoginDate = lastLoginDate; }
 
-    public String getCreatedDate() { return createdDate; }
-    public void setCreatedDate(String createdDate) { this.createdDate = createdDate; }
+    public LocalDateTime getCreatedDate() { return createdDate; }
+    public void setCreatedDate(LocalDateTime createdDate) { this.createdDate = createdDate; }
 
     public String getProvider() { return provider; }
     public void setProvider(String provider) { this.provider = provider; }
+
+    public Boolean getMustChangePassword() { return mustChangePassword; }
+    public void setMustChangePassword(Boolean mustChangePassword) { this.mustChangePassword = mustChangePassword; }
+
+    public String getTempPassword() { return tempPassword; }
+    public void setTempPassword(String tempPassword) { this.tempPassword = tempPassword; }
 
     @Override
     public String toString() {

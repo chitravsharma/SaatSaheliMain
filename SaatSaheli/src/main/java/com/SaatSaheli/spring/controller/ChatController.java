@@ -7,23 +7,19 @@ import com.SaatSaheli.spring.repository.ChatMessageRepository;
 import com.SaatSaheli.spring.repository.ChatRoomRepository;
 import com.SaatSaheli.spring.repository.UserRepository;
 import com.SaatSaheli.spring.util.RoleUtil;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.io.IOException;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/chat")
-@CrossOrigin(origins = "*")
 public class ChatController {
-
-    private static final DateTimeFormatter DTF = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     private static final String[][] DEFAULT_ROOMS = {
             {"Art", "Art", "Discuss visual arts, painting, drawing, and more"},
@@ -43,16 +39,25 @@ public class ChatController {
     @Autowired
     private UserRepository userRepo;
 
+    private Long getAuthUserId(HttpServletRequest request) {
+        Object val = request.getAttribute("jwtUserId");
+        return val instanceof Long ? (Long) val : null;
+    }
+
     /** GET /api/chat/rooms — List all chat rooms (auto-init if empty) */
     @GetMapping("/rooms")
-    public ResponseEntity<?> listRooms(@RequestHeader("X-User-Id") String callerUserId) {
+    public ResponseEntity<?> listRooms(HttpServletRequest request) {
         try {
+            Long userId = getAuthUserId(request);
+            if (userId == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorMap("Authentication required"));
+            }
             List<ChatRoom> rooms = roomRepo.findAll();
             if (rooms.isEmpty()) {
                 rooms = initializeDefaultRooms();
             }
             return ResponseEntity.ok(rooms);
-        } catch (IOException e) {
+        } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(errorMap("Failed to list rooms: " + e.getMessage()));
         }
@@ -64,9 +69,18 @@ public class ChatController {
             @PathVariable Long roomId,
             @RequestParam(required = false) Long afterId,
             @RequestParam(defaultValue = "50") int limit,
-            @RequestHeader("X-User-Id") String callerUserId) {
+            HttpServletRequest request) {
         try {
-            List<ChatMessage> messages = messageRepo.findByRoomIdAfter(roomId, afterId);
+            Long userId = getAuthUserId(request);
+            if (userId == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorMap("Authentication required"));
+            }
+            List<ChatMessage> messages;
+            if (afterId != null) {
+                messages = messageRepo.findByRoomIdAndIdGreaterThan(roomId, afterId);
+            } else {
+                messages = messageRepo.findByRoomId(roomId);
+            }
             // Filter out deleted messages (show placeholder instead)
             List<Map<String, Object>> result = messages.stream()
                     .sorted(Comparator.comparingLong(ChatMessage::getId))
@@ -84,7 +98,7 @@ public class ChatController {
                     })
                     .collect(Collectors.toList());
             return ResponseEntity.ok(result);
-        } catch (IOException e) {
+        } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(errorMap("Failed to get messages: " + e.getMessage()));
         }
@@ -95,14 +109,17 @@ public class ChatController {
     public ResponseEntity<?> sendMessage(
             @PathVariable Long roomId,
             @RequestBody Map<String, String> body,
-            @RequestHeader("X-User-Id") String callerUserId) {
+            HttpServletRequest request) {
         try {
             String text = body.get("message");
             if (text == null || text.trim().isEmpty()) {
                 return ResponseEntity.badRequest().body(errorMap("Message cannot be empty"));
             }
 
-            Long userId = Long.parseLong(callerUserId);
+            Long userId = getAuthUserId(request);
+            if (userId == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorMap("Authentication required"));
+            }
             Optional<User> userOpt = userRepo.findById(userId);
             String senderName = "Unknown";
             if (userOpt.isPresent()) {
@@ -117,12 +134,12 @@ public class ChatController {
             msg.setSenderId(userId);
             msg.setSenderName(senderName);
             msg.setMessage(text.trim());
-            msg.setCreatedDate(LocalDateTime.now().format(DTF));
+            msg.setCreatedDate(LocalDateTime.now());
             msg.setIsDeleted(false);
             msg = messageRepo.save(msg);
 
             return ResponseEntity.ok(msg);
-        } catch (IOException e) {
+        } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(errorMap("Failed to send message: " + e.getMessage()));
         }
@@ -132,9 +149,12 @@ public class ChatController {
     @DeleteMapping("/messages/{messageId}")
     public ResponseEntity<?> deleteMessage(
             @PathVariable Long messageId,
-            @RequestHeader("X-User-Id") String callerUserId) {
+            HttpServletRequest request) {
         try {
-            Long userId = Long.parseLong(callerUserId);
+            Long userId = getAuthUserId(request);
+            if (userId == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorMap("Authentication required"));
+            }
             Optional<ChatMessage> msgOpt = messageRepo.findById(messageId);
             if (msgOpt.isEmpty()) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorMap("Message not found"));
@@ -159,24 +179,23 @@ public class ChatController {
             messageRepo.save(msg);
 
             return ResponseEntity.ok(Map.of("message", "Message deleted"));
-        } catch (IOException e) {
+        } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(errorMap("Failed to delete message: " + e.getMessage()));
         }
     }
 
-    private List<ChatRoom> initializeDefaultRooms() throws IOException {
-        String now = LocalDateTime.now().format(DTF);
+    private List<ChatRoom> initializeDefaultRooms() {
+        LocalDateTime now = LocalDateTime.now();
         List<ChatRoom> rooms = new ArrayList<>();
         for (int i = 0; i < DEFAULT_ROOMS.length; i++) {
             ChatRoom room = new ChatRoom();
-            room.setId((long) (i + 1));
             room.setName(DEFAULT_ROOMS[i][0]);
             room.setCategory(DEFAULT_ROOMS[i][1]);
             room.setDescription(DEFAULT_ROOMS[i][2]);
             room.setCreatedDate(now);
             room.setModifiedDate(now);
-            roomRepo.save(room);
+            room = roomRepo.save(room);
             rooms.add(room);
         }
         return rooms;

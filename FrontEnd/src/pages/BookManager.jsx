@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from "react";
-import { useLocation, Link } from "react-router-dom";
-import axios from "axios";
+import { useLocation, Link, useNavigate } from "react-router-dom";
+import api from "../utils/api";
 import FlipBook from "../FlipBook";
 import PageLayoutEditor from "../PageLayoutEditor";
+import CoverPageDesigner from "../components/CoverPageDesigner";
 import { useAuth } from "../AuthContext";
 import { useStrings } from "../LanguageContext";
+import TermsGate from "../components/TermsGate";
+import ImageEditor from "../components/ImageEditor";
 import "../BookManager.css";
 
 const API = `${process.env.REACT_APP_API_URL}/api/books`;
@@ -22,8 +25,9 @@ function PublicBooks() {
   useEffect(() => {
     const fetchPublished = async () => {
       try {
-        const res = await axios.get(`${API}/search?status=PUBLISHED`);
-        setBooks(Array.isArray(res.data) ? res.data : []);
+        const res = await api.get(`${API}/search?status=PUBLISHED`);
+        const allBooks = Array.isArray(res.data) ? res.data : [];
+        setBooks(allBooks.filter((b) => (b.category || "").toUpperCase() !== "MAGAZINE"));
       } catch {
         setError(strings.publicBooks.error);
       } finally {
@@ -71,6 +75,7 @@ function PublicBooks() {
         <Link to="/Login">{strings.publicBooks.loginPrompt}</Link>
       </p>
 
+      <div className="bm-section-card">
       {loading && <p>{strings.publicBooks.loading}</p>}
       {error && <p className="bm-message">{error}</p>}
 
@@ -79,25 +84,29 @@ function PublicBooks() {
       )}
 
       {!loading && !error && books.length > 0 && (
-        <div className="bm-public-grid">
+        <div className="bm-books-row">
           {books.map((book) => (
-            <button
-              key={book.id}
-              className="bm-public-card"
-              onClick={() => setReadingBookId(book.id)}
-              aria-label={`Read ${book.title}`}
-            >
-              <div className="bm-public-cover">
-                <span className="bm-public-cover-title">{book.title}</span>
-              </div>
-              {book.authorName && (
-                <span className="bm-public-author">{book.authorName}</span>
-              )}
-              <span className="bm-public-read">{strings.publicBooks.readButton}</span>
-            </button>
+            <div key={book.id} className="bm-book-card">
+              <button className="bm-book-card-link" onClick={() => setReadingBookId(book.id)} aria-label={`Read ${book.title}`}>
+                <div className="bm-book-cover">
+                  {book.coverImageUrl ? (
+                    <img src={resolveImageUrl(book.coverImageUrl)} alt={book.title} className="bm-book-cover-img" />
+                  ) : (
+                    <span className="bm-book-cover-title">{book.title}</span>
+                  )}
+                </div>
+                <div className="bm-book-info">
+                  <span className="bm-book-title">{book.title}</span>
+                  {book.authorName && (
+                    <span className="bm-book-author">by {book.authorName}</span>
+                  )}
+                </div>
+              </button>
+            </div>
           ))}
         </div>
       )}
+      </div>{/* end bm-section-card */}
     </div>
   );
 }
@@ -125,9 +134,11 @@ const DEFAULT_FORMAT = {
 };
 
 function BookManager() {
-  const { user } = useAuth();
+  const { user, isSuperAdmin, isPremiumOrAbove } = useAuth();
+  const canCustomizeCover = isSuperAdmin || isPremiumOrAbove;
   const strings = useStrings();
   const location = useLocation();
+  const bmNavigate = useNavigate();
   const userId = user?.userId || 1;
   const [view, setView] = useState("menu");
   const [books, setBooks] = useState([]);
@@ -147,8 +158,9 @@ function BookManager() {
     if (!user) return;
     const fetchPublished = async () => {
       try {
-        const res = await axios.get(`${API}/search?status=PUBLISHED&userId=${userId}`);
-        setPublishedBooks(Array.isArray(res.data) ? res.data : []);
+        const res = await api.get(`${API}/search?status=PUBLISHED&userId=${userId}`);
+        const allBooks = Array.isArray(res.data) ? res.data : [];
+        setPublishedBooks(allBooks.filter((b) => (b.category || "").toUpperCase() !== "MAGAZINE"));
       } catch {
         setPublishedBooks([]);
       } finally {
@@ -184,15 +196,51 @@ function BookManager() {
   const [editGenerating2, setEditGenerating2] = useState(false);
   const [imageStyle, setImageStyle] = useState("general");
 
+  // Image editor state
+  const [editorFile, setEditorFile] = useState(null);
+  const [editorCallback, setEditorCallback] = useState(null);
+
+  // Cover/Back page designer state
+  const [coverDesignData, setCoverDesignData] = useState({});
+
+  // Help & Support state
+  const [showHelp, setShowHelp] = useState(false);
+  const [supportName, setSupportName] = useState("");
+  const [supportEmail, setSupportEmail] = useState("");
+  const [supportPhone, setSupportPhone] = useState("");
+  const [supportRequestTypes, setSupportRequestTypes] = useState([]);
+  const [supportOtherType, setSupportOtherType] = useState("");
+  const [supportMessage, setSupportMessage] = useState("");
+  const [supportWantAppointment, setSupportWantAppointment] = useState("");
+  const [supportPrefDate, setSupportPrefDate] = useState("");
+  const [supportPrefTime, setSupportPrefTime] = useState("");
+  const [supportMeetingType, setSupportMeetingType] = useState("");
+  const [supportTimeline, setSupportTimeline] = useState("");
+  const [supportSending, setSupportSending] = useState(false);
+  const [supportSent, setSupportSent] = useState(false);
+  const [supportError, setSupportError] = useState("");
+
+  // Helper: detect if a page number is the back page (last page in the book)
+  const getBackPageNumber = () => {
+    if (pages.length === 0) return 50;
+    return pages[pages.length - 1]?.pageNumber || 50;
+  };
+  const isCoverPage = (num) => parseInt(num) === 1;
+  const isBackPage = (num) => {
+    const n = parseInt(num);
+    return n === getBackPageNumber() || n === 50 || n === 99;
+  };
+  const isCoverOrBack = (num) => isCoverPage(num) || isBackPage(num);
+
   // Open book for editing when navigated from Account page
   useEffect(() => {
     const editBookId = location.state?.editBookId;
     if (editBookId) {
       const openBook = async () => {
         try {
-          const res = await axios.get(`${API}/${editBookId}`);
+          const res = await api.get(`${API}/${editBookId}`);
           setSelectedBook(res.data);
-          const pagesRes = await axios.get(`${API}/${editBookId}/pages`);
+          const pagesRes = await api.get(`${API}/${editBookId}/pages`);
           setPages(Array.isArray(pagesRes.data) ? pagesRes.data : []);
           setView("edit");
         } catch {
@@ -234,7 +282,7 @@ function BookManager() {
     try {
       const formData = new FormData();
       formData.append("file", file);
-      const res = await axios.post(UPLOAD_API, formData, {
+      const res = await api.post(UPLOAD_API, formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
       setUrl(res.data.url);
@@ -255,7 +303,7 @@ function BookManager() {
     }
     setGeneratingState(true);
     try {
-      const res = await axios.post(GENERATE_API, { prompt: prompt.trim(), style: imageStyle }, { timeout: 90000 });
+      const res = await api.post(GENERATE_API, { prompt: prompt.trim(), style: imageStyle }, { timeout: 90000 });
       setUrl(res.data.url);
       showMessage(strings.bookManager.msgImageGenerated);
     } catch (err) {
@@ -268,7 +316,7 @@ function BookManager() {
   const fetchBooks = async () => {
     try {
       setLoading(true);
-      const res = await axios.get(`${API}/user/${userId}`);
+      const res = await api.get(`${API}/user/${userId}`);
       setBooks(Array.isArray(res.data) ? res.data : []);
     } catch (err) {
       setBooks([]);
@@ -280,7 +328,7 @@ function BookManager() {
   const fetchDrafts = async () => {
     try {
       setLoading(true);
-      const res = await axios.get(`${API}/user/${userId}/drafts`);
+      const res = await api.get(`${API}/user/${userId}/drafts`);
       setBooks(Array.isArray(res.data) ? res.data : []);
     } catch (err) {
       setBooks([]);
@@ -291,7 +339,7 @@ function BookManager() {
 
   const fetchBookPages = async (bookId) => {
     try {
-      const res = await axios.get(`${API}/${bookId}/pages`);
+      const res = await api.get(`${API}/${bookId}/pages`);
       setPages(Array.isArray(res.data) ? res.data : []);
     } catch (err) {
       setPages([]);
@@ -305,7 +353,7 @@ function BookManager() {
     }
     try {
       setLoading(true);
-      const res = await axios.post(`${API}/create`, { title: newTitle, userId });
+      const res = await api.post(`${API}/create`, { title: newTitle, userId });
       setSelectedBook(res.data);
       setPages(res.data.pages || []);
       setNewTitle("");
@@ -327,7 +375,7 @@ function BookManager() {
   const handleUpdateTitle = async () => {
     if (!selectedBook) return;
     try {
-      const res = await axios.put(`${API}/${selectedBook.id}`, { title: selectedBook.title, userId: String(userId) });
+      const res = await api.put(`${API}/${selectedBook.id}`, { title: selectedBook.title, userId: String(userId) });
       setSelectedBook(res.data);
       showMessage(strings.bookManager.msgTitleUpdated);
     } catch (err) {
@@ -338,7 +386,7 @@ function BookManager() {
   const handlePublish = async () => {
     if (!selectedBook) return;
     try {
-      const res = await axios.put(`${API}/${selectedBook.id}/publish?userId=${userId}`);
+      const res = await api.put(`${API}/${selectedBook.id}/publish?userId=${userId}`);
       setSelectedBook(res.data);
       showMessage(strings.bookManager.msgPublished);
     } catch (err) {
@@ -349,7 +397,7 @@ function BookManager() {
   const handleSaveDraft = async () => {
     if (!selectedBook) return;
     try {
-      const res = await axios.put(`${API}/${selectedBook.id}/draft?userId=${userId}`);
+      const res = await api.put(`${API}/${selectedBook.id}/draft?userId=${userId}`);
       setSelectedBook(res.data);
       showMessage(strings.bookManager.msgDraftSaved);
     } catch (err) {
@@ -360,7 +408,7 @@ function BookManager() {
   const handleDeleteBook = async (bookId) => {
     if (!window.confirm(strings.bookManager.confirmDeleteBook)) return;
     try {
-      await axios.delete(`${API}/${bookId}?userId=${userId}`);
+      await api.delete(`${API}/${bookId}?userId=${userId}`);
       showMessage(strings.bookManager.msgBookDeleted);
       setSelectedBook(null);
       setPages([]);
@@ -377,13 +425,16 @@ function BookManager() {
       return;
     }
     try {
-      const formatJson = buildFormatJson(formatFontFamily, formatFontSize, formatColor, pageLayout);
-      await axios.post(`${API}/${selectedBook.id}/page?userId=${userId}`, {
+      const isSpecialPage = isCoverOrBack(pageNumber);
+      const formatJson = isSpecialPage
+        ? JSON.stringify({ fontFamily: "sans-serif", fontSize: "16px", color: "#1a1a2e", coverDesign: coverDesignData, layout: {} })
+        : buildFormatJson(formatFontFamily, formatFontSize, formatColor, pageLayout);
+      await api.post(`${API}/${selectedBook.id}/page?userId=${userId}`, {
         pageNumber: parseInt(pageNumber),
         content: pageContent,
         format: formatJson,
         imageUrl: pageImageUrl,
-        imageUrl2: pageImageUrl2,
+        imageUrl2: isSpecialPage ? "" : pageImageUrl2,
       });
       showMessage(strings.bookManager.msgPageAdded);
       setPageContent("");
@@ -394,6 +445,7 @@ function BookManager() {
       setFormatFontSize("16px");
       setFormatColor("#1a1a2e");
       setPageLayout({});
+      setCoverDesignData({});
       await fetchBookPages(selectedBook.id);
     } catch (err) {
       showMessage(strings.bookManager.msgAddPageFailed);
@@ -403,7 +455,7 @@ function BookManager() {
   const handleUpdatePage = async () => {
     if (!editingPage) return;
     try {
-      await axios.put(`${API}/page/${editingPage.id}?userId=${userId}`, {
+      await api.put(`${API}/page/${editingPage.id}?userId=${userId}`, {
         pageNumber: editingPage.pageNumber,
         content: editingPage.content,
         format: editingPage.format,
@@ -421,7 +473,7 @@ function BookManager() {
   const handleDeletePage = async (pageId) => {
     if (!window.confirm(strings.bookManager.confirmDeletePage)) return;
     try {
-      await axios.delete(`${API}/page/${pageId}?userId=${userId}`);
+      await api.delete(`${API}/page/${pageId}?userId=${userId}`);
       showMessage(strings.bookManager.msgPageDeleted);
       await fetchBookPages(selectedBook.id);
     } catch (err) {
@@ -477,7 +529,13 @@ function BookManager() {
             className="bm-file-input"
             onChange={(e) => {
               if (e.target.files[0]) {
-                handleUpload(e.target.files[0], setUrl, setUploading);
+                setEditorFile(e.target.files[0]);
+                setEditorCallback(() => (editedFile) => {
+                  handleUpload(editedFile, setUrl, setUploading);
+                  setEditorFile(null);
+                  setEditorCallback(null);
+                });
+                e.target.value = "";
               }
             }}
           />
@@ -562,6 +620,7 @@ function BookManager() {
   // Show public books browser if not logged in
   if (!user) return <PublicBooks />;
 
+  const wrappedContent = (() => {
   // Main menu
   if (view === "menu") {
     const isReading = !!readingBookId;
@@ -570,6 +629,7 @@ function BookManager() {
         <div className={isReading ? "bm-sidebar" : ""}>
           <h1>{strings.bookManager.heading}</h1>
           {message && <div className="bm-message">{message}</div>}
+          <div className="bm-section-card">
           <div className={`bm-button-row ${isReading ? "bm-button-col" : ""}`}>
             <button className="bm-btn bm-btn-create" onClick={() => { setReadingBookId(null); setView("create"); }}>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14M5 12h14"/></svg>
@@ -587,8 +647,18 @@ function BookManager() {
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
               {strings.bookManager.allMyBooks}
             </button>
+            <button className="bm-btn bm-btn-edit" onClick={() => bmNavigate("/articles")}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+              My Articles
+            </button>
+            <button className="bm-btn bm-btn-help" onClick={() => bmNavigate("/help-support")}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+              Help & Support
+            </button>
           </div>
+          </div>{/* end bm-section-card for buttons */}
 
+          <div className="bm-section-card bm-published-section">
           <h2 className="bm-published-heading">{strings.publicBooks.heading}</h2>
           {publishedLoading && <p>{strings.publicBooks.loading}</p>}
           {!publishedLoading && publishedBooks.length === 0 && (
@@ -608,26 +678,30 @@ function BookManager() {
                 ))}
               </div>
             ) : (
-              <div className="bm-public-grid">
+              <div className="bm-books-row">
                 {publishedBooks.map((book) => (
-                  <button
-                    key={book.id}
-                    className="bm-public-card"
-                    onClick={() => setReadingBookId(book.id)}
-                    aria-label={`Read ${book.title}`}
-                  >
-                    <div className="bm-public-cover">
-                      <span className="bm-public-cover-title">{book.title}</span>
-                    </div>
-                    {book.authorName && (
-                      <span className="bm-public-author">{book.authorName}</span>
-                    )}
-                    <span className="bm-public-read">{strings.publicBooks.readButton}</span>
-                  </button>
+                  <div key={book.id} className="bm-book-card">
+                    <button className="bm-book-card-link" onClick={() => setReadingBookId(book.id)} aria-label={`Read ${book.title}`}>
+                      <div className="bm-book-cover">
+                        {book.coverImageUrl ? (
+                          <img src={resolveImageUrl(book.coverImageUrl)} alt={book.title} className="bm-book-cover-img" />
+                        ) : (
+                          <span className="bm-book-cover-title">{book.title}</span>
+                        )}
+                      </div>
+                      <div className="bm-book-info">
+                        <span className="bm-book-title">{book.title}</span>
+                        {book.authorName && (
+                          <span className="bm-book-author">by {book.authorName}</span>
+                        )}
+                      </div>
+                    </button>
+                  </div>
                 ))}
               </div>
             )
           )}
+          </div>{/* end bm-section-card for published books */}
         </div>
 
         {isReading && (() => {
@@ -681,6 +755,221 @@ function BookManager() {
             {loading ? strings.bookManager.creating : strings.bookManager.createButton}
           </button>
           <button className="bm-btn bm-btn-back" onClick={() => setView("menu")}>{strings.common.back}</button>
+          <button className="bm-btn bm-btn-help" onClick={() => setShowHelp(!showHelp)} type="button">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            Help & Support
+          </button>
+        </div>
+
+        {showHelp && (
+          <div className="bm-help-panel">
+            <h3>How to Create a Book</h3>
+            <ol>
+              <li><strong>Enter a title</strong> for your book and click "Create".</li>
+              <li><strong>Add pages</strong> with text, images, or AI-generated illustrations.</li>
+              <li><strong>Design your cover</strong> (page 1) and back page using the Cover Designer (Premium feature).</li>
+              <li><strong>Preview</strong> your book with the FlipBook viewer before publishing.</li>
+              <li><strong>Publish</strong> when ready to share with the community.</li>
+            </ol>
+            <h3>Cover & Back Page Tips</h3>
+            <ul>
+              <li>Generate or upload a background image for your cover.</li>
+              <li>Click "Save & Customize" to position text on the image.</li>
+              <li><strong>Drag text blocks</strong> to move them to the desired position.</li>
+              <li>Adjust image scale with the slider for the perfect fit.</li>
+              <li>Click "Save as Cover Page Image" to save the final composite.</li>
+            </ul>
+            <h3>Reading Features</h3>
+            <ul>
+              <li>Use the <strong>Read</strong> button to have a page read aloud.</li>
+              <li>Use <strong>Podcast</strong> mode to listen to the entire book continuously.</li>
+            </ul>
+            <p className="bm-help-contact">Need more help? Contact us at <strong>avikaventures.info@gmail.com</strong></p>
+          </div>
+        )}
+
+        {/* Help & Support / Content Creation Request Form */}
+        <div className="bm-support-form-section">
+          <h2 className="bm-support-form-title">Help & Support / Content Creation Request</h2>
+          <p className="bm-support-desc">
+            Need help or want to request content creation? Fill out the form below and our team will get back to you.
+          </p>
+          {supportSent ? (
+            <div className="bm-support-sent">
+              Thank you for your request! We'll get back to you within 24-48 hours.
+              <button className="bm-btn bm-btn-back" style={{ marginTop: 12 }} onClick={() => setSupportSent(false)}>Submit Another Request</button>
+            </div>
+          ) : (
+            <form className="bm-contact-form" onSubmit={async (e) => {
+              e.preventDefault();
+              setSupportError("");
+              if (!supportName.trim() || !supportEmail.trim() || !supportMessage.trim()) {
+                setSupportError("Please fill in all required fields.");
+                return;
+              }
+              if (supportRequestTypes.length === 0) {
+                setSupportError("Please select at least one request type.");
+                return;
+              }
+              setSupportSending(true);
+              try {
+                const requestTypes = supportRequestTypes.includes("Other")
+                  ? [...supportRequestTypes.filter(t => t !== "Other"), `Other: ${supportOtherType}`].join(", ")
+                  : supportRequestTypes.join(", ");
+                const appointmentInfo = supportWantAppointment === "Yes"
+                  ? `\n\nAppointment Requested:\nDate: ${supportPrefDate}\nTime: ${supportPrefTime}\nMeeting Type: ${supportMeetingType}`
+                  : "\n\nAppointment: No";
+                const fullMessage = `Request Type: ${requestTypes}\nTimeline: ${supportTimeline || "Not specified"}\nPhone: ${supportPhone || "Not provided"}\n\nProject Details:\n${supportMessage.trim()}${appointmentInfo}`;
+                await api.post(`${process.env.REACT_APP_API_URL}/api/contact`, {
+                  name: supportName.trim(),
+                  email: supportEmail.trim(),
+                  subject: `Help & Support: ${requestTypes}`,
+                  message: fullMessage,
+                });
+                setSupportSent(true);
+                setSupportName(""); setSupportEmail(""); setSupportPhone("");
+                setSupportRequestTypes([]); setSupportOtherType("");
+                setSupportMessage(""); setSupportWantAppointment(""); setSupportPrefDate("");
+                setSupportPrefTime(""); setSupportMeetingType(""); setSupportTimeline("");
+              } catch (err) {
+                setSupportError(err.response?.data?.error || "Failed to send. Please try again.");
+              } finally {
+                setSupportSending(false);
+              }
+            }}>
+              {supportError && <div className="bm-message" style={{ background: "#f8d7da", color: "#721c24", borderLeftColor: "#721c24" }}>{supportError}</div>}
+
+              {/* Section 1: Contact Information */}
+              <fieldset className="bm-form-section">
+                <legend className="bm-form-section-title">Section 1: Contact Information</legend>
+                <div className="bm-contact-field">
+                  <label htmlFor="support-name">Full Name *</label>
+                  <input id="support-name" type="text" className="bm-input" placeholder="Your full name" value={supportName} onChange={(e) => setSupportName(e.target.value)} required />
+                </div>
+                <div className="bm-contact-field">
+                  <label htmlFor="support-email">Email Address *</label>
+                  <input id="support-email" type="email" className="bm-input" placeholder="you@example.com" value={supportEmail} onChange={(e) => setSupportEmail(e.target.value)} required />
+                </div>
+                <div className="bm-contact-field">
+                  <label htmlFor="support-phone">Phone Number</label>
+                  <input id="support-phone" type="tel" className="bm-input" placeholder="Your phone number" value={supportPhone} onChange={(e) => setSupportPhone(e.target.value)} />
+                </div>
+              </fieldset>
+
+              {/* Section 2: Type of Request */}
+              <fieldset className="bm-form-section">
+                <legend className="bm-form-section-title">Section 2: Type of Request</legend>
+                <div className="bm-contact-field">
+                  <label>What do you need help with? * <span className="bm-field-hint">(Select one or more)</span></label>
+                  <div className="bm-checkbox-group">
+                    {["Content Creation (Book cover, poem, Article, blog posts)", "Technical Support (My account, Content Issue)"].map((option) => (
+                      <label key={option} className="bm-checkbox-label">
+                        <input
+                          type="checkbox"
+                          checked={supportRequestTypes.includes(option)}
+                          onChange={(e) => {
+                            if (e.target.checked) setSupportRequestTypes([...supportRequestTypes, option]);
+                            else setSupportRequestTypes(supportRequestTypes.filter(t => t !== option));
+                          }}
+                        />
+                        {option}
+                      </label>
+                    ))}
+                    <label className="bm-checkbox-label">
+                      <input
+                        type="checkbox"
+                        checked={supportRequestTypes.includes("Other")}
+                        onChange={(e) => {
+                          if (e.target.checked) setSupportRequestTypes([...supportRequestTypes, "Other"]);
+                          else { setSupportRequestTypes(supportRequestTypes.filter(t => t !== "Other")); setSupportOtherType(""); }
+                        }}
+                      />
+                      Other (please specify)
+                    </label>
+                    {supportRequestTypes.includes("Other") && (
+                      <input type="text" className="bm-input" placeholder="Please specify..." value={supportOtherType} onChange={(e) => setSupportOtherType(e.target.value)} style={{ marginTop: 6 }} />
+                    )}
+                  </div>
+                </div>
+              </fieldset>
+
+              {/* Section 3: Project Details */}
+              <fieldset className="bm-form-section">
+                <legend className="bm-form-section-title">Section 3: Project Details</legend>
+                <div className="bm-contact-field">
+                  <label htmlFor="support-message">Briefly describe your request *</label>
+                  <p className="bm-field-hint">Example: "Need help creating book cover" or "Help setting up my page"</p>
+                  <textarea id="support-message" className="bm-input bm-textarea" placeholder="Describe your request..." value={supportMessage} onChange={(e) => setSupportMessage(e.target.value)} required rows={5} />
+                </div>
+              </fieldset>
+
+              {/* Section 4: Appointment Request */}
+              <fieldset className="bm-form-section">
+                <legend className="bm-form-section-title">Section 4: Appointment Request</legend>
+                <div className="bm-contact-field">
+                  <label>Would you like to schedule a consultation?</label>
+                  <div className="bm-radio-group">
+                    <label className="bm-radio-label">
+                      <input type="radio" name="appointment" value="Yes" checked={supportWantAppointment === "Yes"} onChange={(e) => setSupportWantAppointment(e.target.value)} />
+                      Yes
+                    </label>
+                    <label className="bm-radio-label">
+                      <input type="radio" name="appointment" value="No" checked={supportWantAppointment === "No"} onChange={(e) => setSupportWantAppointment(e.target.value)} />
+                      No
+                    </label>
+                  </div>
+                </div>
+                {supportWantAppointment === "Yes" && (
+                  <div className="bm-appointment-details">
+                    <div className="bm-contact-field">
+                      <label htmlFor="support-date">Preferred Date</label>
+                      <input id="support-date" type="date" className="bm-input" value={supportPrefDate} onChange={(e) => setSupportPrefDate(e.target.value)} />
+                    </div>
+                    <div className="bm-contact-field">
+                      <label htmlFor="support-time">Preferred Time</label>
+                      <input id="support-time" type="time" className="bm-input" value={supportPrefTime} onChange={(e) => setSupportPrefTime(e.target.value)} />
+                    </div>
+                    <div className="bm-contact-field">
+                      <label>Meeting Type</label>
+                      <div className="bm-radio-group">
+                        <label className="bm-radio-label">
+                          <input type="radio" name="meetingType" value="Phone Call" checked={supportMeetingType === "Phone Call"} onChange={(e) => setSupportMeetingType(e.target.value)} />
+                          Phone Call
+                        </label>
+                        <label className="bm-radio-label">
+                          <input type="radio" name="meetingType" value="Video Call" checked={supportMeetingType === "Video Call"} onChange={(e) => setSupportMeetingType(e.target.value)} />
+                          Video Call
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </fieldset>
+
+              {/* Section 5: Timeline & Priority */}
+              <fieldset className="bm-form-section">
+                <legend className="bm-form-section-title">Section 5: Timeline & Priority</legend>
+                <div className="bm-contact-field">
+                  <label>When do you need this completed?</label>
+                  <div className="bm-radio-group">
+                    {["As soon as possible", "Within a week", "Flexible"].map((option) => (
+                      <label key={option} className="bm-radio-label">
+                        <input type="radio" name="timeline" value={option} checked={supportTimeline === option} onChange={(e) => setSupportTimeline(e.target.value)} />
+                        {option}
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              </fieldset>
+
+              <button type="submit" className="bm-btn bm-btn-create" disabled={supportSending}>
+                {supportSending ? "Sending..." : "Submit Request"}
+              </button>
+            </form>
+          )}
+          <p className="bm-support-note">
+            <em>Or email us directly at <strong>avikaventures.info@gmail.com</strong></em>
+          </p>
         </div>
       </div>
     );
@@ -703,7 +992,7 @@ function BookManager() {
         formData.append("file", docFile);
         formData.append("title", newTitle.trim());
         formData.append("userId", userId);
-        const res = await axios.post(`${API}/upload-document`, formData, {
+        const res = await api.post(`${API}/upload-document`, formData, {
           headers: { "Content-Type": "multipart/form-data" },
         });
         const book = res.data;
@@ -759,7 +1048,25 @@ function BookManager() {
           <button className="bm-btn bm-btn-back" onClick={() => setView("menu")}>
             {strings.common.back}
           </button>
+          <button className="bm-btn bm-btn-help" onClick={() => setShowHelp(!showHelp)} type="button">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            Help & Support
+          </button>
         </div>
+
+        {showHelp && (
+          <div className="bm-help-panel">
+            <h3>How to Create from Document</h3>
+            <ol>
+              <li><strong>Enter a title</strong> for your book.</li>
+              <li><strong>Upload a PDF or Word document</strong> (.pdf, .docx, .doc).</li>
+              <li>Your document will be <strong>automatically split into pages</strong>.</li>
+              <li><strong>Edit and format</strong> each page as needed.</li>
+              <li><strong>Preview and publish</strong> when ready.</li>
+            </ol>
+            <p className="bm-help-contact">Need more help? Contact us at <strong>avikaventures.info@gmail.com</strong></p>
+          </div>
+        )}
       </div>
     );
   }
@@ -853,7 +1160,31 @@ function BookManager() {
               <button className="bm-btn bm-btn-create" onClick={handlePublish}>{strings.bookManager.publish}</button>
               <button className="bm-btn bm-btn-preview" onClick={() => setView("preview")}>{strings.bookManager.preview}</button>
               <button className="bm-btn bm-btn-delete" onClick={() => handleDeleteBook(selectedBook.id)}>{strings.bookManager.deleteBook}</button>
+              <button className="bm-btn bm-btn-help" onClick={() => setShowHelp(!showHelp)} type="button">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                Help
+              </button>
             </div>
+
+            {showHelp && (
+              <div className="bm-help-panel">
+                <h3>Book Editing Guide</h3>
+                <ul>
+                  <li><strong>Page 1</strong> is your Cover Page. Set its page number to 1 to use the Cover Designer.</li>
+                  <li>The <strong>last page</strong> is your Back Page. Design it with the Back Page Designer.</li>
+                  <li>Use <strong>Save & Customize</strong> to position text on cover/back page images.</li>
+                  <li><strong>Drag text blocks</strong> to reposition title, author name, etc. on the cover.</li>
+                  <li>Click <strong>Save as Cover/Back Page Image</strong> to save the final composite.</li>
+                  <li>Use <strong>Preview</strong> to see your book as readers will see it.</li>
+                </ul>
+                <h3>Reading & Audio</h3>
+                <ul>
+                  <li>In preview or read mode, use <strong>Read</strong> to hear the current page read aloud.</li>
+                  <li>Use <strong>Podcast</strong> mode to listen to the entire book continuously.</li>
+                </ul>
+                <p className="bm-help-contact">Questions? Contact <strong>avikaventures.info@gmail.com</strong></p>
+              </div>
+            )}
 
             {/* Add page form */}
             <div className="bm-add-page">
@@ -861,31 +1192,55 @@ function BookManager() {
               <div className="bm-page-form-grid">
                 <div className="bm-form-row">
                   <input type="number" placeholder={strings.bookManager.placeholderPageNumber} value={pageNumber}
-                    onChange={(e) => setPageNumber(e.target.value)} className="bm-input bm-input-small" />
+                    onChange={(e) => { setPageNumber(e.target.value); setCoverDesignData({}); }} className="bm-input bm-input-small" />
                   <textarea placeholder={strings.bookManager.placeholderContent} value={pageContent}
                     onChange={(e) => setPageContent(e.target.value)} className="bm-input bm-textarea" rows={3} />
                 </div>
 
-                {renderFormatToolbar(
-                  formatFontFamily, setFormatFontFamily,
-                  formatFontSize, setFormatFontSize,
-                  formatColor, setFormatColor
+                {/* Show Cover/Back Page Designer for cover or back page (Premium+ or Super Admin) */}
+                {pageNumber && isCoverOrBack(pageNumber) && canCustomizeCover && (
+                  <CoverPageDesigner
+                    type={isCoverPage(pageNumber) ? "cover" : "back"}
+                    bookTitle={selectedBook?.title}
+                    authorName={selectedBook?.authorName}
+                    imageUrl={pageImageUrl}
+                    onImageChange={setPageImageUrl}
+                    onDesignDataChange={(d) => setCoverDesignData(d)}
+                    initialData={coverDesignData}
+                  />
+                )}
+                {pageNumber && isCoverOrBack(pageNumber) && !canCustomizeCover && (
+                  <div className="bm-upgrade-notice" style={{ padding: "16px", background: "rgba(37,99,235,0.1)", borderRadius: "8px", border: "1px solid #2a4a6b", marginTop: "8px", color: "#94a3b8", fontSize: "0.9rem" }}>
+                    <strong style={{ color: "#fbbf24" }}>Cover Page Customization</strong> is available for Premium plan and above.{" "}
+                    <Link to="/pricing" style={{ color: "#f59e0b", textDecoration: "underline" }}>Upgrade your plan</Link> to unlock this feature.
+                  </div>
                 )}
 
-                <div className="bm-upload-row">
-                  {renderImageUpload(strings.bookManager.image1Label, pageImageUrl, setPageImageUrl, uploading1, setUploading1, "add-img1", pageContent, generating1, setGenerating1)}
-                  {renderImageUpload(strings.bookManager.image2Label, pageImageUrl2, setPageImageUrl2, uploading2, setUploading2, "add-img2", pageContent, generating2, setGenerating2)}
-                </div>
+                {/* Show regular page editor for non-cover/back pages */}
+                {(!pageNumber || !isCoverOrBack(pageNumber)) && (
+                  <>
+                    {renderFormatToolbar(
+                      formatFontFamily, setFormatFontFamily,
+                      formatFontSize, setFormatFontSize,
+                      formatColor, setFormatColor
+                    )}
 
-                {(pageImageUrl || pageImageUrl2) && (
-                  <PageLayoutEditor
-                    imageUrl={pageImageUrl}
-                    imageUrl2={pageImageUrl2}
-                    content={pageContent}
-                    textStyle={{ fontFamily: formatFontFamily, fontSize: formatFontSize, color: formatColor }}
-                    layout={pageLayout}
-                    onLayoutChange={setPageLayout}
-                  />
+                    <div className="bm-upload-row">
+                      {renderImageUpload(strings.bookManager.image1Label, pageImageUrl, setPageImageUrl, uploading1, setUploading1, "add-img1", pageContent, generating1, setGenerating1)}
+                      {renderImageUpload(strings.bookManager.image2Label, pageImageUrl2, setPageImageUrl2, uploading2, setUploading2, "add-img2", pageContent, generating2, setGenerating2)}
+                    </div>
+
+                    {(pageImageUrl || pageImageUrl2) && (
+                      <PageLayoutEditor
+                        imageUrl={pageImageUrl}
+                        imageUrl2={pageImageUrl2}
+                        content={pageContent}
+                        textStyle={{ fontFamily: formatFontFamily, fontSize: formatFontSize, color: formatColor }}
+                        layout={pageLayout}
+                        onLayoutChange={setPageLayout}
+                      />
+                    )}
+                  </>
                 )}
 
                 <button className="bm-btn bm-btn-create" onClick={handleAddPage}>{strings.bookManager.addPage}</button>
@@ -908,49 +1263,77 @@ function BookManager() {
                           className="bm-input bm-textarea" placeholder={strings.bookManager.placeholderEditContent} rows={3} />
                       </div>
 
-                      {renderFormatToolbar(
-                        editingPage._fontFamily,
-                        (val) => updateEditFormat("_fontFamily", val),
-                        editingPage._fontSize,
-                        (val) => updateEditFormat("_fontSize", val),
-                        editingPage._color,
-                        (val) => updateEditFormat("_color", val)
-                      )}
-
-                      <div className="bm-upload-row">
-                        {renderImageUpload(
-                          strings.bookManager.image1Label,
-                          editingPage.imageUrl,
-                          (url) => setEditingPage((p) => ({ ...p, imageUrl: url })),
-                          editUploading1,
-                          setEditUploading1,
-                          "edit-img1",
-                          editingPage.content,
-                          editGenerating1,
-                          setEditGenerating1
-                        )}
-                        {renderImageUpload(
-                          strings.bookManager.image2Label,
-                          editingPage.imageUrl2,
-                          (url) => setEditingPage((p) => ({ ...p, imageUrl2: url })),
-                          editUploading2,
-                          setEditUploading2,
-                          "edit-img2",
-                          editingPage.content,
-                          editGenerating2,
-                          setEditGenerating2
-                        )}
-                      </div>
-
-                      {(editingPage.imageUrl || editingPage.imageUrl2) && (
-                        <PageLayoutEditor
+                      {/* Show Cover/Back Page Designer for cover or back page (Premium+ or Super Admin) */}
+                      {isCoverOrBack(editingPage.pageNumber) && canCustomizeCover ? (
+                        <CoverPageDesigner
+                          type={isCoverPage(editingPage.pageNumber) ? "cover" : "back"}
+                          bookTitle={selectedBook?.title}
+                          authorName={selectedBook?.authorName}
                           imageUrl={editingPage.imageUrl}
-                          imageUrl2={editingPage.imageUrl2}
-                          content={editingPage.content}
-                          textStyle={{ fontFamily: editingPage._fontFamily, fontSize: editingPage._fontSize, color: editingPage._color }}
-                          layout={editingPage._layout}
-                          onLayoutChange={(l) => updateEditFormat("_layout", l)}
+                          onImageChange={(url) => setEditingPage((p) => ({ ...p, imageUrl: url }))}
+                          onDesignDataChange={(d) => {
+                            setEditingPage((p) => {
+                              let existing = {};
+                              try { existing = JSON.parse(p.format || "{}"); } catch { /* not JSON */ }
+                              return { ...p, format: JSON.stringify({ ...existing, coverDesign: d }) };
+                            });
+                          }}
+                          initialData={(() => {
+                            try { return JSON.parse(editingPage.format).coverDesign || {}; } catch { return {}; }
+                          })()}
                         />
+                      ) : isCoverOrBack(editingPage.pageNumber) && !canCustomizeCover ? (
+                        <div className="bm-upgrade-notice" style={{ padding: "16px", background: "rgba(37,99,235,0.1)", borderRadius: "8px", border: "1px solid #2a4a6b", marginTop: "8px", color: "#94a3b8", fontSize: "0.9rem" }}>
+                          <strong style={{ color: "#fbbf24" }}>Cover Page Customization</strong> is available for Premium plan and above.{" "}
+                          <Link to="/pricing" style={{ color: "#f59e0b", textDecoration: "underline" }}>Upgrade your plan</Link> to unlock this feature.
+                        </div>
+                      ) : (
+                        <>
+                          {renderFormatToolbar(
+                            editingPage._fontFamily,
+                            (val) => updateEditFormat("_fontFamily", val),
+                            editingPage._fontSize,
+                            (val) => updateEditFormat("_fontSize", val),
+                            editingPage._color,
+                            (val) => updateEditFormat("_color", val)
+                          )}
+
+                          <div className="bm-upload-row">
+                            {renderImageUpload(
+                              strings.bookManager.image1Label,
+                              editingPage.imageUrl,
+                              (url) => setEditingPage((p) => ({ ...p, imageUrl: url })),
+                              editUploading1,
+                              setEditUploading1,
+                              "edit-img1",
+                              editingPage.content,
+                              editGenerating1,
+                              setEditGenerating1
+                            )}
+                            {renderImageUpload(
+                              strings.bookManager.image2Label,
+                              editingPage.imageUrl2,
+                              (url) => setEditingPage((p) => ({ ...p, imageUrl2: url })),
+                              editUploading2,
+                              setEditUploading2,
+                              "edit-img2",
+                              editingPage.content,
+                              editGenerating2,
+                              setEditGenerating2
+                            )}
+                          </div>
+
+                          {(editingPage.imageUrl || editingPage.imageUrl2) && (
+                            <PageLayoutEditor
+                              imageUrl={editingPage.imageUrl}
+                              imageUrl2={editingPage.imageUrl2}
+                              content={editingPage.content}
+                              textStyle={{ fontFamily: editingPage._fontFamily, fontSize: editingPage._fontSize, color: editingPage._color }}
+                              layout={editingPage._layout}
+                              onLayoutChange={(l) => updateEditFormat("_layout", l)}
+                            />
+                          )}
+                        </>
                       )}
 
                       <div className="bm-page-actions">
@@ -961,12 +1344,23 @@ function BookManager() {
                   ) : (
                     <div className="bm-page-display">
                       <span className="bm-page-num">#{page.pageNumber}</span>
+                      {page.pageNumber === 1 && <span className="bm-page-type-badge bm-badge-cover">Cover</span>}
+                      {page.pageNumber === getBackPageNumber() && page.pageNumber !== 1 && <span className="bm-page-type-badge bm-badge-back">Back</span>}
                       <span className="bm-page-content">{page.content || strings.bookManager.emptyPage}</span>
-                      {page.imageUrl && (
-                        <img src={resolveImageUrl(page.imageUrl)} alt={strings.bookManager.image1Alt} className="bm-page-thumb" />
-                      )}
-                      {page.imageUrl2 && (
-                        <img src={resolveImageUrl(page.imageUrl2)} alt={strings.bookManager.image2Alt} className="bm-page-thumb" />
+                      {isCoverOrBack(page.pageNumber) && page.imageUrl ? (
+                        <div className="bm-cover-preview" style={{ position: "relative", width: "180px", height: "240px", overflow: "hidden", borderRadius: "8px", border: "1px solid #2a4a6b" }}>
+                          <img src={resolveImageUrl(page.imageUrl)} alt={strings.bookManager.image1Alt}
+                            style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                        </div>
+                      ) : (
+                        <>
+                          {page.imageUrl && (
+                            <img src={resolveImageUrl(page.imageUrl)} alt={strings.bookManager.image1Alt} className="bm-page-thumb" />
+                          )}
+                          {page.imageUrl2 && (
+                            <img src={resolveImageUrl(page.imageUrl2)} alt={strings.bookManager.image2Alt} className="bm-page-thumb" />
+                          )}
+                        </>
                       )}
                       <div className="bm-page-actions">
                         <button className="bm-btn bm-btn-edit" onClick={() => startEditingPage(page)}>{strings.common.edit}</button>
@@ -1005,6 +1399,20 @@ function BookManager() {
   }
 
   return null;
+  })();
+
+  return (
+    <TermsGate userId={userId}>
+      {wrappedContent}
+      {editorFile && (
+        <ImageEditor
+          file={editorFile}
+          onDone={(editedFile) => editorCallback && editorCallback(editedFile)}
+          onCancel={() => { setEditorFile(null); setEditorCallback(null); }}
+        />
+      )}
+    </TermsGate>
+  );
 }
 
 export default BookManager;

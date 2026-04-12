@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import axios from "axios";
+import { useNavigate } from "react-router-dom";
+import api from "../utils/api";
 import { useAuth } from "../AuthContext";
 import { useStrings } from "../LanguageContext";
 import "./Chat.css";
@@ -10,6 +11,7 @@ const POLL_INTERVAL = 5000;
 const Chat = () => {
     const { user, isAdmin } = useAuth();
     const strings = useStrings();
+    const navigate = useNavigate();
     const s = strings.chat || {};
 
     const [rooms, setRooms] = useState([]);
@@ -17,22 +19,21 @@ const Chat = () => {
     const [messages, setMessages] = useState([]);
     const [newMessage, setNewMessage] = useState("");
     const [sending, setSending] = useState(false);
+    const [error, setError] = useState("");
     const messagesEndRef = useRef(null);
     const lastMessageIdRef = useRef(null);
     const pollRef = useRef(null);
-
-    const headers = { "X-User-Id": String(user?.userId || "") };
 
     // Fetch rooms
     useEffect(() => {
         const fetchRooms = async () => {
             try {
-                const res = await axios.get(`${API}/api/chat/rooms`, { headers });
+                const res = await api.get(`${API}/api/chat/rooms`);
                 setRooms(res.data);
                 if (res.data.length > 0 && !selectedRoom) {
                     setSelectedRoom(res.data[0]);
                 }
-            } catch { /* ignore */ }
+            } catch (err) { console.error("Failed to fetch chat rooms:", err); }
         };
         fetchRooms();
     }, []);
@@ -44,9 +45,8 @@ const Chat = () => {
             const afterParam = isPolling && lastMessageIdRef.current
                 ? `?afterId=${lastMessageIdRef.current}&limit=50`
                 : "?limit=50";
-            const res = await axios.get(
-                `${API}/api/chat/rooms/${selectedRoom.id}/messages${afterParam}`,
-                { headers }
+            const res = await api.get(
+                `${API}/api/chat/rooms/${selectedRoom.id}/messages${afterParam}`
             );
             if (isPolling && lastMessageIdRef.current && res.data.length > 0) {
                 setMessages(prev => [...prev, ...res.data]);
@@ -56,7 +56,7 @@ const Chat = () => {
             if (res.data.length > 0) {
                 lastMessageIdRef.current = res.data[res.data.length - 1].id;
             }
-        } catch { /* ignore */ }
+        } catch (err) { console.error("Failed to fetch messages:", err); }
     }, [selectedRoom, user?.userId]);
 
     // Initial load when room changes
@@ -82,26 +82,32 @@ const Chat = () => {
         e.preventDefault();
         if (!newMessage.trim() || !selectedRoom) return;
         setSending(true);
+        setError("");
         try {
-            const res = await axios.post(
+            const res = await api.post(
                 `${API}/api/chat/rooms/${selectedRoom.id}/messages`,
-                { message: newMessage.trim() },
-                { headers }
+                { message: newMessage.trim() }
             );
             setMessages(prev => [...prev, res.data]);
             lastMessageIdRef.current = res.data.id;
             setNewMessage("");
-        } catch { /* ignore */ }
+        } catch (err) {
+            console.error("Failed to send message:", err);
+            setError(s.sendError || "Failed to send message. Please try again.");
+        }
         setSending(false);
     };
 
     const handleDelete = async (messageId) => {
         try {
-            await axios.delete(`${API}/api/chat/messages/${messageId}`, { headers });
+            await api.delete(`${API}/api/chat/messages/${messageId}`);
             setMessages(prev =>
                 prev.map(m => m.id === messageId ? { ...m, message: "[deleted]", isDeleted: true } : m)
             );
-        } catch { /* ignore */ }
+        } catch (err) {
+            console.error("Failed to delete message:", err);
+            setError(s.deleteError || "Failed to delete message. Please try again.");
+        }
     };
 
     const selectRoom = (room) => {
@@ -118,6 +124,10 @@ const Chat = () => {
     };
 
     return (
+        <div className="chat-wrapper">
+            <button className="chat-back-arrow" onClick={() => navigate(-1)} aria-label={strings.common.back} title={strings.common.back}>
+                &#8592;
+            </button>
         <div className="chat-container">
             <div className="chat-sidebar">
                 <h2>{s.roomsHeading || "Chat Rooms"}</h2>
@@ -179,6 +189,7 @@ const Chat = () => {
                             })}
                             <div ref={messagesEndRef} />
                         </div>
+                        {error && <div className="chat-error" role="alert">{error}</div>}
                         <form className="chat-input-bar" onSubmit={handleSend}>
                             <input
                                 type="text"
@@ -197,6 +208,10 @@ const Chat = () => {
                     <div className="chat-empty-room">{s.selectRoom || "Select a room to start chatting"}</div>
                 )}
             </div>
+        </div>
+            <button className="chat-back-arrow" onClick={() => navigate(-1)} aria-label={strings.common.back} title={strings.common.back}>
+                &#8592;
+            </button>
         </div>
     );
 };

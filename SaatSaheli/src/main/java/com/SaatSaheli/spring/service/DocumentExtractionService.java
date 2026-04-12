@@ -9,7 +9,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -18,10 +17,10 @@ import java.util.List;
 @Service
 public class DocumentExtractionService {
 
-    @Autowired
-    private LocalFileService localFileService;
-
     private static final int DOCX_PAGE_CHAR_LIMIT = 500;
+
+    @Autowired
+    private CloudinaryService cloudinaryService;
 
     public List<String> extractText(MultipartFile file) throws IOException {
         String filename = file.getOriginalFilename();
@@ -44,8 +43,8 @@ public class DocumentExtractionService {
             PDFRenderer renderer = new PDFRenderer(doc);
             int totalPages = doc.getNumberOfPages();
             for (int i = 0; i < totalPages; i++) {
-                BufferedImage image = renderer.renderImageWithDPI(i, 150);
-                String url = localFileService.saveBufferedImage(image, "png");
+                String url = cloudinaryService.saveBufferedImage(
+                        renderer.renderImageWithDPI(i, 150), "png");
                 imageUrls.add(url);
             }
         }

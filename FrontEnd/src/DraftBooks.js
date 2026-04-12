@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
+import api from "./utils/api";
 import HTMLFlipBook from "react-pageflip";
 
 const API = `${process.env.REACT_APP_API_URL}/api/books`;
@@ -24,7 +24,7 @@ function DraftBooks() {
 
     const fetchDrafts = async () => {
         try {
-            const res = await axios.get(API);
+            const res = await api.get(API);
             const unpublished = res.data.filter(b => !b.published);
             setDrafts(unpublished);
         } catch (err) {
@@ -37,7 +37,7 @@ function DraftBooks() {
         setSelectedBook(book);
         setMessage("");
         try {
-            const res = await axios.get(`${API}/${book.id}/pages`);
+            const res = await api.get(`${API}/${book.id}/pages`);
             setPages(res.data);
         } catch (err) {
             setPages([]);
@@ -53,7 +53,7 @@ function DraftBooks() {
 
     const handlePublish = async (publish) => {
         try {
-            const res = await axios.put(`${API}/${selectedBook.id}/publish`, { published: publish });
+            const res = await api.put(`${API}/${selectedBook.id}/publish`, { published: publish });
             setSelectedBook(res.data);
             setMessage(publish ? "Book published!" : "Book set to draft.");
             if (publish) {
@@ -68,7 +68,7 @@ function DraftBooks() {
     const handleAddPage = async () => {
         if (!pageNumber) return;
         try {
-            const res = await axios.post(`${API}/${selectedBook.id}/page`, {
+            const res = await api.post(`${API}/${selectedBook.id}/page`, {
                 pageNumber: parseInt(pageNumber),
                 content,
                 imageUrl,

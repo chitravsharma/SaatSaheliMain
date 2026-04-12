@@ -1,15 +1,42 @@
 package com.SaatSaheli.spring.model;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+import jakarta.persistence.*;
+import java.time.LocalDateTime;
+
+@Entity
+@Table(name = "pages")
 public class Page {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Column(name = "book_id")
     private Long bookId;
+
+    @Column(name = "page_number")
     private int pageNumber;
+
+    @Column(columnDefinition = "TEXT")
     private String content;
+
+    @Column(name = "image_url")
     private String imageUrl;
+
+    @Column(name = "image_url_2")
     private String imageUrl2;
+
+    @Column(columnDefinition = "TEXT")
     private String format; // e.g., "bold", "italic", "custom json"
-    private String createdDate;
-    private String modifiedDate;
+
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    @Column(name = "created_date")
+    private LocalDateTime createdDate;
+
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    @Column(name = "modified_date")
+    private LocalDateTime modifiedDate;
 
     public Page() {}
 
@@ -44,11 +71,11 @@ public class Page {
     public String getFormat() { return format; }
     public void setFormat(String format) { this.format = format; }
 
-    public String getCreatedDate() { return createdDate; }
-    public void setCreatedDate(String createdDate) { this.createdDate = createdDate; }
+    public LocalDateTime getCreatedDate() { return createdDate; }
+    public void setCreatedDate(LocalDateTime createdDate) { this.createdDate = createdDate; }
 
-    public String getModifiedDate() { return modifiedDate; }
-    public void setModifiedDate(String modifiedDate) { this.modifiedDate = modifiedDate; }
+    public LocalDateTime getModifiedDate() { return modifiedDate; }
+    public void setModifiedDate(LocalDateTime modifiedDate) { this.modifiedDate = modifiedDate; }
 
     @Override
     public String toString() {
