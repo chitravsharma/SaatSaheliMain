@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
-import { useNavigate, Link, useParams } from "react-router-dom";
-import api from "../utils/api";
+import { useNavigate, Link, useParams, useLocation } from "react-router-dom";
+import api, { profileUrl, getAnonId } from "../utils/api";
 import { useAuth } from "../AuthContext";
 import ImageEditor from "../components/ImageEditor";
 import "../Articles.css";
@@ -26,10 +26,15 @@ const CONTENT_TYPE_MAP = {
 function Articles() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const { contentType: urlContentType } = useParams();
   const userId = user?.userId;
 
-  const [tab, setTab] = useState(urlContentType ? "published" : "my"); // "my" | "published"
+  // Check for ?id= query param (shared link to specific article)
+  const urlParams = new URLSearchParams(location.search);
+  const sharedArticleId = urlParams.get("id");
+
+  const [tab, setTab] = useState("published"); // default to browse all
   const [filterType, setFilterType] = useState(
     urlContentType ? (CONTENT_TYPE_MAP[urlContentType] || "") : ""
   );
@@ -108,6 +113,11 @@ function Articles() {
     } catch (err) { console.error("Failed to load social data for article", articleId, err); }
   };
 
+  // Scroll to top on mount / route change
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [urlContentType, sharedArticleId]);
+
   useEffect(() => {
     if (urlContentType) {
       setFilterType(CONTENT_TYPE_MAP[urlContentType] || "");
@@ -119,6 +129,16 @@ function Articles() {
     if (userId) fetchArticles();
     fetchPublicArticles();
   }, [userId]);
+
+  // Scroll to specific article if shared link has ?id= param
+  useEffect(() => {
+    if (sharedArticleId && publicArticles.length > 0) {
+      setTimeout(() => {
+        const el = document.getElementById(`art-detail-${sharedArticleId}`);
+        if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 300);
+    }
+  }, [sharedArticleId, publicArticles.length]);
 
   useEffect(() => {
     const list = tab === "my" ? articles : publicArticles;
@@ -244,20 +264,11 @@ function Articles() {
   };
 
   const handleLike = async (articleId) => {
-    if (!userId) {
-      const key = `anon_like_ARTICLE_${articleId}`;
-      const was = localStorage.getItem(key) === "true";
-      localStorage.setItem(key, was ? "false" : "true");
-      setSocialData((prev) => ({
-        ...prev,
-        [articleId]: { ...prev[articleId], liked: !was },
-      }));
-      return;
-    }
     try {
-      const res = await api.post(`${API}/api/social/like`, {
-        userId, targetType: "ARTICLE", targetId: articleId,
-      });
+      const body = userId
+        ? { userId, targetType: "ARTICLE", targetId: articleId }
+        : { anonId: getAnonId(), targetType: "ARTICLE", targetId: articleId };
+      const res = await api.post(`${API}/api/social/like`, body);
       setSocialData((prev) => ({
         ...prev,
         [articleId]: { ...prev[articleId], liked: res.data.liked, likeCount: res.data.count },
@@ -266,20 +277,11 @@ function Articles() {
   };
 
   const handleFavorite = async (articleId) => {
-    if (!userId) {
-      const key = `anon_fav_ARTICLE_${articleId}`;
-      const was = localStorage.getItem(key) === "true";
-      localStorage.setItem(key, was ? "false" : "true");
-      setSocialData((prev) => ({
-        ...prev,
-        [articleId]: { ...prev[articleId], favorited: !was },
-      }));
-      return;
-    }
     try {
-      const res = await api.post(`${API}/api/social/favorite`, {
-        userId, targetType: "ARTICLE", targetId: articleId,
-      });
+      const body = userId
+        ? { userId, targetType: "ARTICLE", targetId: articleId }
+        : { anonId: getAnonId(), targetType: "ARTICLE", targetId: articleId };
+      const res = await api.post(`${API}/api/social/favorite`, body);
       setSocialData((prev) => ({
         ...prev,
         [articleId]: { ...prev[articleId], favorited: res.data.favorited },
@@ -289,12 +291,12 @@ function Articles() {
 
   const handleAddComment = async (e, articleId) => {
     e.preventDefault();
-    if (!userId) { showMsg("Please log in to comment."); return navigate("/Login"); }
     if (!newComment.trim()) return;
     try {
-      const res = await api.post(`${API}/api/social/comment`, {
-        userId, targetType: "ARTICLE", targetId: articleId, content: newComment.trim(),
-      });
+      const body = userId
+        ? { userId, targetType: "ARTICLE", targetId: articleId, content: newComment.trim() }
+        : { anonId: getAnonId(), guestName: "Guest", targetType: "ARTICLE", targetId: articleId, content: newComment.trim() };
+      const res = await api.post(`${API}/api/social/comment`, body);
       setSocialData((prev) => ({
         ...prev,
         [articleId]: {
@@ -320,7 +322,9 @@ function Articles() {
   };
 
   const handleShare = async (article) => {
-    const url = `${window.location.origin}/#/articles`;
+    const typePath = article.contentType === "Poetry" ? "poems"
+      : article.contentType === "Blog" ? "blogs" : "articles";
+    const url = `${window.location.origin}/#/articles/${typePath}?id=${article.id}`;
     const text = `Check out "${article.headline}" on Saat Saheli!`;
     if (navigator.share) {
       try {
@@ -349,6 +353,13 @@ function Articles() {
 
     return (
       <div key={article.id} className="art-card">
+        {/* Share button at top */}
+        <div className="art-card-top-share">
+          <button className="art-top-share-btn" onClick={() => handleShare(article)} title="Share">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+            {copiedId === article.id ? "Copied!" : "Share"}
+          </button>
+        </div>
         <div className="art-card-header">
           <div>
             <div className="art-badges-row">
@@ -373,7 +384,7 @@ function Articles() {
         </div>
 
         {!isOwner && article.authorName && (
-          <Link to={`/profile/${article.userId}`} className="art-author-link">
+          <Link to={profileUrl(article.userId, article.authorName)} className="art-author-link">
             by {article.authorName}
           </Link>
         )}
@@ -427,21 +438,17 @@ function Articles() {
         {/* Comments Section */}
         {isCommentsOpen && (
           <div className="art-comments">
-            {userId ? (
               <form onSubmit={(e) => handleAddComment(e, article.id)} className="rb-comment-form">
                 <input
                   ref={openComments === article.id ? commentInputRef : null}
                   type="text"
                   value={newComment}
                   onChange={(e) => setNewComment(e.target.value)}
-                  placeholder="Write a comment..."
+                  placeholder={userId ? "Write a comment..." : "Comment as Guest..."}
                   className="rb-comment-input"
                 />
                 <button type="submit" className="bm-btn bm-btn-create bm-btn-sm" disabled={!newComment.trim()}>Post</button>
               </form>
-            ) : (
-              <p className="rb-login-prompt"><Link to="/Login">Log in</Link> to post a comment.</p>
-            )}
             <div className="rb-comment-list">
               {commentsArr.map((c) => (
                 <div key={c.id} className="rb-comment-item">
@@ -651,19 +658,17 @@ function Articles() {
               );
             })}
 
-          {/* Expanded detail: show full card when a filter is active */}
-          {filterType && (
-            <div className="art-list" style={{ marginTop: 24 }}>
-              <h3 style={{ color: "#fbbf24", marginBottom: 12 }}>
-                {filterType === "Poetry" ? "Poems" : filterType + "s"} — Detail View
-              </h3>
-              {publicArticles.filter(a => a.contentType === filterType).map(article => (
-                <div key={article.id} id={`art-detail-${article.id}`}>
-                  {renderArticleCard(article, userId && article.userId === userId)}
-                </div>
-              ))}
-            </div>
-          )}
+          {/* Full card detail view — always shown */}
+          <div className="art-list" style={{ marginTop: 24 }}>
+            {(filterType
+              ? publicArticles.filter(a => a.contentType === filterType)
+              : publicArticles
+            ).map(article => (
+              <div key={article.id} id={`art-detail-${article.id}`}>
+                {renderArticleCard(article, userId && article.userId === userId)}
+              </div>
+            ))}
+          </div>
         </div>
       )}
       </div>{/* end art-section-card */}

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
-import api from "../utils/api";
+import api, { profileUrl, getAnonId } from "../utils/api";
 import FlipBook from "../FlipBook";
 import { useAuth } from "../AuthContext";
 import { useStrings } from "../LanguageContext";
@@ -59,16 +59,11 @@ function ReadBook() {
   }, [bookId, user]);
 
   const handleLike = async () => {
-    if (!user) {
-      // Anonymous like — toggle in localStorage
-      const key = `anon_like_BOOK_${bookId}`;
-      const wasLiked = localStorage.getItem(key) === "true";
-      localStorage.setItem(key, wasLiked ? "false" : "true");
-      setLiked(!wasLiked);
-      return;
-    }
     try {
-      const res = await api.post(`${API}/api/social/like`, { userId: user.userId, targetType: "BOOK", targetId: Number(bookId) });
+      const body = user
+        ? { userId: user.userId, targetType: "BOOK", targetId: Number(bookId) }
+        : { anonId: getAnonId(), targetType: "BOOK", targetId: Number(bookId) };
+      const res = await api.post(`${API}/api/social/like`, body);
       setLiked(res.data.liked);
       setLikeCount(res.data.count);
     } catch (err) {
@@ -78,16 +73,11 @@ function ReadBook() {
   };
 
   const handleFavorite = async () => {
-    if (!user) {
-      // Anonymous favorite — toggle in localStorage
-      const key = `anon_fav_BOOK_${bookId}`;
-      const wasFav = localStorage.getItem(key) === "true";
-      localStorage.setItem(key, wasFav ? "false" : "true");
-      setFavorited(!wasFav);
-      return;
-    }
     try {
-      const res = await api.post(`${API}/api/social/favorite`, { userId: user.userId, targetType: "BOOK", targetId: Number(bookId) });
+      const body = user
+        ? { userId: user.userId, targetType: "BOOK", targetId: Number(bookId) }
+        : { anonId: getAnonId(), targetType: "BOOK", targetId: Number(bookId) };
+      const res = await api.post(`${API}/api/social/favorite`, body);
       setFavorited(res.data.favorited);
     } catch (err) {
       console.error("Failed to toggle favorite:", err);
@@ -97,12 +87,12 @@ function ReadBook() {
 
   const handleAddComment = async (e) => {
     e.preventDefault();
-    if (!user) { setError("Please log in to comment."); return navigate("/Login"); }
     if (!newComment.trim()) return;
     try {
-      const res = await api.post(`${API}/api/social/comment`, {
-        userId: user.userId, targetType: "BOOK", targetId: Number(bookId), content: newComment.trim(),
-      });
+      const body = user
+        ? { userId: user.userId, targetType: "BOOK", targetId: Number(bookId), content: newComment.trim() }
+        : { anonId: getAnonId(), guestName: "Guest", targetType: "BOOK", targetId: Number(bookId), content: newComment.trim() };
+      const res = await api.post(`${API}/api/social/comment`, body);
       setComments([res.data, ...comments]);
       setNewComment("");
     } catch (err) {
@@ -170,7 +160,7 @@ function ReadBook() {
         <div className="rb-book-header">
           <h2 className="rb-book-title">{book.title}</h2>
           {book.authorName && (
-            <Link to={`/profile/${book.userId}`} className="rb-book-author">by {book.authorName}</Link>
+            <Link to={profileUrl(book.userId, book.authorName)} className="rb-book-author">by {book.authorName}</Link>
           )}
         </div>
       )}
@@ -181,23 +171,17 @@ function ReadBook() {
       {showComments && (
         <div className="rb-comments">
           <h3 className="rb-comments-heading">Comments ({comments.length})</h3>
-          {user ? (
             <form onSubmit={handleAddComment} className="rb-comment-form">
               <input
                 ref={commentInputRef}
                 type="text"
                 value={newComment}
                 onChange={(e) => setNewComment(e.target.value)}
-                placeholder="Write a comment..."
+                placeholder={user ? "Write a comment..." : "Comment as Guest..."}
                 className="rb-comment-input"
               />
               <button type="submit" className="ss-btn ss-btn-primary ss-btn-sm" disabled={!newComment.trim()}>Post</button>
             </form>
-          ) : (
-            <p className="rb-login-prompt">
-              <Link to="/Login">Log in</Link> to post a comment.
-            </p>
-          )}
           <div className="rb-comment-list">
             {comments.map((c) => (
               <div key={c.id} className="rb-comment-item">

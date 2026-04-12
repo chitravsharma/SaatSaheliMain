@@ -217,6 +217,30 @@
   gap: 16px;
 }
 
+.art-card-top-share {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 8px;
+}
+.art-top-share-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 14px;
+  background: transparent;
+  color: var(--accent-gold, #c9a84c);
+  border: 1px solid var(--border-default, #334155);
+  border-radius: 8px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s;
+}
+.art-top-share-btn:hover {
+  border-color: var(--accent-gold, #c9a84c);
+  background: rgba(201, 168, 76, 0.08);
+}
+
 .art-card {
   background: var(--bg-card);
   border: 2px solid var(--border-default);

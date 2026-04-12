@@ -2,10 +2,30 @@
   display: flex;
   gap: 8px;
   margin-bottom: 12px;
+  align-items: center;
+}
+
+.pub-profile-share-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  background: var(--bg-card, #1e293b);
+  color: var(--accent-gold, #c9a84c);
+  border: 1px solid var(--border-default, #334155);
+  border-radius: 8px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s;
+  margin-left: auto;
+}
+.pub-profile-share-btn:hover {
+  border-color: var(--accent-gold, #c9a84c);
 }
 
 .pub-profile-page {
-  max-width: 720px;
+  max-width: 960px;
   margin: 24px auto;
   padding: 24px;
   font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;

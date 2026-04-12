@@ -15,13 +15,20 @@ function resolveImageUrl(url) {
   return url;
 }
 
+const CONTENT_TYPE_MAP = {
+  poem: "Poetry",
+  article: "Article",
+  blog: "Blog",
+};
+
 function SearchBooks() {
   const strings = useStrings();
   const navigate = useNavigate();
   const location = useLocation();
   const [query, setQuery] = useState("");
   const [searchType, setSearchType] = useState("");
-  const [results, setResults] = useState([]);
+  const [bookResults, setBookResults] = useState([]);
+  const [articleResults, setArticleResults] = useState([]);
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
 
@@ -30,23 +37,63 @@ function SearchBooks() {
     setLoading(true);
     setSearched(true);
     try {
-      const params = new URLSearchParams();
-      const authorTypes = ["author"];
+      const contentTypes = ["poem", "article", "blog"];
       const categoryTypes = ["Art", "Music", "Tech", "Creativity", "Community"];
+      const isContentType = type && contentTypes.includes(type);
+      const isAuthor = type === "author";
+      const isCategory = type && categoryTypes.includes(type);
+      const isBookType = type === "book";
 
-      if (type && authorTypes.includes(type)) {
-        if (q) params.append("author", q);
-      } else if (type && categoryTypes.includes(type)) {
-        if (q) params.append("title", q);
-        params.append("category", type);
-      } else {
-        if (q) params.append("title", q);
+      // Search books (for all types except content-type-only searches)
+      let booksPromise = Promise.resolve([]);
+      if (!isContentType) {
+        const params = new URLSearchParams();
+        if (isAuthor) {
+          if (q) params.append("author", q);
+        } else if (isCategory) {
+          if (q) params.append("title", q);
+          params.append("category", type);
+        } else {
+          if (q) params.append("title", q);
+        }
+        booksPromise = axios.get(`${API}/search?${params.toString()}`)
+          .then(res => Array.isArray(res.data) ? res.data : [])
+          .catch(() => []);
       }
 
-      const res = await axios.get(`${API}/search?${params.toString()}`);
-      setResults(Array.isArray(res.data) ? res.data : []);
+      // Search articles (for content types, author, and "All")
+      let articlesPromise = Promise.resolve([]);
+      if (!isBookType && !isCategory) {
+        articlesPromise = axios.get(`${API_BASE}/api/articles`)
+          .then(res => {
+            let arts = Array.isArray(res.data) ? res.data : [];
+            // Filter by content type if searching specific type
+            if (isContentType) {
+              const mapped = CONTENT_TYPE_MAP[type];
+              arts = arts.filter(a => a.contentType === mapped);
+            }
+            // Filter by query text (title/headline match)
+            if (q) {
+              const qLower = q.toLowerCase();
+              arts = arts.filter(a => {
+                const headline = (a.headline || "").toLowerCase();
+                const authorName = (a.authorName || "").toLowerCase();
+                const content = (a.content || "").toLowerCase();
+                if (isAuthor) return authorName.includes(qLower);
+                return headline.includes(qLower) || authorName.includes(qLower) || content.includes(qLower);
+              });
+            }
+            return arts;
+          })
+          .catch(() => []);
+      }
+
+      const [books, articles] = await Promise.all([booksPromise, articlesPromise]);
+      setBookResults(books);
+      setArticleResults(articles);
     } catch (err) {
-      setResults([]);
+      setBookResults([]);
+      setArticleResults([]);
     } finally {
       setLoading(false);
     }
@@ -68,6 +115,14 @@ function SearchBooks() {
     navigate(`/read/${book.id}`);
   };
 
+  const handleSelectArticle = (article) => {
+    const typePath = article.contentType === "Poetry" ? "poems"
+      : article.contentType === "Blog" ? "blogs" : "articles";
+    navigate(`/articles/${typePath}?id=${article.id}`);
+  };
+
+  const totalResults = bookResults.length + articleResults.length;
+
   const searchSuggestions = [
     { label: "Browse all Books", to: "/books" },
     { label: "Read the Magazine", to: "/magazine" },
@@ -83,61 +138,113 @@ function SearchBooks() {
     <div className="book-manager search-page">
       <h1>{strings.searchBooks.heading}</h1>
 
-      {query && (
+      {(query || searchType) && (
         <p style={{ color: "var(--text-secondary, #6b7280)", fontSize: "1rem", margin: "0 0 20px" }}>
-          Showing results for: <strong style={{ color: "var(--text-primary, #e2e8f0)" }}>{query}</strong>
-          {searchType && <> in <strong style={{ color: "var(--text-primary, #e2e8f0)" }}>{searchType}</strong></>}
+          {query && <>Showing results for: <strong style={{ color: "var(--text-primary, #e2e8f0)" }}>{query}</strong></>}
+          {searchType && <>{query ? " " : "Showing results "}in <strong style={{ color: "var(--text-primary, #e2e8f0)" }}>{searchType}</strong></>}
         </p>
       )}
 
       {loading && <div className="loading-spinner" />}
 
-      {searched && !loading && results.length > 0 && (
+      {searched && !loading && totalResults > 0 && (
         <div className="bm-search-results-table">
-          <h3>{strings.searchBooks.resultsHeading(results.length)}</h3>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 16 }}>
-            {results.map((book) => (
-              <div key={book.id} className="home-book-card" style={{
-                background: "var(--bg-card, #1e293b)", border: "1px solid var(--border-default, #334155)",
-                borderRadius: 12, padding: 0, minWidth: 150, maxWidth: 180, cursor: "pointer",
-                transition: "transform 0.2s, box-shadow 0.2s",
-              }}
-                onClick={() => handleSelectBook(book)}
-                onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "0 4px 16px rgba(0,0,0,0.2)"; }}
-                onMouseLeave={(e) => { e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = ""; }}
-              >
-                <div style={{
-                  width: "100%", height: 200, borderRadius: "12px 12px 0 0", overflow: "hidden",
-                  background: "linear-gradient(135deg, #1e3a5f, #2d1b4e)", display: "flex",
-                  alignItems: "center", justifyContent: "center",
-                }}>
-                  {book.coverImageUrl ? (
-                    <img src={resolveImageUrl(book.coverImageUrl)} alt={book.title}
-                      style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                  ) : (
-                    <span style={{ color: "#c9a84c", fontSize: "0.9rem", fontWeight: 600, textAlign: "center", padding: 12 }}>
-                      {book.title}
-                    </span>
-                  )}
-                </div>
-                <div style={{ padding: "10px 12px" }}>
-                  <div style={{ fontWeight: 600, fontSize: "0.88rem", color: "var(--text-primary, #e2e8f0)", marginBottom: 4,
-                    overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                    {book.title}
-                  </div>
-                  {book.authorName && (
-                    <div style={{ fontSize: "0.78rem", color: "var(--text-secondary, #9ca3af)" }}>
-                      by {book.authorName}
+          <h3>{strings.searchBooks.resultsHeading(totalResults)}</h3>
+
+          {/* Book results */}
+          {bookResults.length > 0 && (
+            <>
+              {articleResults.length > 0 && <h4 style={{ color: "var(--accent-gold, #c9a84c)", margin: "16px 0 12px" }}>Books</h4>}
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 16 }}>
+                {bookResults.map((book) => (
+                  <div key={book.id} className="home-book-card" style={{
+                    background: "var(--bg-card, #1e293b)", border: "1px solid var(--border-default, #334155)",
+                    borderRadius: 12, padding: 0, minWidth: 150, maxWidth: 180, cursor: "pointer",
+                    transition: "transform 0.2s, box-shadow 0.2s",
+                  }}
+                    onClick={() => handleSelectBook(book)}
+                    onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "0 4px 16px rgba(0,0,0,0.2)"; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = ""; }}
+                  >
+                    <div style={{
+                      width: "100%", height: 200, borderRadius: "12px 12px 0 0", overflow: "hidden",
+                      background: "linear-gradient(135deg, #1e3a5f, #2d1b4e)", display: "flex",
+                      alignItems: "center", justifyContent: "center",
+                    }}>
+                      {book.coverImageUrl ? (
+                        <img src={resolveImageUrl(book.coverImageUrl)} alt={book.title}
+                          style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                      ) : (
+                        <span style={{ color: "#c9a84c", fontSize: "0.9rem", fontWeight: 600, textAlign: "center", padding: 12 }}>
+                          {book.title}
+                        </span>
+                      )}
                     </div>
-                  )}
-                </div>
+                    <div style={{ padding: "10px 12px" }}>
+                      <div style={{ fontWeight: 600, fontSize: "0.88rem", color: "var(--text-primary, #e2e8f0)", marginBottom: 4,
+                        overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                        {book.title}
+                      </div>
+                      {book.authorName && (
+                        <div style={{ fontSize: "0.78rem", color: "var(--text-secondary, #9ca3af)" }}>
+                          by {book.authorName}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
+            </>
+          )}
+
+          {/* Article/Blog/Poem results */}
+          {articleResults.length > 0 && (
+            <>
+              {bookResults.length > 0 && <h4 style={{ color: "var(--accent-gold, #c9a84c)", margin: "24px 0 12px" }}>Articles, Blogs & Poems</h4>}
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 16 }}>
+                {articleResults.map((article) => (
+                  <div key={`art-${article.id}`} style={{
+                    background: "var(--bg-card, #1e293b)", border: "1px solid var(--border-default, #334155)",
+                    borderRadius: 12, padding: 0, minWidth: 150, maxWidth: 220, cursor: "pointer",
+                    transition: "transform 0.2s, box-shadow 0.2s", overflow: "hidden",
+                  }}
+                    onClick={() => handleSelectArticle(article)}
+                    onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "0 4px 16px rgba(0,0,0,0.2)"; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = ""; }}
+                  >
+                    {article.imageUrl && (
+                      <div style={{ width: "100%", height: 140, overflow: "hidden" }}>
+                        <img src={resolveImageUrl(article.imageUrl)} alt={article.headline}
+                          style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                      </div>
+                    )}
+                    <div style={{ padding: "10px 12px" }}>
+                      <span style={{
+                        display: "inline-block", padding: "2px 8px", borderRadius: 6, fontSize: "0.7rem",
+                        fontWeight: 700, textTransform: "uppercase", marginBottom: 6,
+                        background: article.contentType === "Poetry" ? "rgba(168,85,247,0.15)" : article.contentType === "Blog" ? "rgba(59,130,246,0.15)" : "rgba(239,68,68,0.15)",
+                        color: article.contentType === "Poetry" ? "#a855f7" : article.contentType === "Blog" ? "#3b82f6" : "#ef4444",
+                      }}>
+                        {article.contentType || "Article"}
+                      </span>
+                      <div style={{ fontWeight: 600, fontSize: "0.88rem", color: "var(--text-primary, #e2e8f0)", marginBottom: 4 }}>
+                        {article.headline}
+                      </div>
+                      {article.authorName && (
+                        <div style={{ fontSize: "0.78rem", color: "var(--text-secondary, #9ca3af)" }}>
+                          by {article.authorName}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
         </div>
       )}
 
-      {searched && !loading && results.length === 0 && (
+      {searched && !loading && totalResults === 0 && (
         <div style={{ textAlign: "center", padding: "40px 20px" }}>
           <div style={{ fontSize: "2.5rem", marginBottom: 12 }}>&#128269;</div>
           <h3 style={{ color: "var(--text-primary, #e2e8f0)", marginBottom: 8 }}>

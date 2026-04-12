@@ -438,7 +438,8 @@ public class BookService {
                     .filter(u -> {
                         String first = u.getFirstName() != null ? u.getFirstName().toLowerCase() : "";
                         String last = u.getLastName() != null ? u.getLastName().toLowerCase() : "";
-                        return first.contains(authorLower) || last.contains(authorLower);
+                        String display = u.getDisplayName() != null ? u.getDisplayName().toLowerCase() : "";
+                        return first.contains(authorLower) || last.contains(authorLower) || display.contains(authorLower);
                     })
                     .map(User::getId)
                     .collect(Collectors.toSet());

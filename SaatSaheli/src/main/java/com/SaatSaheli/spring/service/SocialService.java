@@ -71,12 +71,21 @@ public class SocialService {
     // ── Comments ──
 
     public Comment addComment(Long userId, String targetType, Long targetId, String content) {
-        Optional<User> userOpt = userRepo.findById(userId);
-        String userName = userOpt.map(u -> {
-            if (u.getDisplayName() != null && !u.getDisplayName().isEmpty()) return u.getDisplayName();
-            return ((u.getFirstName() != null ? u.getFirstName() : "") +
-                    (u.getLastName() != null ? " " + u.getLastName() : "")).trim();
-        }).orElse("Anonymous");
+        return addComment(userId, targetType, targetId, content, null);
+    }
+
+    public Comment addComment(Long userId, String targetType, Long targetId, String content, String guestName) {
+        String userName;
+        if (guestName != null) {
+            userName = guestName;
+        } else {
+            Optional<User> userOpt = userRepo.findById(userId);
+            userName = userOpt.map(u -> {
+                if (u.getDisplayName() != null && !u.getDisplayName().isEmpty()) return u.getDisplayName();
+                return ((u.getFirstName() != null ? u.getFirstName() : "") +
+                        (u.getLastName() != null ? " " + u.getLastName() : "")).trim();
+            }).orElse("Anonymous");
+        }
 
         Comment comment = new Comment();
         comment.setUserId(userId);

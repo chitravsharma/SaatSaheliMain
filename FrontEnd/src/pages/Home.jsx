@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import api from "../utils/api";
+import api, { getAnonId } from "../utils/api";
 import { useAuth } from "../AuthContext";
 import { useStrings } from "../LanguageContext";
 import "./Home.css";
@@ -25,6 +25,7 @@ function Home() {
   const [recentArticles, setRecentArticles] = useState([]);
   const [bookCounts, setBookCounts] = useState({ likes: {}, comments: {} });
   const [galleryCounts, setGalleryCounts] = useState({ likes: {}, comments: {} });
+  const [articleCounts, setArticleCounts] = useState({ likes: {}, comments: {} });
   const [userLikes, setUserLikes] = useState({});
   const [userFavorites, setUserFavorites] = useState({});
   const [loading, setLoading] = useState(true);
@@ -52,12 +53,13 @@ function Home() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [booksRes, galleriesRes, articlesRes, bookCountsRes, galleryCountsRes] = await Promise.all([
+        const [booksRes, galleriesRes, articlesRes, bookCountsRes, galleryCountsRes, articleCountsRes] = await Promise.all([
           api.get(`${API}/api/books/search?status=PUBLISHED`),
           api.get(`${API}/api/galleries`),
           api.get(`${API}/api/articles`).catch(() => ({ data: [] })),
           api.get(`${API}/api/social/counts?targetType=BOOK`).catch(() => ({ data: { likes: {}, comments: {} } })),
           api.get(`${API}/api/social/counts?targetType=GALLERY`).catch(() => ({ data: { likes: {}, comments: {} } })),
+          api.get(`${API}/api/social/counts?targetType=ARTICLE`).catch(() => ({ data: { likes: {}, comments: {} } })),
         ]);
 
         const books = Array.isArray(booksRes.data) ? booksRes.data : [];
@@ -74,6 +76,7 @@ function Home() {
 
         setBookCounts(bookCountsRes.data || { likes: {}, comments: {} });
         setGalleryCounts(galleryCountsRes.data || { likes: {}, comments: {} });
+        setArticleCounts(articleCountsRes.data || { likes: {}, comments: {} });
       } catch (err) {
         console.error("Failed to fetch home page data:", err);
       } finally {
@@ -104,13 +107,15 @@ function Home() {
     }
     const fetchUserSocial = async () => {
       try {
-        const [bookFavs, galleryFavs] = await Promise.all([
+        const [bookFavs, galleryFavs, articleFavs] = await Promise.all([
           api.get(`${API}/api/social/favorites?userId=${user.userId}&targetType=BOOK`),
           api.get(`${API}/api/social/favorites?userId=${user.userId}&targetType=GALLERY`),
+          api.get(`${API}/api/social/favorites?userId=${user.userId}&targetType=ARTICLE`),
         ]);
         const favMap = {};
         (bookFavs.data || []).forEach(f => { favMap[`BOOK_${f.targetId}`] = true; });
         (galleryFavs.data || []).forEach(f => { favMap[`GALLERY_${f.targetId}`] = true; });
+        (articleFavs.data || []).forEach(f => { favMap[`ARTICLE_${f.targetId}`] = true; });
         setUserFavorites(favMap);
       } catch (err) { console.error("Failed to fetch user social data:", err); }
     };
@@ -120,25 +125,22 @@ function Home() {
   const handleLike = async (targetType, targetId) => {
     const actionKey = `like_${targetType}_${targetId}`;
     if (busyActions.has(actionKey)) return;
-    if (!user) {
-      const anonKey = `anon_like_${targetType}_${targetId}`;
-      const wasLiked = localStorage.getItem(anonKey) === "true";
-      localStorage.setItem(anonKey, wasLiked ? "false" : "true");
-      const key = `${targetType}_${targetId}`;
-      setUserLikes(prev => ({ ...prev, [key]: !wasLiked }));
-      return;
-    }
     setBusyActions(prev => new Set(prev).add(actionKey));
     const key = `${targetType}_${targetId}`;
     const prevLiked = userLikes[key];
     setUserLikes(prev => ({ ...prev, [key]: !prevLiked }));
     try {
-      const res = await api.post(`${API}/api/social/like`, { userId: user.userId, targetType, targetId });
+      const body = user
+        ? { userId: user.userId, targetType, targetId }
+        : { anonId: getAnonId(), targetType, targetId };
+      const res = await api.post(`${API}/api/social/like`, body);
       setUserLikes(prev => ({ ...prev, [key]: res.data.liked }));
       if (targetType === "BOOK") {
         setBookCounts(prev => ({ ...prev, likes: { ...prev.likes, [targetId]: res.data.count } }));
-      } else {
+      } else if (targetType === "GALLERY") {
         setGalleryCounts(prev => ({ ...prev, likes: { ...prev.likes, [targetId]: res.data.count } }));
+      } else if (targetType === "ARTICLE") {
+        setArticleCounts(prev => ({ ...prev, likes: { ...prev.likes, [targetId]: res.data.count } }));
       }
     } catch {
       setUserLikes(prev => ({ ...prev, [key]: prevLiked }));
@@ -151,20 +153,15 @@ function Home() {
   const handleFavorite = async (targetType, targetId) => {
     const actionKey = `fav_${targetType}_${targetId}`;
     if (busyActions.has(actionKey)) return;
-    if (!user) {
-      const anonKey = `anon_fav_${targetType}_${targetId}`;
-      const wasFav = localStorage.getItem(anonKey) === "true";
-      localStorage.setItem(anonKey, wasFav ? "false" : "true");
-      const key = `${targetType}_${targetId}`;
-      setUserFavorites(prev => ({ ...prev, [key]: !wasFav }));
-      return;
-    }
     setBusyActions(prev => new Set(prev).add(actionKey));
     const key = `${targetType}_${targetId}`;
     const prevFav = userFavorites[key];
     setUserFavorites(prev => ({ ...prev, [key]: !prevFav }));
     try {
-      const res = await api.post(`${API}/api/social/favorite`, { userId: user.userId, targetType, targetId });
+      const body = user
+        ? { userId: user.userId, targetType, targetId }
+        : { anonId: getAnonId(), targetType, targetId };
+      const res = await api.post(`${API}/api/social/favorite`, body);
       setUserFavorites(prev => ({ ...prev, [key]: res.data.favorited }));
     } catch {
       setUserFavorites(prev => ({ ...prev, [key]: prevFav }));
@@ -189,7 +186,7 @@ function Home() {
   const handleShare = async (article) => {
     const typePath = article.contentType === "Poetry" ? "poems"
       : article.contentType === "Blog" ? "blogs" : "articles";
-    const url = `${window.location.origin}/#/articles/${typePath}`;
+    const url = `${window.location.origin}/#/articles/${typePath}?id=${article.id}`;
     const text = `Check out "${article.headline}" on Saat Saheli!`;
     if (navigator.share) {
       try { await navigator.share({ title: article.headline, text, url }); } catch { /* cancelled */ }
@@ -472,7 +469,7 @@ function Home() {
                 : "articles";
               return (
                 <div key={article.id} className="home-article-card">
-                  <Link to={`/articles/${typePath}`} className="home-article-link">
+                  <Link to={`/articles/${typePath}?id=${article.id}`} className="home-article-link">
                     {article.imageUrl && (
                       <img src={resolveImageUrl(article.imageUrl)} alt={article.headline} className="home-article-img" />
                     )}
@@ -486,6 +483,17 @@ function Home() {
                     </div>
                   </Link>
                   <div className="home-card-social">
+                    <button className={`ss-btn-icon-sm ${userLikes[`ARTICLE_${article.id}`] ? "active" : ""}`} onClick={() => handleLike("ARTICLE", article.id)} title="Like">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill={userLikes[`ARTICLE_${article.id}`] ? "#e74c3c" : "none"} stroke={userLikes[`ARTICLE_${article.id}`] ? "#e74c3c" : "currentColor"} strokeWidth="2"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
+                      <span>{articleCounts.likes[article.id] || 0}</span>
+                    </button>
+                    <Link to={`/articles/${typePath}?id=${article.id}`} className="ss-btn-icon-sm" title="Comments">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+                      <span>{articleCounts.comments[article.id] || 0}</span>
+                    </Link>
+                    <button className={`ss-btn-icon-sm ${userFavorites[`ARTICLE_${article.id}`] ? "active" : ""}`} onClick={() => handleFavorite("ARTICLE", article.id)} title="Favorite">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill={userFavorites[`ARTICLE_${article.id}`] ? "#d4a017" : "none"} stroke={userFavorites[`ARTICLE_${article.id}`] ? "#d4a017" : "currentColor"} strokeWidth="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                    </button>
                     <button className="ss-btn-icon-sm" onClick={() => handleShare(article)} title="Share">
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
                       {shareCopiedId === article.id ? <span>Copied!</span> : <span>Share</span>}

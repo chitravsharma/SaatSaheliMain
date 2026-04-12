@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import api from "../utils/api";
+import api, { profileUrl } from "../utils/api";
 import { useAuth } from "../AuthContext";
 import { useStrings } from "../LanguageContext";
 import TermsGate from "../components/TermsGate";
@@ -248,7 +248,7 @@ function Account() {
             {profile?.displayName ? strings.account.editProfile : strings.account.createProfile}
           </Link>
           {profile?.displayName && (
-            <Link to={`/profile/${user.userId}`} className="acct-profile-link acct-profile-link-secondary">
+            <Link to={profileUrl(user.userId, profile?.displayName)} className="acct-profile-link acct-profile-link-secondary">
               {strings.account.viewPublicProfile}
             </Link>
           )}
@@ -402,7 +402,7 @@ function Account() {
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
                 My Page
               </h3>
-              <p className="acct-section-desc">Your personal page. <Link to={`/profile/${user.userId}`}>View your public profile</Link> to see how it looks.</p>
+              <p className="acct-section-desc">Your personal page. <Link to={profileUrl(user.userId, profile?.displayName)}>View your public profile</Link> to see how it looks.</p>
             </div>
           )}
 

@@ -68,6 +68,7 @@ function App() {
           <Route path="/read/:bookId" element={<ReadBook />} />
           <Route path="/account" element={<Account />} />
           <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+          <Route path="/profile/:userId/:nameSlug" element={<PublicProfile />} />
           <Route path="/profile/:userId" element={<PublicProfile />} />
           <Route path="/policies" element={<SitePolicies />} />
           <Route path="/category/tech" element={<TechPage />} />

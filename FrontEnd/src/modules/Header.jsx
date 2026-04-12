@@ -39,9 +39,9 @@ const Header = () => {
 
   const handleSearchSubmit = (e) => {
     e.preventDefault();
-    if (!searchQuery.trim()) return;
+    if (!searchQuery.trim() && !searchType) return;
     const params = new URLSearchParams();
-    params.append("q", searchQuery.trim());
+    if (searchQuery.trim()) params.append("q", searchQuery.trim());
     if (searchType) params.append("type", searchType);
     navigate(`/search?${params.toString()}`);
     closeMobileNav();

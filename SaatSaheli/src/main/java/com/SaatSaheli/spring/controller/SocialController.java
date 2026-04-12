@@ -21,9 +21,17 @@ public class SocialController {
     @PostMapping("/like")
     public ResponseEntity<?> toggleLike(@RequestBody Map<String, Object> body) {
         try {
-            Long userId = Long.parseLong(body.get("userId").toString());
             String targetType = (String) body.get("targetType");
             Long targetId = Long.parseLong(body.get("targetId").toString());
+            Long userId;
+            if (body.get("userId") != null && !body.get("userId").toString().isEmpty()) {
+                userId = Long.parseLong(body.get("userId").toString());
+            } else if (body.get("anonId") != null) {
+                // Use negative hash of anonId to avoid collision with real user IDs
+                userId = (long) -Math.abs(body.get("anonId").toString().hashCode());
+            } else {
+                return ResponseEntity.badRequest().body(errorMap("userId or anonId required"));
+            }
             return ResponseEntity.ok(socialService.toggleLike(userId, targetType, targetId));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorMap(e.getMessage()));
@@ -47,14 +55,24 @@ public class SocialController {
     @PostMapping("/comment")
     public ResponseEntity<?> addComment(@RequestBody Map<String, Object> body) {
         try {
-            Long userId = Long.parseLong(body.get("userId").toString());
             String targetType = (String) body.get("targetType");
             Long targetId = Long.parseLong(body.get("targetId").toString());
             String content = (String) body.get("content");
             if (content == null || content.trim().isEmpty()) {
                 return ResponseEntity.badRequest().body(errorMap("Comment content is required"));
             }
-            return ResponseEntity.ok(socialService.addComment(userId, targetType, targetId, content.trim()));
+            Long userId;
+            String guestName = null;
+            if (body.get("userId") != null && !body.get("userId").toString().isEmpty()) {
+                userId = Long.parseLong(body.get("userId").toString());
+            } else if (body.get("anonId") != null) {
+                userId = (long) -Math.abs(body.get("anonId").toString().hashCode());
+                guestName = body.get("guestName") != null ? body.get("guestName").toString().trim() : "Guest";
+                if (guestName.isEmpty()) guestName = "Guest";
+            } else {
+                return ResponseEntity.badRequest().body(errorMap("userId or anonId required"));
+            }
+            return ResponseEntity.ok(socialService.addComment(userId, targetType, targetId, content.trim(), guestName));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorMap(e.getMessage()));
         }
@@ -86,9 +104,16 @@ public class SocialController {
     @PostMapping("/favorite")
     public ResponseEntity<?> toggleFavorite(@RequestBody Map<String, Object> body) {
         try {
-            Long userId = Long.parseLong(body.get("userId").toString());
             String targetType = (String) body.get("targetType");
             Long targetId = Long.parseLong(body.get("targetId").toString());
+            Long userId;
+            if (body.get("userId") != null && !body.get("userId").toString().isEmpty()) {
+                userId = Long.parseLong(body.get("userId").toString());
+            } else if (body.get("anonId") != null) {
+                userId = (long) -Math.abs(body.get("anonId").toString().hashCode());
+            } else {
+                return ResponseEntity.badRequest().body(errorMap("userId or anonId required"));
+            }
             return ResponseEntity.ok(socialService.toggleFavorite(userId, targetType, targetId));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorMap(e.getMessage()));

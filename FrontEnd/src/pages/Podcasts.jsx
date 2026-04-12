@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import api from "../utils/api";
+import api, { profileUrl } from "../utils/api";
 import { useAuth } from "../AuthContext";
 import "./Podcasts.css";
 
@@ -231,7 +231,7 @@ function Podcasts() {
           </div>
           <h3 className="podcast-title">{podcast.title}</h3>
           {!isOwner && podcast.authorName && (
-            <Link to={`/profile/${podcast.userId}`} className="podcast-author">by {podcast.authorName}</Link>
+            <Link to={profileUrl(podcast.userId, podcast.authorName)} className="podcast-author">by {podcast.authorName}</Link>
           )}
           {podcast.description && <p className="podcast-desc">{podcast.description}</p>}
           <span className="podcast-date">{new Date(podcast.createdDate).toLocaleDateString()}</span>

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
-import api from "../utils/api";
+import api, { profileUrl } from "../utils/api";
 import { useAuth } from "../AuthContext";
 import { useStrings } from "../LanguageContext";
 import "./GalleryView.css";
@@ -152,7 +152,7 @@ function GalleryView() {
       <div className="gv-header">
         <h1 className="gv-title">{gallery.title}</h1>
         {gallery.authorName && (
-          <Link to={`/profile/${gallery.userId}`} className="gv-author">by {gallery.authorName}</Link>
+          <Link to={profileUrl(gallery.userId, gallery.authorName)} className="gv-author">by {gallery.authorName}</Link>
         )}
         {gallery.description && <p className="gv-description">{gallery.description}</p>}
       </div>

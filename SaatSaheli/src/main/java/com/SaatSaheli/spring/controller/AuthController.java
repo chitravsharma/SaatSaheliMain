@@ -230,6 +230,34 @@ public class AuthController {
     }
 
     /**
+     * GET /api/auth/public-profile/{userId} — no auth required
+     */
+    @GetMapping("/public-profile/{userId}")
+    public ResponseEntity<?> getPublicProfile(@PathVariable Long userId) {
+        try {
+            Optional<User> userOpt = userRepo.findById(userId);
+            if (userOpt.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorMap("User not found"));
+            }
+            User user = userOpt.get();
+            Map<String, Object> profile = new HashMap<>();
+            profile.put("id", user.getId());
+            profile.put("displayName", user.getDisplayName());
+            profile.put("firstName", user.getFirstName());
+            profile.put("lastName", user.getLastName());
+            profile.put("headline", user.getHeadline());
+            profile.put("profileImageUrl", user.getProfileImageUrl());
+            profile.put("location", user.getLocation());
+            profile.put("bio", user.getBio());
+            profile.put("createdDate", user.getCreatedDate());
+            return ResponseEntity.ok(profile);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(errorMap("Failed to fetch profile: " + e.getMessage()));
+        }
+    }
+
+    /**
      * GET /api/auth/user/{userId}
      */
     @GetMapping("/user/{userId}")

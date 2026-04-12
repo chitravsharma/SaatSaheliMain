@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import api from "../utils/api";
+import api, { profileUrl } from "../utils/api";
 import { useAuth } from "../AuthContext";
 import { useStrings } from "../LanguageContext";
 import ImageEditor from "../components/ImageEditor";
@@ -114,7 +114,7 @@ function Profile() {
         interests: interests.join(","),
         fields: fields.join(","),
       });
-      navigate(`/profile/${user.userId}`);
+      navigate(profileUrl(user.userId, form.displayName || user.name));
     } catch {
       setError(s.saveFailed);
     } finally {
