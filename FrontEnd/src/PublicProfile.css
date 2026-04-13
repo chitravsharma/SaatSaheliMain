@@ -45,9 +45,9 @@
 }
 
 .pub-profile-avatar {
-  width: 100px;
-  height: 100px;
-  border-radius: 50%;
+  width: 140px;
+  height: 180px;
+  border-radius: 10px;
   object-fit: cover;
   border: 3px solid var(--accent-blue);
   flex-shrink: 0;
@@ -271,8 +271,8 @@
   }
 
   .pub-profile-avatar {
-    width: 80px;
-    height: 80px;
+    width: 120px;
+    height: 150px;
   }
 
   .pub-profile-books {
