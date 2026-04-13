@@ -1,8 +1,10 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import axios from 'axios';
+import ReCAPTCHA from 'react-google-recaptcha';
 import './Contacts.css';
 
 const API_BASE = process.env.REACT_APP_API_URL;
+const RECAPTCHA_SITE_KEY = process.env.REACT_APP_RECAPTCHA_SITE_KEY;
 
 const Contact = () => {
   const [name, setName] = useState('');
@@ -13,6 +15,8 @@ const Contact = () => {
   const [sent, setSent] = useState(false);
   const [error, setError] = useState('');
   const [honeypot, setHoneypot] = useState('');
+  const [recaptchaToken, setRecaptchaToken] = useState('');
+  const recaptchaRef = useRef(null);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -20,6 +24,10 @@ const Contact = () => {
 
     if (!name.trim() || !email.trim() || !subject.trim() || !message.trim()) {
       setError('Please fill in all required fields.');
+      return;
+    }
+    if (RECAPTCHA_SITE_KEY && !recaptchaToken) {
+      setError('Please complete the reCAPTCHA.');
       return;
     }
 
@@ -31,15 +39,20 @@ const Contact = () => {
         subject: subject.trim(),
         message: message.trim(),
         website: honeypot,
+        recaptchaToken,
       });
       setSent(true);
       setName('');
       setEmail('');
       setSubject('');
       setMessage('');
+      setRecaptchaToken('');
+      recaptchaRef.current?.reset();
     } catch (err) {
       const msg = err.response?.data?.error || 'Failed to send message. Please try again.';
       setError(msg);
+      setRecaptchaToken('');
+      recaptchaRef.current?.reset();
     } finally {
       setSending(false);
     }
@@ -122,6 +135,17 @@ const Contact = () => {
                 rows={5}
               />
             </div>
+
+            {RECAPTCHA_SITE_KEY && (
+              <div className="contact-field" style={{ display: 'flex', justifyContent: 'center' }}>
+                <ReCAPTCHA
+                  ref={recaptchaRef}
+                  sitekey={RECAPTCHA_SITE_KEY}
+                  onChange={(token) => setRecaptchaToken(token || '')}
+                  onExpired={() => setRecaptchaToken('')}
+                />
+              </div>
+            )}
 
             <button
               type="submit"

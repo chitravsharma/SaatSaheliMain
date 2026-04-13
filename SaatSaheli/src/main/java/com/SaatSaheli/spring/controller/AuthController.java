@@ -7,6 +7,7 @@ import com.SaatSaheli.spring.repository.UserRepository;
 import com.SaatSaheli.spring.util.JwtUtil;
 import com.SaatSaheli.spring.util.RateLimiter;
 import com.SaatSaheli.spring.service.EmailService;
+import com.SaatSaheli.spring.service.RecaptchaService;
 import com.SaatSaheli.spring.util.RoleUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,6 +40,9 @@ public class AuthController {
     @Autowired
     private EmailService emailService;
 
+    @Autowired
+    private RecaptchaService recaptchaService;
+
     private static final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
     // Helper: get authenticated userId from JWT (set by JwtInterceptor)
@@ -65,6 +69,15 @@ public class AuthController {
 
             if (email == null || email.isEmpty()) {
                 return ResponseEntity.badRequest().body(errorMap("Email is required"));
+            }
+
+            // reCAPTCHA only for email signup — Google OAuth already proves humanness
+            if ("email".equalsIgnoreCase(provider)) {
+                String recaptchaToken = (String) body.get("recaptchaToken");
+                if (!recaptchaService.verify(recaptchaToken, clientIp)) {
+                    return ResponseEntity.badRequest()
+                            .body(errorMap("Please complete the reCAPTCHA challenge."));
+                }
             }
 
             Optional<Login> existing = loginRepo.findByEmailIgnoreCase(email);

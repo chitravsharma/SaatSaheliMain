@@ -1,6 +1,7 @@
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import { useNavigate, useSearchParams, useLocation, Link } from "react-router-dom";
 import { GoogleLogin, GoogleOAuthProvider } from "@react-oauth/google";
+import ReCAPTCHA from "react-google-recaptcha";
 import axios from "axios";
 import { useAuth } from "../AuthContext";
 import { useStrings } from "../LanguageContext";
@@ -8,6 +9,7 @@ import './Login.css';
 
 const API_BASE = `${process.env.REACT_APP_API_URL}/api/auth`;
 const GOOGLE_CLIENT_ID = process.env.REACT_APP_GOOGLE_CLIENT_ID;
+const RECAPTCHA_SITE_KEY = process.env.REACT_APP_RECAPTCHA_SITE_KEY;
 
 export default function Login() {
   const navigate = useNavigate();
@@ -44,6 +46,8 @@ export default function Login() {
   const [phoneNumber, setPhoneNumber] = useState("");
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState("Free");
+  const [recaptchaToken, setRecaptchaToken] = useState("");
+  const recaptchaRef = useRef(null);
 
   const saveUserAndRedirect = (data) => {
     const userData = {
@@ -142,6 +146,10 @@ export default function Login() {
       setError("Password must contain at least one special character.");
       return;
     }
+    if (RECAPTCHA_SITE_KEY && !recaptchaToken) {
+      setError("Please complete the reCAPTCHA.");
+      return;
+    }
 
     setLoading(true);
     try {
@@ -153,11 +161,14 @@ export default function Login() {
         phoneNumber: phoneNumber.trim(),
         provider: "email",
         plan: selectedPlan,
+        recaptchaToken,
       });
       saveUserAndRedirect(res.data);
     } catch (err) {
       const msg = err.response?.data?.error || strings.login.errorSignupFailed;
       setError(msg);
+      setRecaptchaToken("");
+      recaptchaRef.current?.reset();
     } finally {
       setLoading(false);
     }
@@ -555,10 +566,29 @@ export default function Login() {
                   </label>
                 </div>
 
+                {RECAPTCHA_SITE_KEY && (
+                  <div className="auth-field" style={{ display: 'flex', justifyContent: 'center' }}>
+                    <ReCAPTCHA
+                      ref={recaptchaRef}
+                      sitekey={RECAPTCHA_SITE_KEY}
+                      onChange={(token) => setRecaptchaToken(token || "")}
+                      onExpired={() => setRecaptchaToken("")}
+                    />
+                  </div>
+                )}
+
                 <button
                   type="submit"
                   className="auth-btn auth-btn-primary"
-                  disabled={loading}
+                  disabled={
+                    loading ||
+                    !firstName.trim() ||
+                    !email.trim() ||
+                    !password ||
+                    !confirmPassword ||
+                    !acceptedTerms ||
+                    (!!RECAPTCHA_SITE_KEY && !recaptchaToken)
+                  }
                 >
                   {loading ? strings.login.creatingAccount : strings.login.createAccountButton}
                 </button>

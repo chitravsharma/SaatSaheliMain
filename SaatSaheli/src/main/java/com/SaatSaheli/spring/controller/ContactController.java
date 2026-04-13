@@ -5,6 +5,7 @@ import com.SaatSaheli.spring.model.User;
 import com.SaatSaheli.spring.repository.ContactMessageRepository;
 import com.SaatSaheli.spring.repository.UserRepository;
 import com.SaatSaheli.spring.service.EmailService;
+import com.SaatSaheli.spring.service.RecaptchaService;
 import com.SaatSaheli.spring.util.RateLimiter;
 import com.SaatSaheli.spring.util.RoleUtil;
 import jakarta.servlet.http.HttpServletRequest;
@@ -41,6 +42,9 @@ public class ContactController {
     @Autowired
     private RateLimiter rateLimiter;
 
+    @Autowired
+    private RecaptchaService recaptchaService;
+
     private Long getAuthUserId(HttpServletRequest request) {
         Object val = request.getAttribute("jwtUserId");
         return val instanceof Long ? (Long) val : null;
@@ -65,6 +69,13 @@ public class ContactController {
             if (!rateLimiter.tryAcquire("contact_" + clientIp)) {
                 return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
                         .body(errorMap("Too many submissions. Please try again in a few minutes."));
+            }
+
+            // reCAPTCHA — must come before any DB writes
+            String recaptchaToken = body.get("recaptchaToken");
+            if (!recaptchaService.verify(recaptchaToken, clientIp)) {
+                return ResponseEntity.badRequest()
+                        .body(errorMap("Please complete the reCAPTCHA challenge."));
             }
 
             String name = body.get("name");

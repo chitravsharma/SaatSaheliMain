@@ -1,8 +1,10 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import axios from 'axios';
+import ReCAPTCHA from 'react-google-recaptcha';
 import './Feedback.css';
 
 const API_BASE = process.env.REACT_APP_API_URL;
+const RECAPTCHA_SITE_KEY = process.env.REACT_APP_RECAPTCHA_SITE_KEY;
 
 const FEEDBACK_CATEGORIES = [
   "Website Experience",
@@ -24,6 +26,8 @@ const Feedback = () => {
   const [sent, setSent] = useState(false);
   const [error, setError] = useState('');
   const [honeypot, setHoneypot] = useState('');
+  const [recaptchaToken, setRecaptchaToken] = useState('');
+  const recaptchaRef = useRef(null);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -31,6 +35,10 @@ const Feedback = () => {
 
     if (!name.trim() || !email.trim() || !message.trim()) {
       setError('Please fill in all required fields.');
+      return;
+    }
+    if (RECAPTCHA_SITE_KEY && !recaptchaToken) {
+      setError('Please complete the reCAPTCHA.');
       return;
     }
 
@@ -44,12 +52,17 @@ const Feedback = () => {
         rating: rating || null,
         category: category || null,
         website: honeypot,
+        recaptchaToken,
       });
       setSent(true);
       setName(''); setEmail(''); setCategory('');
       setRating(''); setMessage('');
+      setRecaptchaToken('');
+      recaptchaRef.current?.reset();
     } catch (err) {
       setError(err.response?.data?.error || 'Failed to send. Please try again.');
+      setRecaptchaToken('');
+      recaptchaRef.current?.reset();
     } finally {
       setSending(false);
     }
@@ -143,6 +156,17 @@ const Feedback = () => {
                   value={message} onChange={(e) => setMessage(e.target.value)} required rows={6} />
               </div>
             </fieldset>
+
+            {RECAPTCHA_SITE_KEY && (
+              <div className="feedback-field" style={{ display: 'flex', justifyContent: 'center' }}>
+                <ReCAPTCHA
+                  ref={recaptchaRef}
+                  sitekey={RECAPTCHA_SITE_KEY}
+                  onChange={(token) => setRecaptchaToken(token || '')}
+                  onExpired={() => setRecaptchaToken('')}
+                />
+              </div>
+            )}
 
             <button type="submit" className="feedback-submit" disabled={sending}>
               {sending ? 'Sending...' : 'Submit Feedback'}
