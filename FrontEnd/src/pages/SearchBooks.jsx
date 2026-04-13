@@ -126,9 +126,9 @@ function SearchBooks() {
   const searchSuggestions = [
     { label: "Browse all Books", to: "/books" },
     { label: "Read the Magazine", to: "/magazine" },
-    { label: "Explore Poems", to: "/articles/poems" },
-    { label: "Read Articles", to: "/articles/articles" },
-    { label: "Discover Blogs", to: "/articles/blogs" },
+    { label: "Explore Poems", to: "/poems" },
+    { label: "Read Articles", to: "/articles" },
+    { label: "Discover Blogs", to: "/blogs" },
     { label: "Listen to Podcasts", to: "/podcasts" },
     { label: "Photo Galleries", to: "/category/Art" },
     { label: "Visit Marketplace", to: "/marketplace" },

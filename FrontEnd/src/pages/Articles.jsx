@@ -17,27 +17,31 @@ function resolveImageUrl(url) {
 
 const CATEGORY_OPTIONS = ["Tech", "Creativity", "Community", "Art", "Music", "DIY", "Other"];
 
-const CONTENT_TYPE_MAP = {
+// Map URL path segment (first part of pathname) → content type label used in the DB/UI.
+// Each content type now has its own top-level route (/poems, /blogs, /articles) for SEO.
+const PATH_TO_CONTENT_TYPE = {
   poems: "Poetry",
-  articles: "Article",
   blogs: "Blog",
+  articles: "Article",
 };
 
 function Articles() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const { contentType: urlContentType } = useParams();
+  const { articleId: urlArticleId } = useParams();
   const userId = user?.userId;
 
-  // Check for ?id= query param (shared link to specific article)
+  // Derive the active content type from the URL path (/poems → Poetry, etc.)
+  const pathSegment = location.pathname.split("/").filter(Boolean)[0] || "";
+  const urlContentType = PATH_TO_CONTENT_TYPE[pathSegment] || "";
+
+  // Article id may come from the URL path (/poems/42) or from a legacy ?id= query param.
   const urlParams = new URLSearchParams(location.search);
-  const sharedArticleId = urlParams.get("id");
+  const sharedArticleId = urlArticleId || urlParams.get("id");
 
   const [tab, setTab] = useState("published"); // default to browse all
-  const [filterType, setFilterType] = useState(
-    urlContentType ? (CONTENT_TYPE_MAP[urlContentType] || "") : ""
-  );
+  const [filterType, setFilterType] = useState(urlContentType || "");
   const [copiedId, setCopiedId] = useState(null);
   const [articles, setArticles] = useState([]);
   const [publicArticles, setPublicArticles] = useState([]);
@@ -50,9 +54,7 @@ function Articles() {
   const [headline, setHeadline] = useState("");
   const [content, setContent] = useState("");
   const [imageUrl, setImageUrl] = useState("");
-  const [contentType, setContentType] = useState(
-    urlContentType ? (CONTENT_TYPE_MAP[urlContentType] || "Blog") : "Blog"
-  );
+  const [contentType, setContentType] = useState(urlContentType || "Blog");
   const [category, setCategory] = useState("");
   const [uploading, setUploading] = useState(false);
   const [editorFile, setEditorFile] = useState(null);
@@ -120,7 +122,7 @@ function Articles() {
 
   useEffect(() => {
     if (urlContentType) {
-      setFilterType(CONTENT_TYPE_MAP[urlContentType] || "");
+      setFilterType(urlContentType);
       setTab("published");
     }
   }, [urlContentType]);
@@ -260,7 +262,7 @@ function Articles() {
     setImageUrl("");
     setCategory("");
     setFormImageSize(100);
-    setContentType(urlContentType ? (CONTENT_TYPE_MAP[urlContentType] || "Blog") : "Blog");
+    setContentType(urlContentType || "Blog");
   };
 
   const handleLike = async (articleId) => {
@@ -324,7 +326,7 @@ function Articles() {
   const handleShare = async (article) => {
     const typePath = article.contentType === "Poetry" ? "poems"
       : article.contentType === "Blog" ? "blogs" : "articles";
-    const url = `${window.location.origin}/articles/${typePath}?id=${article.id}`;
+    const url = `${window.location.origin}/${typePath}/${article.id}`;
     const text = `Check out "${article.headline}" on Saat Saheli!`;
     if (navigator.share) {
       try {

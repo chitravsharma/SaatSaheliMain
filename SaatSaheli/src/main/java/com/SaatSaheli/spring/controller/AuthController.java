@@ -1,8 +1,14 @@
 package com.SaatSaheli.spring.controller;
 
+import com.SaatSaheli.spring.model.Article;
+import com.SaatSaheli.spring.model.Book;
 import com.SaatSaheli.spring.model.Login;
+import com.SaatSaheli.spring.model.Podcast;
 import com.SaatSaheli.spring.model.User;
+import com.SaatSaheli.spring.repository.ArticleRepository;
+import com.SaatSaheli.spring.repository.BookRepository;
 import com.SaatSaheli.spring.repository.LoginRepository;
+import com.SaatSaheli.spring.repository.PodcastRepository;
 import com.SaatSaheli.spring.repository.UserRepository;
 import com.SaatSaheli.spring.util.JwtUtil;
 import com.SaatSaheli.spring.util.RateLimiter;
@@ -17,9 +23,14 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -42,6 +53,15 @@ public class AuthController {
 
     @Autowired
     private RecaptchaService recaptchaService;
+
+    @Autowired
+    private BookRepository bookRepo;
+
+    @Autowired
+    private ArticleRepository articleRepo;
+
+    @Autowired
+    private PodcastRepository podcastRepo;
 
     private static final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
@@ -239,6 +259,70 @@ public class AuthController {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(errorMap("Failed to update status: " + e.getMessage()));
+        }
+    }
+
+    /**
+     * GET /api/auth/writers — public list of users with ≥1 published book, article, or podcast.
+     * Sorted by most recent content first. Used by the public Writers directory page.
+     */
+    @GetMapping("/writers")
+    public ResponseEntity<?> getWriters() {
+        try {
+            // Collect (userId → most recent content date) across all published content types.
+            Map<Long, LocalDateTime> latestByUser = new HashMap<>();
+            Set<Long> creatorIds = new HashSet<>();
+
+            for (Book b : bookRepo.findByStatusIgnoreCase("PUBLISHED")) {
+                if (b.getUserId() == null) continue;
+                creatorIds.add(b.getUserId());
+                LocalDateTime t = b.getModifiedDate() != null ? b.getModifiedDate() : b.getCreatedDate();
+                mergeLatest(latestByUser, b.getUserId(), t);
+            }
+            for (Article a : articleRepo.findByStatusOrderByCreatedDateDesc("PUBLISHED")) {
+                if (a.getUserId() == null) continue;
+                creatorIds.add(a.getUserId());
+                mergeLatest(latestByUser, a.getUserId(), a.getCreatedDate());
+            }
+            for (Podcast p : podcastRepo.findByStatusOrderByCreatedDateDesc("PUBLISHED")) {
+                if (p.getUserId() == null) continue;
+                creatorIds.add(p.getUserId());
+                mergeLatest(latestByUser, p.getUserId(), p.getCreatedDate());
+            }
+
+            if (creatorIds.isEmpty()) {
+                return ResponseEntity.ok(List.of());
+            }
+
+            List<Map<String, Object>> writers = new ArrayList<>();
+            for (User user : userRepo.findAllById(creatorIds)) {
+                Map<String, Object> w = new HashMap<>();
+                w.put("id", user.getId());
+                w.put("displayName", user.getDisplayName());
+                w.put("firstName", user.getFirstName());
+                w.put("lastName", user.getLastName());
+                w.put("headline", user.getHeadline());
+                w.put("profileImageUrl", user.getProfileImageUrl());
+                w.put("location", user.getLocation());
+                w.put("latestContentDate", latestByUser.get(user.getId()));
+                writers.add(w);
+            }
+            // Most recently active writer first
+            writers.sort(Comparator.comparing(
+                    (Map<String, Object> m) -> (LocalDateTime) m.get("latestContentDate"),
+                    Comparator.nullsLast(Comparator.reverseOrder())));
+            return ResponseEntity.ok(writers);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(errorMap("Failed to fetch writers: " + e.getMessage()));
+        }
+    }
+
+    private static void mergeLatest(Map<Long, LocalDateTime> map, Long userId, LocalDateTime t) {
+        if (t == null) return;
+        LocalDateTime existing = map.get(userId);
+        if (existing == null || t.isAfter(existing)) {
+            map.put(userId, t);
         }
     }
 

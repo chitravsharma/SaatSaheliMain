@@ -1,0 +1,121 @@
+.writers-page {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 32px 20px 60px;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  color: var(--text-primary);
+}
+
+.writers-hero {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.writers-hero h1 {
+  font-size: 2rem;
+  font-weight: 700;
+  margin: 0 0 8px;
+}
+
+.writers-divider {
+  width: 60px;
+  border: 0;
+  border-top: 3px solid var(--accent, #d97706);
+  margin: 12px auto 16px;
+}
+
+.writers-intro {
+  color: var(--text-muted, #555);
+  max-width: 640px;
+  margin: 0 auto;
+  line-height: 1.5;
+}
+
+.writers-status {
+  text-align: center;
+  color: var(--text-muted, #666);
+  padding: 24px;
+}
+
+.writers-error {
+  color: #b91c1c;
+}
+
+.writers-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 20px;
+  margin-top: 16px;
+}
+
+.writer-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: var(--bg-card, #fff);
+  border: 1px solid var(--border-default, #e5e7eb);
+  border-radius: 12px;
+  padding: 16px;
+  text-decoration: none;
+  color: inherit;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+}
+
+.writer-card:hover,
+.writer-card:focus-visible {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+  border-color: var(--accent, #d97706);
+  outline: none;
+}
+
+.writer-avatar {
+  flex: 0 0 auto;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: var(--bg-subtle, #f3f4f6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted, #6b7280);
+  font-weight: 600;
+  font-size: 1.25rem;
+}
+
+.writer-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.writer-meta {
+  min-width: 0;
+}
+
+.writer-name {
+  font-weight: 600;
+  font-size: 1rem;
+  color: var(--text-primary, #111);
+  margin-bottom: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.writer-headline {
+  font-size: 0.875rem;
+  color: var(--text-muted, #555);
+  line-height: 1.35;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.writer-location {
+  font-size: 0.75rem;
+  color: var(--text-muted, #888);
+  margin-top: 4px;
+}

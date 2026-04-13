@@ -74,7 +74,7 @@ function PublicProfile() {
   const handleShareArticle = async (article) => {
     const typePath = article.contentType === "Poetry" ? "poems"
       : article.contentType === "Blog" ? "blogs" : "articles";
-    const url = `${window.location.origin}/articles/${typePath}?id=${article.id}`;
+    const url = `${window.location.origin}/${typePath}/${article.id}`;
     const text = `Check out "${article.headline}" on Saat Saheli!`;
     if (navigator.share) {
       try { await navigator.share({ title: article.headline, text, url }); } catch { /* cancelled */ }

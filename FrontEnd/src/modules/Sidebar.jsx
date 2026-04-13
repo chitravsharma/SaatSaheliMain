@@ -19,6 +19,8 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
           <ul className="sidebar-links">
             <li><Link to="/" onClick={toggleSidebar}>Home</Link></li>
             <li><Link to="/about" onClick={toggleSidebar}>About</Link></li>
+            <li><Link to="/writers" onClick={toggleSidebar}>Writers</Link></li>
+            <li><Link to="/galleries" onClick={toggleSidebar}>Galleries</Link></li>
             <li><Link to="/contacts" onClick={toggleSidebar}>Contact</Link></li>
             <li><Link to="/feedback" onClick={toggleSidebar}>Give Feedback</Link></li>
           </ul>

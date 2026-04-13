@@ -186,7 +186,7 @@ function Home() {
   const handleShare = async (article) => {
     const typePath = article.contentType === "Poetry" ? "poems"
       : article.contentType === "Blog" ? "blogs" : "articles";
-    const url = `${window.location.origin}/articles/${typePath}?id=${article.id}`;
+    const url = `${window.location.origin}/${typePath}/${article.id}`;
     const text = `Check out "${article.headline}" on Saat Saheli!`;
     if (navigator.share) {
       try { await navigator.share({ title: article.headline, text, url }); } catch { /* cancelled */ }
@@ -255,19 +255,19 @@ function Home() {
           </span>
           Books
         </Link>
-        <Link to="/articles/poems" className="home-tag-link">
+        <Link to="/poems" className="home-tag-link">
           <span className="home-tag-icon">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.828 2.828 0 114 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
           </span>
           Poems
         </Link>
-        <Link to="/articles/articles" className="home-tag-link">
+        <Link to="/articles" className="home-tag-link">
           <span className="home-tag-icon">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
           </span>
           Articles
         </Link>
-        <Link to="/articles/blogs" className="home-tag-link">
+        <Link to="/blogs" className="home-tag-link">
           <span className="home-tag-icon">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
           </span>
@@ -278,6 +278,18 @@ function Home() {
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
           </span>
           Podcasts
+        </Link>
+        <Link to="/writers" className="home-tag-link">
+          <span className="home-tag-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+          </span>
+          Writers
+        </Link>
+        <Link to="/galleries" className="home-tag-link">
+          <span className="home-tag-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+          </span>
+          Galleries
         </Link>
         <Link to="/marketplace" className="home-tag-link">
           <span className="home-tag-icon">
@@ -504,9 +516,10 @@ function Home() {
             })}
           </div>
           <div className="home-section-more">
-            <Link to="/articles/poems" className="ss-btn ss-btn-outline" style={{ marginRight: 8 }}>Poems</Link>
-            <Link to="/articles/blogs" className="ss-btn ss-btn-outline" style={{ marginRight: 8 }}>Blogs</Link>
-            <Link to="/articles/articles" className="ss-btn ss-btn-outline">Articles</Link>
+            <Link to="/poems" className="ss-btn ss-btn-outline" style={{ marginRight: 8 }}>Poems</Link>
+            <Link to="/blogs" className="ss-btn ss-btn-outline" style={{ marginRight: 8 }}>Blogs</Link>
+            <Link to="/articles" className="ss-btn ss-btn-outline" style={{ marginRight: 8 }}>Articles</Link>
+            <Link to="/writers" className="ss-btn ss-btn-outline">Meet Our Writers</Link>
           </div>
         </div>
       )}

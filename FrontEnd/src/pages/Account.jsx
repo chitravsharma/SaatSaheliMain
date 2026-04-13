@@ -441,7 +441,7 @@ function Account() {
                           <td><span className={`bm-status ${statusClass(item.status)}`}>{item.status}</span></td>
                           <td>{formatDate(item.createdDate)}</td>
                           <td>
-                            <Link to="/articles/poems" className="bm-btn bm-btn-edit bm-btn-sm">{strings.account.editButton}</Link>
+                            <Link to="/poems" className="bm-btn bm-btn-edit bm-btn-sm">{strings.account.editButton}</Link>
                           </td>
                         </tr>
                       ))}
@@ -452,7 +452,7 @@ function Account() {
                 );
               })()}
               <p className="acct-section-desc" style={{ marginTop: 8 }}>
-                <Link to="/articles/poems">Create &amp; manage your poems</Link>
+                <Link to="/poems">Create &amp; manage your poems</Link>
               </p>
             </div>
           )}
@@ -482,7 +482,7 @@ function Account() {
                           <td><span className={`bm-status ${statusClass(item.status)}`}>{item.status}</span></td>
                           <td>{formatDate(item.createdDate)}</td>
                           <td>
-                            <Link to="/articles/blogs" className="bm-btn bm-btn-edit bm-btn-sm">{strings.account.editButton}</Link>
+                            <Link to="/blogs" className="bm-btn bm-btn-edit bm-btn-sm">{strings.account.editButton}</Link>
                           </td>
                         </tr>
                       ))}
@@ -493,7 +493,7 @@ function Account() {
                 );
               })()}
               <p className="acct-section-desc" style={{ marginTop: 8 }}>
-                <Link to="/articles/blogs">Create &amp; manage your blogs</Link>
+                <Link to="/blogs">Create &amp; manage your blogs</Link>
               </p>
             </div>
           )}
@@ -523,7 +523,7 @@ function Account() {
                           <td><span className={`bm-status ${statusClass(item.status)}`}>{item.status}</span></td>
                           <td>{formatDate(item.createdDate)}</td>
                           <td>
-                            <Link to="/articles/articles" className="bm-btn bm-btn-edit bm-btn-sm">{strings.account.editButton}</Link>
+                            <Link to="/articles" className="bm-btn bm-btn-edit bm-btn-sm">{strings.account.editButton}</Link>
                           </td>
                         </tr>
                       ))}
@@ -534,7 +534,7 @@ function Account() {
                 );
               })()}
               <p className="acct-section-desc" style={{ marginTop: 8 }}>
-                <Link to="/articles/articles">Create &amp; manage your articles</Link>
+                <Link to="/articles">Create &amp; manage your articles</Link>
               </p>
             </div>
           )}

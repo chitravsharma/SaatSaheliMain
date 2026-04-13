@@ -39,6 +39,8 @@ import NotFound from './pages/NotFound';
 import HelpSupport from './pages/HelpSupport';
 import MagazineSubmit from './pages/MagazineSubmit';
 import Feedback from './pages/Feedback';
+import Writers from './pages/Writers';
+import Galleries from './pages/Galleries';
 
 
 function BookManagerWrapper() {
@@ -76,10 +78,16 @@ function App() {
           <Route path="/admin" element={<ProtectedRoute requiredRole="ADMIN"><AdminDashboard /></ProtectedRoute>} />
           <Route path="/chat" element={<ProtectedRoute><Chat /></ProtectedRoute>} />
           <Route path="/articles" element={<Articles />} />
-          <Route path="/articles/:contentType" element={<Articles />} />
+          <Route path="/articles/:articleId" element={<Articles />} />
+          <Route path="/blogs" element={<Articles />} />
+          <Route path="/blogs/:articleId" element={<Articles />} />
+          <Route path="/poems" element={<Articles />} />
+          <Route path="/poems/:articleId" element={<Articles />} />
+          <Route path="/writers" element={<Writers />} />
           <Route path="/podcasts" element={<Podcasts />} />
           <Route path="/magazine" element={<Magazine />} />
           <Route path="/magazine/submit" element={<MagazineSubmit />} />
+          <Route path="/galleries" element={<Galleries />} />
           <Route path="/gallery/:galleryId" element={<GalleryView />} />
           <Route path="/pricing" element={<Pricing />} />
           <Route path="/marketplace" element={<Marketplace />} />
