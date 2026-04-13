@@ -145,7 +145,7 @@ export default function Marketplace() {
   };
 
   const handleShare = async (item) => {
-    const url = `${window.location.origin}/#/marketplace`;
+    const url = `${window.location.origin}/marketplace`;
     const text = `Check out "${item.title}" for ${item.price} on Saat Saheli Marketplace!`;
     if (navigator.share) {
       try { await navigator.share({ title: item.title, text, url }); } catch { /* cancelled */ }
