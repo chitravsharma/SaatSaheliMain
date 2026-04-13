@@ -1,3 +1,13 @@
 # https://www.robotstxt.org/robotstxt.html
 User-agent: *
-Disallow:
+Disallow: /admin
+Disallow: /admin-manual
+Disallow: /account
+Disallow: /profile
+Disallow: /chat
+Disallow: /checkout
+Disallow: /Login
+Disallow: /register
+Disallow: /logout
+
+Sitemap: https://saatsaheli.com/sitemap.xml
