@@ -234,7 +234,7 @@ function CategoryPage() {
                                         <ul className="cat-articles-list">
                                             {items.map(article => (
                                                 <li key={article.id} className="cat-articles-item">
-                                                    <Link to={`/articles/${sec.type === "Poetry" ? "poems" : sec.type === "Blog" ? "blogs" : "articles"}`} className="cat-articles-link">
+                                                    <Link to={`/${sec.type === "Poetry" ? "poems" : sec.type === "Blog" ? "blogs" : "articles"}/${article.id}`} className="cat-articles-link">
                                                         <span className={`cat-articles-dot cat-articles-dot-${sec.type.toLowerCase()}`} />
                                                         <span className="cat-articles-title">{article.headline}</span>
                                                         {article.authorName && <span className="cat-articles-author">by {article.authorName}</span>}

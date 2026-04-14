@@ -60,7 +60,7 @@ function PublicProfile() {
   }, [userId]);
 
   const handleShareProfile = async () => {
-    const url = `${window.location.origin}/#${profileUrl(userId, displayName)}`;
+    const url = `${window.location.origin}${profileUrl(userId, displayName)}`;
     const text = `Check out ${displayName}'s profile on Saat Saheli!`;
     if (navigator.share) {
       try { await navigator.share({ title: displayName, text, url }); } catch { /* cancelled */ }
@@ -164,7 +164,7 @@ function PublicProfile() {
                 : article.contentType === "Blog" ? "blogs" : "articles";
               return (
                 <div key={article.id} className="home-article-card">
-                  <Link to={`/articles/${typePath}?id=${article.id}`} className="home-article-link">
+                  <Link to={`/${typePath}/${article.id}`} className="home-article-link">
                     {article.imageUrl && (
                       <img src={resolveImageUrl(article.imageUrl)} alt={article.headline} className="home-article-img" />
                     )}

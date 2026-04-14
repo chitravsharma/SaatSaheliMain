@@ -118,7 +118,7 @@ function SearchBooks() {
   const handleSelectArticle = (article) => {
     const typePath = article.contentType === "Poetry" ? "poems"
       : article.contentType === "Blog" ? "blogs" : "articles";
-    navigate(`/articles/${typePath}?id=${article.id}`);
+    navigate(`/${typePath}/${article.id}`);
   };
 
   const totalResults = bookResults.length + articleResults.length;
