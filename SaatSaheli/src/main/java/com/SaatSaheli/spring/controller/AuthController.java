@@ -382,6 +382,7 @@ public class AuthController {
             profile.put("firstName", user.getFirstName());
             profile.put("lastName", user.getLastName());
             profile.put("headline", user.getHeadline());
+            profile.put("occupation", user.getOccupation());
             profile.put("profileImageUrl", user.getProfileImageUrl());
             profile.put("location", user.getLocation());
             profile.put("bio", user.getBio());
@@ -455,6 +456,7 @@ public class AuthController {
             if (updated.getGender() != null) user.setGender(updated.getGender());
             if (updated.getDisplayName() != null) user.setDisplayName(updated.getDisplayName());
             if (updated.getHeadline() != null) user.setHeadline(updated.getHeadline());
+            if (updated.getOccupation() != null) user.setOccupation(updated.getOccupation());
             if (updated.getProfileImageUrl() != null) user.setProfileImageUrl(updated.getProfileImageUrl());
             if (updated.getLocation() != null) user.setLocation(updated.getLocation());
             if (updated.getBio() != null) user.setBio(updated.getBio());

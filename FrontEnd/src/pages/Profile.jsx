@@ -29,6 +29,7 @@ function Profile() {
   const [form, setForm] = useState({
     displayName: "",
     headline: "",
+    occupation: "",
     location: "",
     bio: "",
     teamRole: "",
@@ -52,6 +53,7 @@ function Profile() {
         setForm({
           displayName: data.displayName || "",
           headline: data.headline || "",
+          occupation: data.occupation || "",
           location: data.location || "",
           bio: data.bio || "",
           teamRole: data.teamRole || "",
@@ -122,6 +124,7 @@ function Profile() {
       const payload = {
         displayName: form.displayName,
         headline: form.headline,
+        occupation: form.occupation,
         location: form.location,
         bio: form.bio,
         profileImageUrl: profileImageUrl,
@@ -174,6 +177,19 @@ function Profile() {
             onChange={handleChange}
             placeholder={s.placeholderHeadline}
             maxLength={150}
+          />
+        </div>
+
+        <div className="profile-field">
+          <label htmlFor="occupation">Role (optional)</label>
+          <input
+            id="occupation"
+            name="occupation"
+            type="text"
+            value={form.occupation}
+            onChange={handleChange}
+            placeholder="e.g., Writer, Poet, Artist, Engineer"
+            maxLength={100}
           />
         </div>
 

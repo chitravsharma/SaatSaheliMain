@@ -115,8 +115,9 @@ function PublicProfile() {
         <div className="pub-profile-info">
           <h1>{displayName}</h1>
           {profile.headline && <p className="pub-profile-headline">{profile.headline}</p>}
+          {profile.occupation && <p className="pub-profile-occupation">{profile.occupation}</p>}
           {profile.location && <p className="pub-profile-location">{profile.location}</p>}
-          {profile.createdDate && (
+          {profile.createdDate && !profile.teamRole && (
             <p className="pub-profile-member">{s.memberSince} {new Date(profile.createdDate).toLocaleDateString()}</p>
           )}
         </div>

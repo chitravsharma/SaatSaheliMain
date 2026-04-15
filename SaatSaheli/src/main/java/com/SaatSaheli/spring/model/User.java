@@ -36,6 +36,9 @@ public class User {
 
     private String headline;
 
+    // User-chosen free-text role/identity (e.g., "Writer", "Poet", "Artist", "Engineer")
+    private String occupation;
+
     @Column(name = "profile_image_url")
     private String profileImageUrl;
 
@@ -96,6 +99,9 @@ public class User {
 
     public String getHeadline() { return headline; }
     public void setHeadline(String headline) { this.headline = headline; }
+
+    public String getOccupation() { return occupation; }
+    public void setOccupation(String occupation) { this.occupation = occupation; }
 
     public String getProfileImageUrl() { return profileImageUrl; }
     public void setProfileImageUrl(String profileImageUrl) { this.profileImageUrl = profileImageUrl; }
