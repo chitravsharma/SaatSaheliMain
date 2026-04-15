@@ -1,6 +1,17 @@
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import api, { profileUrl } from '../utils/api';
 import { useStrings } from '../LanguageContext';
 import './About.css';
+
+const API = process.env.REACT_APP_API_URL;
+
+function firstSentence(text) {
+  if (!text) return '';
+  const match = text.match(/[^.!?]+[.!?]/);
+  const sentence = (match ? match[0] : text).trim();
+  return sentence.length > 140 ? sentence.slice(0, 137) + '…' : sentence;
+}
 
 const categoryIcons = {
   Art: "\uD83C\uDFA8",
@@ -14,6 +25,13 @@ const categoryIcons = {
 const About = () => {
   const strings = useStrings();
   const a = strings.about;
+  const [team, setTeam] = useState([]);
+
+  useEffect(() => {
+    api.get(`${API}/api/auth/team-members`)
+      .then((res) => setTeam(Array.isArray(res.data) ? res.data : []))
+      .catch(() => setTeam([]));
+  }, []);
 
   return (
   <div className="about-page">
@@ -26,6 +44,42 @@ const About = () => {
     <div className="about-card">
       <p>{a.description}</p>
     </div>
+
+    {team.length > 0 && (
+      <div className="about-section about-team-section">
+        <h2 className="about-section-title">Founder Profile</h2>
+        <div className="about-team-grid">
+          {team.map((m) => {
+            const url = profileUrl(m.id, m.displayName);
+            const imgSrc = m.profileImageUrl
+              ? (m.profileImageUrl.startsWith('http') ? m.profileImageUrl : `${API}${m.profileImageUrl}`)
+              : null;
+            const teaser = firstSentence(m.bio);
+            return (
+              <div key={m.id} className="about-team-card">
+                <Link to={url} className="about-team-photo-link" aria-label={`View ${m.displayName}'s profile`}>
+                  {imgSrc ? (
+                    <img src={imgSrc} alt={m.displayName} className="about-team-photo" />
+                  ) : (
+                    <div className="about-team-photo about-team-photo-placeholder">
+                      {(m.displayName || '?').charAt(0).toUpperCase()}
+                    </div>
+                  )}
+                </Link>
+                <div className="about-team-info">
+                  <span className="about-team-role">{m.teamRole}</span>
+                  <Link to={url} className="about-team-name">{m.displayName}</Link>
+                  {m.headline && <p className="about-team-headline">{m.headline}</p>}
+                  {teaser && (
+                    <Link to={url} className="about-team-teaser">{teaser}</Link>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    )}
 
     <div className="about-section">
       <h2 className="about-section-title">{a.sectionTitle}</h2>

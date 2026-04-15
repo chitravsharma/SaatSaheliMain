@@ -327,6 +327,45 @@ public class AuthController {
     }
 
     /**
+     * GET /api/auth/team-members — public, returns all users with an assigned teamRole,
+     * sorted by the team hierarchy (Founder first).
+     */
+    private static final List<String> TEAM_ROLE_ORDER = List.of(
+        "Founder / Editor-in-Chief",
+        "Tech Lead (or CTO)",
+        "Managing Editor",
+        "Content Head",
+        "Community Manager",
+        "Marketing/Growth Lead"
+    );
+
+    @GetMapping("/team-members")
+    public ResponseEntity<?> getTeamMembers() {
+        try {
+            List<Map<String, Object>> members = userRepo.findByTeamRoleIsNotNull().stream()
+                .map(u -> {
+                    Map<String, Object> m = new HashMap<>();
+                    m.put("id", u.getId());
+                    m.put("displayName", u.getDisplayName());
+                    m.put("headline", u.getHeadline());
+                    m.put("profileImageUrl", u.getProfileImageUrl());
+                    m.put("bio", u.getBio());
+                    m.put("teamRole", u.getTeamRole());
+                    return m;
+                })
+                .sorted(Comparator.comparingInt(m -> {
+                    int idx = TEAM_ROLE_ORDER.indexOf(m.get("teamRole"));
+                    return idx == -1 ? Integer.MAX_VALUE : idx;
+                }))
+                .collect(java.util.stream.Collectors.toList());
+            return ResponseEntity.ok(members);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(errorMap("Failed to fetch team members: " + e.getMessage()));
+        }
+    }
+
+    /**
      * GET /api/auth/public-profile/{userId} — no auth required
      */
     @GetMapping("/public-profile/{userId}")
@@ -346,6 +385,7 @@ public class AuthController {
             profile.put("profileImageUrl", user.getProfileImageUrl());
             profile.put("location", user.getLocation());
             profile.put("bio", user.getBio());
+            profile.put("teamRole", user.getTeamRole());
             profile.put("createdDate", user.getCreatedDate());
             return ResponseEntity.ok(profile);
         } catch (Exception e) {
@@ -422,6 +462,13 @@ public class AuthController {
             if (updated.getFields() != null) user.setFields(updated.getFields());
             // Plan changes should go through payment flow, but allow for now
             if (updated.getPlan() != null) user.setPlan(updated.getPlan());
+            // teamRole is admin-only — silently ignore if caller is not admin
+            if (updated.getTeamRole() != null) {
+                Optional<User> callerOpt = callerUserId != null ? userRepo.findById(callerUserId) : Optional.empty();
+                if (callerOpt.isPresent() && RoleUtil.isAdmin(callerOpt.get().getRole())) {
+                    user.setTeamRole(updated.getTeamRole().isBlank() ? null : updated.getTeamRole());
+                }
+            }
             user.setModifiedDate(LocalDateTime.now());
             user = userRepo.save(user);
             return ResponseEntity.ok(user);

@@ -53,6 +53,9 @@ public class User {
     @Column(name = "plan")
     private String plan; // "Free", "Premium", "Gold", "Creator"
 
+    @Column(name = "team_role")
+    private String teamRole; // SaatSaheli team title, admin-assignable only
+
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     @Column(name = "created_date")
     private LocalDateTime createdDate;
@@ -111,6 +114,9 @@ public class User {
 
     public String getPlan() { return plan; }
     public void setPlan(String plan) { this.plan = plan; }
+
+    public String getTeamRole() { return teamRole; }
+    public void setTeamRole(String teamRole) { this.teamRole = teamRole; }
 
     public LocalDateTime getCreatedDate() { return createdDate; }
     public void setCreatedDate(LocalDateTime createdDate) { this.createdDate = createdDate; }

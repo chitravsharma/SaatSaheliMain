@@ -8,17 +8,30 @@ import "../Profile.css";
 
 const API = process.env.REACT_APP_API_URL;
 
+const TEAM_ROLE_OPTIONS = [
+  "Founder / Editor-in-Chief",
+  "Managing Editor",
+  "Content Head",
+  "Community Manager",
+  "Marketing/Growth Lead",
+  "Tech Lead (or CTO)",
+];
+
+const BIO_MAX = 3000; // ~500 words
+
 function Profile() {
   const { user } = useAuth();
   const strings = useStrings();
   const navigate = useNavigate();
   const s = strings.profile;
+  const isAdmin = user && (user.role === "ADMIN" || user.role === "SUPER_ADMIN");
 
   const [form, setForm] = useState({
     displayName: "",
     headline: "",
     location: "",
     bio: "",
+    teamRole: "",
   });
   const [interests, setInterests] = useState([]);
   const [fields, setFields] = useState([]);
@@ -41,6 +54,7 @@ function Profile() {
           headline: data.headline || "",
           location: data.location || "",
           bio: data.bio || "",
+          teamRole: data.teamRole || "",
         });
         setProfileImageUrl(data.profileImageUrl || "");
         setInterests(data.interests ? data.interests.split(",") : []);
@@ -105,7 +119,7 @@ function Profile() {
     setError("");
     setMessage("");
     try {
-      await api.put(`${API}/api/auth/user/${user.userId}`, {
+      const payload = {
         displayName: form.displayName,
         headline: form.headline,
         location: form.location,
@@ -113,7 +127,9 @@ function Profile() {
         profileImageUrl: profileImageUrl,
         interests: interests.join(","),
         fields: fields.join(","),
-      });
+      };
+      if (isAdmin) payload.teamRole = form.teamRole;
+      await api.put(`${API}/api/auth/user/${user.userId}`, payload);
       navigate(profileUrl(user.userId, form.displayName || user.name));
     } catch {
       setError(s.saveFailed);
@@ -203,10 +219,30 @@ function Profile() {
             value={form.bio}
             onChange={handleChange}
             placeholder={s.placeholderBio}
-            rows={5}
-            maxLength={1000}
+            rows={10}
+            maxLength={BIO_MAX}
           />
+          <div className="profile-char-counter" style={{ fontSize: 12, color: "#666", textAlign: "right", marginTop: 4 }}>
+            {form.bio.length} / {BIO_MAX} characters (~500 words)
+          </div>
         </div>
+
+        {isAdmin && (
+          <div className="profile-field">
+            <label htmlFor="teamRole">SaatSaheli Team Role</label>
+            <select
+              id="teamRole"
+              name="teamRole"
+              value={form.teamRole}
+              onChange={handleChange}
+            >
+              <option value="">— None —</option>
+              {TEAM_ROLE_OPTIONS.map((opt) => (
+                <option key={opt} value={opt}>{opt}</option>
+              ))}
+            </select>
+          </div>
+        )}
 
         <div className="profile-field">
           <label>{s.labelInterests}</label>

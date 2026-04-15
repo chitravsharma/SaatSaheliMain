@@ -88,6 +88,18 @@ const Header = () => {
               {strings.header.navChat || "Chat"}
             </Link>
           )}
+          {user && (
+            <Link to="/account" className="nav-link" onClick={closeMobileNav}>
+              <svg className="nav-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              My Account
+            </Link>
+          )}
+          {user && (
+            <Link to="/help-support" className="nav-link" onClick={closeMobileNav}>
+              <svg className="nav-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2a10 10 0 100 20 10 10 0 000-20z"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+              Need Help in Content Creation
+            </Link>
+          )}
           {user && (user.role === "ADMIN" || user.role === "SUPER_ADMIN") && (
             <Link to="/admin" className="nav-link" onClick={closeMobileNav}>
               <svg className="nav-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>

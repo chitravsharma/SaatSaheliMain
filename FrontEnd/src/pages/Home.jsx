@@ -303,6 +303,22 @@ function Home() {
           </span>
           Help
         </Link>
+        {user && (
+          <Link to="/account" className="home-tag-link">
+            <span className="home-tag-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            </span>
+            My Account
+          </Link>
+        )}
+        {user && (
+          <Link to="/help-support" className="home-tag-link">
+            <span className="home-tag-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2a10 10 0 100 20 10 10 0 000-20z"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            </span>
+            Need Help in Content Creation
+          </Link>
+        )}
       </div>
 
       {loading && <div className="loading-spinner" />}
