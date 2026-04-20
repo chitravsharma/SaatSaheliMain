@@ -33,3 +33,13 @@ SaatSaheli/uploads/
 
 # Local dev seed scripts (hardcoded IDs, not for shared use)
 populate_magazine*.py
+
+# Neon CLI local state
+.neon
+
+# iCloud-renamed node_modules (workaround, not real source)
+FrontEnd/node_modules.nosync/
+
+# One-off local assets not part of the app
+saatsaheli-logo.png
+saatsaheli-stickers.html
