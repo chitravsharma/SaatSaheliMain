@@ -7,35 +7,41 @@ import java.util.concurrent.ConcurrentHashMap;
 @Component
 public class RateLimiter {
 
-    private static final int MAX_ATTEMPTS = 10; // max attempts per window
-    private static final long WINDOW_MS = 15 * 60 * 1000; // 15-minute window
+    private static final int DEFAULT_MAX_ATTEMPTS = 10;
+    private static final long DEFAULT_WINDOW_MS = 15 * 60 * 1000;
 
     private final ConcurrentHashMap<String, long[]> attempts = new ConcurrentHashMap<>();
     // long[0] = count, long[1] = window start time
 
     /**
-     * Check if the given key (e.g., IP address or email) is rate-limited.
-     * Returns true if the request is ALLOWED, false if rate-limited.
+     * Strict default policy: 10 attempts per 15-minute window.
+     * Used for auth endpoints (login, signup, forgot-password).
      */
     public boolean tryAcquire(String key) {
-        long now = System.currentTimeMillis();
-        attempts.compute(key, (k, val) -> {
-            if (val == null || now - val[1] > WINDOW_MS) {
-                return new long[]{1, now};
-            }
-            val[0]++;
-            return val;
-        });
-        long[] val = attempts.get(key);
-        return val != null && val[0] <= MAX_ATTEMPTS;
+        return tryAcquire(key, DEFAULT_MAX_ATTEMPTS, DEFAULT_WINDOW_MS);
     }
 
     /**
-     * Get remaining attempts for a key.
+     * Per-endpoint policy. Returns true if allowed, false if rate-limited.
+     */
+    public boolean tryAcquire(String key, int maxAttempts, long windowMs) {
+        long now = System.currentTimeMillis();
+        long[] val = attempts.compute(key, (k, v) -> {
+            if (v == null || now - v[1] > windowMs) {
+                return new long[]{1, now};
+            }
+            v[0]++;
+            return v;
+        });
+        return val[0] <= maxAttempts;
+    }
+
+    /**
+     * Remaining attempts for a key under the default policy.
      */
     public int remaining(String key) {
         long[] val = attempts.get(key);
-        if (val == null || System.currentTimeMillis() - val[1] > WINDOW_MS) return MAX_ATTEMPTS;
-        return (int) Math.max(0, MAX_ATTEMPTS - val[0]);
+        if (val == null || System.currentTimeMillis() - val[1] > DEFAULT_WINDOW_MS) return DEFAULT_MAX_ATTEMPTS;
+        return (int) Math.max(0, DEFAULT_MAX_ATTEMPTS - val[0]);
     }
 }

@@ -10,6 +10,7 @@ import com.SaatSaheli.spring.model.Page;
 import com.SaatSaheli.spring.model.User;
 import com.SaatSaheli.spring.repository.UserRepository;
 import com.SaatSaheli.spring.service.ExportService;
+import com.SaatSaheli.spring.util.RateLimiter;
 import com.SaatSaheli.spring.util.RoleUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,6 +38,9 @@ public class BookController {
     @Autowired
     private UserRepository userRepo;
 
+    @Autowired
+    private RateLimiter rateLimiter;
+
     @GetMapping("/search")
     public ResponseEntity<?> searchBooks(
             @RequestParam(required = false) Long id,
@@ -44,8 +48,14 @@ public class BookController {
             @RequestParam(required = false) String author,
             @RequestParam(required = false) String status,
             @RequestParam(required = false) Long userId,
-            @RequestParam(required = false) String category) {
+            @RequestParam(required = false) String category,
+            HttpServletRequest request) {
         try {
+            String clientIp = request.getRemoteAddr();
+            if (!rateLimiter.tryAcquire("search:" + clientIp, 60, 60_000)) {
+                return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+                        .body(errorMap("Too many search requests. Please slow down."));
+            }
             return ResponseEntity.ok(bookService.searchBooks(id, title, author, status, userId, category));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
