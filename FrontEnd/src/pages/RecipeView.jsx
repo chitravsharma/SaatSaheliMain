@@ -48,9 +48,15 @@ export default function RecipeView() {
           user ? api.get(`${API}/api/social/favorite?targetType=${TARGET_TYPE}&targetId=${recipeId}&userId=${user.userId}`) : Promise.resolve({ data: { favorited: false } }),
           api.get(`${API}/api/social/comments?targetType=${TARGET_TYPE}&targetId=${recipeId}`),
         ]);
-        setLiked(likeRes.data.liked || false);
-        setLikeCount(likeRes.data.likeCount || 0);
-        setFavorited(favRes.data.favorited || false);
+        if (user) {
+          setLiked(likeRes.data.liked || false);
+          setFavorited(favRes.data.favorited || false);
+        } else {
+          // Reflect anonymous localStorage state so the hearts/stars persist visually
+          setLiked(localStorage.getItem(`anon_like_RECIPE_${recipeId}`) === "true");
+          setFavorited(localStorage.getItem(`anon_fav_RECIPE_${recipeId}`) === "true");
+        }
+        setLikeCount(likeRes.data.count || 0);
         setComments(Array.isArray(commentsRes.data) ? commentsRes.data : []);
       } catch (err) {
         // non-fatal
@@ -59,18 +65,30 @@ export default function RecipeView() {
   }, [recipeId, user]);
 
   const handleLike = async () => {
-    if (!user) return navigate("/Login");
+    if (!user) {
+      const key = `anon_like_RECIPE_${recipeId}`;
+      const wasLiked = localStorage.getItem(key) === "true";
+      localStorage.setItem(key, wasLiked ? "false" : "true");
+      setLiked(!wasLiked);
+      return;
+    }
     try {
       const res = await api.post(`${API}/api/social/like`, {
         userId: user.userId, targetType: TARGET_TYPE, targetId: Number(recipeId),
       });
       setLiked(res.data.liked);
-      setLikeCount(res.data.likeCount);
+      setLikeCount(res.data.count);
     } catch (err) { console.error(err); }
   };
 
   const handleFavorite = async () => {
-    if (!user) return navigate("/Login");
+    if (!user) {
+      const key = `anon_fav_RECIPE_${recipeId}`;
+      const wasFav = localStorage.getItem(key) === "true";
+      localStorage.setItem(key, wasFav ? "false" : "true");
+      setFavorited(!wasFav);
+      return;
+    }
     try {
       const res = await api.post(`${API}/api/social/favorite`, {
         userId: user.userId, targetType: TARGET_TYPE, targetId: Number(recipeId),
