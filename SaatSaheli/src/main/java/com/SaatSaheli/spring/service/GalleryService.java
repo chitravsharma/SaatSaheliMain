@@ -146,6 +146,18 @@ public class GalleryService {
         imageRepo.deleteById(imageId);
     }
 
+    public GalleryImage updateImageCaption(Long imageId, String caption, Long requestUserId) {
+        Optional<GalleryImage> opt = imageRepo.findById(imageId);
+        if (opt.isEmpty()) throw new RuntimeException("Image not found");
+        GalleryImage img = opt.get();
+        Optional<Gallery> galleryOpt = galleryRepo.findById(img.getGalleryId());
+        if (galleryOpt.isPresent() && requestUserId != null && !requestUserId.equals(galleryOpt.get().getUserId())) {
+            throw new RuntimeException("Only the owner can edit captions");
+        }
+        img.setCaption(caption);
+        return imageRepo.save(img);
+    }
+
     private void enrichWithAuthor(Gallery gallery) {
         if (gallery.getUserId() != null) {
             Optional<User> userOpt = userRepo.findById(gallery.getUserId());

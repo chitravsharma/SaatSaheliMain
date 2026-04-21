@@ -23,7 +23,10 @@ function GalleryView() {
   const [newComment, setNewComment] = useState("");
   const [showComments, setShowComments] = useState(false);
   const [error, setError] = useState("");
+  const [imageStates, setImageStates] = useState({}); // {imageId: {liked, likeCount, favorited}}
+  const [imageShareCopied, setImageShareCopied] = useState(null); // imageId briefly
   const commentInputRef = useRef(null);
+  const loginPromptRef = useRef(null);
 
   useEffect(() => {
     const fetchGallery = async () => {
@@ -39,6 +42,32 @@ function GalleryView() {
     };
     fetchGallery();
   }, [galleryId]);
+
+  // Fetch per-image social state when gallery images load
+  useEffect(() => {
+    if (!gallery || !gallery.images || gallery.images.length === 0) return;
+    (async () => {
+      const states = {};
+      await Promise.all(
+        gallery.images.map(async (img) => {
+          try {
+            const [likeRes, favRes] = await Promise.all([
+              api.get(`${API}/api/social/like?targetType=GALLERY_IMAGE&targetId=${img.id}${user ? `&userId=${user.userId}` : ""}`),
+              user ? api.get(`${API}/api/social/favorite?targetType=GALLERY_IMAGE&targetId=${img.id}&userId=${user.userId}`) : Promise.resolve({ data: { favorited: false } }),
+            ]);
+            states[img.id] = {
+              liked: user ? (likeRes.data.liked || false) : (localStorage.getItem(`anon_like_GALLERY_IMAGE_${img.id}`) === "true"),
+              likeCount: likeRes.data.count || 0,
+              favorited: user ? (favRes.data.favorited || false) : (localStorage.getItem(`anon_fav_GALLERY_IMAGE_${img.id}`) === "true"),
+            };
+          } catch (err) {
+            states[img.id] = { liked: false, likeCount: 0, favorited: false };
+          }
+        })
+      );
+      setImageStates(states);
+    })();
+  }, [gallery, user]);
 
   useEffect(() => {
     if (!galleryId) return;
@@ -95,6 +124,74 @@ function GalleryView() {
       setFavorited(res.data.favorited);
     } catch (err) {
       setError("Failed to update favorite. Please try again.");
+    }
+  };
+
+  // Per-image actions
+  const handleImageLike = async (imageId) => {
+    if (!user) {
+      const key = `anon_like_GALLERY_IMAGE_${imageId}`;
+      const wasLiked = localStorage.getItem(key) === "true";
+      localStorage.setItem(key, wasLiked ? "false" : "true");
+      setImageStates((s) => ({
+        ...s,
+        [imageId]: {
+          ...(s[imageId] || { likeCount: 0, favorited: false }),
+          liked: !wasLiked,
+          likeCount: (s[imageId]?.likeCount || 0) + (wasLiked ? -1 : 1),
+        },
+      }));
+      return;
+    }
+    try {
+      const res = await api.post(`${API}/api/social/like`, {
+        userId: user.userId, targetType: "GALLERY_IMAGE", targetId: Number(imageId),
+      });
+      setImageStates((s) => ({
+        ...s,
+        [imageId]: { ...(s[imageId] || {}), liked: res.data.liked, likeCount: res.data.count },
+      }));
+    } catch (err) {
+      setError("Failed to like image.");
+    }
+  };
+
+  const handleImageFavorite = async (imageId) => {
+    if (!user) {
+      const key = `anon_fav_GALLERY_IMAGE_${imageId}`;
+      const wasFav = localStorage.getItem(key) === "true";
+      localStorage.setItem(key, wasFav ? "false" : "true");
+      setImageStates((s) => ({
+        ...s,
+        [imageId]: { ...(s[imageId] || { liked: false, likeCount: 0 }), favorited: !wasFav },
+      }));
+      return;
+    }
+    try {
+      const res = await api.post(`${API}/api/social/favorite`, {
+        userId: user.userId, targetType: "GALLERY_IMAGE", targetId: Number(imageId),
+      });
+      setImageStates((s) => ({
+        ...s,
+        [imageId]: { ...(s[imageId] || {}), favorited: res.data.favorited },
+      }));
+    } catch (err) {
+      setError("Failed to favorite image.");
+    }
+  };
+
+  const handleImageShare = async (imageId) => {
+    const url = `${window.location.origin}/gallery/${galleryId}?img=${imageId}`;
+    const shareData = { title: gallery?.title || "Gallery", url };
+    if (navigator.share) {
+      try { await navigator.share(shareData); return; } catch { /* cancelled */ }
+    }
+    try {
+      await navigator.clipboard.writeText(url);
+      setImageShareCopied(imageId);
+      setTimeout(() => setImageShareCopied(null), 1500);
+    } catch (err) {
+      setError("Failed to copy link.");
     }
   };
 
@@ -163,7 +260,7 @@ function GalleryView() {
           <svg width="20" height="20" viewBox="0 0 24 24" fill={liked ? "#e74c3c" : "none"} stroke={liked ? "#e74c3c" : "currentColor"} strokeWidth="2"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
           <span>{likeCount}</span>
         </button>
-        <button className={`ss-btn-icon ${showComments ? "active" : ""}`} onClick={() => { setShowComments(!showComments); if (!showComments) setTimeout(() => commentInputRef.current?.focus(), 100); }} title="Comments">
+        <button className={`ss-btn-icon ${showComments ? "active" : ""}`} onClick={() => { setShowComments(!showComments); if (!showComments) setTimeout(() => { const target = commentInputRef.current || loginPromptRef.current; target?.focus(); target?.scrollIntoView({ behavior: "smooth", block: "center" }); }, 100); }} title="Comments">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
           <span>{comments.length}</span>
         </button>
@@ -181,12 +278,48 @@ function GalleryView() {
 
       {/* Photo grid */}
       <div className="gv-grid">
-        {images.map((img, i) => (
-          <div key={img.id || i} className="gv-grid-item" onClick={() => openLightbox(i)} role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") openLightbox(i); }}>
-            <img src={img.imageUrl} alt={img.caption || `Photo ${i + 1}`} className="gv-grid-img" />
-            {img.caption && <div className="gv-grid-caption">{img.caption}</div>}
-          </div>
-        ))}
+        {images.map((img, i) => {
+          const st = imageStates[img.id] || { liked: false, likeCount: 0, favorited: false };
+          return (
+            <div key={img.id || i} className="gv-grid-item">
+              <div
+                className="gv-grid-thumb"
+                onClick={() => openLightbox(i)}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") openLightbox(i); }}
+              >
+                <img src={img.imageUrl} alt={img.caption || `Photo ${i + 1}`} className="gv-grid-img" />
+                {img.caption && <div className="gv-grid-caption">{img.caption}</div>}
+              </div>
+              <div className="gv-image-actions" onClick={(e) => e.stopPropagation()}>
+                <button
+                  className={`gv-image-action ${st.liked ? "active-like" : ""}`}
+                  onClick={() => handleImageLike(img.id)}
+                  title="Like"
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill={st.liked ? "#e74c3c" : "none"} stroke={st.liked ? "#e74c3c" : "currentColor"} strokeWidth="2"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
+                  <span>{st.likeCount}</span>
+                </button>
+                <button
+                  className={`gv-image-action ${st.favorited ? "active-star" : ""}`}
+                  onClick={() => handleImageFavorite(img.id)}
+                  title="Favorite"
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill={st.favorited ? "#d4a017" : "none"} stroke={st.favorited ? "#d4a017" : "currentColor"} strokeWidth="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                </button>
+                <button
+                  className="gv-image-action"
+                  onClick={() => handleImageShare(img.id)}
+                  title="Share"
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+                  {imageShareCopied === img.id && <span className="gv-share-copied">Copied</span>}
+                </button>
+              </div>
+            </div>
+          );
+        })}
       </div>
 
       {images.length === 0 && <p className="gv-empty">No photos in this gallery yet.</p>}
@@ -209,7 +342,7 @@ function GalleryView() {
             </form>
           ) : (
             <p className="gv-login-prompt">
-              <Link to="/Login">Log in</Link> to post a comment.
+              <Link to="/Login" ref={loginPromptRef}>Login with Google or create an account</Link> to comment on this item.
             </p>
           )}
           <div className="gv-comment-list">

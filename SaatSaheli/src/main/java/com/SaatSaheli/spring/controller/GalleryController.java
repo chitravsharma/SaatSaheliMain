@@ -115,6 +115,21 @@ public class GalleryController {
         }
     }
 
+    @PutMapping("/images/{imageId}")
+    public ResponseEntity<?> updateImageCaption(
+            @PathVariable Long imageId,
+            @RequestBody Map<String, Object> body) {
+        try {
+            String caption = (String) body.get("caption");
+            Long userId = body.get("userId") != null ? Long.parseLong(body.get("userId").toString()) : null;
+            return ResponseEntity.ok(galleryService.updateImageCaption(imageId, caption, userId));
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorMap(e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorMap(e.getMessage()));
+        }
+    }
+
     private Map<String, String> errorMap(String message) {
         Map<String, String> map = new HashMap<>();
         map.put("error", message);

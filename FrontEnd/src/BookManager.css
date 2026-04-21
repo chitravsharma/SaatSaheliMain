@@ -1589,8 +1589,8 @@
 }
 
 .rb-login-prompt {
-  font-size: 0.9rem;
-  color: var(--text-muted);
+  font-size: 0.95rem;
+  color: var(--text-primary);
   text-align: center;
   padding: 12px;
 }

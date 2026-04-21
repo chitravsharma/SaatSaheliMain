@@ -41,6 +41,9 @@ import MagazineSubmit from './pages/MagazineSubmit';
 import Feedback from './pages/Feedback';
 import Writers from './pages/Writers';
 import Galleries from './pages/Galleries';
+import Recipes from './pages/Recipes';
+import RecipeEditor from './pages/RecipeEditor';
+import RecipeView from './pages/RecipeView';
 
 
 function BookManagerWrapper() {
@@ -89,6 +92,10 @@ function App() {
           <Route path="/magazine/submit" element={<MagazineSubmit />} />
           <Route path="/galleries" element={<Galleries />} />
           <Route path="/gallery/:galleryId" element={<GalleryView />} />
+          <Route path="/recipes" element={<Recipes />} />
+          <Route path="/recipes/create" element={<ProtectedRoute><RecipeEditor /></ProtectedRoute>} />
+          <Route path="/recipes/:recipeId" element={<RecipeView />} />
+          <Route path="/recipes/:recipeId/edit" element={<ProtectedRoute><RecipeEditor /></ProtectedRoute>} />
           <Route path="/pricing" element={<Pricing />} />
           <Route path="/marketplace" element={<Marketplace />} />
           <Route path="/checkout" element={<ProtectedRoute><Checkout /></ProtectedRoute>} />

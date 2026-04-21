@@ -68,6 +68,7 @@ function Articles() {
   const [openComments, setOpenComments] = useState(null);
   const [newComment, setNewComment] = useState("");
   const commentInputRef = useRef(null);
+  const loginPromptRef = useRef(null);
 
   const showMsg = (msg) => {
     setMessage(msg);
@@ -343,7 +344,11 @@ function Articles() {
     setOpenComments(openComments === articleId ? null : articleId);
     setNewComment("");
     if (openComments !== articleId) {
-      setTimeout(() => commentInputRef.current?.focus(), 100);
+      setTimeout(() => {
+        const target = commentInputRef.current || loginPromptRef.current;
+        target?.focus();
+        target?.scrollIntoView({ behavior: "smooth", block: "center" });
+      }, 100);
     }
   };
 
@@ -440,17 +445,23 @@ function Articles() {
         {/* Comments Section */}
         {isCommentsOpen && (
           <div className="art-comments">
+            {userId ? (
               <form onSubmit={(e) => handleAddComment(e, article.id)} className="rb-comment-form">
                 <input
                   ref={openComments === article.id ? commentInputRef : null}
                   type="text"
                   value={newComment}
                   onChange={(e) => setNewComment(e.target.value)}
-                  placeholder={userId ? "Write a comment..." : "Comment as Guest..."}
+                  placeholder="Write a comment..."
                   className="rb-comment-input"
                 />
                 <button type="submit" className="bm-btn bm-btn-create bm-btn-sm" disabled={!newComment.trim()}>Post</button>
               </form>
+            ) : (
+              <p className="rb-login-prompt">
+                <Link to="/Login" ref={openComments === article.id ? loginPromptRef : null}>Login with Google or create an account</Link> to comment on this item.
+              </p>
+            )}
             <div className="rb-comment-list">
               {commentsArr.map((c) => (
                 <div key={c.id} className="rb-comment-item">

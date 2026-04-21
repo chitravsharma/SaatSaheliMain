@@ -1,0 +1,142 @@
+.recipe-editor-page {
+  max-width: 900px;
+}
+
+.recipe-editor-title {
+  color: var(--text-primary);
+  margin-bottom: 24px;
+}
+
+.recipe-editor-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.recipe-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.recipe-field-label {
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--text-primary);
+}
+
+.recipe-field input[type="text"],
+.recipe-field textarea {
+  padding: 10px 12px;
+  border-radius: 6px;
+  border: 1px solid var(--border-strong);
+  font-size: 0.95rem;
+  background: var(--bg-card);
+  color: var(--text-primary);
+  font-family: inherit;
+}
+
+.recipe-field textarea {
+  resize: vertical;
+  min-height: 100px;
+}
+
+.recipe-images-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 12px;
+}
+
+.recipe-image-slot {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  border: 1px solid var(--border-default);
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--bg-card);
+}
+
+.recipe-image-slot img {
+  width: 100%;
+  aspect-ratio: 4/3;
+  object-fit: cover;
+  display: block;
+}
+
+.recipe-image-remove {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.7);
+  color: #fff;
+  border: none;
+  font-size: 1.1rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.recipe-image-reorder {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  display: flex;
+  gap: 2px;
+}
+
+.recipe-image-reorder button {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.6);
+  color: #fff;
+  border: none;
+  font-size: 0.95rem;
+  cursor: pointer;
+}
+
+.recipe-image-reorder button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.recipe-image-caption {
+  margin: 0 8px 8px;
+  padding: 4px 8px;
+  border: 1px solid var(--border-default);
+  border-radius: 4px;
+  font-size: 0.8rem;
+  background: var(--bg-card);
+  color: var(--text-primary);
+}
+
+.recipe-image-upload {
+  aspect-ratio: 4/3;
+  border: 2px dashed var(--border-strong);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent-gold);
+  font-weight: 600;
+  cursor: pointer;
+  background: var(--bg-card-alt);
+  text-align: center;
+  padding: 8px;
+}
+
+.recipe-image-upload:hover {
+  border-color: var(--accent-gold);
+  background: var(--bg-card);
+}
+
+.recipe-editor-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
