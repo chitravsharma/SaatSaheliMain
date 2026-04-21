@@ -28,6 +28,7 @@ SaatSaheli/uploads/
 .env
 .env.local
 .env.*.local
+env.txt
 !.env.example
 !FrontEnd/.env.example
 
