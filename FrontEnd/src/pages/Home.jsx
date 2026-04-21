@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import api, { getAnonId } from "../utils/api";
 import { useAuth } from "../AuthContext";
@@ -16,6 +16,56 @@ function resolveImageUrl(url) {
   return url;
 }
 
+// Wraps a horizontally-scrolling row and shows prev/next arrows when content overflows.
+function ScrollRow({ className, children }) {
+  const ref = useRef(null);
+  const [canLeft, setCanLeft] = useState(false);
+  const [canRight, setCanRight] = useState(false);
+
+  const update = () => {
+    const el = ref.current;
+    if (!el) return;
+    setCanLeft(el.scrollLeft > 2);
+    setCanRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 2);
+  };
+
+  useEffect(() => {
+    update();
+    const el = ref.current;
+    if (!el) return;
+    el.addEventListener("scroll", update, { passive: true });
+    window.addEventListener("resize", update);
+    return () => {
+      el.removeEventListener("scroll", update);
+      window.removeEventListener("resize", update);
+    };
+  }, [children]);
+
+  const scrollStep = (dir) => {
+    const el = ref.current;
+    if (!el) return;
+    el.scrollBy({ left: dir * Math.max(280, el.clientWidth * 0.8), behavior: "smooth" });
+  };
+
+  return (
+    <div className="home-row-wrap">
+      {canLeft && (
+        <button type="button" className="home-row-arrow home-row-arrow-left" onClick={() => scrollStep(-1)} aria-label="Scroll left">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+      )}
+      <div ref={ref} className={className}>
+        {children}
+      </div>
+      {canRight && (
+        <button type="button" className="home-row-arrow home-row-arrow-right" onClick={() => scrollStep(1)} aria-label="Scroll right">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
+      )}
+    </div>
+  );
+}
+
 function Home() {
   const strings = useStrings();
   const { user } = useAuth();
@@ -23,6 +73,8 @@ function Home() {
   const [recentBooks, setRecentBooks] = useState([]);
   const [galleries, setGalleries] = useState([]);
   const [recentArticles, setRecentArticles] = useState([]);
+  const [recentRecipes, setRecentRecipes] = useState([]);
+  const [recentPodcasts, setRecentPodcasts] = useState([]);
   const [bookCounts, setBookCounts] = useState({ likes: {}, comments: {} });
   const [galleryCounts, setGalleryCounts] = useState({ likes: {}, comments: {} });
   const [articleCounts, setArticleCounts] = useState({ likes: {}, comments: {} });
@@ -30,6 +82,8 @@ function Home() {
   const [userFavorites, setUserFavorites] = useState({});
   const [loading, setLoading] = useState(true);
   const [shareCopiedId, setShareCopiedId] = useState(null);
+  const [podcastShareCopiedId, setPodcastShareCopiedId] = useState(null);
+  const [podcastCounts, setPodcastCounts] = useState({ likes: {}, comments: {} });
   const [adShareCopiedId, setAdShareCopiedId] = useState(null);
   const [advertisements, setAdvertisements] = useState([]);
   const [actionError, setActionError] = useState("");
@@ -53,13 +107,16 @@ function Home() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [booksRes, galleriesRes, articlesRes, bookCountsRes, galleryCountsRes, articleCountsRes] = await Promise.all([
+        const [booksRes, galleriesRes, articlesRes, recipesRes, podcastsRes, bookCountsRes, galleryCountsRes, articleCountsRes, podcastCountsRes] = await Promise.all([
           api.get(`${API}/api/books/search?status=PUBLISHED`),
           api.get(`${API}/api/galleries`),
           api.get(`${API}/api/articles`).catch(() => ({ data: [] })),
+          api.get(`${API}/api/recipes`).catch(() => ({ data: [] })),
+          api.get(`${API}/api/podcasts`).catch(() => ({ data: [] })),
           api.get(`${API}/api/social/counts?targetType=BOOK`).catch(() => ({ data: { likes: {}, comments: {} } })),
           api.get(`${API}/api/social/counts?targetType=GALLERY`).catch(() => ({ data: { likes: {}, comments: {} } })),
           api.get(`${API}/api/social/counts?targetType=ARTICLE`).catch(() => ({ data: { likes: {}, comments: {} } })),
+          api.get(`${API}/api/social/counts?targetType=PODCAST`).catch(() => ({ data: { likes: {}, comments: {} } })),
         ]);
 
         const books = Array.isArray(booksRes.data) ? booksRes.data : [];
@@ -72,11 +129,21 @@ function Home() {
 
         const arts = Array.isArray(articlesRes.data) ? articlesRes.data : [];
         arts.sort((a, b) => new Date(b.createdDate) - new Date(a.createdDate));
-        setRecentArticles(arts.slice(0, 6));
+        setRecentArticles(arts.slice(0, 18)); // enough for split rows
+
+        const recs = Array.isArray(recipesRes.data) ? recipesRes.data : [];
+        recs.sort((a, b) => new Date(b.createdDate) - new Date(a.createdDate));
+        setRecentRecipes(recs.slice(0, 6));
+
+        const pods = (Array.isArray(podcastsRes.data) ? podcastsRes.data : [])
+          .filter(p => p.status === "PUBLISHED");
+        pods.sort((a, b) => new Date(b.createdDate) - new Date(a.createdDate));
+        setRecentPodcasts(pods.slice(0, 6));
 
         setBookCounts(bookCountsRes.data || { likes: {}, comments: {} });
         setGalleryCounts(galleryCountsRes.data || { likes: {}, comments: {} });
         setArticleCounts(articleCountsRes.data || { likes: {}, comments: {} });
+        setPodcastCounts(podcastCountsRes.data || { likes: {}, comments: {} });
       } catch (err) {
         console.error("Failed to fetch home page data:", err);
       } finally {
@@ -197,6 +264,18 @@ function Home() {
     }
   };
 
+  const handlePodcastShare = async (podcast) => {
+    const url = `${window.location.origin}/podcasts`;
+    const text = `Check out "${podcast.title}" on Saat Saheli!`;
+    if (navigator.share) {
+      try { await navigator.share({ title: podcast.title, text, url }); } catch { /* cancelled */ }
+    } else {
+      await navigator.clipboard.writeText(`${text}\n${url}`);
+      setPodcastShareCopiedId(podcast.id);
+      setTimeout(() => setPodcastShareCopiedId(null), 2000);
+    }
+  };
+
   const magLabel = strings.home.catMagazine || "Magazine";
   const booksLabel = strings.home.catBooks || "Books";
   const categoryIcons = {
@@ -273,6 +352,12 @@ function Home() {
           </span>
           Blogs
         </Link>
+        <Link to="/recipes" className="home-tag-link">
+          <span className="home-tag-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8h1a4 4 0 010 8h-1"/><path d="M2 8h16v9a4 4 0 01-4 4H6a4 4 0 01-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>
+          </span>
+          Recipes
+        </Link>
         <Link to="/podcasts" className="home-tag-link">
           <span className="home-tag-icon">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
@@ -284,6 +369,12 @@ function Home() {
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
           </span>
           Writers
+        </Link>
+        <Link to="/writers?type=artist" className="home-tag-link">
+          <span className="home-tag-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="13.5" cy="6.5" r=".5"/><circle cx="17.5" cy="10.5" r=".5"/><circle cx="8.5" cy="7.5" r=".5"/><circle cx="6.5" cy="12.5" r=".5"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 011.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/></svg>
+          </span>
+          Artists
         </Link>
         <Link to="/galleries" className="home-tag-link">
           <span className="home-tag-icon">
@@ -330,6 +421,16 @@ function Home() {
             <p className="home-empty">No published content yet. Be the first to create!</p>
           )}
 
+          {recentBooks.length > 0 && (
+            <div className="home-section-header">
+              <h2 className="home-section-heading">Books</h2>
+              <div className="home-section-actions">
+                <Link to="/books" className="ss-btn ss-btn-outline">Browse Books</Link>
+                <Link to="/writers?type=writer" className="ss-btn ss-btn-outline">Meet Our Writers</Link>
+              </div>
+            </div>
+          )}
+
           {Object.keys(grouped).length > 0 && (
             <div className="home-categories">
               {Object.entries(grouped).map(([category, books]) => (
@@ -338,7 +439,7 @@ function Home() {
                     <span className="home-category-icon">{categoryIcons[category] || "\uD83D\uDCDA"}</span>
                     {category}
                   </h3>
-                  <div className="home-books-row">
+                  <ScrollRow className="home-books-row">
                     {books.map((book) => {
                       const likeC = bookCounts.likes[book.id] || 0;
                       const commentC = bookCounts.comments[book.id] || 0;
@@ -387,7 +488,7 @@ function Home() {
                         </div>
                       );
                     })}
-                  </div>
+                  </ScrollRow>
                   {category === magLabel && (
                     <div style={{ textAlign: 'left', margin: '16px 0 8px' }}>
                       <Link to="/magazine/submit" className="magazine-submit-cta">
@@ -438,8 +539,14 @@ function Home() {
       {/* 2. Photo Galleries */}
       {!loading && galleries.length > 0 && (
         <div className="home-section home-section-galleries">
-          <h2 className="home-section-heading">Photo Galleries</h2>
-          <div className="home-gallery-row">
+          <div className="home-section-header">
+            <h2 className="home-section-heading">Photo Galleries</h2>
+            <div className="home-section-actions">
+              <Link to="/galleries" className="ss-btn ss-btn-outline">See all Galleries</Link>
+              <Link to="/writers?type=artist" className="ss-btn ss-btn-outline">Meet Our Artists</Link>
+            </div>
+          </div>
+          <ScrollRow className="home-gallery-row">
             {galleries.map((gallery) => {
               const coverImg = gallery.coverImageUrl || (gallery.images && gallery.images[0]?.imageUrl);
               const imgCount = gallery.images ? gallery.images.length : 0;
@@ -482,63 +589,180 @@ function Home() {
                 </div>
               );
             })}
-          </div>
+          </ScrollRow>
         </div>
       )}
 
-      {/* 3. Blogs & Articles */}
-      {!loading && recentArticles.length > 0 && (
-        <div className="home-section home-section-articles">
-          <h2 className="home-section-heading">Blogs & Articles</h2>
-          <div className="home-articles-row">
-            {recentArticles.map((article) => {
-              const typePath = article.contentType === "Poetry" ? "poems"
-                : article.contentType === "Blog" ? "blogs"
-                : "articles";
-              return (
-                <div key={article.id} className="home-article-card">
-                  <Link to={`/${typePath}/${article.id}`} className="home-article-link">
-                    {article.imageUrl && (
-                      <img src={resolveImageUrl(article.imageUrl)} alt={article.headline} className="home-article-img" />
-                    )}
-                    <div className="home-article-info">
-                      <span className={`home-article-type home-article-type-${(article.contentType || "article").toLowerCase()}`}>
-                        {article.contentType || "Article"}
-                      </span>
-                      <span className="home-article-title">{article.headline}</span>
-                      {article.authorName && <span className="home-article-author">by {article.authorName}</span>}
-                      <span className="home-article-date">{new Date(article.createdDate).toLocaleDateString()}</span>
-                    </div>
-                  </Link>
-                  <div className="home-card-social">
-                    <button className={`ss-btn-icon-sm ${userLikes[`ARTICLE_${article.id}`] ? "active" : ""}`} onClick={() => handleLike("ARTICLE", article.id)} title="Like">
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill={userLikes[`ARTICLE_${article.id}`] ? "#e74c3c" : "none"} stroke={userLikes[`ARTICLE_${article.id}`] ? "#e74c3c" : "currentColor"} strokeWidth="2"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
-                      <span>{articleCounts.likes[article.id] || 0}</span>
-                    </button>
-                    <Link to={`/${typePath}/${article.id}`} className="ss-btn-icon-sm" title="Comments">
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
-                      <span>{articleCounts.comments[article.id] || 0}</span>
-                    </Link>
-                    <button className={`ss-btn-icon-sm ${userFavorites[`ARTICLE_${article.id}`] ? "active" : ""}`} onClick={() => handleFavorite("ARTICLE", article.id)} title="Favorite">
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill={userFavorites[`ARTICLE_${article.id}`] ? "#d4a017" : "none"} stroke={userFavorites[`ARTICLE_${article.id}`] ? "#d4a017" : "currentColor"} strokeWidth="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-                    </button>
-                    <button className="ss-btn-icon-sm" onClick={() => handleShare(article)} title="Share">
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
-                      {shareCopiedId === article.id ? <span>Copied!</span> : <span>Share</span>}
-                    </button>
+      {/* 3. Content rows — separate sections per type, compact card when no image */}
+      {(() => {
+        const poems = recentArticles.filter(a => a.contentType === "Poetry").slice(0, 6);
+        const blogs = recentArticles.filter(a => a.contentType === "Blog").slice(0, 6);
+        const arts  = recentArticles.filter(a => !a.contentType || (a.contentType !== "Poetry" && a.contentType !== "Blog")).slice(0, 6);
+
+        const renderArticleCard = (article) => {
+          const typePath = article.contentType === "Poetry" ? "poems"
+            : article.contentType === "Blog" ? "blogs"
+            : "articles";
+          const hasImage = !!article.imageUrl;
+          return (
+            <div key={`a-${article.id}`} className={`home-article-card ${hasImage ? "" : "home-article-card-compact"}`}>
+              <Link to={`/${typePath}/${article.id}`} className="home-article-link">
+                {hasImage && (
+                  <img src={resolveImageUrl(article.imageUrl)} alt={article.headline} className="home-article-img" />
+                )}
+                <div className="home-article-info">
+                  <span className={`home-article-type home-article-type-${(article.contentType || "article").toLowerCase()}`}>
+                    {article.contentType || "Article"}
+                  </span>
+                  <span className="home-article-title">{article.headline}</span>
+                  {article.authorName && <span className="home-article-author">by {article.authorName}</span>}
+                  <span className="home-article-date">{new Date(article.createdDate).toLocaleDateString()}</span>
+                </div>
+              </Link>
+              <div className="home-card-social">
+                <button className={`ss-btn-icon-sm ${userLikes[`ARTICLE_${article.id}`] ? "active" : ""}`} onClick={() => handleLike("ARTICLE", article.id)} title="Like">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill={userLikes[`ARTICLE_${article.id}`] ? "#e74c3c" : "none"} stroke={userLikes[`ARTICLE_${article.id}`] ? "#e74c3c" : "currentColor"} strokeWidth="2"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
+                  <span>{articleCounts.likes[article.id] || 0}</span>
+                </button>
+                <Link to={`/${typePath}/${article.id}`} className="ss-btn-icon-sm" title="Comments">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+                  <span>{articleCounts.comments[article.id] || 0}</span>
+                </Link>
+                <button className={`ss-btn-icon-sm ${userFavorites[`ARTICLE_${article.id}`] ? "active" : ""}`} onClick={() => handleFavorite("ARTICLE", article.id)} title="Favorite">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill={userFavorites[`ARTICLE_${article.id}`] ? "#d4a017" : "none"} stroke={userFavorites[`ARTICLE_${article.id}`] ? "#d4a017" : "currentColor"} strokeWidth="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                </button>
+                <button className="ss-btn-icon-sm" onClick={() => handleShare(article)} title="Share">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+                  {shareCopiedId === article.id ? <span>Copied!</span> : <span>Share</span>}
+                </button>
+              </div>
+            </div>
+          );
+        };
+
+        const renderPodcastCard = (podcast) => {
+          const hasImage = !!podcast.coverImageUrl;
+          return (
+            <div key={`p-${podcast.id}`} className={`home-article-card ${hasImage ? "" : "home-article-card-compact"}`}>
+              <Link to={`/podcasts`} className="home-article-link">
+                {hasImage && <img src={podcast.coverImageUrl} alt={podcast.title} className="home-article-img" />}
+                <div className="home-article-info">
+                  <span className="home-article-type home-article-type-poetry">Podcast</span>
+                  <span className="home-article-title">{podcast.title}</span>
+                  {podcast.category && <span className="home-article-author">{podcast.category}</span>}
+                  {podcast.authorName && <span className="home-article-author">by {podcast.authorName}</span>}
+                  <span className="home-article-date">{new Date(podcast.createdDate).toLocaleDateString()}</span>
+                </div>
+              </Link>
+              <div className="home-card-social">
+                <button className={`ss-btn-icon-sm ${userLikes[`PODCAST_${podcast.id}`] ? "active" : ""}`} onClick={() => handleLike("PODCAST", podcast.id)} title="Like">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill={userLikes[`PODCAST_${podcast.id}`] ? "#e74c3c" : "none"} stroke={userLikes[`PODCAST_${podcast.id}`] ? "#e74c3c" : "currentColor"} strokeWidth="2"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
+                  <span>{podcastCounts.likes[podcast.id] || 0}</span>
+                </button>
+                <Link to="/podcasts" className="ss-btn-icon-sm" title="Comments">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+                  <span>{podcastCounts.comments[podcast.id] || 0}</span>
+                </Link>
+                <button className={`ss-btn-icon-sm ${userFavorites[`PODCAST_${podcast.id}`] ? "active" : ""}`} onClick={() => handleFavorite("PODCAST", podcast.id)} title="Favorite">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill={userFavorites[`PODCAST_${podcast.id}`] ? "#d4a017" : "none"} stroke={userFavorites[`PODCAST_${podcast.id}`] ? "#d4a017" : "currentColor"} strokeWidth="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                </button>
+                <button className="ss-btn-icon-sm" onClick={() => handlePodcastShare(podcast)} title="Share">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+                  {podcastShareCopiedId === podcast.id ? <span>Copied!</span> : <span>Share</span>}
+                </button>
+              </div>
+            </div>
+          );
+        };
+
+        const renderRecipeCard = (recipe) => {
+          const cover = recipe.images && recipe.images[0]?.imageUrl;
+          const hasImage = !!cover;
+          return (
+            <div key={`r-${recipe.id}`} className={`home-article-card ${hasImage ? "" : "home-article-card-compact"}`}>
+              <Link to={`/recipes/${recipe.id}`} className="home-article-link">
+                {hasImage && <img src={cover} alt={recipe.recipeName} className="home-article-img" />}
+                <div className="home-article-info">
+                  <span className="home-article-type home-article-type-recipe">Recipe</span>
+                  <span className="home-article-title">{recipe.recipeName}</span>
+                  {recipe.cuisine && <span className="home-article-author">{recipe.cuisine}</span>}
+                  {recipe.authorName && <span className="home-article-author">by {recipe.authorName}</span>}
+                  <span className="home-article-date">{new Date(recipe.createdDate).toLocaleDateString()}</span>
+                </div>
+              </Link>
+            </div>
+          );
+        };
+
+        return (
+          <>
+            {!loading && poems.length > 0 && (
+              <div className="home-section home-section-articles">
+                <div className="home-section-header">
+                  <h2 className="home-section-heading">Poems / कविताएँ</h2>
+                  <div className="home-section-actions">
+                    <Link to="/poems" className="ss-btn ss-btn-outline">See all Poems</Link>
+                    <Link to="/writers?type=poet" className="ss-btn ss-btn-outline">Meet Our Poets</Link>
                   </div>
                 </div>
-              );
-            })}
-          </div>
-          <div className="home-section-more">
-            <Link to="/poems" className="ss-btn ss-btn-outline" style={{ marginRight: 8 }}>Poems</Link>
-            <Link to="/blogs" className="ss-btn ss-btn-outline" style={{ marginRight: 8 }}>Blogs</Link>
-            <Link to="/articles" className="ss-btn ss-btn-outline" style={{ marginRight: 8 }}>Articles</Link>
-            <Link to="/writers" className="ss-btn ss-btn-outline">Meet Our Writers</Link>
-          </div>
-        </div>
-      )}
+                <ScrollRow className="home-articles-row">{poems.map(renderArticleCard)}</ScrollRow>
+              </div>
+            )}
+
+            {!loading && blogs.length > 0 && (
+              <div className="home-section home-section-articles">
+                <div className="home-section-header">
+                  <h2 className="home-section-heading">Blogs</h2>
+                  <div className="home-section-actions">
+                    <Link to="/blogs" className="ss-btn ss-btn-outline">See all Blogs</Link>
+                    <Link to="/writers?type=writer" className="ss-btn ss-btn-outline">Meet Our Writers</Link>
+                  </div>
+                </div>
+                <ScrollRow className="home-articles-row">{blogs.map(renderArticleCard)}</ScrollRow>
+              </div>
+            )}
+
+            {!loading && arts.length > 0 && (
+              <div className="home-section home-section-articles">
+                <div className="home-section-header">
+                  <h2 className="home-section-heading">Articles</h2>
+                  <div className="home-section-actions">
+                    <Link to="/articles" className="ss-btn ss-btn-outline">See all Articles</Link>
+                    <Link to="/writers?type=writer" className="ss-btn ss-btn-outline">Meet Our Writers</Link>
+                  </div>
+                </div>
+                <ScrollRow className="home-articles-row">{arts.map(renderArticleCard)}</ScrollRow>
+              </div>
+            )}
+
+            {!loading && recentRecipes.length > 0 && (
+              <div className="home-section home-section-articles">
+                <div className="home-section-header">
+                  <h2 className="home-section-heading">Recipes / व्यंजन</h2>
+                  <div className="home-section-actions">
+                    <Link to="/recipes" className="ss-btn ss-btn-outline">See all Recipes</Link>
+                    <Link to="/writers?type=cook" className="ss-btn ss-btn-outline">Meet Our Cooks</Link>
+                  </div>
+                </div>
+                <ScrollRow className="home-articles-row">{recentRecipes.map(renderRecipeCard)}</ScrollRow>
+              </div>
+            )}
+
+            {!loading && recentPodcasts.length > 0 && (
+              <div className="home-section home-section-articles">
+                <div className="home-section-header">
+                  <h2 className="home-section-heading">Podcasts</h2>
+                  <div className="home-section-actions">
+                    <Link to="/podcasts" className="ss-btn ss-btn-outline">See all Podcasts</Link>
+                    <Link to="/writers" className="ss-btn ss-btn-outline">Meet Our Creators</Link>
+                  </div>
+                </div>
+                <ScrollRow className="home-articles-row">{recentPodcasts.map(renderPodcastCard)}</ScrollRow>
+              </div>
+            )}
+          </>
+        );
+      })()}
 
       {/* Testimonials - What Our Readers Say */}
       {!loading && testimonials.length > 0 && (
@@ -566,8 +790,8 @@ function Home() {
               );
             })}
           </div>
-          <div className="home-section-more">
-            <Link to="/feedback" className="ss-btn ss-btn-outline">Share Your Feedback</Link>
+          <div className="home-section-more home-feedback-more">
+            <Link to="/feedback" className="ss-btn ss-btn-outline home-feedback-cta">Share Your Feedback</Link>
           </div>
         </div>
       )}

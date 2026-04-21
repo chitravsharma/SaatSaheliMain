@@ -11,6 +11,7 @@ const Footer = () => {
   return (
     <footer className="site-footer" role="contentinfo">
       <nav className="footer-links" aria-label="Footer navigation">
+        <Link to="/" className="footer-link">Home</Link>
         <Link to="/contacts" className="footer-link">{strings.footer.contactUs}</Link>
         <Link to="/policies" className="footer-link">{strings.footer.sitePolicies}</Link>
         <Link to="/feedback" className="footer-link">{strings.footer.feedback}</Link>

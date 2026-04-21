@@ -2,13 +2,17 @@ package com.SaatSaheli.spring.controller;
 
 import com.SaatSaheli.spring.model.Article;
 import com.SaatSaheli.spring.model.Book;
+import com.SaatSaheli.spring.model.Gallery;
 import com.SaatSaheli.spring.model.Login;
 import com.SaatSaheli.spring.model.Podcast;
+import com.SaatSaheli.spring.model.Recipe;
 import com.SaatSaheli.spring.model.User;
 import com.SaatSaheli.spring.repository.ArticleRepository;
 import com.SaatSaheli.spring.repository.BookRepository;
+import com.SaatSaheli.spring.repository.GalleryRepository;
 import com.SaatSaheli.spring.repository.LoginRepository;
 import com.SaatSaheli.spring.repository.PodcastRepository;
+import com.SaatSaheli.spring.repository.RecipeRepository;
 import com.SaatSaheli.spring.repository.UserRepository;
 import com.SaatSaheli.spring.util.JwtUtil;
 import com.SaatSaheli.spring.util.RateLimiter;
@@ -62,6 +66,12 @@ public class AuthController {
 
     @Autowired
     private PodcastRepository podcastRepo;
+
+    @Autowired
+    private RecipeRepository recipeRepo;
+
+    @Autowired
+    private GalleryRepository galleryRepo;
 
     private static final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
@@ -269,8 +279,9 @@ public class AuthController {
     @GetMapping("/writers")
     public ResponseEntity<?> getWriters() {
         try {
-            // Collect (userId → most recent content date) across all published content types.
+            // Collect per-user metadata across all published content types.
             Map<Long, LocalDateTime> latestByUser = new HashMap<>();
+            Map<Long, Set<String>> contentTypesByUser = new HashMap<>();
             Set<Long> creatorIds = new HashSet<>();
 
             for (Book b : bookRepo.findByStatusIgnoreCase("PUBLISHED")) {
@@ -278,16 +289,40 @@ public class AuthController {
                 creatorIds.add(b.getUserId());
                 LocalDateTime t = b.getModifiedDate() != null ? b.getModifiedDate() : b.getCreatedDate();
                 mergeLatest(latestByUser, b.getUserId(), t);
+                contentTypesByUser.computeIfAbsent(b.getUserId(), k -> new HashSet<>()).add("book");
             }
             for (Article a : articleRepo.findByStatusOrderByCreatedDateDesc("PUBLISHED")) {
                 if (a.getUserId() == null) continue;
                 creatorIds.add(a.getUserId());
                 mergeLatest(latestByUser, a.getUserId(), a.getCreatedDate());
+                // Map the Article's contentType to our taxonomy
+                String ct = a.getContentType() != null ? a.getContentType().toLowerCase() : "article";
+                if ("poetry".equals(ct)) {
+                    contentTypesByUser.computeIfAbsent(a.getUserId(), k -> new HashSet<>()).add("poem");
+                } else if ("blog".equals(ct)) {
+                    contentTypesByUser.computeIfAbsent(a.getUserId(), k -> new HashSet<>()).add("blog");
+                } else {
+                    contentTypesByUser.computeIfAbsent(a.getUserId(), k -> new HashSet<>()).add("article");
+                }
             }
             for (Podcast p : podcastRepo.findByStatusOrderByCreatedDateDesc("PUBLISHED")) {
                 if (p.getUserId() == null) continue;
                 creatorIds.add(p.getUserId());
                 mergeLatest(latestByUser, p.getUserId(), p.getCreatedDate());
+                contentTypesByUser.computeIfAbsent(p.getUserId(), k -> new HashSet<>()).add("podcast");
+            }
+            for (Recipe r : recipeRepo.findByStatusOrderByCreatedDateDesc("PUBLISHED")) {
+                if (r.getUserId() == null) continue;
+                creatorIds.add(r.getUserId());
+                mergeLatest(latestByUser, r.getUserId(), r.getCreatedDate());
+                contentTypesByUser.computeIfAbsent(r.getUserId(), k -> new HashSet<>()).add("recipe");
+            }
+            for (Gallery g : galleryRepo.findByStatusIgnoreCase("PUBLISHED")) {
+                if (g.getUserId() == null) continue;
+                creatorIds.add(g.getUserId());
+                LocalDateTime t = g.getModifiedDate() != null ? g.getModifiedDate() : g.getCreatedDate();
+                mergeLatest(latestByUser, g.getUserId(), t);
+                contentTypesByUser.computeIfAbsent(g.getUserId(), k -> new HashSet<>()).add("gallery");
             }
 
             if (creatorIds.isEmpty()) {
@@ -305,9 +340,10 @@ public class AuthController {
                 w.put("profileImageUrl", user.getProfileImageUrl());
                 w.put("location", user.getLocation());
                 w.put("latestContentDate", latestByUser.get(user.getId()));
+                w.put("contentTypes", contentTypesByUser.getOrDefault(user.getId(), new HashSet<>()));
                 writers.add(w);
             }
-            // Most recently active writer first
+            // Most recently active creator first
             writers.sort(Comparator.comparing(
                     (Map<String, Object> m) -> (LocalDateTime) m.get("latestContentDate"),
                     Comparator.nullsLast(Comparator.reverseOrder())));

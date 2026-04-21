@@ -380,11 +380,72 @@
 }
 
 /* ── Articles/Blogs section ── */
+/* Wrapper around any horizontal-scroll row — anchors the prev/next arrows */
+.home-row-wrap {
+  position: relative;
+}
+
+.home-row-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.96);
+  border: 1px solid var(--border-strong);
+  color: var(--text-primary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 5;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  transition: background 0.15s, color 0.15s, transform 0.15s;
+}
+
+.home-row-arrow:hover {
+  background: var(--accent-gold);
+  color: #fff;
+  transform: translateY(-50%) scale(1.05);
+}
+
+.home-row-arrow-left {
+  left: -8px;
+}
+
+.home-row-arrow-right {
+  right: -8px;
+}
+
+@media (max-width: 520px) {
+  /* On touch screens, native scroll gestures are more natural — hide arrows */
+  .home-row-arrow {
+    display: none;
+  }
+}
+
 .home-articles-row {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  display: flex;
   gap: 16px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+  scroll-snap-type: x mandatory;
   margin-bottom: 16px;
+}
+
+.home-articles-row > .home-article-card {
+  flex: 0 0 280px;
+  scroll-snap-align: start;
+  min-width: 0;
+}
+
+.home-articles-row::-webkit-scrollbar {
+  height: 4px;
+}
+.home-articles-row::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+  border-radius: 4px;
 }
 
 .home-article-card {
@@ -447,6 +508,24 @@
   color: #c66b3d;
 }
 
+.home-article-type-recipe {
+  background: #ffe8d1;
+  color: #c17614;
+}
+
+/* Compact card when item has no image — narrower + shorter, keeps meta visible */
+.home-article-card-compact {
+  min-height: 0;
+}
+
+.home-article-card-compact .home-article-info {
+  padding: 14px 16px;
+}
+
+.home-article-card-compact .home-article-title {
+  font-size: 1.05rem;
+}
+
 .home-article-title {
   font-size: 1rem;
   font-weight: 700;
@@ -467,6 +546,84 @@
 .home-section-more {
   text-align: center;
   margin-top: 12px;
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.home-section-more .ss-btn {
+  padding: 4px 14px;
+  font-size: 0.82rem;
+  min-height: 28px;
+  line-height: 1.3;
+}
+
+/* "Share Your Feedback" CTA — larger to invite action */
+.home-feedback-more {
+  margin-top: 20px;
+}
+
+.home-feedback-more .home-feedback-cta.ss-btn {
+  padding: 10px 28px;
+  font-size: 1rem;
+  min-height: 44px;
+  line-height: 1.3;
+  font-weight: 600;
+}
+
+/* Section header with heading on the left and action buttons on the right */
+.home-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.home-section-header .home-section-heading {
+  margin: 0;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.home-section-actions {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.home-section-actions .ss-btn {
+  padding: 4px 12px;
+  font-size: 0.78rem;
+  min-height: 26px;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+/* Remove the bright-blue outline on section action buttons — neutral border instead */
+.home-section-actions .ss-btn-outline,
+.home-section-more .ss-btn-outline {
+  border-color: var(--border-strong);
+}
+
+.home-section-actions .ss-btn-outline:hover,
+.home-section-more .ss-btn-outline:hover {
+  border-color: var(--accent-gold);
+  background: var(--accent-gold);
+}
+
+/* Mobile: stack heading over buttons, left-align buttons, full width */
+@media (max-width: 520px) {
+  .home-section-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .home-section-actions {
+    width: 100%;
+  }
 }
 
 /* ── Testimonials section — grey gradient w/ sage & terracotta accents ── */

@@ -24,7 +24,8 @@ function PublicProfile() {
   const [profile, setProfile] = useState(null);
   const [books, setBooks] = useState([]);
   const [articles, setArticles] = useState([]);
-  const [galleryImages, setGalleryImages] = useState([]);
+  const [galleries, setGalleries] = useState([]);
+  const [recipes, setRecipes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [shareCopied, setShareCopied] = useState(false);
@@ -33,23 +34,25 @@ function PublicProfile() {
     window.scrollTo(0, 0);
     const fetchData = async () => {
       try {
-        const [profileRes, booksRes, articlesRes] = await Promise.all([
+        const [profileRes, booksRes, articlesRes, galleriesRes, recipesRes] = await Promise.all([
           api.get(`${API}/api/auth/public-profile/${userId}`),
-          api.get(`${API}/api/books/user/${userId}`),
+          api.get(`${API}/api/books/user/${userId}`).catch(() => ({ data: [] })),
           api.get(`${API}/api/articles`).catch(() => ({ data: [] })),
+          api.get(`${API}/api/galleries/user/${userId}`).catch(() => ({ data: [] })),
+          api.get(`${API}/api/recipes/user/${userId}`).catch(() => ({ data: [] })),
         ]);
         setProfile(profileRes.data);
         const published = (Array.isArray(booksRes.data) ? booksRes.data : [])
           .filter((b) => b.status === "PUBLISHED");
         setBooks(published);
-        // Filter published articles by this user
         const allArticles = Array.isArray(articlesRes.data) ? articlesRes.data : [];
         setArticles(allArticles.filter(a => String(a.userId) === String(userId) && a.status === "PUBLISHED"));
-        // Load gallery from localStorage
-        const savedGallery = localStorage.getItem(`gallery_${userId}`);
-        if (savedGallery) {
-          setGalleryImages(JSON.parse(savedGallery));
-        }
+        const gals = (Array.isArray(galleriesRes.data) ? galleriesRes.data : [])
+          .filter(g => g.status !== "DELETED");
+        setGalleries(gals);
+        const recs = (Array.isArray(recipesRes.data) ? recipesRes.data : [])
+          .filter(r => r.status === "PUBLISHED");
+        setRecipes(recs);
       } catch {
         setError(true);
       } finally {
@@ -93,6 +96,76 @@ function PublicProfile() {
 
   const displayName = profile.displayName || [profile.firstName, profile.lastName].filter(Boolean).join(" ") || profile.email;
 
+  const poems = articles.filter(a => a.contentType === "Poetry");
+  const blogs = articles.filter(a => a.contentType === "Blog");
+  const arts  = articles.filter(a => !a.contentType || (a.contentType !== "Poetry" && a.contentType !== "Blog"));
+
+  const renderArticleCard = (article) => {
+    const typePath = article.contentType === "Poetry" ? "poems"
+      : article.contentType === "Blog" ? "blogs" : "articles";
+    const hasImage = !!article.imageUrl;
+    return (
+      <div key={`a-${article.id}`} className={`home-article-card ${hasImage ? "" : "home-article-card-compact"}`}>
+        <Link to={`/${typePath}/${article.id}`} className="home-article-link">
+          {hasImage && (
+            <img src={resolveImageUrl(article.imageUrl)} alt={article.headline} className="home-article-img" />
+          )}
+          <div className="home-article-info">
+            <span className={`home-article-type home-article-type-${(article.contentType || "article").toLowerCase()}`}>
+              {article.contentType || "Article"}
+            </span>
+            <span className="home-article-title">{article.headline}</span>
+            <span className="home-article-date">{new Date(article.createdDate).toLocaleDateString()}</span>
+          </div>
+        </Link>
+        <div className="home-card-social">
+          <button className="ss-btn-icon-sm" onClick={() => handleShareArticle(article)} title="Share">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+            <span>Share</span>
+          </button>
+        </div>
+      </div>
+    );
+  };
+
+  const renderRecipeCard = (recipe) => {
+    const cover = recipe.images && recipe.images[0]?.imageUrl;
+    const hasImage = !!cover;
+    return (
+      <div key={`r-${recipe.id}`} className={`home-article-card ${hasImage ? "" : "home-article-card-compact"}`}>
+        <Link to={`/recipes/${recipe.id}`} className="home-article-link">
+          {hasImage && <img src={cover} alt={recipe.recipeName} className="home-article-img" />}
+          <div className="home-article-info">
+            <span className="home-article-type home-article-type-recipe">Recipe</span>
+            <span className="home-article-title">{recipe.recipeName}</span>
+            {recipe.cuisine && <span className="home-article-author">{recipe.cuisine}</span>}
+            <span className="home-article-date">{new Date(recipe.createdDate).toLocaleDateString()}</span>
+          </div>
+        </Link>
+      </div>
+    );
+  };
+
+  const renderGalleryCard = (gallery) => {
+    const cover = resolveImageUrl(gallery.coverImageUrl);
+    const hasImage = !!cover;
+    return (
+      <div key={`g-${gallery.id}`} className={`home-article-card ${hasImage ? "" : "home-article-card-compact"}`}>
+        <Link to={`/gallery/${gallery.id}`} className="home-article-link">
+          {hasImage && <img src={cover} alt={gallery.title} className="home-article-img" />}
+          <div className="home-article-info">
+            <span className="home-article-type home-article-type-poetry">Gallery</span>
+            <span className="home-article-title">{gallery.title || "Untitled"}</span>
+            {gallery.description && <span className="home-article-author">{gallery.description}</span>}
+            <span className="home-article-date">{new Date(gallery.createdDate).toLocaleDateString()}</span>
+          </div>
+        </Link>
+      </div>
+    );
+  };
+
+  const hasNothing = books.length === 0 && articles.length === 0 && galleries.length === 0 && recipes.length === 0;
+
   return (
     <div className="pub-profile-page">
       <div className="pub-profile-nav">
@@ -129,7 +202,7 @@ function PublicProfile() {
         </div>
       )}
 
-      {/* Published Books - Home page card format */}
+      {/* Books */}
       {books.length > 0 && (
         <div className="home-section home-section-books" style={{ marginBottom: 24 }}>
           <h2 className="home-section-heading">{s.booksHeading}</h2>
@@ -155,57 +228,47 @@ function PublicProfile() {
         </div>
       )}
 
-      {/* Published Articles, Blogs, Poems - Home page card format */}
-      {articles.length > 0 && (
+      {/* Poems */}
+      {poems.length > 0 && (
         <div className="home-section home-section-articles" style={{ marginBottom: 24 }}>
-          <h2 className="home-section-heading">Blogs & Articles</h2>
-          <div className="home-articles-row">
-            {articles.map((article) => {
-              const typePath = article.contentType === "Poetry" ? "poems"
-                : article.contentType === "Blog" ? "blogs" : "articles";
-              return (
-                <div key={article.id} className="home-article-card">
-                  <Link to={`/${typePath}/${article.id}`} className="home-article-link">
-                    {article.imageUrl && (
-                      <img src={resolveImageUrl(article.imageUrl)} alt={article.headline} className="home-article-img" />
-                    )}
-                    <div className="home-article-info">
-                      <span className={`home-article-type home-article-type-${(article.contentType || "article").toLowerCase()}`}>
-                        {article.contentType || "Article"}
-                      </span>
-                      <span className="home-article-title">{article.headline}</span>
-                      <span className="home-article-date">{new Date(article.createdDate).toLocaleDateString()}</span>
-                    </div>
-                  </Link>
-                  <div className="home-card-social">
-                    <button className="ss-btn-icon-sm" onClick={() => handleShareArticle(article)} title="Share">
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
-                      <span>Share</span>
-                    </button>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+          <h2 className="home-section-heading">Poems / कविताएँ</h2>
+          <div className="home-articles-row">{poems.map(renderArticleCard)}</div>
         </div>
       )}
 
-      {/* Gallery */}
-      {galleryImages.length > 0 && (
-        <>
-          <h2>Gallery</h2>
-          <div className="pub-profile-gallery">
-            {galleryImages.map((img, i) => (
-              <div key={i} className="pub-gallery-item">
-                <img src={img.url} alt={img.name || "Gallery"} className="pub-gallery-img" />
-              </div>
-            ))}
-          </div>
-        </>
+      {/* Blogs */}
+      {blogs.length > 0 && (
+        <div className="home-section home-section-articles" style={{ marginBottom: 24 }}>
+          <h2 className="home-section-heading">Blogs</h2>
+          <div className="home-articles-row">{blogs.map(renderArticleCard)}</div>
+        </div>
       )}
 
-      {/* Show empty state only if no content at all */}
-      {books.length === 0 && articles.length === 0 && galleryImages.length === 0 && (
+      {/* Articles */}
+      {arts.length > 0 && (
+        <div className="home-section home-section-articles" style={{ marginBottom: 24 }}>
+          <h2 className="home-section-heading">Articles</h2>
+          <div className="home-articles-row">{arts.map(renderArticleCard)}</div>
+        </div>
+      )}
+
+      {/* Recipes */}
+      {recipes.length > 0 && (
+        <div className="home-section home-section-articles" style={{ marginBottom: 24 }}>
+          <h2 className="home-section-heading">Recipes / व्यंजन</h2>
+          <div className="home-articles-row">{recipes.map(renderRecipeCard)}</div>
+        </div>
+      )}
+
+      {/* Galleries */}
+      {galleries.length > 0 && (
+        <div className="home-section home-section-articles" style={{ marginBottom: 24 }}>
+          <h2 className="home-section-heading">Galleries</h2>
+          <div className="home-articles-row">{galleries.map(renderGalleryCard)}</div>
+        </div>
+      )}
+
+      {hasNothing && (
         <p className="pub-profile-no-books">{s.noBooks}</p>
       )}
     </div>

@@ -9,6 +9,70 @@ const API = process.env.REACT_APP_API_URL;
 const LANGUAGE_OPTIONS = ["Hindi", "English", "Bilingual"];
 const CATEGORY_OPTIONS = ["Storytelling", "Poetry", "Interview", "Discussion", "Music", "Education", "Other"];
 
+function formatTime(s) {
+  if (!s || !isFinite(s)) return "0:00";
+  const m = Math.floor(s / 60);
+  const sec = Math.floor(s % 60);
+  return `${m}:${sec.toString().padStart(2, "0")}`;
+}
+
+function PodcastAudio({ src }) {
+  const audioRef = useRef(null);
+  const [playing, setPlaying] = useState(false);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
+
+  const togglePlay = () => {
+    if (!audioRef.current) return;
+    if (playing) audioRef.current.pause();
+    else audioRef.current.play();
+  };
+
+  const handleSeek = (e) => {
+    if (!audioRef.current || !duration) return;
+    const bar = e.currentTarget;
+    const rect = bar.getBoundingClientRect();
+    const pct = Math.min(1, Math.max(0, (e.clientX - rect.left) / rect.width));
+    audioRef.current.currentTime = pct * duration;
+  };
+
+  const progressPct = duration ? (currentTime / duration) * 100 : 0;
+
+  return (
+    <div className="podcast-cp">
+      <button
+        type="button"
+        className="podcast-cp-play"
+        onClick={togglePlay}
+        aria-label={playing ? "Pause" : "Play"}
+      >
+        {playing ? (
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+        ) : (
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+        )}
+      </button>
+      <span className="podcast-cp-time">{formatTime(currentTime)}</span>
+      <div className="podcast-cp-bar" onClick={handleSeek} role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow={Math.round(progressPct)}>
+        <div className="podcast-cp-bar-fill" style={{ width: `${progressPct}%` }} />
+      </div>
+      <span className="podcast-cp-time">{formatTime(duration)}</span>
+      <audio
+        ref={audioRef}
+        src={src}
+        preload="metadata"
+        onContextMenu={(e) => e.preventDefault()}
+        onPlay={() => setPlaying(true)}
+        onPause={() => setPlaying(false)}
+        onEnded={() => setPlaying(false)}
+        onTimeUpdate={() => setCurrentTime(audioRef.current?.currentTime || 0)}
+        onLoadedMetadata={() => setDuration(audioRef.current?.duration || 0)}
+        style={{ display: "none" }}
+      />
+    </div>
+  );
+}
+
 function Podcasts() {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -21,6 +85,13 @@ function Podcasts() {
   const [message, setMessage] = useState("");
   const [filterLang, setFilterLang] = useState("");
   const [copiedId, setCopiedId] = useState(null);
+  const [likeCounts, setLikeCounts] = useState({});
+  const [commentCounts, setCommentCounts] = useState({});
+  const [userLikes, setUserLikes] = useState({});
+  const [userFavorites, setUserFavorites] = useState({});
+  const [openComments, setOpenComments] = useState(null);
+  const [podcastComments, setPodcastComments] = useState({});
+  const [newCommentText, setNewCommentText] = useState("");
 
   // Create/Edit form
   const [showForm, setShowForm] = useState(false);
@@ -34,10 +105,6 @@ function Podcasts() {
   const [publishOnSave, setPublishOnSave] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
-
-  // Playing state
-  const [playingId, setPlayingId] = useState(null);
-  const audioRef = useRef(null);
 
   const showMsg = (msg) => {
     setMessage(msg);
@@ -69,6 +136,84 @@ function Podcasts() {
     fetchPodcasts();
     if (userId) fetchMyPodcasts();
   }, [userId]);
+
+  // Fetch social counts for all podcasts (likes + comments)
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await api.get(`${API}/api/social/counts?targetType=PODCAST`);
+        setLikeCounts(res.data?.likes || {});
+        setCommentCounts(res.data?.comments || {});
+      } catch {
+        /* non-fatal */
+      }
+    })();
+  }, [podcasts.length, myPodcasts.length]);
+
+  const handleLike = async (podcastId) => {
+    if (!userId) { showMsg("Log in to like podcasts"); return; }
+    try {
+      const res = await api.post(`${API}/api/social/like`, {
+        userId, targetType: "PODCAST", targetId: Number(podcastId),
+      });
+      setUserLikes(prev => ({ ...prev, [podcastId]: res.data.liked }));
+      setLikeCounts(prev => ({ ...prev, [podcastId]: res.data.count }));
+    } catch { showMsg("Failed to update like"); }
+  };
+
+  const handleFavorite = async (podcastId) => {
+    if (!userId) { showMsg("Log in to favorite podcasts"); return; }
+    try {
+      const res = await api.post(`${API}/api/social/favorite`, {
+        userId, targetType: "PODCAST", targetId: Number(podcastId),
+      });
+      setUserFavorites(prev => ({ ...prev, [podcastId]: res.data.favorited }));
+    } catch { showMsg("Failed to update favorite"); }
+  };
+
+  const toggleComments = async (podcastId) => {
+    if (openComments === podcastId) {
+      setOpenComments(null);
+      return;
+    }
+    setOpenComments(podcastId);
+    setNewCommentText("");
+    // Lazy-load comments if not already fetched
+    if (!podcastComments[podcastId]) {
+      try {
+        const res = await api.get(`${API}/api/social/comments?targetType=PODCAST&targetId=${podcastId}`);
+        setPodcastComments(prev => ({ ...prev, [podcastId]: Array.isArray(res.data) ? res.data : [] }));
+      } catch {
+        setPodcastComments(prev => ({ ...prev, [podcastId]: [] }));
+      }
+    }
+  };
+
+  const handleAddComment = async (podcastId) => {
+    if (!userId || !newCommentText.trim()) return;
+    try {
+      const res = await api.post(`${API}/api/social/comments`, {
+        userId, targetType: "PODCAST", targetId: Number(podcastId), content: newCommentText.trim(),
+      });
+      setPodcastComments(prev => ({
+        ...prev,
+        [podcastId]: [...(prev[podcastId] || []), res.data],
+      }));
+      setCommentCounts(prev => ({ ...prev, [podcastId]: (prev[podcastId] || 0) + 1 }));
+      setNewCommentText("");
+    } catch { showMsg("Failed to post comment"); }
+  };
+
+  const handleDeleteComment = async (podcastId, commentId) => {
+    try {
+      await api.delete(`${API}/api/social/comments/${commentId}?userId=${userId}`);
+      setPodcastComments(prev => ({
+        ...prev,
+        [podcastId]: (prev[podcastId] || []).filter(c => c.id !== commentId),
+      }));
+      setCommentCounts(prev => ({ ...prev, [podcastId]: Math.max(0, (prev[podcastId] || 1) - 1) }));
+    } catch { showMsg("Failed to delete comment"); }
+  };
 
   const handleAudioUpload = async (e) => {
     const file = e.target.files?.[0];
@@ -169,20 +314,6 @@ function Podcasts() {
     setCategory("");
   };
 
-  const togglePlay = (podcastId, url) => {
-    if (playingId === podcastId) {
-      audioRef.current?.pause();
-      setPlayingId(null);
-    } else {
-      if (audioRef.current) audioRef.current.pause();
-      const audio = new Audio(url);
-      audioRef.current = audio;
-      audio.play();
-      audio.onended = () => setPlayingId(null);
-      setPlayingId(podcastId);
-    }
-  };
-
   const handleShare = async (podcast) => {
     const url = `${window.location.origin}/podcasts`;
     const text = `Listen to "${podcast.title}" on Saat Saheli!`;
@@ -240,18 +371,22 @@ function Podcasts() {
 
       {podcast.audioUrl && (
         <div className="podcast-player">
-          <button className="podcast-play-btn" onClick={() => togglePlay(podcast.id, podcast.audioUrl)}>
-            {playingId === podcast.id ? (
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="#fbbf24"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
-            ) : (
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="#fbbf24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-            )}
-          </button>
-          <audio controls className="podcast-audio" src={podcast.audioUrl} />
+          <PodcastAudio src={podcast.audioUrl} />
         </div>
       )}
 
       <div className="podcast-actions-bar">
+        <button className={`ss-btn-icon-sm ${userLikes[podcast.id] ? "active" : ""}`} onClick={() => handleLike(podcast.id)} title="Like">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill={userLikes[podcast.id] ? "#e74c3c" : "none"} stroke={userLikes[podcast.id] ? "#e74c3c" : "currentColor"} strokeWidth="2"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
+          <span>{likeCounts[podcast.id] || 0}</span>
+        </button>
+        <button className={`ss-btn-icon-sm ${openComments === podcast.id ? "active" : ""}`} onClick={() => toggleComments(podcast.id)} title="Comments">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+          <span>{commentCounts[podcast.id] || 0}</span>
+        </button>
+        <button className={`ss-btn-icon-sm ${userFavorites[podcast.id] ? "active" : ""}`} onClick={() => handleFavorite(podcast.id)} title="Favorite">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill={userFavorites[podcast.id] ? "#d4a017" : "none"} stroke={userFavorites[podcast.id] ? "#d4a017" : "currentColor"} strokeWidth="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+        </button>
         <button className="ss-btn-icon-sm" onClick={() => handleShare(podcast)} title="Share">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
           {copiedId === podcast.id ? <span>Copied!</span> : <span>Share</span>}
@@ -266,6 +401,45 @@ function Podcasts() {
           </>
         )}
       </div>
+
+      {openComments === podcast.id && (
+        <div className="podcast-comments">
+          <h4 className="podcast-comments-heading">Comments ({commentCounts[podcast.id] || 0})</h4>
+          {userId ? (
+            <form
+              onSubmit={(e) => { e.preventDefault(); handleAddComment(podcast.id); }}
+              className="podcast-comment-form"
+            >
+              <input
+                type="text"
+                value={newCommentText}
+                onChange={(e) => setNewCommentText(e.target.value)}
+                placeholder="Write a comment..."
+                className="podcast-comment-input"
+              />
+              <button type="submit" className="bm-btn bm-btn-create bm-btn-sm" disabled={!newCommentText.trim()}>Post</button>
+            </form>
+          ) : (
+            <p className="podcast-login-prompt">
+              <Link to="/Login">Login with Google or create an account</Link> to comment on this item.
+            </p>
+          )}
+          <div className="podcast-comment-list">
+            {(podcastComments[podcast.id] || []).map(c => (
+              <div key={c.id} className="podcast-comment-item">
+                <div className="podcast-comment-header">
+                  <span className="podcast-comment-author">{c.userName}</span>
+                  <span className="podcast-comment-date">{new Date(c.createdDate).toLocaleDateString()}</span>
+                  {userId && userId === c.userId && (
+                    <button className="podcast-comment-delete" onClick={() => handleDeleteComment(podcast.id, c.id)}>Delete</button>
+                  )}
+                </div>
+                <p className="podcast-comment-text">{c.content}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 

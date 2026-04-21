@@ -17,6 +17,10 @@
 
 html {
   overflow-y: auto;
+  /* Force native widgets (audio controls, inputs, scrollbars) to render in
+     light mode even when the user's OS is set to dark mode. The site design
+     is light-themed. */
+  color-scheme: light;
 }
 
 body {

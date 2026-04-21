@@ -416,7 +416,7 @@ function Account() {
                   onChange={(e) => setNewGalleryTitle(e.target.value)}
                   placeholder="New gallery title..."
                   className="acct-gallery-input"
-                  style={{ flex: 1, padding: "8px 12px", borderRadius: 6, border: "1px solid #3a5a7b", fontSize: "0.88rem", background: "#0f1923", color: "#f0f4f8" }}
+                  style={{ flex: 1, padding: "8px 12px", borderRadius: 6, border: "1px solid var(--border-strong)", fontSize: "0.88rem", background: "var(--bg-card)", color: "var(--text-primary)" }}
                 />
                 <button className="ss-btn ss-btn-primary ss-btn-sm" onClick={handleCreateGallery} disabled={!newGalleryTitle.trim()}>Create Gallery</button>
               </div>
@@ -519,7 +519,7 @@ function Account() {
                   </div>
                   {galleryMsg && <p className="acct-gallery-msg">{galleryMsg}</p>}
                   <div className="acct-gallery-upload" style={{ marginTop: 8 }}>
-                    <label className="ss-btn ss-btn-secondary ss-btn-sm" style={{ cursor: "pointer" }}>
+                    <label className="ss-btn ss-btn-primary ss-btn-sm" style={{ cursor: "pointer" }}>
                       {uploadingGallery ? "Uploading..." : "Upload Photos"}
                       <input
                         ref={galleryInputRef}

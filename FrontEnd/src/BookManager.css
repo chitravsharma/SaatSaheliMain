@@ -135,11 +135,15 @@
 
 /* Gray */
 .bm-btn-back {
-  background-color: var(--border-default);
+  background-color: #64748b;
   color: #ffffff;
-  border-color: var(--border-default);
+  border-color: #64748b;
 }
-.bm-btn-back:hover { background-color: var(--border-strong); border-color: var(--border-strong); }
+.bm-btn-back:hover {
+  background-color: #475569;
+  border-color: #475569;
+  color: #ffffff;
+}
 
 /* Main menu button row */
 .bm-button-row {
@@ -1361,13 +1365,14 @@
 
 /* Help & Support */
 .bm-btn-help {
-  background-color: var(--border-strong);
-  color: var(--text-primary);
-  border-color: var(--border-strong);
+  background-color: #64748b;
+  color: #ffffff;
+  border-color: #64748b;
 }
 .bm-btn-help:hover {
-  background-color: #4a6a8b;
-  border-color: #4a6a8b;
+  background-color: #475569;
+  border-color: #475569;
+  color: #ffffff;
 }
 
 .bm-help-panel {

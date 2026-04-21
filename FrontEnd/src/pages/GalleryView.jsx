@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { useParams, useNavigate, Link } from "react-router-dom";
+import { useParams, useNavigate, Link, useSearchParams } from "react-router-dom";
 import api, { profileUrl } from "../utils/api";
 import { useAuth } from "../AuthContext";
 import { useStrings } from "../LanguageContext";
@@ -12,6 +12,7 @@ function GalleryView() {
   const { user } = useAuth();
   const strings = useStrings();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
   const [gallery, setGallery] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -42,6 +43,22 @@ function GalleryView() {
     };
     fetchGallery();
   }, [galleryId]);
+
+  // If URL has ?img=<imageId>, open the lightbox on that image after gallery loads.
+  // This supports deep-linked shares from the per-image Share button.
+  useEffect(() => {
+    if (!gallery || !gallery.images || gallery.images.length === 0) return;
+    const imgParam = searchParams.get("img");
+    if (!imgParam) return;
+    const idx = gallery.images.findIndex((img) => String(img.id) === String(imgParam));
+    if (idx >= 0) {
+      setLightboxIndex(idx);
+    } else {
+      // Image id unknown (deleted/reordered) — fall back to scrolling near the top of the grid
+      const grid = document.querySelector(".gv-grid");
+      if (grid) grid.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }, [gallery, searchParams]);
 
   // Fetch per-image social state when gallery images load
   useEffect(() => {
@@ -124,6 +141,27 @@ function GalleryView() {
       setFavorited(res.data.favorited);
     } catch (err) {
       setError("Failed to update favorite. Please try again.");
+    }
+  };
+
+  const [galleryShareCopied, setGalleryShareCopied] = useState(false);
+
+  const handleGalleryShare = async () => {
+    const url = `${window.location.origin}/gallery/${galleryId}`;
+    const shareData = {
+      title: gallery?.title || "Gallery",
+      text: `Check out "${gallery?.title || 'this gallery'}" on Saat Saheli!`,
+      url,
+    };
+    if (navigator.share) {
+      try { await navigator.share(shareData); return; } catch { /* cancelled */ }
+    }
+    try {
+      await navigator.clipboard.writeText(url);
+      setGalleryShareCopied(true);
+      setTimeout(() => setGalleryShareCopied(false), 1500);
+    } catch (err) {
+      setError("Failed to copy link.");
     }
   };
 
@@ -266,6 +304,10 @@ function GalleryView() {
         </button>
         <button className={`ss-btn-icon ${favorited ? "active" : ""}`} onClick={handleFavorite} title="Favorite">
           <svg width="20" height="20" viewBox="0 0 24 24" fill={favorited ? "#d4a017" : "none"} stroke={favorited ? "#d4a017" : "currentColor"} strokeWidth="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+        </button>
+        <button className="ss-btn-icon" onClick={handleGalleryShare} title="Share gallery" style={{ position: "relative" }}>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+          {galleryShareCopied && <span className="gv-share-copied">Copied</span>}
         </button>
       </div>
 
