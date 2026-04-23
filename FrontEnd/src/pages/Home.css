@@ -719,6 +719,7 @@
 .home-ad-section {
   margin: 28px 0;
 }
+.home-ad-section:empty { display: none; }
 
 .home-ad-banner {
   background: linear-gradient(135deg, #f1f5f9 0%, var(--bg-card) 50%, var(--bg-body) 100%);

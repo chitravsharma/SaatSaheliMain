@@ -1,0 +1,303 @@
+/* AdBanner — site-themed styles using tokens from index.css:
+   --bg-body #f5f0eb, --bg-header #ede4d3, --bg-card #fff, --border-default #e2e8f0,
+   --text-primary #1e293b, --text-muted #64748b, --accent-gold #d97706, --accent-gold-hover #b45309
+*/
+
+.ad-banner-wrap {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Base card — used by FOOTER_TOP + SIDE_RAIL on cream body bg */
+.ad-banner {
+  position: relative;
+  background: linear-gradient(135deg, var(--bg-card, #ffffff) 0%, var(--bg-header, #ede4d3) 100%);
+  border: 1px solid var(--border-default, #e2e8f0);
+  border-radius: 10px;
+  padding: 10px 14px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(30, 41, 59, 0.05);
+}
+
+.ad-banner-label {
+  position: absolute;
+  top: 4px;
+  right: 8px;
+  font-size: 0.6rem;
+  color: var(--text-muted, #64748b);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid var(--border-default, #e2e8f0);
+  padding: 1px 6px;
+  border-radius: 4px;
+}
+
+.ad-banner-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.ad-banner-title {
+  margin: 0;
+  color: var(--text-primary, #1e293b);
+  font-size: 1rem;
+  text-align: center;
+}
+
+.ad-banner-image {
+  max-width: 100%;
+  max-height: 120px;
+  object-fit: contain;
+  border-radius: 6px;
+}
+
+.ad-banner-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.ad-banner-cta {
+  background: var(--accent-gold, #d97706);
+  color: #fff;
+  padding: 4px 12px;
+  border-radius: 6px;
+  text-decoration: none;
+  font-size: 0.8rem;
+  font-weight: 600;
+  transition: background 0.15s ease;
+}
+
+.ad-banner-cta:hover { background: var(--accent-gold-hover, #b45309); }
+
+.ad-banner-share-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: transparent;
+  border: 1px solid var(--accent-gold, #d97706);
+  color: var(--accent-gold, #d97706);
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.ad-banner-share-btn:hover {
+  background: var(--accent-gold, #d97706);
+  color: #fff;
+}
+
+/* Animations */
+.ad-banner-scroll {
+  animation: ad-banner-scroll-anim 18s linear infinite;
+  white-space: nowrap;
+}
+
+@keyframes ad-banner-scroll-anim {
+  0% { transform: translateX(100%); }
+  100% { transform: translateX(-100%); }
+}
+
+.ad-banner-blink { animation: ad-banner-blink-anim 1.6s ease-in-out infinite; }
+@keyframes ad-banner-blink-anim {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+/* Placement: HEADER_TOP — sits inside dark header between logo row and nav.
+   Desktop: inline between .header-top-row and .header-nav (horizontal flex).
+   Mobile: stays in place as a visible strip between logo row and collapsed nav drawer.
+   Header uses dark navy gradient (#1a1a2e → #5a5a7a) so styling is transparent with light text. */
+.ad-banner-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  background: transparent;
+}
+.ad-banner-header .ad-banner {
+  padding: 0;
+  border: none;
+  background: transparent;
+  border-radius: 4px;
+  box-shadow: none;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.ad-banner-header .ad-banner-label { display: none; }
+.ad-banner-header .ad-banner-content { flex-direction: row; gap: 6px; align-items: center; }
+
+/* Image ad: fills the slot dimensions, aspect ratio preserved via object-fit */
+.ad-banner-header .ad-banner-image {
+  width: 100%;
+  height: 100%;
+  max-width: 100%;
+  max-height: 68px;
+  object-fit: contain;
+  border-radius: 4px;
+  display: block;
+}
+
+/* Make the image's anchor a real clickable button so the whole image area reacts */
+.ad-banner-header .ad-banner-content > a {
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+.ad-banner-header .ad-banner-content > a:hover { opacity: 0.85; transform: scale(1.02); }
+.ad-banner-header .ad-banner-content > a:focus-visible {
+  outline: 2px solid #c9a84c;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.ad-banner-header .ad-banner-title {
+  font-size: 0.85rem;
+  white-space: nowrap;
+  color: #c9a84c; /* header accent gold */
+}
+.ad-banner-header .ad-banner-actions { display: none; }
+
+/* Blink targets opacity only; keep dimensions fixed so it doesn't feel like a "dot" flash */
+.ad-banner-header .ad-banner-blink { animation-duration: 2.4s; }
+
+/* Pill-style HTML ad treatment — intended for a compact in-header announcement.
+   Used when an admin authors an ad with contentType=html using the .ad-hdr-inline class pattern. */
+.ad-banner-header .ad-hdr-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 14px;
+  background: rgba(201, 168, 76, 0.08);
+  border: 1px solid rgba(201, 168, 76, 0.35);
+  border-radius: 999px;
+  color: #d0d8e8;
+  text-decoration: none;
+  font-size: 0.82rem;
+  line-height: 1.3;
+  max-width: 100%;
+  transition: background 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+}
+.ad-banner-header .ad-hdr-inline .ad-hdr-text {
+  text-align: center;
+}
+.ad-banner-header .ad-hdr-inline:hover {
+  background: rgba(201, 168, 76, 0.18);
+  border-color: #c9a84c;
+  transform: translateY(-1px);
+}
+.ad-banner-header .ad-hdr-inline:focus-visible {
+  outline: 2px solid #c9a84c;
+  outline-offset: 2px;
+}
+.ad-banner-header .ad-hdr-emoji { font-size: 1.05rem; line-height: 1; }
+.ad-banner-header .ad-hdr-text { color: #d0d8e8; }
+.ad-banner-header .ad-hdr-text strong { color: #c9a84c; font-weight: 600; }
+.ad-banner-header .ad-hdr-line {
+  display: block;
+  line-height: 1.25;
+  white-space: nowrap;
+}
+.ad-banner-header .ad-hdr-line-en { color: #ffffff; font-weight: 600; }
+.ad-banner-header .ad-hdr-line-hi { color: #c9a84c; font-size: 0.78rem; margin-top: 1px; }
+.ad-banner-header .ad-hdr-cta {
+  color: #c9a84c;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  padding-left: 4px;
+  border-left: 1px solid rgba(201, 168, 76, 0.35);
+}
+
+/* Mobile: allow wrapping and truncate long titles so the strip stays tidy */
+@media (max-width: 768px) {
+  .ad-banner-header {
+    margin: 0;
+    justify-content: center;
+  }
+  .ad-banner-header .ad-banner-title {
+    font-size: 0.8rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 60vw;
+  }
+  .ad-banner-header .ad-banner-image {
+    max-height: 48px;
+  }
+  .ad-banner-header .ad-hdr-inline {
+    max-width: 92vw;
+    font-size: 0.78rem;
+    padding: 4px 10px;
+  }
+  .ad-banner-header .ad-hdr-text {
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
+/* Placement: FOOTER_TOP — narrow strip above the footer, on cream body background */
+.ad-banner-footer {
+  margin: 0 auto 16px auto;
+  padding: 0 12px;
+  max-width: 1100px;
+  background: transparent;
+}
+.ad-banner-footer .ad-banner {
+  padding: 8px 14px;
+  border-radius: 8px;
+}
+.ad-banner-footer .ad-banner-image { max-height: 60px; }
+.ad-banner-footer .ad-banner-title { font-size: 0.95rem; }
+
+/* Placement: SIDE_RAIL — compact horizontal strip on Home, sits after Books panel.
+   Styled as a Home-section card (cream gradient, gold left border, subtle shadow). */
+.ad-banner-side {
+  display: flex;
+  flex-direction: row;
+  gap: 12px;
+  max-width: 900px;
+  margin: 8px auto 16px auto;
+  padding: 20px 24px;
+  background:
+    radial-gradient(ellipse at 0% 0%, rgba(201, 168, 76, 0.14) 0%, transparent 60%),
+    radial-gradient(ellipse at 100% 100%, rgba(198, 107, 61, 0.08) 0%, transparent 55%),
+    linear-gradient(135deg, #fafbfc 0%, #f0ece4 100%);
+  border: 1px solid var(--border-default, #e2e8f0);
+  border-left: 4px solid #c9a84c;
+  border-radius: 14px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+}
+.ad-banner-side .ad-banner {
+  padding: 0;
+  flex: 1 1 auto;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+}
+.ad-banner-side .ad-banner-image { max-height: 80px; }
+.ad-banner-side .ad-banner-title { font-size: 0.95rem; }
+
+@media (max-width: 768px) {
+  .ad-banner-side {
+    flex-direction: column;
+    max-width: 100%;
+    padding: 16px 18px;
+  }
+  .ad-banner-side .ad-banner-image { max-height: 60px; }
+}

@@ -27,6 +27,9 @@ const UserManual = () => {
             <li><a href="#getting-started">Getting Started</a></li>
             <li><a href="#your-profile">Your Profile</a></li>
             <li><a href="#creating-books">Creating Books</a></li>
+            <li><a href="#articles-poems-blogs">Articles, Poems &amp; Blogs</a></li>
+            <li><a href="#recipes">Recipes</a></li>
+            <li><a href="#podcasts">Podcasts</a></li>
             <li><a href="#gallery">Gallery</a></li>
             <li><a href="#reading-books">Reading Books</a></li>
             <li><a href="#search">Search</a></li>
@@ -188,11 +191,137 @@ const UserManual = () => {
         </section>
 
         {/* ── 4. Gallery ── */}
+        {/* ── 4. Articles, Poems & Blogs ── */}
+        <section id="articles-poems-blogs" className="manual-section">
+          <h2>4. Articles, Poems &amp; Blogs</h2>
+          <p>
+            Alongside full-length books, you can share shorter pieces of
+            writing. Articles, poems, and blogs all share the same editor and
+            appear on your public profile and in community listings.
+          </p>
+          <ol>
+            <li>
+              From your <strong>Account</strong> page, open the writing
+              section and choose <strong>New Article</strong>,{" "}
+              <strong>New Poem</strong>, or <strong>New Blog</strong>.
+            </li>
+            <li>
+              Enter a title, pick a category (Art, Music, Creativity,
+              Community, Tech, etc.), and write your content. The editor
+              supports rich formatting.
+            </li>
+            <li>
+              Save as <strong>Draft</strong> while you work, or{" "}
+              <strong>Publish</strong> when ready. Only published pieces are
+              visible to others.
+            </li>
+            <li>
+              Readers can like, favorite, comment on, and share each piece.
+              Anonymous visitors can like and favorite too.
+            </li>
+          </ol>
+
+          <div className="manual-tip">
+            Use the category and language filters on the Writers page to help
+            the right audience discover your work.
+          </div>
+        </section>
+
+        {/* ── 5. Recipes ── */}
+        <section id="recipes" className="manual-section">
+          <h2>5. Recipes</h2>
+          <p>
+            Share family recipes, seasonal specialties, or original creations.
+            Each recipe has a side-by-side detail view so readers can follow
+            along while they cook.
+          </p>
+          <ol>
+            <li>
+              From your <strong>Account</strong> page open{" "}
+              <strong>My Recipes</strong> and click{" "}
+              <strong>+ New Recipe</strong>.
+            </li>
+            <li>
+              Enter a title and select a language (Hindi, English, or
+              Bilingual).
+            </li>
+            <li>
+              Add the <strong>ingredients</strong> list and{" "}
+              <strong>step-by-step instructions</strong>. Use line breaks
+              between items so each one renders on its own line.
+            </li>
+            <li>
+              Upload up to <strong>four images</strong> (the finished dish,
+              key steps, plating) and add an optional caption to each image.
+            </li>
+            <li>
+              Save as <strong>Draft</strong> to keep working, or{" "}
+              <strong>Publish</strong> to make it visible to everyone. Drafts
+              are marked with a yellow badge and only you can see them.
+            </li>
+            <li>
+              Readers can like, favorite, comment, and share your recipe.
+              Anonymous visitors can like and favorite (their toggle is
+              remembered locally in their browser).
+            </li>
+          </ol>
+
+          <div className="manual-tip">
+            A clear lead photo, specific quantities, and a short personal note
+            about the dish make a recipe much more inviting.
+          </div>
+        </section>
+
+        {/* ── 6. Podcasts ── */}
+        <section id="podcasts" className="manual-section">
+          <h2>6. Podcasts</h2>
+          <p>
+            Podcasts on Saat Saheli are curated by the site team. Everyone can
+            listen, like, favorite, comment on, and share podcasts &mdash; no
+            account required to press play.
+          </p>
+
+          <h3>Listening</h3>
+          <ol>
+            <li>
+              Open <strong>Podcasts</strong> from the navigation menu.
+            </li>
+            <li>
+              Use the <strong>language filter</strong> (All / हिंदी / English
+              / Bilingual) to narrow the list.
+            </li>
+            <li>
+              Tap the play button on any card to start the built-in player.
+              You can seek by clicking anywhere on the progress bar.
+            </li>
+            <li>
+              Below each player: like (&hearts;), favorite (&#9733;),
+              comment, and share buttons. Liking and favoriting work without
+              logging in; commenting requires an account.
+            </li>
+          </ol>
+
+          <h3>Uploading (admin only)</h3>
+          <p>
+            Only administrators can upload, edit, publish, or remove podcasts.
+            If you have admin access, a <strong>My Podcasts</strong> tab
+            appears with an upload form that accepts audio files and an
+            optional cover image, language, and category.
+          </p>
+
+          <div className="manual-tip">
+            If you have a podcast idea you would like published, reach out to
+            the Saat Saheli team through the contact form.
+          </div>
+        </section>
+
+        {/* ── 7. Gallery ── */}
         <section id="gallery" className="manual-section">
-          <h2>4. Gallery</h2>
+          <h2>7. Gallery</h2>
           <p>
             Your gallery is a personal photo collection that is displayed on
-            your public profile.
+            your public profile. Each image is its own small post &mdash;
+            readers can react to it directly.
           </p>
           <ol>
             <li>
@@ -200,27 +329,37 @@ const UserManual = () => {
             </li>
             <li>
               Find the <strong>Gallery</strong> section and click{" "}
-              <strong>Upload Photo</strong>.
+              <strong>Upload Photo</strong>. Select one or more images (JPG,
+              PNG, or similar).
             </li>
             <li>
-              Select one or more images from your device. Supported formats
-              include JPG, PNG, and similar image types.
+              Add a <strong>caption</strong> to each image &mdash; captions
+              are editable inline from the Gallery edit view.
             </li>
             <li>
-              Your uploaded photos will appear in your gallery and will be
-              visible to anyone who visits your public profile.
+              Uploaded photos appear on your public profile and on the
+              community Gallery page.
             </li>
           </ol>
 
+          <h3>Viewing and Sharing Single Images</h3>
+          <p>
+            Every photo has its own like, favorite, and share button. When
+            someone shares a single image, the link opens your gallery with
+            that exact photo highlighted in a lightbox (the URL ends in
+            <code>?img=&lt;id&gt;</code>).
+          </p>
+
           <div className="manual-tip">
             Use the gallery to showcase artwork, photography, or any images
-            that complement your books and interests.
+            that complement your books and other writing. A short caption
+            helps visitors understand the context.
           </div>
         </section>
 
         {/* ── 5. Reading Books ── */}
         <section id="reading-books" className="manual-section">
-          <h2>5. Reading Books</h2>
+          <h2>8. Reading Books</h2>
           <p>
             Saat Saheli features a <strong>FlipBook reader</strong> that
             presents books in a realistic page-turning format.
@@ -253,7 +392,7 @@ const UserManual = () => {
 
         {/* ── 6. Search ── */}
         <section id="search" className="manual-section">
-          <h2>6. Search</h2>
+          <h2>9. Search</h2>
           <p>
             Use the <strong>Search</strong> feature to find books across the
             entire Saat Saheli library.
@@ -290,7 +429,7 @@ const UserManual = () => {
 
         {/* ── 7. Chat ── */}
         <section id="chat" className="manual-section">
-          <h2>7. Chat</h2>
+          <h2>10. Chat</h2>
           <p>
             Saat Saheli includes <strong>chat rooms</strong> where members can
             communicate in real time.
@@ -321,7 +460,7 @@ const UserManual = () => {
 
         {/* ── 8. Categories ── */}
         <section id="categories" className="manual-section">
-          <h2>8. Categories</h2>
+          <h2>11. Categories</h2>
           <p>
             Browse content organized into themed categories. Each category page
             showcases books and creators related to that topic.
@@ -359,20 +498,29 @@ const UserManual = () => {
 
         {/* ── 9. Public Profile ── */}
         <section id="public-profile" className="manual-section">
-          <h2>9. Your Public Profile</h2>
+          <h2>12. Your Public Profile</h2>
           <p>
             Every member has a public profile page that other users can visit.
             Your public profile displays:
           </p>
           <ul>
-            <li>Your display name, bio, and profile photo.</li>
-            <li>Your selected interests.</li>
+            <li>Your display name, bio, profile photo, and optional headline or location.</li>
+            <li>Your selected interests and the content types you publish.</li>
             <li>
               Your <strong>published books</strong> &mdash; visitors can click
               any book to open it in the FlipBook reader.
             </li>
             <li>
-              Your <strong>gallery</strong> &mdash; all photos you have uploaded.
+              Your <strong>articles, poems, and blogs</strong>, grouped into
+              their own rows.
+            </li>
+            <li>
+              Your <strong>recipes</strong> &mdash; each opens in the
+              side-by-side detail view.
+            </li>
+            <li>
+              Your <strong>gallery</strong> &mdash; photos with captions,
+              each individually shareable.
             </li>
           </ul>
           <p>
@@ -382,8 +530,9 @@ const UserManual = () => {
           </p>
 
           <div className="manual-tip">
-            A complete profile with a photo, bio, interests, and published
-            books makes the best impression on visitors.
+            A complete profile with a photo, bio, interests, and a mix of
+            published books, articles, recipes, and gallery photos makes the
+            best impression on visitors.
           </div>
         </section>
 

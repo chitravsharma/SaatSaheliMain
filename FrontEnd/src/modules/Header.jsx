@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import siteLogo from './SaatSaheliLogo.jpg';
 import { useAuth } from '../AuthContext';
 import { useStrings, useLanguage } from '../LanguageContext';
+import AdBanner from './AdBanner';
 import './Header.css';
 
 const welcomeMessage = process.env.REACT_APP_WELCOME_MESSAGE;
@@ -69,6 +70,11 @@ const Header = () => {
             <span className={`hamburger-icon ${mobileNavOpen ? "hamburger-open" : ""}`} />
           </button>
         </div>
+
+        <div className="header-ad-slot">
+          <AdBanner placement="HEADER_TOP" />
+        </div>
+
         <nav
           className={`header-nav ${mobileNavOpen ? "header-nav-open" : ""}`}
           role="navigation"
@@ -83,8 +89,21 @@ const Header = () => {
             {strings.header.navAbout}
           </Link>
           <Link to="/manual" className="nav-link" onClick={closeMobileNav}>
-            <svg className="nav-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-            Help
+            <svg className="nav-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
+            User Manual
+          </Link>
+          <Link to="/podcasts" className="nav-link nav-link-podcast" onClick={closeMobileNav}>
+            <svg className="nav-mic" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+              {/* studio mic body with grille lines */}
+              <rect x="9" y="2" width="6" height="12" rx="3" fill="#c9a84c"/>
+              <path d="M9.5 5h5M9.5 7.5h5M9.5 10h5" stroke="#6b5414" strokeWidth="0.6" strokeLinecap="round"/>
+              {/* arc stand */}
+              <path d="M6 11v1a6 6 0 0012 0v-1" fill="none" stroke="#c9a84c" strokeWidth="1.8" strokeLinecap="round"/>
+              {/* stand post + base */}
+              <line x1="12" y1="18" x2="12" y2="22" stroke="#c9a84c" strokeWidth="1.8" strokeLinecap="round"/>
+              <line x1="9" y1="22" x2="15" y2="22" stroke="#c9a84c" strokeWidth="1.8" strokeLinecap="round"/>
+            </svg>
+            <span>Weekly Podcast</span>
           </Link>
           {user && (
             <Link to="/chat" className="nav-link" onClick={closeMobileNav}>

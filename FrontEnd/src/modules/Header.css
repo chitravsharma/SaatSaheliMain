@@ -45,6 +45,31 @@
   flex-shrink: 0;
 }
 
+/* Slot for HEADER_TOP AdBanner — a rectangular block between logo and nav.
+   Transparent background/border — only the ad content is visible.
+   When AdBanner returns null (no active ads), the slot collapses via :empty. */
+.header-ad-slot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1 1 auto;
+  min-width: 140px;
+  max-width: 420px;
+  min-height: 76px;
+  padding: 4px 8px;
+  background: transparent;
+  border: none;
+}
+.header-ad-slot:empty { display: none; }
+@media (max-width: 768px) {
+  .header-ad-slot {
+    width: 100%;
+    max-width: 100%;
+    min-height: 0;
+    padding: 6px 8px;
+  }
+}
+
 .header-logo {
   flex-shrink: 0;
   display: flex;
@@ -280,6 +305,46 @@
 .nav-link-register:hover {
   background: linear-gradient(135deg, #1d4ed8, #3b82f6);
   color: #ffffff;
+}
+
+/* Weekly Podcast button — standout pill with studio mic icon and pulsing "live" dot */
+.nav-link-podcast {
+  position: relative;
+  padding: 6px 14px 6px 12px;
+  background: linear-gradient(135deg, rgba(201, 168, 76, 0.22), rgba(201, 168, 76, 0.08));
+  border: 1px solid rgba(201, 168, 76, 0.55);
+  border-radius: 22px;
+  color: #ffffff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+  transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+.nav-link-podcast:hover {
+  background: linear-gradient(135deg, rgba(201, 168, 76, 0.4), rgba(201, 168, 76, 0.18));
+  border-color: #c9a84c;
+  color: #ffffff;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(201, 168, 76, 0.25);
+}
+.nav-link-podcast .nav-mic {
+  flex-shrink: 0;
+  margin-right: 4px;
+}
+/* Pulsing red "live"/"new" dot on the corner */
+.nav-link-podcast::after {
+  content: "";
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  width: 9px;
+  height: 9px;
+  background: #ef4444;
+  border-radius: 50%;
+  border: 2px solid #1a1a2e;
+  animation: podcast-live-pulse 1.8s ease-in-out infinite;
+}
+@keyframes podcast-live-pulse {
+  0%, 100% { transform: scale(1); opacity: 1; box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.6); }
+  50% { transform: scale(1.25); opacity: 0.85; box-shadow: 0 0 0 4px rgba(239, 68, 68, 0); }
 }
 
 .welcome-msg {
@@ -549,5 +614,8 @@
   .hamburger-icon::before,
   .hamburger-icon::after {
     transition: none;
+  }
+  .nav-link-podcast::after {
+    animation: none;
   }
 }

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { useParams, Link, useNavigate } from "react-router-dom";
+import { useParams, Link, useNavigate, useSearchParams } from "react-router-dom";
 import api, { profileUrl, getAnonId } from "../utils/api";
 import FlipBook from "../FlipBook";
 import { useAuth } from "../AuthContext";
@@ -13,6 +13,7 @@ function ReadBook() {
   const { user } = useAuth();
   const strings = useStrings();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
   const [book, setBook] = useState(null);
   const [liked, setLiked] = useState(false);
@@ -58,6 +59,20 @@ function ReadBook() {
     };
     fetchSocial();
   }, [bookId, user]);
+
+  // If arrived via a "Comments" link elsewhere (?focus=comments), auto-open the
+  // comment section and scroll it into view. Fires once per visit — not on
+  // subsequent comment posts.
+  useEffect(() => {
+    if (searchParams.get("focus") !== "comments") return;
+    setShowComments(true);
+    const t = setTimeout(() => {
+      const target = commentInputRef.current || loginPromptRef.current;
+      target?.scrollIntoView({ behavior: "smooth", block: "center" });
+      target?.focus?.();
+    }, 600);
+    return () => clearTimeout(t);
+  }, [bookId, searchParams]);
 
   const handleLike = async () => {
     try {

@@ -1,8 +1,10 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import api, { getAnonId } from "../utils/api";
 import { useAuth } from "../AuthContext";
 import { useStrings } from "../LanguageContext";
+import AdBanner from "../modules/AdBanner";
+import ScrollRow from "../components/ScrollRow";
 import "./Home.css";
 import "./Magazine.css";
 
@@ -14,56 +16,6 @@ function resolveImageUrl(url) {
   const match = url.match(/\/file\/d\/([^/]+)\//);
   if (match) return `https://drive.google.com/thumbnail?id=${match[1]}&sz=w200`;
   return url;
-}
-
-// Wraps a horizontally-scrolling row and shows prev/next arrows when content overflows.
-function ScrollRow({ className, children }) {
-  const ref = useRef(null);
-  const [canLeft, setCanLeft] = useState(false);
-  const [canRight, setCanRight] = useState(false);
-
-  const update = () => {
-    const el = ref.current;
-    if (!el) return;
-    setCanLeft(el.scrollLeft > 2);
-    setCanRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 2);
-  };
-
-  useEffect(() => {
-    update();
-    const el = ref.current;
-    if (!el) return;
-    el.addEventListener("scroll", update, { passive: true });
-    window.addEventListener("resize", update);
-    return () => {
-      el.removeEventListener("scroll", update);
-      window.removeEventListener("resize", update);
-    };
-  }, [children]);
-
-  const scrollStep = (dir) => {
-    const el = ref.current;
-    if (!el) return;
-    el.scrollBy({ left: dir * Math.max(280, el.clientWidth * 0.8), behavior: "smooth" });
-  };
-
-  return (
-    <div className="home-row-wrap">
-      {canLeft && (
-        <button type="button" className="home-row-arrow home-row-arrow-left" onClick={() => scrollStep(-1)} aria-label="Scroll left">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
-        </button>
-      )}
-      <div ref={ref} className={className}>
-        {children}
-      </div>
-      {canRight && (
-        <button type="button" className="home-row-arrow home-row-arrow-right" onClick={() => scrollStep(1)} aria-label="Scroll right">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
-        </button>
-      )}
-    </div>
-  );
 }
 
 function Home() {
@@ -84,18 +36,9 @@ function Home() {
   const [shareCopiedId, setShareCopiedId] = useState(null);
   const [podcastShareCopiedId, setPodcastShareCopiedId] = useState(null);
   const [podcastCounts, setPodcastCounts] = useState({ likes: {}, comments: {} });
-  const [adShareCopiedId, setAdShareCopiedId] = useState(null);
-  const [advertisements, setAdvertisements] = useState([]);
   const [actionError, setActionError] = useState("");
   const [busyActions, setBusyActions] = useState(new Set());
   const [testimonials, setTestimonials] = useState([]);
-
-  // Fetch active advertisements from API
-  useEffect(() => {
-    api.get(`${API}/api/advertisements/active`)
-      .then(res => setAdvertisements(Array.isArray(res.data) ? res.data : []))
-      .catch((err) => { console.error("Failed to fetch advertisements:", err); });
-  }, []);
 
   // Fetch testimonials (recent feedback with ratings)
   useEffect(() => {
@@ -235,18 +178,6 @@ function Home() {
       setActionError("Something went wrong. Please try again.");
     } finally {
       setBusyActions(prev => { const n = new Set(prev); n.delete(actionKey); return n; });
-    }
-  };
-
-  const handleAdShare = async (ad) => {
-    const url = ad.linkUrl || window.location.origin;
-    const text = `Check out this on Saat Saheli: ${ad.title}`;
-    if (navigator.share) {
-      try { await navigator.share({ title: ad.title, text, url }); } catch { /* cancelled */ }
-    } else {
-      await navigator.clipboard.writeText(`${text}\n${url}`);
-      setAdShareCopiedId(ad.id);
-      setTimeout(() => setAdShareCopiedId(null), 2000);
     }
   };
 
@@ -477,7 +408,7 @@ function Home() {
                               <svg width="14" height="14" viewBox="0 0 24 24" fill={isLiked ? "#e74c3c" : "none"} stroke={isLiked ? "#e74c3c" : "currentColor"} strokeWidth="2"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
                               <span>{likeC}</span>
                             </button>
-                            <Link to={`/read/${book.id}`} className="ss-btn-icon-sm" title="Comments">
+                            <Link to={`/read/${book.id}?focus=comments`} className="ss-btn-icon-sm" title="Comments">
                               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
                               <span>{commentC}</span>
                             </Link>
@@ -503,38 +434,12 @@ function Home() {
         </div>
       )}
 
-      {/* Dynamic Ad Banners */}
-      {!loading && advertisements.length > 0 && advertisements.map((ad) => (
-        <div key={ad.id} className="home-ad-section">
-          <div className={`home-ad-banner home-ad-anim-${ad.animation}`}>
-            <span className="home-ad-label">Advertisement</span>
-            <div className={`home-ad-content ${ad.animation === "scroll" ? "home-ad-scroll" : ""} ${ad.animation === "blink" ? "home-ad-blink" : ""}`}>
-              {ad.contentType === "image" && ad.imageUrl && (
-                ad.linkUrl ? (
-                  <a href={ad.linkUrl} target="_blank" rel="noopener noreferrer">
-                    <img src={ad.imageUrl} alt={ad.title} className="home-ad-image" />
-                  </a>
-                ) : (
-                  <img src={ad.imageUrl} alt={ad.title} className="home-ad-image" />
-                )
-              )}
-              {ad.contentType === "html" && (
-                <div dangerouslySetInnerHTML={{ __html: ad.htmlContent }} />
-              )}
-              {ad.contentType === "text" && <h3>{ad.title}</h3>}
-              <div className="home-ad-actions">
-                {ad.linkUrl && ad.contentType !== "image" && (
-                  <a href={ad.linkUrl} target="_blank" rel="noopener noreferrer" className="home-ad-cta">Learn More</a>
-                )}
-                <button className="home-ad-share-btn" onClick={() => handleAdShare(ad)} title="Share this ad">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
-                  {adShareCopiedId === ad.id ? "Copied!" : "Share"}
-                </button>
-              </div>
-            </div>
-          </div>
+      {/* Side-rail ad slot */}
+      {!loading && (
+        <div className="home-ad-section">
+          <AdBanner placement="SIDE_RAIL" />
         </div>
-      ))}
+      )}
 
       {/* 2. Photo Galleries */}
       {!loading && galleries.length > 0 && (
@@ -796,19 +701,6 @@ function Home() {
         </div>
       )}
 
-      {/* Fallback ad if no dynamic ads exist */}
-      {!loading && advertisements.length === 0 && (
-        <div className="home-ad-section">
-          <div className="home-ad-banner home-ad-banner-alt">
-            <span className="home-ad-label">Sponsored</span>
-            <div className="home-ad-content">
-              <h3>Join Saat Saheli Creator Program</h3>
-              <p>Publish your books, podcasts, and artwork. Upgrade to Creator plan for premium publishing tools and monetization.</p>
-              <Link to="/pricing" className="home-ad-cta">Explore Plans</Link>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

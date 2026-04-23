@@ -9,6 +9,8 @@ import { useStrings } from "../LanguageContext";
 import TermsGate from "../components/TermsGate";
 import ImageEditor from "../components/ImageEditor";
 import "../BookManager.css";
+import "./Home.css";
+import ScrollRow from "../components/ScrollRow";
 
 const API = `${process.env.REACT_APP_API_URL}/api/books`;
 const UPLOAD_API = `${process.env.REACT_APP_API_URL}/api/upload`;
@@ -70,43 +72,50 @@ function PublicBooks() {
 
   return (
     <div className="book-manager">
-      <h1>{strings.publicBooks.heading}</h1>
       <p className="bm-public-hint">
         <Link to="/Login">{strings.publicBooks.loginPrompt}</Link>
       </p>
 
-      <div className="bm-section-card">
+      <div className="home-section home-section-books">
+      <div className="home-section-header">
+        <h2 className="home-section-heading">{strings.publicBooks.heading}</h2>
+      </div>
       {loading && <p>{strings.publicBooks.loading}</p>}
       {error && <p className="bm-message">{error}</p>}
 
       {!loading && !error && books.length === 0 && (
-        <p>{strings.publicBooks.emptyState}</p>
+        <p className="home-empty">{strings.publicBooks.emptyState}</p>
       )}
 
       {!loading && !error && books.length > 0 && (
-        <div className="bm-books-row">
+        <ScrollRow className="home-books-row">
           {books.map((book) => (
-            <div key={book.id} className="bm-book-card">
-              <button className="bm-book-card-link" onClick={() => setReadingBookId(book.id)} aria-label={`Read ${book.title}`}>
-                <div className="bm-book-cover">
+            <div key={book.id} className="home-book-card">
+              <button
+                className="home-book-link"
+                onClick={() => setReadingBookId(book.id)}
+                aria-label={`Read ${book.title}`}
+                style={{ background: "none", border: "none", padding: 0, textAlign: "left", cursor: "pointer", width: "100%" }}
+              >
+                <div className="home-book-cover">
                   {book.coverImageUrl ? (
-                    <img src={resolveImageUrl(book.coverImageUrl)} alt={book.title} className="bm-book-cover-img" />
+                    <img src={resolveImageUrl(book.coverImageUrl)} alt={book.title} className="home-book-cover-img" />
                   ) : (
-                    <span className="bm-book-cover-title">{book.title}</span>
+                    <span className="home-book-cover-title">{book.title}</span>
                   )}
                 </div>
-                <div className="bm-book-info">
-                  <span className="bm-book-title">{book.title}</span>
+                <div className="home-book-info">
+                  <span className="home-book-title">{book.title}</span>
                   {book.authorName && (
-                    <span className="bm-book-author">by {book.authorName}</span>
+                    <span className="home-book-author">by {book.authorName}</span>
                   )}
                 </div>
               </button>
             </div>
           ))}
-        </div>
+        </ScrollRow>
       )}
-      </div>{/* end bm-section-card */}
+      </div>{/* end home-section */}
     </div>
   );
 }
@@ -658,11 +667,13 @@ function BookManager() {
           </div>
           </div>{/* end bm-section-card for buttons */}
 
-          <div className="bm-section-card bm-published-section">
-          <h2 className="bm-published-heading">{strings.publicBooks.heading}</h2>
+          <div className="home-section home-section-books">
+          <div className="home-section-header">
+            <h2 className="home-section-heading">{strings.publicBooks.heading}</h2>
+          </div>
           {publishedLoading && <p>{strings.publicBooks.loading}</p>}
           {!publishedLoading && publishedBooks.length === 0 && (
-            <p>{strings.publicBooks.emptyState}</p>
+            <p className="home-empty">{strings.publicBooks.emptyState}</p>
           )}
           {!publishedLoading && publishedBooks.length > 0 && (
             isReading ? (
@@ -678,30 +689,35 @@ function BookManager() {
                 ))}
               </div>
             ) : (
-              <div className="bm-books-row">
+              <ScrollRow className="home-books-row">
                 {publishedBooks.map((book) => (
-                  <div key={book.id} className="bm-book-card">
-                    <button className="bm-book-card-link" onClick={() => setReadingBookId(book.id)} aria-label={`Read ${book.title}`}>
-                      <div className="bm-book-cover">
+                  <div key={book.id} className="home-book-card">
+                    <button
+                      className="home-book-link"
+                      onClick={() => setReadingBookId(book.id)}
+                      aria-label={`Read ${book.title}`}
+                      style={{ background: "none", border: "none", padding: 0, textAlign: "left", cursor: "pointer", width: "100%" }}
+                    >
+                      <div className="home-book-cover">
                         {book.coverImageUrl ? (
-                          <img src={resolveImageUrl(book.coverImageUrl)} alt={book.title} className="bm-book-cover-img" />
+                          <img src={resolveImageUrl(book.coverImageUrl)} alt={book.title} className="home-book-cover-img" />
                         ) : (
-                          <span className="bm-book-cover-title">{book.title}</span>
+                          <span className="home-book-cover-title">{book.title}</span>
                         )}
                       </div>
-                      <div className="bm-book-info">
-                        <span className="bm-book-title">{book.title}</span>
+                      <div className="home-book-info">
+                        <span className="home-book-title">{book.title}</span>
                         {book.authorName && (
-                          <span className="bm-book-author">by {book.authorName}</span>
+                          <span className="home-book-author">by {book.authorName}</span>
                         )}
                       </div>
                     </button>
                   </div>
                 ))}
-              </div>
+              </ScrollRow>
             )
           )}
-          </div>{/* end bm-section-card for published books */}
+          </div>{/* end home-section for published books */}
         </div>
 
         {isReading && (() => {
