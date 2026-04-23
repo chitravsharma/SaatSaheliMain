@@ -118,7 +118,7 @@ export default function RecipeView() {
     e.preventDefault();
     if (!user || !newComment.trim()) return;
     try {
-      const res = await api.post(`${API}/api/social/comments`, {
+      const res = await api.post(`${API}/api/social/comment`, {
         userId: user.userId, targetType: TARGET_TYPE, targetId: Number(recipeId), content: newComment.trim(),
       });
       setComments((prev) => [...prev, res.data]);
@@ -128,7 +128,7 @@ export default function RecipeView() {
 
   const handleDeleteComment = async (commentId) => {
     try {
-      await api.delete(`${API}/api/social/comments/${commentId}?userId=${user.userId}`);
+      await api.delete(`${API}/api/social/comment/${commentId}?userId=${user.userId}`);
       setComments((prev) => prev.filter((c) => c.id !== commentId));
     } catch (err) { console.error(err); }
   };

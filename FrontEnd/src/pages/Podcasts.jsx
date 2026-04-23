@@ -138,7 +138,9 @@ function Podcasts() {
     if (userId) fetchMyPodcasts();
   }, [userId]);
 
-  // Fetch social counts for all podcasts (likes + comments)
+  // Fetch social counts for all podcasts (likes + comments).
+  // For anonymous users also hydrate userLikes/userFavorites from localStorage so the
+  // heart/star icons reflect their prior toggles across reloads.
   useEffect(() => {
     (async () => {
       try {
@@ -148,11 +150,28 @@ function Podcasts() {
       } catch {
         /* non-fatal */
       }
+      if (!userId) {
+        const allIds = [...podcasts, ...myPodcasts].map(p => p.id);
+        const likes = {};
+        const favs = {};
+        allIds.forEach(id => {
+          if (localStorage.getItem(`anon_like_PODCAST_${id}`) === "true") likes[id] = true;
+          if (localStorage.getItem(`anon_fav_PODCAST_${id}`) === "true") favs[id] = true;
+        });
+        setUserLikes(likes);
+        setUserFavorites(favs);
+      }
     })();
-  }, [podcasts.length, myPodcasts.length]);
+  }, [podcasts, myPodcasts, userId]);
 
   const handleLike = async (podcastId) => {
-    if (!userId) { showMsg("Log in to like podcasts"); return; }
+    if (!userId) {
+      const key = `anon_like_PODCAST_${podcastId}`;
+      const wasLiked = localStorage.getItem(key) === "true";
+      localStorage.setItem(key, wasLiked ? "false" : "true");
+      setUserLikes(prev => ({ ...prev, [podcastId]: !wasLiked }));
+      return;
+    }
     try {
       const res = await api.post(`${API}/api/social/like`, {
         userId, targetType: "PODCAST", targetId: Number(podcastId),
@@ -163,7 +182,13 @@ function Podcasts() {
   };
 
   const handleFavorite = async (podcastId) => {
-    if (!userId) { showMsg("Log in to favorite podcasts"); return; }
+    if (!userId) {
+      const key = `anon_fav_PODCAST_${podcastId}`;
+      const wasFav = localStorage.getItem(key) === "true";
+      localStorage.setItem(key, wasFav ? "false" : "true");
+      setUserFavorites(prev => ({ ...prev, [podcastId]: !wasFav }));
+      return;
+    }
     try {
       const res = await api.post(`${API}/api/social/favorite`, {
         userId, targetType: "PODCAST", targetId: Number(podcastId),
@@ -193,7 +218,7 @@ function Podcasts() {
   const handleAddComment = async (podcastId) => {
     if (!userId || !newCommentText.trim()) return;
     try {
-      const res = await api.post(`${API}/api/social/comments`, {
+      const res = await api.post(`${API}/api/social/comment`, {
         userId, targetType: "PODCAST", targetId: Number(podcastId), content: newCommentText.trim(),
       });
       setPodcastComments(prev => ({
@@ -207,7 +232,7 @@ function Podcasts() {
 
   const handleDeleteComment = async (podcastId, commentId) => {
     try {
-      await api.delete(`${API}/api/social/comments/${commentId}?userId=${userId}`);
+      await api.delete(`${API}/api/social/comment/${commentId}?userId=${userId}`);
       setPodcastComments(prev => ({
         ...prev,
         [podcastId]: (prev[podcastId] || []).filter(c => c.id !== commentId),
