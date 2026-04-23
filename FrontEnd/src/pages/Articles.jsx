@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { useNavigate, Link, useParams, useLocation } from "react-router-dom";
 import api, { profileUrl, getAnonId } from "../utils/api";
 import { useAuth } from "../AuthContext";
+import useProfile from "../hooks/useProfile";
 import ImageEditor from "../components/ImageEditor";
 import "../Articles.css";
 
@@ -27,6 +28,7 @@ const PATH_TO_CONTENT_TYPE = {
 
 function Articles() {
   const { user } = useAuth();
+  const { hasProfile } = useProfile();
   const navigate = useNavigate();
   const location = useLocation();
   const { articleId: urlArticleId } = useParams();
@@ -490,17 +492,11 @@ function Articles() {
 
       {/* Tabs: My Content | Browse All */}
       <div className="art-tabs">
-        {userId && (
+        {userId && hasProfile && (
           <button className={tab === "my" ? "active" : ""} onClick={() => setTab("my")}>My Content</button>
         )}
         <button className={tab === "published" ? "active" : ""} onClick={() => setTab("published")}>Browse All</button>
       </div>
-
-      {!userId && (
-        <p style={{ color: "#64748b", fontSize: "0.875rem", margin: "8px 0 16px", textAlign: "center" }}>
-          <Link to="/Login" style={{ color: "#d97706", fontWeight: 600, textDecoration: "underline" }}>Log in to create and manage your own articles, poems, and blogs.</Link>
-        </p>
-      )}
 
       {/* Content type filter tabs */}
       <div className="art-section-card">
@@ -511,7 +507,7 @@ function Articles() {
         <button className={filterType === "Article" ? "active" : ""} onClick={() => setFilterType("Article")}>Articles</button>
       </div>
 
-      {tab === "my" && userId && (
+      {tab === "my" && userId && hasProfile && (
         <>
           <div className="art-top-actions">
             <button className="bm-btn bm-btn-create" onClick={() => { resetForm(); setShowForm(true); }}>

@@ -5,6 +5,7 @@ import FlipBook from "../FlipBook";
 import PageLayoutEditor from "../PageLayoutEditor";
 import CoverPageDesigner from "../components/CoverPageDesigner";
 import { useAuth } from "../AuthContext";
+import useProfile from "../hooks/useProfile";
 import { useStrings } from "../LanguageContext";
 import TermsGate from "../components/TermsGate";
 import ImageEditor from "../components/ImageEditor";
@@ -16,7 +17,8 @@ const API = `${process.env.REACT_APP_API_URL}/api/books`;
 const UPLOAD_API = `${process.env.REACT_APP_API_URL}/api/upload`;
 const GENERATE_API = `${process.env.REACT_APP_API_URL}/api/generate-image`;
 
-// Public books browser shown when no user is logged in
+// Public books browser shown when no user is logged in, or when a logged-in
+// user has not yet created a profile (tri-state create flow — #28).
 function PublicBooks() {
   const strings = useStrings();
   const [books, setBooks] = useState([]);
@@ -72,9 +74,6 @@ function PublicBooks() {
 
   return (
     <div className="book-manager">
-      <p className="bm-public-hint">
-        <Link to="/Login">{strings.publicBooks.loginPrompt}</Link>
-      </p>
 
       <div className="home-section home-section-books">
       <div className="home-section-header">
@@ -144,6 +143,7 @@ const DEFAULT_FORMAT = {
 
 function BookManager() {
   const { user, isSuperAdmin, isPremiumOrAbove } = useAuth();
+  const { hasProfile, loading: profileLoading } = useProfile();
   const canCustomizeCover = isSuperAdmin || isPremiumOrAbove;
   const strings = useStrings();
   const location = useLocation();
@@ -626,8 +626,12 @@ function BookManager() {
     </div>
   );
 
-  // Show public books browser if not logged in
+  // Show public books browser if not logged in, or if logged in without a profile
+  // (tri-state create flow — #28). Wait for profile fetch so we don't flash the
+  // full manager UI to users who haven't completed profile yet.
   if (!user) return <PublicBooks />;
+  if (profileLoading) return null;
+  if (!hasProfile) return <PublicBooks />;
 
   const wrappedContent = (() => {
   // Main menu

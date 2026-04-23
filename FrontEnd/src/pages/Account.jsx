@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { useNavigate, Link, useSearchParams } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import api, { profileUrl } from "../utils/api";
 import { useAuth } from "../AuthContext";
 import { useStrings } from "../LanguageContext";
@@ -18,8 +18,6 @@ function Account() {
   const { user } = useAuth();
   const strings = useStrings();
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const profileRequired = searchParams.get("profile") === "required";
   const [books, setBooks] = useState([]);
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -250,7 +248,7 @@ function Account() {
         </button>
       </div>
       <h1>{strings.account.heading}</h1>
-      {profileRequired && !profile?.displayName && (
+      {!loading && !profile?.displayName && (
         <div className="acct-profile-required-banner" role="alert" style={{
           padding: "12px 16px",
           margin: "12px 0",
@@ -260,7 +258,7 @@ function Account() {
           color: "#7c2d12",
           fontWeight: 500,
         }}>
-          Please create your profile before adding content. Fill in a display name (and optionally a bio and photo) in the section below, then head back to creating.
+          Create profile to add and publish any content.
         </div>
       )}
 
@@ -359,7 +357,7 @@ function Account() {
       {loading && <div className="loading-spinner" />}
       {error && <p className="acct-error">{error}</p>}
 
-      {!loading && !error && (userInterests.includes("Book") || books.length > 0) && (
+      {!loading && !error && profile?.displayName && (userInterests.includes("Book") || books.length > 0) && (
         <>
           <h2>{strings.account.booksHeading}</h2>
 
@@ -411,12 +409,19 @@ function Account() {
         </>
       )}
 
-      {/* Interest-based sections */}
-      {!loading && userInterests.length > 0 && (
+      {/* Interest-based sections — only visible once the user has completed their profile.
+          Falls back to existing content so users who created items before picking interests
+          still see their "My X" rows. */}
+      {!loading && profile?.displayName && (
+        userInterests.length > 0
+        || articles.length > 0
+        || recipes.length > 0
+        || galleries.length > 0
+      ) && (
         <div className="acct-interests-sections">
           <h2>My Sections</h2>
 
-          {userInterests.includes("Gallery") && (
+          {(userInterests.includes("Gallery") || galleries.length > 0) && (
             <div className="acct-section-card" id="section-gallery">
               <h3 className="acct-section-title">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
@@ -577,7 +582,7 @@ function Account() {
             </div>
           )}
 
-          {userInterests.includes("Poems") && (
+          {(userInterests.includes("Poems") || articles.some(a => a.contentType === "Poetry")) && (
             <div className="acct-section-card" id="section-poems">
               <h3 className="acct-section-title">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
@@ -618,7 +623,7 @@ function Account() {
             </div>
           )}
 
-          {userInterests.includes("Blog") && (
+          {(userInterests.includes("Blog") || articles.some(a => a.contentType === "Blog")) && (
             <div className="acct-section-card" id="section-blog">
               <h3 className="acct-section-title">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
@@ -659,7 +664,7 @@ function Account() {
             </div>
           )}
 
-          {userInterests.includes("Article") && (
+          {(userInterests.includes("Article") || articles.some(a => a.contentType === "Article")) && (
             <div className="acct-section-card" id="section-article">
               <h3 className="acct-section-title">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
@@ -700,7 +705,7 @@ function Account() {
             </div>
           )}
 
-          {userInterests.includes("Recipes") && (
+          {(userInterests.includes("Recipes") || recipes.length > 0) && (
             <div className="acct-section-card" id="section-recipes">
               <h3 className="acct-section-title">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 8h1a4 4 0 010 8h-1"/><path d="M2 8h16v9a4 4 0 01-4 4H6a4 4 0 01-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>

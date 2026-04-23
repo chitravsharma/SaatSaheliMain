@@ -2,12 +2,14 @@ import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import api, { profileUrl } from "../utils/api";
 import { useAuth } from "../AuthContext";
+import useProfile from "../hooks/useProfile";
 import "./Recipes.css";
 
 const API = process.env.REACT_APP_API_URL;
 
 export default function Recipes() {
   const { user } = useAuth();
+  const { hasProfile } = useProfile();
   const [recipes, setRecipes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -29,14 +31,10 @@ export default function Recipes() {
         <p className="recipes-intro">
           Discover and share favorite recipes from our community.
         </p>
-        {user ? (
+        {user && hasProfile && (
           <Link to="/recipes/create" className="ss-btn ss-btn-primary">
             + Create a Recipe
           </Link>
-        ) : (
-          <p style={{ color: "#64748b", fontSize: "0.875rem", margin: "8px 0 0" }}>
-            <Link to="/Login" style={{ color: "#d97706", fontWeight: 600, textDecoration: "underline" }}>Log in to create and manage your own recipes.</Link>
-          </p>
         )}
       </div>
 
