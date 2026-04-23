@@ -80,18 +80,6 @@ const Header = () => {
           role="navigation"
           aria-label="Main navigation"
         >
-          <Link to="/" className="nav-link" onClick={closeMobileNav}>
-            <svg className="nav-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-            Home
-          </Link>
-          <Link to="/about" className="nav-link" onClick={closeMobileNav}>
-            <svg className="nav-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-            {strings.header.navAbout}
-          </Link>
-          <Link to="/manual" className="nav-link" onClick={closeMobileNav}>
-            <svg className="nav-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
-            User Manual
-          </Link>
           <Link to="/podcasts" className="nav-link nav-link-podcast" onClick={closeMobileNav}>
             <svg className="nav-mic" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
               {/* studio mic body with grille lines */}
@@ -104,6 +92,18 @@ const Header = () => {
               <line x1="9" y1="22" x2="15" y2="22" stroke="#c9a84c" strokeWidth="1.8" strokeLinecap="round"/>
             </svg>
             <span>Weekly Podcast</span>
+          </Link>
+          <Link to="/" className="nav-link" onClick={closeMobileNav}>
+            <svg className="nav-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+            Home
+          </Link>
+          <Link to="/about" className="nav-link" onClick={closeMobileNav}>
+            <svg className="nav-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+            {strings.header.navAbout}
+          </Link>
+          <Link to="/manual" className="nav-link" onClick={closeMobileNav}>
+            <svg className="nav-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
+            User Manual
           </Link>
           {user && (
             <Link to="/chat" className="nav-link" onClick={closeMobileNav}>
