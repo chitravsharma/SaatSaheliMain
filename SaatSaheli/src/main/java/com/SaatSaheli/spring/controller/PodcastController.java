@@ -1,15 +1,21 @@
 package com.SaatSaheli.spring.controller;
 
 import com.SaatSaheli.spring.model.Podcast;
+import com.SaatSaheli.spring.model.User;
+import com.SaatSaheli.spring.repository.UserRepository;
 import com.SaatSaheli.spring.service.PodcastService;
+import com.SaatSaheli.spring.util.RoleUtil;
+import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/podcasts")
@@ -20,9 +26,31 @@ public class PodcastController {
     @Autowired
     private PodcastService podcastService;
 
+    @Autowired
+    private UserRepository userRepo;
+
+    private Long getAuthUserId(HttpServletRequest request) {
+        Object val = request.getAttribute("jwtUserId");
+        return val instanceof Long ? (Long) val : null;
+    }
+
+    private ResponseEntity<?> requireAdmin(HttpServletRequest request) {
+        Long callerUserId = getAuthUserId(request);
+        if (callerUserId == null) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", "Authentication required"));
+        }
+        Optional<User> callerOpt = userRepo.findById(callerUserId);
+        if (callerOpt.isEmpty() || !RoleUtil.isAdmin(callerOpt.get().getRole())) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", "Admin access required"));
+        }
+        return null;
+    }
+
     @PostMapping
-    public ResponseEntity<?> createPodcast(@RequestBody Map<String, Object> body) {
+    public ResponseEntity<?> createPodcast(@RequestBody Map<String, Object> body, HttpServletRequest request) {
         try {
+            ResponseEntity<?> denied = requireAdmin(request);
+            if (denied != null) return denied;
             Long userId = Long.valueOf(body.get("userId").toString());
             String title = (String) body.get("title");
             if (title == null || title.trim().isEmpty()) {
@@ -47,8 +75,10 @@ public class PodcastController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<?> updatePodcast(@PathVariable Long id, @RequestBody Map<String, Object> body) {
+    public ResponseEntity<?> updatePodcast(@PathVariable Long id, @RequestBody Map<String, Object> body, HttpServletRequest request) {
         try {
+            ResponseEntity<?> denied = requireAdmin(request);
+            if (denied != null) return denied;
             Long userId = body.get("userId") != null ? Long.valueOf(body.get("userId").toString()) : null;
             String title = (String) body.get("title");
             String description = (String) body.get("description");
@@ -70,8 +100,10 @@ public class PodcastController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> deletePodcast(@PathVariable Long id, @RequestParam Long userId) {
+    public ResponseEntity<?> deletePodcast(@PathVariable Long id, @RequestParam Long userId, HttpServletRequest request) {
         try {
+            ResponseEntity<?> denied = requireAdmin(request);
+            if (denied != null) return denied;
             podcastService.deletePodcast(id, userId);
             return ResponseEntity.ok(Map.of("message", "Podcast deleted"));
         } catch (Exception e) {

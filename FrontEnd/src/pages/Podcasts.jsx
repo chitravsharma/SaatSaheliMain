@@ -77,6 +77,7 @@ function Podcasts() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const userId = user?.userId;
+  const isAdmin = !!user && (user.role === "ADMIN" || user.role === "SUPER_ADMIN");
 
   const [tab, setTab] = useState("browse"); // "my" | "browse"
   const [podcasts, setPodcasts] = useState([]);
@@ -457,7 +458,7 @@ function Podcasts() {
       {/* Tabs */}
       <div className="podcast-tabs">
         <button className={tab === "browse" ? "active" : ""} onClick={() => setTab("browse")}>Browse All</button>
-        {userId && <button className={tab === "my" ? "active" : ""} onClick={() => setTab("my")}>My Podcasts</button>}
+        {isAdmin && <button className={tab === "my" ? "active" : ""} onClick={() => setTab("my")}>My Podcasts</button>}
       </div>
 
       {/* Language filter */}
@@ -477,13 +478,13 @@ function Podcasts() {
         <div className="podcast-list">
           {loading ? <p>Loading...</p> :
             filteredPodcasts.length === 0 ? <p className="podcast-empty">No podcasts yet. Be the first to share!</p> :
-            filteredPodcasts.map(p => renderPodcastCard(p, userId && p.userId === userId))
+            filteredPodcasts.map(p => renderPodcastCard(p, isAdmin))
           }
         </div>
       )}
 
-      {/* My Podcasts tab */}
-      {tab === "my" && userId && (
+      {/* My Podcasts tab — admin-only */}
+      {tab === "my" && isAdmin && (
         <>
           <div className="podcast-top-actions">
             <button className="bm-btn bm-btn-create" onClick={() => { resetForm(); setShowForm(true); }}>
