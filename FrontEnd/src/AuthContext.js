@@ -20,6 +20,15 @@ export function AuthProvider({ children }) {
         clearAuth();
     }, [clearAuth]);
 
+    // Auto-logout: clear auth then full-page redirect to /Login with reason.
+    // Full reload (not SPA navigate) because AuthContext lives above Router,
+    // and it also flushes any in-memory state from the previously authenticated session.
+    const autoLogout = useCallback((reason) => {
+        clearAuth();
+        const suffix = reason ? `?reason=${encodeURIComponent(reason)}` : "";
+        window.location.href = `/Login${suffix}`;
+    }, [clearAuth]);
+
     const updateActivity = useCallback(() => {
         localStorage.setItem("saatSaheliLastActivity", Date.now().toString());
     }, []);
@@ -27,8 +36,8 @@ export function AuthProvider({ children }) {
     const resetTimer = useCallback(() => {
         if (timerRef.current) clearTimeout(timerRef.current);
         updateActivity();
-        timerRef.current = setTimeout(logout, INACTIVITY_TIMEOUT);
-    }, [logout, updateActivity]);
+        timerRef.current = setTimeout(() => autoLogout("idle"), INACTIVITY_TIMEOUT);
+    }, [autoLogout, updateActivity]);
 
     // Restore session on mount — but only if window session is still active
     // and user was not inactive for more than 15 minutes
@@ -70,6 +79,20 @@ export function AuthProvider({ children }) {
             if (timerRef.current) clearTimeout(timerRef.current);
         };
     }, [user, resetTimer]);
+
+    // Cross-tab sync: if another tab clears the auth keys (manual logout or idle
+    // timeout in that tab), this tab also drops the user from state so the UI
+    // doesn't keep showing a logged-in view.
+    useEffect(() => {
+        const onStorage = (e) => {
+            if (e.key === "saatSaheliUser" && e.newValue === null) {
+                if (timerRef.current) clearTimeout(timerRef.current);
+                setUser(null);
+            }
+        };
+        window.addEventListener("storage", onStorage);
+        return () => window.removeEventListener("storage", onStorage);
+    }, []);
 
     const login = (userData) => {
         // Store user data

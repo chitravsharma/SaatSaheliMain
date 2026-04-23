@@ -21,7 +21,10 @@ export default function Login() {
   const initialMode = (isRegisterPath || searchParams.get("mode") === "signup") ? "signup" : "login";
   const [mode, setMode] = useState(initialMode); // "login" | "signup" | "forgot" | "changePassword"
   const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
+  const idleMessage = searchParams.get("reason") === "idle"
+    ? "You were signed out after 15 minutes of inactivity. Please log in again."
+    : "";
+  const [success, setSuccess] = useState(idleMessage);
   const [loading, setLoading] = useState(false);
 
   // Login fields
