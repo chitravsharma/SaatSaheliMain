@@ -29,10 +29,14 @@ export default function Recipes() {
         <p className="recipes-intro">
           Discover and share favorite recipes from our community.
         </p>
-        {user && (
+        {user ? (
           <Link to="/recipes/create" className="ss-btn ss-btn-primary">
             + Create a Recipe
           </Link>
+        ) : (
+          <p style={{ color: "#64748b", fontSize: "0.875rem", margin: "8px 0 0" }}>
+            <Link to="/Login" style={{ color: "#d97706", fontWeight: 600, textDecoration: "underline" }}>Log in to create and manage your own recipes.</Link>
+          </p>
         )}
       </div>
 

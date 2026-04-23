@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import api from "../utils/api";
+import { useAuth } from "../AuthContext";
 import "./Writers.css";
 import "./Galleries.css";
 
@@ -15,6 +16,7 @@ function resolveImageUrl(url) {
 }
 
 export default function Galleries() {
+  const { user } = useAuth();
   const [galleries, setGalleries] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -36,6 +38,13 @@ export default function Galleries() {
         <p className="writers-intro">
           Browse photo galleries shared by our community.
         </p>
+        {user ? (
+          <Link to="/account" className="ss-btn ss-btn-primary">+ Upload to Gallery</Link>
+        ) : (
+          <p style={{ color: "#64748b", fontSize: "0.875rem", margin: "8px 0 0" }}>
+            <Link to="/Login" style={{ color: "#d97706", fontWeight: 600, textDecoration: "underline" }}>Log in to create and manage your own galleries.</Link>
+          </p>
+        )}
       </div>
 
       {loading && <p className="writers-status">Loading galleries…</p>}

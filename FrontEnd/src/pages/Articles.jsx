@@ -496,6 +496,12 @@ function Articles() {
         <button className={tab === "published" ? "active" : ""} onClick={() => setTab("published")}>Browse All</button>
       </div>
 
+      {!userId && (
+        <p style={{ color: "#64748b", fontSize: "0.875rem", margin: "8px 0 16px", textAlign: "center" }}>
+          <Link to="/Login" style={{ color: "#d97706", fontWeight: 600, textDecoration: "underline" }}>Log in to create and manage your own articles, poems, and blogs.</Link>
+        </p>
+      )}
+
       {/* Content type filter tabs */}
       <div className="art-section-card">
       <div className="art-filter-tabs">

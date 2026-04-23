@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import api, { profileUrl } from "../utils/api";
 import { useAuth } from "../AuthContext";
 import { useStrings } from "../LanguageContext";
@@ -18,6 +18,8 @@ function Account() {
   const { user } = useAuth();
   const strings = useStrings();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const profileRequired = searchParams.get("profile") === "required";
   const [books, setBooks] = useState([]);
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -248,6 +250,19 @@ function Account() {
         </button>
       </div>
       <h1>{strings.account.heading}</h1>
+      {profileRequired && !profile?.displayName && (
+        <div className="acct-profile-required-banner" role="alert" style={{
+          padding: "12px 16px",
+          margin: "12px 0",
+          background: "#fff7ed",
+          border: "1px solid #fcd34d",
+          borderRadius: 8,
+          color: "#7c2d12",
+          fontWeight: 500,
+        }}>
+          Please create your profile before adding content. Fill in a display name (and optionally a bio and photo) in the section below, then head back to creating.
+        </div>
+      )}
 
       <div className="acct-profile-card">
         <div className="acct-profile-top">
