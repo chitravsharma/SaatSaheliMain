@@ -459,7 +459,7 @@ function Articles() {
               </form>
             ) : (
               <p className="rb-login-prompt">
-                <Link to="/Login" ref={openComments === article.id ? loginPromptRef : null}>Login with Google or create an account</Link> to comment on this item.
+                <Link to={`/Login?redirect=${encodeURIComponent(window.location.pathname + window.location.search + window.location.hash)}`} ref={openComments === article.id ? loginPromptRef : null}>Login with Google or create an account</Link> to comment on this item.
               </p>
             )}
             <div className="rb-comment-list">

@@ -49,6 +49,12 @@ export default function Login() {
   const [recaptchaToken, setRecaptchaToken] = useState("");
   const recaptchaRef = useRef(null);
 
+  // Same-origin path only (starts with "/", not "//"), to avoid open-redirect.
+  const postLoginPath = (() => {
+    const r = searchParams.get("redirect");
+    return r && r.startsWith("/") && !r.startsWith("//") ? r : "/";
+  })();
+
   const saveUserAndRedirect = (data) => {
     const userData = {
       userId: data.userId,
@@ -70,7 +76,7 @@ export default function Login() {
     }
 
     authLogin(userData);
-    navigate("/");
+    navigate(postLoginPath);
   };
 
   const handleLogin = async (e) => {
@@ -227,7 +233,7 @@ export default function Login() {
         headers: { Authorization: `Bearer ${pendingUserData.token}` },
       });
       authLogin(pendingUserData);
-      navigate("/");
+      navigate(postLoginPath);
     } catch (err) {
       setError(err.response?.data?.error || "Failed to update password.");
     } finally {
