@@ -9,6 +9,7 @@ import java.util.List;
 @Repository
 public interface AdvertisementRepository extends JpaRepository<Advertisement, Long> {
     List<Advertisement> findByActiveTrueOrderByCreatedDateDesc();
+    List<Advertisement> findByActiveTrueAndPlacementOrderByCreatedDateDesc(String placement);
     List<Advertisement> findAllByOrderByCreatedDateDesc();
     List<Advertisement> findByUserIdOrderByCreatedDateDesc(Long userId);
 }

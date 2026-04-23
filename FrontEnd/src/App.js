@@ -4,6 +4,7 @@ import React from "react";
 
 import Header from './modules/Header';
 import Footer from './modules/Footer';
+import AdBanner from './modules/AdBanner';
 import ServerWakeUp from './components/ServerWakeUp';
 import { Routes, Route, useLocation } from 'react-router-dom';
 import Home from './pages/Home';
@@ -30,6 +31,7 @@ import Articles from './pages/Articles';
 import Podcasts from './pages/Podcasts';
 import Magazine from './pages/Magazine';
 import ProtectedRoute from './components/ProtectedRoute';
+import RequireProfile from './components/RequireProfile';
 import DownloadProtection from './components/DownloadProtection';
 import VisitorTracker from './components/VisitorTracker';
 import MaintenanceBanner from './components/MaintenanceBanner';
@@ -93,9 +95,9 @@ function App() {
           <Route path="/galleries" element={<Galleries />} />
           <Route path="/gallery/:galleryId" element={<GalleryView />} />
           <Route path="/recipes" element={<Recipes />} />
-          <Route path="/recipes/create" element={<ProtectedRoute><RecipeEditor /></ProtectedRoute>} />
+          <Route path="/recipes/create" element={<ProtectedRoute><RequireProfile><RecipeEditor /></RequireProfile></ProtectedRoute>} />
           <Route path="/recipes/:recipeId" element={<RecipeView />} />
-          <Route path="/recipes/:recipeId/edit" element={<ProtectedRoute><RecipeEditor /></ProtectedRoute>} />
+          <Route path="/recipes/:recipeId/edit" element={<ProtectedRoute><RequireProfile><RecipeEditor /></RequireProfile></ProtectedRoute>} />
           <Route path="/pricing" element={<Pricing />} />
           <Route path="/marketplace" element={<Marketplace />} />
           <Route path="/checkout" element={<ProtectedRoute><Checkout /></ProtectedRoute>} />
@@ -106,6 +108,7 @@ function App() {
         </Routes>
         </DownloadProtection>
       </main>
+      <AdBanner placement="FOOTER_TOP" />
       <Footer />
     </div>
     </ServerWakeUp>

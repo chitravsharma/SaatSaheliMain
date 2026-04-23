@@ -32,6 +32,12 @@ public class Advertisement {
 
     private String animation; // "static", "scroll", "blink"
 
+    private String placement; // "HEADER_TOP", "FOOTER_TOP", "SIDE_RAIL"
+
+    // Admin-controlled display dimensions (pixels). Nullable — falls back to CSS defaults when not set.
+    private Integer width;
+    private Integer height;
+
     private Boolean active;
 
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
@@ -68,6 +74,15 @@ public class Advertisement {
 
     public String getAnimation() { return animation; }
     public void setAnimation(String animation) { this.animation = animation; }
+
+    public String getPlacement() { return placement; }
+    public void setPlacement(String placement) { this.placement = placement; }
+
+    public Integer getWidth() { return width; }
+    public void setWidth(Integer width) { this.width = width; }
+
+    public Integer getHeight() { return height; }
+    public void setHeight(Integer height) { this.height = height; }
 
     public Boolean getActive() { return active; }
     public void setActive(Boolean active) { this.active = active; }

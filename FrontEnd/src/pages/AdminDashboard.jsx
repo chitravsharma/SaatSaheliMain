@@ -45,8 +45,12 @@ const AdminDashboard = () => {
     const [adImageFile, setAdImageFile] = useState(null);
     const [adLinkUrl, setAdLinkUrl] = useState("");
     const [adAnimation, setAdAnimation] = useState("static"); // "static" | "scroll" | "blink"
+    const [adPlacement, setAdPlacement] = useState("HEADER_TOP"); // "HEADER_TOP" | "FOOTER_TOP" | "SIDE_RAIL"
+    const [adWidth, setAdWidth] = useState(""); // px; blank = CSS default
+    const [adHeight, setAdHeight] = useState(""); // px; blank = CSS default
     const [adActive, setAdActive] = useState(true);
     const [adUploading, setAdUploading] = useState(false);
+    const [editingAdId, setEditingAdId] = useState(null);
 
     const fetchAdvertisements = useCallback(async () => {
         try {
@@ -71,7 +75,33 @@ const AdminDashboard = () => {
         setAdUploading(false);
     };
 
-    const addAdvertisement = async () => {
+    const resetAdForm = () => {
+        setAdTitle(""); setAdHtmlContent(""); setAdImageUrl(""); setAdImageFile(null);
+        setAdLinkUrl(""); setAdAnimation("static"); setAdPlacement("HEADER_TOP");
+        setAdWidth(""); setAdHeight("");
+        setAdActive(true); setAdContentType("text"); setEditingAdId(null);
+    };
+
+    const startEditAd = (ad) => {
+        setEditingAdId(ad.id);
+        setAdTitle(ad.title || "");
+        setAdContentType(ad.contentType || "text");
+        setAdHtmlContent(ad.htmlContent || "");
+        setAdImageUrl(ad.imageUrl || "");
+        setAdImageFile(null);
+        setAdLinkUrl(ad.linkUrl || "");
+        setAdAnimation(ad.animation || "static");
+        setAdPlacement(ad.placement || "HEADER_TOP");
+        setAdWidth(ad.width ? String(ad.width) : "");
+        setAdHeight(ad.height ? String(ad.height) : "");
+        setAdActive(ad.active !== false);
+        setTimeout(() => {
+            const form = document.querySelector(".admin-maint-form");
+            if (form) form.scrollIntoView({ behavior: "smooth", block: "start" });
+        }, 0);
+    };
+
+    const saveAdvertisement = async () => {
         if (!adTitle.trim()) {
             setMessage("Please enter an advertisement title");
             return;
@@ -85,7 +115,7 @@ const AdminDashboard = () => {
             return;
         }
         try {
-            await api.post(`${API}/api/advertisements`, {
+            const payload = {
                 userId: user.userId,
                 title: adTitle,
                 contentType: adContentType,
@@ -93,14 +123,22 @@ const AdminDashboard = () => {
                 imageUrl: adContentType === "image" ? adImageUrl : "",
                 linkUrl: adLinkUrl,
                 animation: adAnimation,
+                placement: adPlacement,
+                width: adWidth === "" ? null : Number(adWidth),
+                height: adHeight === "" ? null : Number(adHeight),
                 active: adActive,
-            });
-            setAdTitle(""); setAdHtmlContent(""); setAdImageUrl(""); setAdImageFile(null);
-            setAdLinkUrl(""); setAdAnimation("static"); setAdActive(true); setAdContentType("text");
-            setMessage("Advertisement added successfully");
+            };
+            if (editingAdId) {
+                await api.put(`${API}/api/advertisements/${editingAdId}`, payload);
+                setMessage("Advertisement updated successfully");
+            } else {
+                await api.post(`${API}/api/advertisements`, payload);
+                setMessage("Advertisement added successfully");
+            }
+            resetAdForm();
             fetchAdvertisements();
         } catch {
-            setMessage("Failed to create advertisement");
+            setMessage(editingAdId ? "Failed to update advertisement" : "Failed to create advertisement");
         }
     };
 
@@ -1269,9 +1307,9 @@ const AdminDashboard = () => {
                         Create and manage advertisement banners displayed on the home page. You can add images, formatted HTML content, and choose animation styles.
                     </p>
 
-                    {/* Add new advertisement form */}
+                    {/* Add / edit advertisement form */}
                     <div className="admin-maint-form">
-                        <h3>Create New Advertisement</h3>
+                        <h3>{editingAdId ? `Edit Advertisement #${editingAdId}` : "Create New Advertisement"}</h3>
                         <div className="admin-maint-fields">
                             <div className="admin-maint-field admin-maint-field-wide">
                                 <label>Title</label>
@@ -1292,6 +1330,26 @@ const AdminDashboard = () => {
                                     <option value="scroll">Scroll Left to Right</option>
                                     <option value="blink">Blinking</option>
                                 </select>
+                            </div>
+                            <div className="admin-maint-field">
+                                <label>Placement</label>
+                                <select value={adPlacement} onChange={e => setAdPlacement(e.target.value)} className="admin-action-select" style={{ width: "100%" }}>
+                                    <option value="HEADER_TOP">Header (top of every page)</option>
+                                    <option value="FOOTER_TOP">Footer (above footer links)</option>
+                                    <option value="SIDE_RAIL">Side rail (home page)</option>
+                                </select>
+                            </div>
+                            <div className="admin-maint-field">
+                                <label>Width (px, optional)</label>
+                                <input type="number" min="0" max="2000" value={adWidth}
+                                       onChange={e => setAdWidth(e.target.value)}
+                                       placeholder="auto" className="bm-input" style={{ width: "100%" }} />
+                            </div>
+                            <div className="admin-maint-field">
+                                <label>Height (px, optional)</label>
+                                <input type="number" min="0" max="2000" value={adHeight}
+                                       onChange={e => setAdHeight(e.target.value)}
+                                       placeholder="auto" className="bm-input" style={{ width: "100%" }} />
                             </div>
 
                             {adContentType === "image" && (
@@ -1337,7 +1395,16 @@ const AdminDashboard = () => {
                                 </label>
                             </div>
                         </div>
-                        <button className="bm-btn bm-btn-create" onClick={addAdvertisement}>Create Advertisement</button>
+                        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                            <button className="bm-btn bm-btn-create" onClick={saveAdvertisement}>
+                                {editingAdId ? "Update Advertisement" : "Create Advertisement"}
+                            </button>
+                            {editingAdId && (
+                                <button className="bm-btn bm-btn-back" onClick={resetAdForm}>
+                                    Cancel
+                                </button>
+                            )}
+                        </div>
                     </div>
 
                     {/* Existing advertisements */}
@@ -1352,6 +1419,7 @@ const AdminDashboard = () => {
                                     <tr>
                                         <th>Title</th>
                                         <th>Type</th>
+                                        <th>Placement</th>
                                         <th>Animation</th>
                                         <th>Preview</th>
                                         <th>Status</th>
@@ -1367,6 +1435,11 @@ const AdminDashboard = () => {
                                                 <span className={`admin-type-badge admin-type-${ad.contentType === "html" ? "blog" : ad.contentType === "image" ? "article" : "poetry"}`}>
                                                     {ad.contentType === "html" ? "HTML" : ad.contentType === "image" ? "Image" : "Text"}
                                                 </span>
+                                            </td>
+                                            <td style={{ fontSize: "0.8rem" }}>
+                                                {ad.placement === "FOOTER_TOP" ? "Footer"
+                                                    : ad.placement === "SIDE_RAIL" ? "Side rail"
+                                                    : "Header"}
                                             </td>
                                             <td style={{ textTransform: "capitalize" }}>{ad.animation}</td>
                                             <td style={{ maxWidth: 200 }}>
@@ -1385,6 +1458,9 @@ const AdminDashboard = () => {
                                             </td>
                                             <td>{toPSTDate(ad.createdDate)}</td>
                                             <td>
+                                                <button className="bm-btn bm-btn-sm bm-btn-create" onClick={() => startEditAd(ad)}>
+                                                    Edit
+                                                </button>
                                                 <button className="bm-btn bm-btn-sm bm-btn-edit" onClick={() => toggleAdActive(ad.id)}>
                                                     {ad.active ? "Deactivate" : "Activate"}
                                                 </button>

@@ -29,6 +29,17 @@ public class AdvertisementController {
         }
     }
 
+    // Public: get active advertisements for a specific placement slot
+    @GetMapping("/active/{placement}")
+    public ResponseEntity<?> getActiveAdvertisementsByPlacement(@PathVariable String placement) {
+        try {
+            return ResponseEntity.ok(adService.getActiveAdvertisementsByPlacement(placement));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(errorMap("Failed to get advertisements: " + e.getMessage()));
+        }
+    }
+
     // Admin: get all advertisements
     @GetMapping
     public ResponseEntity<?> getAllAdvertisements() {
@@ -72,10 +83,13 @@ public class AdvertisementController {
             String imageUrl = (String) body.get("imageUrl");
             String linkUrl = (String) body.get("linkUrl");
             String animation = (String) body.get("animation");
+            String placement = (String) body.get("placement");
+            Integer width = parseIntOrNull(body.get("width"));
+            Integer height = parseIntOrNull(body.get("height"));
             Boolean active = body.get("active") != null ? Boolean.parseBoolean(body.get("active").toString()) : true;
 
             Advertisement ad = adService.createAdvertisement(userId, title.trim(), contentType,
-                    htmlContent, imageUrl, linkUrl, animation, active);
+                    htmlContent, imageUrl, linkUrl, animation, placement, width, height, active);
             return ResponseEntity.ok(ad);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -93,10 +107,13 @@ public class AdvertisementController {
             String imageUrl = (String) body.get("imageUrl");
             String linkUrl = (String) body.get("linkUrl");
             String animation = (String) body.get("animation");
+            String placement = (String) body.get("placement");
+            Integer width = parseIntOrNull(body.get("width"));
+            Integer height = parseIntOrNull(body.get("height"));
             Boolean active = body.get("active") != null ? Boolean.parseBoolean(body.get("active").toString()) : null;
 
             Advertisement ad = adService.updateAdvertisement(id, title, contentType, htmlContent,
-                    imageUrl, linkUrl, animation, active);
+                    imageUrl, linkUrl, animation, placement, width, height, active);
             return ResponseEntity.ok(ad);
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorMap(e.getMessage()));
@@ -138,5 +155,12 @@ public class AdvertisementController {
         Map<String, String> map = new HashMap<>();
         map.put("error", message);
         return map;
+    }
+
+    private Integer parseIntOrNull(Object v) {
+        if (v == null) return null;
+        String s = v.toString().trim();
+        if (s.isEmpty()) return null;
+        try { return Integer.valueOf(s); } catch (NumberFormatException e) { return null; }
     }
 }
