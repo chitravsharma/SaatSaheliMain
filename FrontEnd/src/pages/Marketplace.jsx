@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import api from "../utils/api";
 import { useAuth } from "../AuthContext";
+import useProfile from "../hooks/useProfile";
 import "./Marketplace.css";
 
 const API = process.env.REACT_APP_API_URL;
@@ -11,6 +12,7 @@ const CONDITION_OPTIONS = ["New", "Like New", "Good", "Fair"];
 
 export default function Marketplace() {
   const { user } = useAuth();
+  const { hasProfile } = useProfile();
   const userId = user?.userId;
 
   const [tab, setTab] = useState("browse");
@@ -226,7 +228,7 @@ export default function Marketplace() {
         {/* Tabs */}
         <div className="mp-tabs">
           <button className={tab === "browse" ? "active" : ""} onClick={() => setTab("browse")}>Browse All</button>
-          {userId && <button className={tab === "my" ? "active" : ""} onClick={() => setTab("my")}>My Listings</button>}
+          {userId && hasProfile && <button className={tab === "my" ? "active" : ""} onClick={() => setTab("my")}>My Listings</button>}
         </div>
 
         {/* Category filter */}
@@ -252,7 +254,7 @@ export default function Marketplace() {
         )}
 
         {/* My Listings tab */}
-        {tab === "my" && userId && (
+        {tab === "my" && userId && hasProfile && (
           <>
             <div className="mp-top-actions">
               <button className="bm-btn bm-btn-create" onClick={() => { resetForm(); setShowForm(true); }}>
@@ -327,11 +329,6 @@ export default function Marketplace() {
           </>
         )}
 
-        {!userId && tab === "my" && (
-          <p className="mp-empty">
-            <Link to="/Login">Log in</Link> to create and manage your listings.
-          </p>
-        )}
       </div>
     </div>
   );
