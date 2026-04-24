@@ -306,11 +306,23 @@ export default function Login() {
 
           {mode === "login" && (
             <>
-              <h2>{strings.login.logInHeading}</h2>
-              <form className="auth-form" onSubmit={handleLogin}>
-                {error && <div className="auth-error" role="alert">{error}</div>}
-                {success && <div className="auth-success" role="status">{success}</div>}
+              {error && <div className="auth-error" role="alert">{error}</div>}
+              {success && <div className="auth-success" role="status">{success}</div>}
 
+              <div style={{ display: "flex", justifyContent: "center" }}>
+                <GoogleLogin
+                  onSuccess={handleGoogleSuccess}
+                  onError={() => setError(strings.login.errorGoogleFailed)}
+                  text="signin_with"
+                  shape="rectangular"
+                  size="large"
+                  width="100%"
+                />
+              </div>
+
+              <div className="auth-divider"><span>{strings.common.or}</span></div>
+
+              <form className="auth-form" onSubmit={handleLogin}>
                 <div className="auth-field">
                   <label htmlFor="login-email">{strings.login.labelEmail}</label>
                   <input
@@ -337,33 +349,23 @@ export default function Login() {
                   />
                 </div>
 
-                <button
-                  type="submit"
-                  className="auth-btn auth-btn-primary"
-                  disabled={loading}
-                >
-                  {loading ? strings.login.loggingIn : strings.login.logInButton}
-                </button>
+                <div className="auth-login-row">
+                  <button
+                    type="submit"
+                    className="auth-btn auth-btn-primary auth-btn-compact"
+                    disabled={loading}
+                  >
+                    {loading ? strings.login.loggingIn : strings.login.logInButton}
+                  </button>
+                  <button
+                    type="button"
+                    className="auth-forgot-link"
+                    onClick={() => switchMode("forgot")}
+                  >
+                    Forgot password?
+                  </button>
+                </div>
               </form>
-
-              <div className="auth-divider"><span>{strings.common.or}</span></div>
-
-              <div style={{ display: "flex", justifyContent: "center" }}>
-                <GoogleLogin
-                  onSuccess={handleGoogleSuccess}
-                  onError={() => setError(strings.login.errorGoogleFailed)}
-                  text="signin_with"
-                  shape="rectangular"
-                  size="large"
-                  width="100%"
-                />
-              </div>
-
-              <div className="auth-forgot">
-                <button onClick={() => switchMode("forgot")}>
-                  Forgot Password?
-                </button>
-              </div>
 
               <div className="auth-switch">
                 {strings.login.noAccount}{" "}
@@ -408,6 +410,11 @@ export default function Login() {
                   <button type="submit" className="auth-btn auth-btn-primary" disabled={loading}>
                     {loading ? "Sending..." : "Send Reset Link"}
                   </button>
+                  <p className="auth-forgot-help">
+                    Can't remember the email you signed up with? Contact us at{" "}
+                    <a href="mailto:avikaventures.info@gmail.com">avikaventures.info@gmail.com</a>{" "}
+                    with your name and phone number, and we'll help recover your account.
+                  </p>
                   <div className="auth-switch">
                     <button onClick={() => switchMode("login")}>
                       Back to Login
@@ -462,10 +469,24 @@ export default function Login() {
           {mode === "signup" && (
             <>
               <h2>{strings.login.createAccountHeading}</h2>
-              <form className="auth-form" onSubmit={handleSignup}>
-                {error && <div className="auth-error" role="alert">{error}</div>}
-                {success && <div className="auth-success" role="status">{success}</div>}
 
+              {error && <div className="auth-error" role="alert">{error}</div>}
+              {success && <div className="auth-success" role="status">{success}</div>}
+
+              <div style={{ display: "flex", justifyContent: "center" }}>
+                <GoogleLogin
+                  onSuccess={handleGoogleSuccess}
+                  onError={() => setError(strings.login.errorGoogleFailed)}
+                  text="signup_with"
+                  shape="rectangular"
+                  size="large"
+                  width="100%"
+                />
+              </div>
+
+              <div className="auth-divider"><span>{strings.common.or}</span></div>
+
+              <form className="auth-form" onSubmit={handleSignup}>
                 <div className="auth-field-row">
                   <div className="auth-field">
                     <label htmlFor="signup-first">{strings.login.labelFirstName}</label>
@@ -602,19 +623,6 @@ export default function Login() {
                   {loading ? strings.login.creatingAccount : strings.login.createAccountButton}
                 </button>
               </form>
-
-              <div className="auth-divider"><span>{strings.common.or}</span></div>
-
-              <div style={{ display: "flex", justifyContent: "center" }}>
-                <GoogleLogin
-                  onSuccess={handleGoogleSuccess}
-                  onError={() => setError(strings.login.errorGoogleFailed)}
-                  text="signup_with"
-                  shape="rectangular"
-                  size="large"
-                  width="100%"
-                />
-              </div>
 
               <div className="auth-switch">
                 {strings.login.hasAccount}{" "}

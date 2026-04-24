@@ -137,6 +137,42 @@
   background-color: rgba(37, 99, 235, 0.15);
 }
 
+/* Narrower submit button for the login form — full-width looks oversized
+   once the primary CTA above is the Google button. */
+.auth-btn-compact {
+  width: auto;
+  min-width: 120px;
+  max-width: 200px;
+  padding: 7px 18px;
+  font-size: 0.85rem;
+  min-height: 32px;
+}
+
+/* Login button left, "Forgot username or password?" link right, same row. */
+.auth-login-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.auth-forgot-link {
+  background: none;
+  border: none;
+  color: var(--accent-blue-light);
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 2px 4px;
+  text-align: right;
+}
+
+.auth-forgot-link:hover {
+  color: #93bbfc;
+  text-decoration: underline;
+}
+
 .auth-divider {
   display: flex;
   align-items: center;
@@ -223,6 +259,22 @@
 
 .auth-forgot button:hover {
   color: #93bbfc;
+  text-decoration: underline;
+}
+
+.auth-forgot-help {
+  font-size: 0.82rem;
+  color: var(--text-muted, #94a3b8);
+  line-height: 1.5;
+  margin: 4px 0 0;
+  padding: 10px 12px;
+  background: rgba(59, 130, 246, 0.08);
+  border-left: 3px solid var(--accent-blue-light);
+  border-radius: 4px;
+}
+
+.auth-forgot-help a {
+  color: var(--accent-blue-light);
   text-decoration: underline;
 }
 
