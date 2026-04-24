@@ -20,12 +20,14 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
- * Phase 1 placeholder for #24 SuperAdmin act-on-behalf audit trail.
- * Returns the shared revision_info rows — one per entity write, with
- * actor (real SA) + target (content owner) + timestamp + request path.
- * Phase 3 will add filters, per-entity diff joins, and a frontend tab.
+ * #24 Phase 3 — SuperAdmin-only feed of the Envers revision_info table so the
+ * frontend admin console can render an "Audit Log" tab. Returns the most
+ * recent N rows, filterable by actor, target, path substring, and timestamp
+ * range, enriched with actor/target display names from the users table.
+ * Per-entity diff (_aud row join) is deferred to a later pass.
  */
 @RestController
 @RequestMapping("/api/admin/audit-log")
@@ -39,7 +41,12 @@ public class AuditLogController {
 
     @GetMapping
     public ResponseEntity<?> list(
-            @RequestParam(defaultValue = "100") int limit,
+            @RequestParam(defaultValue = "200") int limit,
+            @RequestParam(required = false) Long actorUserId,
+            @RequestParam(required = false) Long targetUserId,
+            @RequestParam(required = false) String pathContains,
+            @RequestParam(required = false) Long sinceMs,
+            @RequestParam(required = false) Long untilMs,
             HttpServletRequest request) {
         try {
             Long callerUserId = (Long) request.getAttribute("jwtUserId");
@@ -51,17 +58,44 @@ public class AuditLogController {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error("SuperAdmin access required"));
             }
 
-            int capped = Math.max(1, Math.min(limit, 500));
+            // Fetch a generous slice ordered by timestamp, then filter in memory.
+            // revision_info grows linearly with writes; at community scale the
+            // top 2000 rows is trivially cheap to scan for an admin UI probe.
+            int fetchSize = Math.max(limit, 500) * 4;
             List<SaatSaheliRevisionEntity> revs = revisionRepo.findAllByOrderByTimestampDesc(
-                    PageRequest.of(0, capped));
+                    PageRequest.of(0, Math.min(fetchSize, 2000)));
 
-            List<Map<String, Object>> result = revs.stream().map(r -> {
+            String needle = pathContains == null ? null : pathContains.trim().toLowerCase();
+            List<SaatSaheliRevisionEntity> filtered = revs.stream()
+                    .filter(r -> actorUserId == null || actorUserId.equals(r.getActorUserId()))
+                    .filter(r -> targetUserId == null || targetUserId.equals(r.getTargetUserId()))
+                    .filter(r -> sinceMs == null || r.getTimestamp() >= sinceMs)
+                    .filter(r -> untilMs == null || r.getTimestamp() <= untilMs)
+                    .filter(r -> needle == null || needle.isEmpty()
+                            || (r.getRequestPath() != null && r.getRequestPath().toLowerCase().contains(needle)))
+                    .limit(Math.max(1, Math.min(limit, 500)))
+                    .toList();
+
+            // Enrich with display names. One lookup per unique userId referenced.
+            var userIdsSet = filtered.stream()
+                    .flatMap(r -> java.util.stream.Stream.of(r.getActorUserId(), r.getTargetUserId()))
+                    .filter(id -> id != null)
+                    .collect(Collectors.toSet());
+            Map<Long, String> nameById = userRepo.findAllById(userIdsSet).stream()
+                    .collect(Collectors.toMap(User::getId, AuditLogController::displayNameOf, (a, b) -> a));
+
+            List<Map<String, Object>> result = filtered.stream().map(r -> {
                 Map<String, Object> entry = new LinkedHashMap<>();
                 entry.put("rev", r.getId());
                 entry.put("timestamp", r.getTimestamp());
                 entry.put("actorUserId", r.getActorUserId());
+                entry.put("actorName", r.getActorUserId() == null ? null : nameById.get(r.getActorUserId()));
                 entry.put("targetUserId", r.getTargetUserId());
+                entry.put("targetName", r.getTargetUserId() == null ? null : nameById.get(r.getTargetUserId()));
                 entry.put("requestPath", r.getRequestPath());
+                entry.put("impersonated", r.getActorUserId() != null
+                        && r.getTargetUserId() != null
+                        && !r.getActorUserId().equals(r.getTargetUserId()));
                 return entry;
             }).toList();
 
@@ -70,6 +104,15 @@ public class AuditLogController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(error("Failed to load audit log: " + e.getMessage()));
         }
+    }
+
+    private static String displayNameOf(User u) {
+        if (u == null) return null;
+        String dn = u.getDisplayName();
+        if (dn != null && !dn.isBlank()) return dn;
+        String full = ((u.getFirstName() == null ? "" : u.getFirstName())
+                + " " + (u.getLastName() == null ? "" : u.getLastName())).trim();
+        return full.isEmpty() ? u.getEmail() : full;
     }
 
     private Map<String, String> error(String msg) {

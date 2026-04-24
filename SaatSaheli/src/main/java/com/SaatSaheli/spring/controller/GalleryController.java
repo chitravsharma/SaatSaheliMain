@@ -4,6 +4,7 @@ import com.SaatSaheli.spring.model.Gallery;
 import com.SaatSaheli.spring.model.GalleryImage;
 import com.SaatSaheli.spring.service.CloudinaryService;
 import com.SaatSaheli.spring.service.GalleryService;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -51,15 +52,26 @@ public class GalleryController {
     }
 
     @PostMapping
-    public ResponseEntity<?> createGallery(@RequestBody Map<String, Object> body) {
+    public ResponseEntity<?> createGallery(@RequestBody Map<String, Object> body, HttpServletRequest request) {
         try {
+            Long jwtUserId = (Long) request.getAttribute("jwtUserId");
+            if (jwtUserId == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorMap("Authentication required"));
+            }
+            Object bodyUserId = body.get("userId");
+            if (bodyUserId != null) {
+                Long parsed = Long.parseLong(bodyUserId.toString());
+                if (!jwtUserId.equals(parsed)) {
+                    return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                            .body(errorMap("Body userId does not match authenticated user"));
+                }
+            }
             String title = (String) body.get("title");
             String description = (String) body.get("description");
-            Long userId = body.get("userId") != null ? Long.parseLong(body.get("userId").toString()) : null;
             if (title == null || title.trim().isEmpty()) {
                 return ResponseEntity.badRequest().body(errorMap("Title is required"));
             }
-            Gallery gallery = galleryService.createGallery(title.trim(), description, userId);
+            Gallery gallery = galleryService.createGallery(title.trim(), description, jwtUserId);
             return ResponseEntity.ok(gallery);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorMap(e.getMessage()));
@@ -67,12 +79,24 @@ public class GalleryController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<?> updateGallery(@PathVariable Long id, @RequestBody Map<String, String> body) {
+    public ResponseEntity<?> updateGallery(@PathVariable Long id, @RequestBody Map<String, String> body,
+                                           HttpServletRequest request) {
         try {
+            Long jwtUserId = (Long) request.getAttribute("jwtUserId");
+            if (jwtUserId == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorMap("Authentication required"));
+            }
+            String bodyUserId = body.get("userId");
+            if (bodyUserId != null) {
+                Long parsed = Long.parseLong(bodyUserId);
+                if (!jwtUserId.equals(parsed)) {
+                    return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                            .body(errorMap("Body userId does not match authenticated user"));
+                }
+            }
             String title = body.get("title");
             String description = body.get("description");
-            Long userId = body.get("userId") != null ? Long.parseLong(body.get("userId")) : null;
-            return ResponseEntity.ok(galleryService.updateGallery(id, title, description, userId));
+            return ResponseEntity.ok(galleryService.updateGallery(id, title, description, jwtUserId));
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorMap(e.getMessage()));
         }

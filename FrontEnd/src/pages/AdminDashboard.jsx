@@ -98,6 +98,11 @@ const AdminDashboard = () => {
     const [listingStatusFilter, setListingStatusFilter] = useState("");
     const [bookSearch, setBookSearch] = useState("");
     const [bookStatusFilter, setBookStatusFilter] = useState("");
+    const [auditRows, setAuditRows] = useState([]);
+    const [auditActorFilter, setAuditActorFilter] = useState("");
+    const [auditTargetFilter, setAuditTargetFilter] = useState("");
+    const [auditPathFilter, setAuditPathFilter] = useState("");
+    const [auditOnlyImpersonated, setAuditOnlyImpersonated] = useState(false);
     const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState("");
     const [userSearch, setUserSearch] = useState("");
@@ -381,6 +386,20 @@ const AdminDashboard = () => {
         setLoading(false);
     }, [user?.userId]);
 
+    const fetchAuditLog = useCallback(async () => {
+        setLoading(true);
+        try {
+            const params = new URLSearchParams();
+            params.set("limit", "200");
+            if (auditActorFilter.trim()) params.set("actorUserId", auditActorFilter.trim());
+            if (auditTargetFilter.trim()) params.set("targetUserId", auditTargetFilter.trim());
+            if (auditPathFilter.trim()) params.set("pathContains", auditPathFilter.trim());
+            const res = await api.get(`${API}/api/admin/audit-log?${params.toString()}`);
+            setAuditRows(Array.isArray(res.data) ? res.data : []);
+        } catch { /* ignore */ }
+        setLoading(false);
+    }, [user?.userId, auditActorFilter, auditTargetFilter, auditPathFilter]);
+
     const fetchSupportQueries = useCallback(async () => {
         setSupportLoading(true);
         try {
@@ -484,10 +503,11 @@ const AdminDashboard = () => {
         if (tab === "recipes") fetchRecipes();
         if (tab === "galleries") fetchGalleries();
         if (tab === "marketplace") fetchListings();
+        if (tab === "audit") fetchAuditLog();
         if (tab === "analytics") fetchAnalytics();
         if (tab === "advertisements") fetchAdvertisements();
         if (tab === "support") fetchSupportQueries();
-    }, [tab, fetchUsers, fetchBooks, fetchArticles, fetchRecipes, fetchGalleries, fetchListings, fetchAnalytics, fetchAdvertisements, fetchSupportQueries]);
+    }, [tab, fetchUsers, fetchBooks, fetchArticles, fetchRecipes, fetchGalleries, fetchListings, fetchAuditLog, fetchAnalytics, fetchAdvertisements, fetchSupportQueries]);
 
     const changeRole = async (userId, newRole) => {
         try {
@@ -891,6 +911,11 @@ const AdminDashboard = () => {
                 {isSuperAdmin && (
                     <button className={tab === "advertisements" ? "active" : ""} onClick={() => setTab("advertisements")}>
                         Advertisements
+                    </button>
+                )}
+                {isSuperAdmin && (
+                    <button className={tab === "audit" ? "active" : ""} onClick={() => setTab("audit")}>
+                        Audit Log
                     </button>
                 )}
             </div>
@@ -1486,6 +1511,90 @@ const AdminDashboard = () => {
                                         </td>
                                     </tr>
                                 ))}
+                            </tbody>
+                        </table>
+                    )}
+                </div>
+            )}
+
+            {/* Audit Log Tab — #24 Phase 3 */}
+            {tab === "audit" && (
+                <div className="admin-table-wrap">
+                    <div className="admin-search-bar">
+                        <input
+                            type="text"
+                            className="admin-search-input"
+                            style={{ maxWidth: 160 }}
+                            placeholder="Actor userId"
+                            value={auditActorFilter}
+                            onChange={(e) => setAuditActorFilter(e.target.value)}
+                        />
+                        <input
+                            type="text"
+                            className="admin-search-input"
+                            style={{ maxWidth: 160 }}
+                            placeholder="Target userId"
+                            value={auditTargetFilter}
+                            onChange={(e) => setAuditTargetFilter(e.target.value)}
+                        />
+                        <input
+                            type="text"
+                            className="admin-search-input"
+                            placeholder="Path contains (e.g. /api/books)"
+                            value={auditPathFilter}
+                            onChange={(e) => setAuditPathFilter(e.target.value)}
+                        />
+                        <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: "0.85rem" }}>
+                            <input
+                                type="checkbox"
+                                checked={auditOnlyImpersonated}
+                                onChange={(e) => setAuditOnlyImpersonated(e.target.checked)}
+                            />
+                            Only impersonated
+                        </label>
+                        <button className="admin-btn" onClick={fetchAuditLog}>Apply</button>
+                    </div>
+
+                    {loading ? <p>{strings.common.loading}</p> : (
+                        <table className="admin-table">
+                            <thead>
+                                <tr>
+                                    <th>Rev</th>
+                                    <th>When</th>
+                                    <th>Actor</th>
+                                    <th>Target</th>
+                                    <th>Path</th>
+                                    <th>Impersonated?</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {(auditOnlyImpersonated ? auditRows.filter(r => r.impersonated) : auditRows).map((r) => (
+                                    <tr key={r.rev}>
+                                        <td style={{ fontFamily: "monospace" }}>{r.rev}</td>
+                                        <td style={{ whiteSpace: "nowrap" }}>{toPSTDateTime(r.timestamp ? new Date(r.timestamp).toISOString() : null)}</td>
+                                        <td>
+                                            {r.actorName ? (
+                                                <>{r.actorName} <span style={{ color: "var(--text-muted)", fontSize: "0.8rem" }}>#{r.actorUserId}</span></>
+                                            ) : (r.actorUserId ? `#${r.actorUserId}` : "—")}
+                                        </td>
+                                        <td>
+                                            {r.targetName ? (
+                                                <>{r.targetName} <span style={{ color: "var(--text-muted)", fontSize: "0.8rem" }}>#{r.targetUserId}</span></>
+                                            ) : (r.targetUserId ? `#${r.targetUserId}` : "—")}
+                                        </td>
+                                        <td style={{ fontFamily: "monospace", fontSize: "0.85rem" }}>{r.requestPath || "—"}</td>
+                                        <td>
+                                            {r.impersonated ? (
+                                                <span className="status-badge" style={{ background: "#fef3c7", color: "#92400e" }}>IMPERSONATED</span>
+                                            ) : "—"}
+                                        </td>
+                                    </tr>
+                                ))}
+                                {auditRows.length === 0 && (
+                                    <tr><td colSpan={6} style={{ textAlign: "center", padding: 24, color: "var(--text-muted)" }}>
+                                        No audit entries yet.
+                                    </td></tr>
+                                )}
                             </tbody>
                         </table>
                     )}

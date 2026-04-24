@@ -3,6 +3,7 @@ package com.SaatSaheli.spring.controller;
 import java.util.HashMap;
 import java.util.Map;
 
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,22 +20,30 @@ public class ArticleController {
     private ArticleService articleService;
 
     @PostMapping
-    public ResponseEntity<?> createArticle(@RequestBody Map<String, Object> body) {
+    public ResponseEntity<?> createArticle(@RequestBody Map<String, Object> body, HttpServletRequest request) {
         try {
-            Long userId = body.get("userId") != null ? Long.parseLong(body.get("userId").toString()) : null;
+            Long jwtUserId = (Long) request.getAttribute("jwtUserId");
+            if (jwtUserId == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorMap("Authentication required"));
+            }
+            Object bodyUserId = body.get("userId");
+            if (bodyUserId != null) {
+                Long parsed = Long.parseLong(bodyUserId.toString());
+                if (!jwtUserId.equals(parsed)) {
+                    return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                            .body(errorMap("Body userId does not match authenticated user"));
+                }
+            }
             String headline = (String) body.get("headline");
             String content = (String) body.get("content");
             String imageUrl = (String) body.get("imageUrl");
             String contentType = (String) body.get("contentType");
-            if (userId == null) {
-                return ResponseEntity.badRequest().body(errorMap("userId is required"));
-            }
             if (headline == null || headline.isEmpty()) {
                 return ResponseEntity.badRequest().body(errorMap("Headline is required"));
             }
             String status = (String) body.get("status");
             String category = (String) body.get("category");
-            Article article = articleService.createArticle(userId, headline, content, imageUrl, contentType, status, category);
+            Article article = articleService.createArticle(jwtUserId, headline, content, imageUrl, contentType, status, category);
             return ResponseEntity.ok(article);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -43,16 +52,28 @@ public class ArticleController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<?> updateArticle(@PathVariable Long id, @RequestBody Map<String, Object> body) {
+    public ResponseEntity<?> updateArticle(@PathVariable Long id, @RequestBody Map<String, Object> body,
+                                           HttpServletRequest request) {
         try {
-            Long userId = body.get("userId") != null ? Long.parseLong(body.get("userId").toString()) : null;
+            Long jwtUserId = (Long) request.getAttribute("jwtUserId");
+            if (jwtUserId == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorMap("Authentication required"));
+            }
+            Object bodyUserId = body.get("userId");
+            if (bodyUserId != null) {
+                Long parsed = Long.parseLong(bodyUserId.toString());
+                if (!jwtUserId.equals(parsed)) {
+                    return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                            .body(errorMap("Body userId does not match authenticated user"));
+                }
+            }
             String headline = (String) body.get("headline");
             String content = (String) body.get("content");
             String imageUrl = (String) body.get("imageUrl");
             String contentType = (String) body.get("contentType");
             String status = (String) body.get("status");
             String category = (String) body.get("category");
-            Article article = articleService.updateArticle(id, userId, headline, content, imageUrl, contentType, status, category);
+            Article article = articleService.updateArticle(id, jwtUserId, headline, content, imageUrl, contentType, status, category);
             return ResponseEntity.ok(article);
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorMap(e.getMessage()));
