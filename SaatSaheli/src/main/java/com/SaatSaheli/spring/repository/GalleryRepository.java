@@ -7,4 +7,5 @@ import java.util.List;
 public interface GalleryRepository extends JpaRepository<Gallery, Long> {
     List<Gallery> findByUserId(Long userId);
     List<Gallery> findByStatusIgnoreCase(String status);
+    List<Gallery> findAllByOrderByCreatedDateDesc();
 }

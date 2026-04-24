@@ -16,6 +16,66 @@ const toPSTDate = (dateStr, opts) => {
     if (!dateStr) return "\u2014";
     return new Date(dateStr).toLocaleDateString("en-US", { timeZone: PST_TZ, ...opts });
 };
+// Backend sends timestamps as "yyyy-MM-dd HH:mm:ss" with no zone suffix; the
+// underlying LocalDateTime.now() is captured in UTC on the Render JVM. Treat
+// the string as UTC (append "Z" after swapping the space for "T") and render
+// in Pacific with the TZ abbreviation so admins aren't guessing the zone.
+const toPSTDateTime = (dateStr) => {
+    if (!dateStr) return "\u2014";
+    const iso = typeof dateStr === "string" && !dateStr.endsWith("Z") && !/[+-]\d{2}:?\d{2}$/.test(dateStr)
+        ? dateStr.replace(" ", "T") + "Z"
+        : dateStr;
+    const d = new Date(iso);
+    if (isNaN(d.getTime())) return dateStr;
+    return d.toLocaleString("en-US", {
+        timeZone: PST_TZ,
+        year: "numeric", month: "2-digit", day: "2-digit",
+        hour: "2-digit", minute: "2-digit", second: "2-digit",
+        timeZoneName: "short",
+    });
+};
+
+// Click-to-sort helpers for the admin tables. Cycle: unsorted \u2192 asc \u2192 desc \u2192 unsorted.
+// `type: "date"` accessors should return ISO strings (or null) \u2014 string compare handles
+// ordering correctly for ISO dates. `type: "string"` lower-cases for case-insensitive sort.
+const toggleSort = (setSort, key) => {
+    setSort(prev => {
+        if (prev.key !== key) return { key, dir: "asc" };
+        if (prev.dir === "asc") return { key, dir: "desc" };
+        return { key: null, dir: "asc" };
+    });
+};
+
+const applySort = (rows, sort, accessors) => {
+    if (!sort.key) return rows;
+    const acc = accessors[sort.key];
+    if (!acc) return rows;
+    const copy = [...rows];
+    copy.sort((a, b) => {
+        const av = acc(a);
+        const bv = acc(b);
+        const aNull = av == null || av === "";
+        const bNull = bv == null || bv === "";
+        if (aNull && bNull) return 0;
+        if (aNull) return 1;      // nulls last, regardless of direction
+        if (bNull) return -1;
+        if (av < bv) return sort.dir === "asc" ? -1 : 1;
+        if (av > bv) return sort.dir === "asc" ? 1 : -1;
+        return 0;
+    });
+    return copy;
+};
+
+const SortArrow = ({ sort, col }) => {
+    if (sort.key !== col) return <span style={{ marginLeft: 4, fontSize: "0.7em", opacity: 0.3 }}>\u2195</span>;
+    return <span style={{ marginLeft: 4, fontSize: "0.75em" }}>{sort.dir === "asc" ? "\u25b2" : "\u25bc"}</span>;
+};
+
+const sortableTh = (label, sort, setSort, col) => (
+    <th style={{ cursor: "pointer", userSelect: "none" }} onClick={() => toggleSort(setSort, col)}>
+        {label}<SortArrow sort={sort} col={col} />
+    </th>
+);
 
 const AdminDashboard = () => {
     const { user, isSuperAdmin } = useAuth();
@@ -27,12 +87,33 @@ const AdminDashboard = () => {
     const [users, setUsers] = useState([]);
     const [books, setBooks] = useState([]);
     const [articles, setArticles] = useState([]);
+    const [recipes, setRecipes] = useState([]);
+    const [recipeSearch, setRecipeSearch] = useState("");
+    const [recipeStatusFilter, setRecipeStatusFilter] = useState("");
+    const [galleries, setGalleries] = useState([]);
+    const [gallerySearch, setGallerySearch] = useState("");
+    const [galleryStatusFilter, setGalleryStatusFilter] = useState("");
+    const [listings, setListings] = useState([]);
+    const [listingSearch, setListingSearch] = useState("");
+    const [listingStatusFilter, setListingStatusFilter] = useState("");
+    const [bookSearch, setBookSearch] = useState("");
+    const [bookStatusFilter, setBookStatusFilter] = useState("");
     const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState("");
     const [userSearch, setUserSearch] = useState("");
     const [articleSearch, setArticleSearch] = useState("");
     const [articleTypeFilter, setArticleTypeFilter] = useState("");
     const [articleStatusFilter, setArticleStatusFilter] = useState("");
+
+    // Per-table sort state for the admin console. Null key = original order.
+    const [userSort, setUserSort] = useState({ key: null, dir: "asc" });
+    const [bookSort, setBookSort] = useState({ key: null, dir: "asc" });
+    const [articleSort, setArticleSort] = useState({ key: null, dir: "asc" });
+    const [recipeSort, setRecipeSort] = useState({ key: null, dir: "asc" });
+    const [gallerySort, setGallerySort] = useState({ key: null, dir: "asc" });
+    const [listingSort, setListingSort] = useState({ key: null, dir: "asc" });
+    const [adSort, setAdSort] = useState({ key: null, dir: "asc" });
+    const [querySort, setQuerySort] = useState({ key: null, dir: "asc" });
     const [resetPasswordUserId, setResetPasswordUserId] = useState(null);
     const [resetNewPassword, setResetNewPassword] = useState("");
 
@@ -273,6 +354,33 @@ const AdminDashboard = () => {
         setLoading(false);
     }, [user?.userId]);
 
+    const fetchRecipes = useCallback(async () => {
+        setLoading(true);
+        try {
+            const res = await api.get(`${API}/api/admin/recipes`);
+            setRecipes(Array.isArray(res.data) ? res.data : []);
+        } catch { /* ignore */ }
+        setLoading(false);
+    }, [user?.userId]);
+
+    const fetchGalleries = useCallback(async () => {
+        setLoading(true);
+        try {
+            const res = await api.get(`${API}/api/admin/galleries`);
+            setGalleries(Array.isArray(res.data) ? res.data : []);
+        } catch { /* ignore */ }
+        setLoading(false);
+    }, [user?.userId]);
+
+    const fetchListings = useCallback(async () => {
+        setLoading(true);
+        try {
+            const res = await api.get(`${API}/api/admin/marketplace`);
+            setListings(Array.isArray(res.data) ? res.data : []);
+        } catch { /* ignore */ }
+        setLoading(false);
+    }, [user?.userId]);
+
     const fetchSupportQueries = useCallback(async () => {
         setSupportLoading(true);
         try {
@@ -373,10 +481,13 @@ const AdminDashboard = () => {
         if (tab === "users") fetchUsers();
         if (tab === "books") fetchBooks();
         if (tab === "articles") fetchArticles();
+        if (tab === "recipes") fetchRecipes();
+        if (tab === "galleries") fetchGalleries();
+        if (tab === "marketplace") fetchListings();
         if (tab === "analytics") fetchAnalytics();
         if (tab === "advertisements") fetchAdvertisements();
         if (tab === "support") fetchSupportQueries();
-    }, [tab, fetchUsers, fetchBooks, fetchArticles, fetchAnalytics, fetchAdvertisements, fetchSupportQueries]);
+    }, [tab, fetchUsers, fetchBooks, fetchArticles, fetchRecipes, fetchGalleries, fetchListings, fetchAnalytics, fetchAdvertisements, fetchSupportQueries]);
 
     const changeRole = async (userId, newRole) => {
         try {
@@ -407,18 +518,6 @@ const AdminDashboard = () => {
             fetchStats();
         } catch {
             setMessage(s.bookDeleteFailed || "Failed to delete book");
-        }
-    };
-
-    const purgeDeletedBooks = async () => {
-        if (!window.confirm("Permanently delete ALL books marked as deleted? This cannot be undone.")) return;
-        try {
-            const res = await api.delete(`${API}/api/admin/books/purge`);
-            setMessage(`Purged ${res.data.count} deleted books permanently.`);
-            fetchBooks();
-            fetchStats();
-        } catch {
-            setMessage("Failed to purge deleted books");
         }
     };
 
@@ -480,18 +579,6 @@ const AdminDashboard = () => {
         }
     };
 
-    const purgeAllDraftArticles = async () => {
-        if (!window.confirm("Permanently delete ALL draft articles? This cannot be undone.")) return;
-        try {
-            const res = await api.delete(`${API}/api/admin/articles/purge`);
-            setMessage(`Purged ${res.data.count} draft articles permanently.`);
-            fetchArticles();
-            fetchStats();
-        } catch {
-            setMessage("Failed to purge draft articles");
-        }
-    };
-
     const handleArticleAction = (articleId, action, status) => {
         switch (action) {
             case "publish": changeArticleStatus(articleId, "PUBLISHED"); break;
@@ -500,6 +587,158 @@ const AdminDashboard = () => {
             default: break;
         }
     };
+
+    // ─── Recipe Admin Actions ───
+    const deleteRecipe = async (recipeId) => {
+        if (!window.confirm("Delete this recipe?")) return;
+        try {
+            await api.delete(`${API}/api/admin/recipes/${recipeId}`);
+            setMessage("Recipe deleted");
+            fetchRecipes();
+            fetchStats();
+        } catch {
+            setMessage("Failed to delete recipe");
+        }
+    };
+
+    const changeRecipeStatus = async (recipeId, newStatus) => {
+        try {
+            await api.put(`${API}/api/admin/recipes/${recipeId}/status`, { status: newStatus });
+            setMessage(`Recipe ${newStatus === "PUBLISHED" ? "published" : "unpublished"}`);
+            fetchRecipes();
+            fetchStats();
+        } catch {
+            setMessage("Failed to change recipe status");
+        }
+    };
+
+    const handleRecipeAction = (recipeId, action) => {
+        switch (action) {
+            case "publish": changeRecipeStatus(recipeId, "PUBLISHED"); break;
+            case "unpublish": changeRecipeStatus(recipeId, "DRAFT"); break;
+            case "delete": deleteRecipe(recipeId); break;
+            default: break;
+        }
+    };
+
+    const filteredRecipes = recipes.filter((r) => {
+        if (recipeStatusFilter && r.status !== recipeStatusFilter) return false;
+        if (!recipeSearch.trim()) return true;
+        const q = recipeSearch.toLowerCase();
+        return (
+            (r.recipeName || "").toLowerCase().includes(q) ||
+            (r.authorName || "").toLowerCase().includes(q) ||
+            (r.cuisine || "").toLowerCase().includes(q) ||
+            (r.status || "").toLowerCase().includes(q) ||
+            String(r.id).includes(q)
+        );
+    });
+
+    // ─── Gallery Admin Actions ───
+    const deleteGallery = async (galleryId) => {
+        if (!window.confirm("Delete this gallery and all its images?")) return;
+        try {
+            await api.delete(`${API}/api/admin/galleries/${galleryId}`);
+            setMessage("Gallery deleted");
+            fetchGalleries();
+            fetchStats();
+        } catch {
+            setMessage("Failed to delete gallery");
+        }
+    };
+
+    const changeGalleryStatus = async (galleryId, newStatus) => {
+        try {
+            await api.put(`${API}/api/admin/galleries/${galleryId}/status`, { status: newStatus });
+            setMessage(`Gallery ${newStatus === "PUBLISHED" ? "published" : "unpublished"}`);
+            fetchGalleries();
+            fetchStats();
+        } catch {
+            setMessage("Failed to change gallery status");
+        }
+    };
+
+    const handleGalleryAction = (galleryId, action) => {
+        switch (action) {
+            case "publish": changeGalleryStatus(galleryId, "PUBLISHED"); break;
+            case "unpublish": changeGalleryStatus(galleryId, "DRAFT"); break;
+            case "delete": deleteGallery(galleryId); break;
+            default: break;
+        }
+    };
+
+    const filteredGalleries = galleries.filter((g) => {
+        if (galleryStatusFilter && (g.status || "").toUpperCase() !== galleryStatusFilter) return false;
+        if (!gallerySearch.trim()) return true;
+        const q = gallerySearch.toLowerCase();
+        return (
+            (g.title || "").toLowerCase().includes(q) ||
+            (g.authorName || "").toLowerCase().includes(q) ||
+            (g.description || "").toLowerCase().includes(q) ||
+            (g.status || "").toLowerCase().includes(q) ||
+            String(g.id).includes(q)
+        );
+    });
+
+    // ─── Marketplace Admin Actions ───
+    const deleteListing = async (listingId) => {
+        if (!window.confirm("Delete this listing?")) return;
+        try {
+            await api.delete(`${API}/api/admin/marketplace/${listingId}`);
+            setMessage("Listing deleted");
+            fetchListings();
+            fetchStats();
+        } catch {
+            setMessage("Failed to delete listing");
+        }
+    };
+
+    const changeListingStatus = async (listingId, newStatus) => {
+        try {
+            await api.put(`${API}/api/admin/marketplace/${listingId}/status`, { status: newStatus });
+            setMessage(`Listing set to ${newStatus.toLowerCase()}`);
+            fetchListings();
+            fetchStats();
+        } catch {
+            setMessage("Failed to change listing status");
+        }
+    };
+
+    const handleListingAction = (listingId, action) => {
+        switch (action) {
+            case "activate": changeListingStatus(listingId, "ACTIVE"); break;
+            case "sold": changeListingStatus(listingId, "SOLD"); break;
+            case "remove": changeListingStatus(listingId, "REMOVED"); break;
+            case "delete": deleteListing(listingId); break;
+            default: break;
+        }
+    };
+
+    const filteredBooks = books.filter((b) => {
+        if (bookStatusFilter && (b.status || "").toUpperCase() !== bookStatusFilter) return false;
+        if (!bookSearch.trim()) return true;
+        const q = bookSearch.toLowerCase();
+        return (
+            (b.title || "").toLowerCase().includes(q) ||
+            (b.authorName || "").toLowerCase().includes(q) ||
+            (b.category || "").toLowerCase().includes(q) ||
+            (b.status || "").toLowerCase().includes(q) ||
+            String(b.id).includes(q)
+        );
+    });
+
+    const filteredListings = listings.filter((l) => {
+        if (listingStatusFilter && (l.status || "").toUpperCase() !== listingStatusFilter) return false;
+        if (!listingSearch.trim()) return true;
+        const q = listingSearch.toLowerCase();
+        return (
+            (l.title || "").toLowerCase().includes(q) ||
+            (l.sellerName || "").toLowerCase().includes(q) ||
+            (l.category || "").toLowerCase().includes(q) ||
+            (l.status || "").toLowerCase().includes(q) ||
+            String(l.id).includes(q)
+        );
+    });
 
     // Filter articles
     const filteredArticles = articles.filter((a) => {
@@ -628,6 +867,15 @@ const AdminDashboard = () => {
                 <button className={tab === "articles" ? "active" : ""} onClick={() => setTab("articles")}>
                     Articles
                 </button>
+                <button className={tab === "recipes" ? "active" : ""} onClick={() => setTab("recipes")}>
+                    Recipes
+                </button>
+                <button className={tab === "galleries" ? "active" : ""} onClick={() => setTab("galleries")}>
+                    Galleries
+                </button>
+                <button className={tab === "marketplace" ? "active" : ""} onClick={() => setTab("marketplace")}>
+                    Buy/Sell
+                </button>
                 <button className={tab === "analytics" ? "active" : ""} onClick={() => setTab("analytics")}>
                     Analytics
                 </button>
@@ -746,13 +994,16 @@ const AdminDashboard = () => {
                                     <th>Plan</th>
                                     <th>Type</th>
                                     <th>Content</th>
-                                    <th>{s.colStatus || "Status"}</th>
-                                    <th>{s.colLastLogin || "Last Login"}</th>
+                                    {sortableTh(s.colStatus || "Status", userSort, setUserSort, "status")}
+                                    {sortableTh(s.colLastLogin || "Last Login", userSort, setUserSort, "lastLogin")}
                                     <th>{s.colActions || "Actions"}</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                {filteredUsers.map((u) => (
+                                {applySort(filteredUsers, userSort, {
+                                    status: (u) => (u.status || "ACTIVE").toLowerCase(),
+                                    lastLogin: (u) => u.lastLoginDate,
+                                }).map((u) => (
                                     <tr key={u.id}>
                                         <td>{u.id}</td>
                                         <td>{[u.firstName, u.lastName].filter(Boolean).join(" ") || "\u2014"}</td>
@@ -794,7 +1045,7 @@ const AdminDashboard = () => {
                                                 {u.status || "ACTIVE"}
                                             </span>
                                         </td>
-                                        <td>{u.lastLoginDate || "\u2014"}</td>
+                                        <td>{toPSTDateTime(u.lastLoginDate)}</td>
                                         <td>
                                             <select
                                                 className="admin-action-select"
@@ -819,16 +1070,32 @@ const AdminDashboard = () => {
 
             {tab === "books" && (
                 <div className="admin-table-wrap">
-                    {isSuperAdmin && (
-                        <div className="admin-purge-bar">
-                            <button className="admin-purge-btn" onClick={purgeDeletedBooks}>
-                                Permanently Delete All Removed Books
-                            </button>
-                            <span className="admin-purge-note">
-                                This will permanently remove all books with &quot;DELETED&quot; status and their pages.
+                    <div className="admin-search-bar">
+                        <input
+                            type="text"
+                            className="admin-search-input"
+                            placeholder="Search by title, author, category, status..."
+                            value={bookSearch}
+                            onChange={(e) => setBookSearch(e.target.value)}
+                        />
+                        <select
+                            className="admin-search-input"
+                            style={{ maxWidth: 140 }}
+                            value={bookStatusFilter}
+                            onChange={(e) => setBookStatusFilter(e.target.value)}
+                        >
+                            <option value="">All Status</option>
+                            <option value="PUBLISHED">Published</option>
+                            <option value="DRAFT">Draft</option>
+                            <option value="ARCHIVED">Archived</option>
+                            <option value="DELETED">Deleted</option>
+                        </select>
+                        {(bookSearch || bookStatusFilter) && (
+                            <span className="admin-search-count">
+                                {filteredBooks.length} of {books.length} books
                             </span>
-                        </div>
-                    )}
+                        )}
+                    </div>
                     {loading ? <p>{strings.common.loading}</p> : (
                         <table className="admin-table">
                             <thead>
@@ -836,13 +1103,16 @@ const AdminDashboard = () => {
                                     <th>ID</th>
                                     <th>{s.colTitle || "Title"}</th>
                                     <th>{s.colAuthor || "Author"}</th>
-                                    <th>{s.colBookStatus || "Status"}</th>
-                                    <th>{s.colModified || "Modified"}</th>
+                                    {sortableTh(s.colBookStatus || "Status", bookSort, setBookSort, "status")}
+                                    {sortableTh(s.colModified || "Modified", bookSort, setBookSort, "modified")}
                                     <th>{s.colActions || "Actions"}</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                {books.map((b) => (
+                                {applySort(filteredBooks, bookSort, {
+                                    status: (b) => (b.status || "").toLowerCase(),
+                                    modified: (b) => b.modifiedDate,
+                                }).map((b) => (
                                     <tr key={b.id}>
                                         <td>{b.id}</td>
                                         <td>{b.title}</td>
@@ -852,7 +1122,7 @@ const AdminDashboard = () => {
                                                 {b.status}
                                             </span>
                                         </td>
-                                        <td>{b.modifiedDate || "\u2014"}</td>
+                                        <td>{toPSTDateTime(b.modifiedDate)}</td>
                                         <td>
                                             <select
                                                 className="admin-action-select"
@@ -926,18 +1196,6 @@ const AdminDashboard = () => {
                         )}
                     </div>
 
-                    {/* Purge bar for Super Admin */}
-                    {isSuperAdmin && (
-                        <div className="admin-purge-bar">
-                            <button className="admin-purge-btn" onClick={purgeAllDraftArticles}>
-                                Permanently Delete All Draft Articles
-                            </button>
-                            <span className="admin-purge-note">
-                                This will permanently remove all articles, blogs, and poems with &quot;DRAFT&quot; status.
-                            </span>
-                        </div>
-                    )}
-
                     {loading ? <p>{strings.common.loading}</p> : (
                         <table className="admin-table">
                             <thead>
@@ -947,13 +1205,16 @@ const AdminDashboard = () => {
                                     <th>Type</th>
                                     <th>Category</th>
                                     <th>Author</th>
-                                    <th>Status</th>
-                                    <th>Created</th>
+                                    {sortableTh("Status", articleSort, setArticleSort, "status")}
+                                    {sortableTh("Created", articleSort, setArticleSort, "created")}
                                     <th>Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                {filteredArticles.map((a) => (
+                                {applySort(filteredArticles, articleSort, {
+                                    status: (a) => (a.status || "").toLowerCase(),
+                                    created: (a) => a.createdDate,
+                                }).map((a) => (
                                     <tr key={a.id}>
                                         <td>{a.id}</td>
                                         <td className="admin-article-title">{a.headline}</td>
@@ -969,7 +1230,7 @@ const AdminDashboard = () => {
                                                 {a.status}
                                             </span>
                                         </td>
-                                        <td>{toPSTDate(a.createdDate)}</td>
+                                        <td>{toPSTDateTime(a.createdDate)}</td>
                                         <td>
                                             <select
                                                 className="admin-action-select"
@@ -983,6 +1244,243 @@ const AdminDashboard = () => {
                                                 {a.status !== "DRAFT" && (
                                                     <option value="unpublish">Unpublish</option>
                                                 )}
+                                                <option value="delete">Delete</option>
+                                            </select>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    )}
+                </div>
+            )}
+
+            {/* Recipes Tab */}
+            {tab === "recipes" && (
+                <div className="admin-table-wrap">
+                    <div className="admin-search-bar">
+                        <input
+                            type="text"
+                            className="admin-search-input"
+                            placeholder="Search by recipe name, author, cuisine..."
+                            value={recipeSearch}
+                            onChange={(e) => setRecipeSearch(e.target.value)}
+                        />
+                        <select
+                            className="admin-search-input"
+                            style={{ maxWidth: 140 }}
+                            value={recipeStatusFilter}
+                            onChange={(e) => setRecipeStatusFilter(e.target.value)}
+                        >
+                            <option value="">All Status</option>
+                            <option value="PUBLISHED">Published</option>
+                            <option value="DRAFT">Draft</option>
+                        </select>
+                        {(recipeSearch || recipeStatusFilter) && (
+                            <span className="admin-search-count">
+                                {filteredRecipes.length} of {recipes.length} recipes
+                            </span>
+                        )}
+                    </div>
+
+                    {loading ? <p>{strings.common.loading}</p> : (
+                        <table className="admin-table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Recipe Name</th>
+                                    <th>Cuisine</th>
+                                    <th>Author</th>
+                                    {sortableTh("Status", recipeSort, setRecipeSort, "status")}
+                                    {sortableTh("Created", recipeSort, setRecipeSort, "created")}
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {applySort(filteredRecipes, recipeSort, {
+                                    status: (r) => (r.status || "").toLowerCase(),
+                                    created: (r) => r.createdDate,
+                                }).map((r) => (
+                                    <tr key={r.id}>
+                                        <td>{r.id}</td>
+                                        <td className="admin-article-title">{r.recipeName}</td>
+                                        <td>{r.cuisine || "—"}</td>
+                                        <td>{r.authorName || "—"}</td>
+                                        <td>
+                                            <span className={`status-badge status-${(r.status || "").toLowerCase()}`}>
+                                                {r.status}
+                                            </span>
+                                        </td>
+                                        <td>{toPSTDateTime(r.createdDate)}</td>
+                                        <td>
+                                            <select
+                                                className="admin-action-select"
+                                                value=""
+                                                onChange={(e) => { handleRecipeAction(r.id, e.target.value); e.target.value = ""; }}
+                                            >
+                                                <option value="" disabled>Action...</option>
+                                                {r.status !== "PUBLISHED" && <option value="publish">Publish</option>}
+                                                {r.status !== "DRAFT" && <option value="unpublish">Unpublish</option>}
+                                                <option value="delete">Delete</option>
+                                            </select>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    )}
+                </div>
+            )}
+
+            {/* Galleries Tab */}
+            {tab === "galleries" && (
+                <div className="admin-table-wrap">
+                    <div className="admin-search-bar">
+                        <input
+                            type="text"
+                            className="admin-search-input"
+                            placeholder="Search by title, author, description..."
+                            value={gallerySearch}
+                            onChange={(e) => setGallerySearch(e.target.value)}
+                        />
+                        <select
+                            className="admin-search-input"
+                            style={{ maxWidth: 140 }}
+                            value={galleryStatusFilter}
+                            onChange={(e) => setGalleryStatusFilter(e.target.value)}
+                        >
+                            <option value="">All Status</option>
+                            <option value="PUBLISHED">Published</option>
+                            <option value="DRAFT">Draft</option>
+                        </select>
+                        {(gallerySearch || galleryStatusFilter) && (
+                            <span className="admin-search-count">
+                                {filteredGalleries.length} of {galleries.length} galleries
+                            </span>
+                        )}
+                    </div>
+
+                    {loading ? <p>{strings.common.loading}</p> : (
+                        <table className="admin-table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Title</th>
+                                    <th>Author</th>
+                                    <th>Description</th>
+                                    {sortableTh("Status", gallerySort, setGallerySort, "status")}
+                                    {sortableTh("Created", gallerySort, setGallerySort, "created")}
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {applySort(filteredGalleries, gallerySort, {
+                                    status: (g) => (g.status || "").toLowerCase(),
+                                    created: (g) => g.createdDate,
+                                }).map((g) => (
+                                    <tr key={g.id}>
+                                        <td>{g.id}</td>
+                                        <td className="admin-article-title">{g.title}</td>
+                                        <td>{g.authorName || "—"}</td>
+                                        <td style={{ maxWidth: 240, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                                            {g.description || "—"}
+                                        </td>
+                                        <td>
+                                            <span className={`status-badge status-${(g.status || "").toLowerCase()}`}>
+                                                {g.status || "—"}
+                                            </span>
+                                        </td>
+                                        <td>{toPSTDateTime(g.createdDate)}</td>
+                                        <td>
+                                            <select
+                                                className="admin-action-select"
+                                                value=""
+                                                onChange={(e) => { handleGalleryAction(g.id, e.target.value); e.target.value = ""; }}
+                                            >
+                                                <option value="" disabled>Action...</option>
+                                                {(g.status || "").toUpperCase() !== "PUBLISHED" && <option value="publish">Publish</option>}
+                                                {(g.status || "").toUpperCase() !== "DRAFT" && <option value="unpublish">Unpublish</option>}
+                                                <option value="delete">Delete</option>
+                                            </select>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    )}
+                </div>
+            )}
+
+            {/* Buy/Sell (Marketplace) Tab */}
+            {tab === "marketplace" && (
+                <div className="admin-table-wrap">
+                    <div className="admin-search-bar">
+                        <input
+                            type="text"
+                            className="admin-search-input"
+                            placeholder="Search by title, seller, category..."
+                            value={listingSearch}
+                            onChange={(e) => setListingSearch(e.target.value)}
+                        />
+                        <select
+                            className="admin-search-input"
+                            style={{ maxWidth: 140 }}
+                            value={listingStatusFilter}
+                            onChange={(e) => setListingStatusFilter(e.target.value)}
+                        >
+                            <option value="">All Status</option>
+                            <option value="ACTIVE">Active</option>
+                            <option value="SOLD">Sold</option>
+                            <option value="REMOVED">Removed</option>
+                        </select>
+                        {(listingSearch || listingStatusFilter) && (
+                            <span className="admin-search-count">
+                                {filteredListings.length} of {listings.length} listings
+                            </span>
+                        )}
+                    </div>
+
+                    {loading ? <p>{strings.common.loading}</p> : (
+                        <table className="admin-table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Title</th>
+                                    <th>Seller</th>
+                                    <th>Category</th>
+                                    <th>Price</th>
+                                    {sortableTh("Status", listingSort, setListingSort, "status")}
+                                    {sortableTh("Created", listingSort, setListingSort, "created")}
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {applySort(filteredListings, listingSort, {
+                                    status: (l) => (l.status || "").toLowerCase(),
+                                    created: (l) => l.createdDate,
+                                }).map((l) => (
+                                    <tr key={l.id}>
+                                        <td>{l.id}</td>
+                                        <td className="admin-article-title">{l.title}</td>
+                                        <td>{l.sellerName || "—"}</td>
+                                        <td>{l.category || "—"}</td>
+                                        <td>{l.price || "—"}</td>
+                                        <td>
+                                            <span className={`status-badge status-${(l.status || "").toLowerCase()}`}>
+                                                {l.status || "—"}
+                                            </span>
+                                        </td>
+                                        <td>{toPSTDateTime(l.createdDate)}</td>
+                                        <td>
+                                            <select
+                                                className="admin-action-select"
+                                                value=""
+                                                onChange={(e) => { handleListingAction(l.id, e.target.value); e.target.value = ""; }}
+                                            >
+                                                <option value="" disabled>Action...</option>
+                                                {(l.status || "").toUpperCase() !== "ACTIVE" && <option value="activate">Mark Active</option>}
+                                                {(l.status || "").toUpperCase() !== "SOLD" && <option value="sold">Mark Sold</option>}
+                                                {(l.status || "").toUpperCase() !== "REMOVED" && <option value="remove">Remove</option>}
                                                 <option value="delete">Delete</option>
                                             </select>
                                         </td>
@@ -1422,13 +1920,16 @@ const AdminDashboard = () => {
                                         <th>Placement</th>
                                         <th>Animation</th>
                                         <th>Preview</th>
-                                        <th>Status</th>
-                                        <th>Created</th>
+                                        {sortableTh("Status", adSort, setAdSort, "status")}
+                                        {sortableTh("Created", adSort, setAdSort, "created")}
                                         <th>Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {advertisements.map(ad => (
+                                    {applySort(advertisements, adSort, {
+                                        status: (ad) => ad.active ? "active" : "inactive",
+                                        created: (ad) => ad.createdDate,
+                                    }).map(ad => (
                                         <tr key={ad.id}>
                                             <td>{ad.title}</td>
                                             <td>
@@ -1456,7 +1957,7 @@ const AdminDashboard = () => {
                                                     {ad.active ? "Active" : "Inactive"}
                                                 </span>
                                             </td>
-                                            <td>{toPSTDate(ad.createdDate)}</td>
+                                            <td>{toPSTDateTime(ad.createdDate)}</td>
                                             <td>
                                                 <button className="bm-btn bm-btn-sm bm-btn-create" onClick={() => startEditAd(ad)}>
                                                     Edit
@@ -1576,13 +2077,16 @@ const AdminDashboard = () => {
                                         <th>Name</th>
                                         <th>Email</th>
                                         <th>Subject</th>
-                                        <th>Date</th>
-                                        <th>Status</th>
+                                        {sortableTh("Date", querySort, setQuerySort, "date")}
+                                        {sortableTh("Status", querySort, setQuerySort, "status")}
                                         <th>Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {filtered.map(q => {
+                                    {applySort(filtered, querySort, {
+                                        date: (q) => q.createdDate,
+                                        status: (q) => (q.status || "").toLowerCase(),
+                                    }).map(q => {
                                         const statusOpt = STATUS_OPTIONS.find(o => o.value === q.status) || STATUS_OPTIONS[0];
                                         const isExpanded = expandedQueryId === q.id;
                                         return (

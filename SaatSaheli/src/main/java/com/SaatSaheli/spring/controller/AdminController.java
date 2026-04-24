@@ -2,14 +2,19 @@ package com.SaatSaheli.spring.controller;
 
 import com.SaatSaheli.spring.model.Article;
 import com.SaatSaheli.spring.model.Book;
+import com.SaatSaheli.spring.model.Gallery;
 import com.SaatSaheli.spring.model.Login;
+import com.SaatSaheli.spring.model.MarketplaceListing;
 import com.SaatSaheli.spring.model.Page;
+import com.SaatSaheli.spring.model.Recipe;
 import com.SaatSaheli.spring.model.User;
 import com.SaatSaheli.spring.repository.ArticleRepository;
 import com.SaatSaheli.spring.repository.BookRepository;
 import com.SaatSaheli.spring.repository.GalleryRepository;
 import com.SaatSaheli.spring.repository.LoginRepository;
+import com.SaatSaheli.spring.repository.MarketplaceListingRepository;
 import com.SaatSaheli.spring.repository.PodcastRepository;
+import com.SaatSaheli.spring.repository.RecipeRepository;
 import com.SaatSaheli.spring.repository.UserRepository;
 import com.SaatSaheli.spring.service.ArticleService;
 import com.SaatSaheli.spring.service.BookService;
@@ -53,6 +58,12 @@ public class AdminController {
 
     @Autowired
     private PodcastRepository podcastRepo;
+
+    @Autowired
+    private RecipeRepository recipeRepo;
+
+    @Autowired
+    private MarketplaceListingRepository marketplaceRepo;
 
     @Autowired
     private DocumentExtractionService documentExtractionService;
@@ -383,6 +394,85 @@ public class AdminController {
         }
     }
 
+    /** GET /api/admin/recipes — List all recipes enriched with author name */
+    @GetMapping("/recipes")
+    public ResponseEntity<?> listRecipes(HttpServletRequest request) {
+        try {
+            User caller = verifyCaller(getAuthUserId(request), false);
+            if (caller == null) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorMap("Admin access required"));
+            }
+            List<Recipe> recipes = recipeRepo.findAllByOrderByCreatedDateDesc();
+            Map<Long, User> userMap = userRepo.findAll().stream()
+                    .collect(Collectors.toMap(User::getId, u -> u, (a, b) -> a));
+            for (Recipe recipe : recipes) {
+                if (recipe.getUserId() != null && userMap.containsKey(recipe.getUserId())) {
+                    User u = userMap.get(recipe.getUserId());
+                    String name = (u.getDisplayName() != null && !u.getDisplayName().isEmpty())
+                            ? u.getDisplayName()
+                            : ((u.getFirstName() != null ? u.getFirstName() : "")
+                            + (u.getLastName() != null ? " " + u.getLastName() : "")).trim();
+                    recipe.setAuthorName(name);
+                }
+            }
+            return ResponseEntity.ok(recipes);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(errorMap("Failed to list recipes: " + e.getMessage()));
+        }
+    }
+
+    /** DELETE /api/admin/recipes/{recipeId} — Delete any recipe */
+    @DeleteMapping("/recipes/{recipeId}")
+    public ResponseEntity<?> deleteRecipe(
+            @PathVariable Long recipeId,
+            HttpServletRequest request) {
+        try {
+            User caller = verifyCaller(getAuthUserId(request), false);
+            if (caller == null) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorMap("Admin access required"));
+            }
+            if (!recipeRepo.existsById(recipeId)) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorMap("Recipe not found"));
+            }
+            recipeRepo.deleteById(recipeId);
+            return ResponseEntity.ok(Map.of("message", "Recipe deleted"));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(errorMap("Failed to delete recipe: " + e.getMessage()));
+        }
+    }
+
+    /** PUT /api/admin/recipes/{recipeId}/status — Change recipe status (PUBLISHED/DRAFT) */
+    @PutMapping("/recipes/{recipeId}/status")
+    public ResponseEntity<?> changeRecipeStatus(
+            @PathVariable Long recipeId,
+            @RequestBody Map<String, String> body,
+            HttpServletRequest request) {
+        try {
+            User caller = verifyCaller(getAuthUserId(request), false);
+            if (caller == null) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorMap("Admin access required"));
+            }
+            String newStatus = body.get("status");
+            if (newStatus == null) {
+                return ResponseEntity.badRequest().body(errorMap("Status is required"));
+            }
+            Optional<Recipe> opt = recipeRepo.findById(recipeId);
+            if (opt.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorMap("Recipe not found"));
+            }
+            Recipe recipe = opt.get();
+            recipe.setStatus(newStatus.toUpperCase());
+            recipe.setModifiedDate(java.time.LocalDateTime.now(java.time.ZoneOffset.UTC));
+            recipeRepo.save(recipe);
+            return ResponseEntity.ok(recipe);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(errorMap("Failed to change recipe status: " + e.getMessage()));
+        }
+    }
+
     /** DELETE /api/admin/articles/purge — Permanently delete all DRAFT articles (SUPER_ADMIN only) */
     @DeleteMapping("/articles/purge")
     public ResponseEntity<?> purgeDraftArticles(HttpServletRequest request) {
@@ -398,6 +488,164 @@ public class AdminController {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(errorMap("Failed to purge articles: " + e.getMessage()));
+        }
+    }
+
+    /** GET /api/admin/galleries — List all galleries enriched with author name */
+    @GetMapping("/galleries")
+    public ResponseEntity<?> listGalleries(HttpServletRequest request) {
+        try {
+            User caller = verifyCaller(getAuthUserId(request), false);
+            if (caller == null) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorMap("Admin access required"));
+            }
+            List<Gallery> galleries = galleryRepo.findAllByOrderByCreatedDateDesc();
+            Map<Long, User> userMap = userRepo.findAll().stream()
+                    .collect(Collectors.toMap(User::getId, u -> u, (a, b) -> a));
+            for (Gallery g : galleries) {
+                if (g.getUserId() != null && userMap.containsKey(g.getUserId())) {
+                    User u = userMap.get(g.getUserId());
+                    String name = (u.getDisplayName() != null && !u.getDisplayName().isEmpty())
+                            ? u.getDisplayName()
+                            : ((u.getFirstName() != null ? u.getFirstName() : "")
+                            + (u.getLastName() != null ? " " + u.getLastName() : "")).trim();
+                    g.setAuthorName(name);
+                }
+            }
+            return ResponseEntity.ok(galleries);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(errorMap("Failed to list galleries: " + e.getMessage()));
+        }
+    }
+
+    /** DELETE /api/admin/galleries/{galleryId} — Delete any gallery */
+    @DeleteMapping("/galleries/{galleryId}")
+    public ResponseEntity<?> deleteGallery(
+            @PathVariable Long galleryId,
+            HttpServletRequest request) {
+        try {
+            User caller = verifyCaller(getAuthUserId(request), false);
+            if (caller == null) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorMap("Admin access required"));
+            }
+            if (!galleryRepo.existsById(galleryId)) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorMap("Gallery not found"));
+            }
+            galleryRepo.deleteById(galleryId);
+            return ResponseEntity.ok(Map.of("message", "Gallery deleted"));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(errorMap("Failed to delete gallery: " + e.getMessage()));
+        }
+    }
+
+    /** PUT /api/admin/galleries/{galleryId}/status — Change gallery status (PUBLISHED/DRAFT) */
+    @PutMapping("/galleries/{galleryId}/status")
+    public ResponseEntity<?> changeGalleryStatus(
+            @PathVariable Long galleryId,
+            @RequestBody Map<String, String> body,
+            HttpServletRequest request) {
+        try {
+            User caller = verifyCaller(getAuthUserId(request), false);
+            if (caller == null) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorMap("Admin access required"));
+            }
+            String newStatus = body.get("status");
+            if (newStatus == null) {
+                return ResponseEntity.badRequest().body(errorMap("Status is required"));
+            }
+            Optional<Gallery> opt = galleryRepo.findById(galleryId);
+            if (opt.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorMap("Gallery not found"));
+            }
+            Gallery g = opt.get();
+            g.setStatus(newStatus.toUpperCase());
+            g.setModifiedDate(java.time.LocalDateTime.now(java.time.ZoneOffset.UTC));
+            galleryRepo.save(g);
+            return ResponseEntity.ok(g);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(errorMap("Failed to change gallery status: " + e.getMessage()));
+        }
+    }
+
+    /** GET /api/admin/marketplace — List all buy/sell listings enriched with seller name */
+    @GetMapping("/marketplace")
+    public ResponseEntity<?> listMarketplace(HttpServletRequest request) {
+        try {
+            User caller = verifyCaller(getAuthUserId(request), false);
+            if (caller == null) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorMap("Admin access required"));
+            }
+            List<MarketplaceListing> listings = marketplaceRepo.findAllByOrderByCreatedDateDesc();
+            Map<Long, User> userMap = userRepo.findAll().stream()
+                    .collect(Collectors.toMap(User::getId, u -> u, (a, b) -> a));
+            for (MarketplaceListing l : listings) {
+                if (l.getUserId() != null && userMap.containsKey(l.getUserId())) {
+                    User u = userMap.get(l.getUserId());
+                    String name = (u.getDisplayName() != null && !u.getDisplayName().isEmpty())
+                            ? u.getDisplayName()
+                            : ((u.getFirstName() != null ? u.getFirstName() : "")
+                            + (u.getLastName() != null ? " " + u.getLastName() : "")).trim();
+                    l.setSellerName(name);
+                }
+            }
+            return ResponseEntity.ok(listings);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(errorMap("Failed to list marketplace: " + e.getMessage()));
+        }
+    }
+
+    /** DELETE /api/admin/marketplace/{listingId} — Delete any listing */
+    @DeleteMapping("/marketplace/{listingId}")
+    public ResponseEntity<?> deleteListing(
+            @PathVariable Long listingId,
+            HttpServletRequest request) {
+        try {
+            User caller = verifyCaller(getAuthUserId(request), false);
+            if (caller == null) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorMap("Admin access required"));
+            }
+            if (!marketplaceRepo.existsById(listingId)) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorMap("Listing not found"));
+            }
+            marketplaceRepo.deleteById(listingId);
+            return ResponseEntity.ok(Map.of("message", "Listing deleted"));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(errorMap("Failed to delete listing: " + e.getMessage()));
+        }
+    }
+
+    /** PUT /api/admin/marketplace/{listingId}/status — Change listing status (ACTIVE/SOLD/REMOVED) */
+    @PutMapping("/marketplace/{listingId}/status")
+    public ResponseEntity<?> changeListingStatus(
+            @PathVariable Long listingId,
+            @RequestBody Map<String, String> body,
+            HttpServletRequest request) {
+        try {
+            User caller = verifyCaller(getAuthUserId(request), false);
+            if (caller == null) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorMap("Admin access required"));
+            }
+            String newStatus = body.get("status");
+            if (newStatus == null) {
+                return ResponseEntity.badRequest().body(errorMap("Status is required"));
+            }
+            Optional<MarketplaceListing> opt = marketplaceRepo.findById(listingId);
+            if (opt.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorMap("Listing not found"));
+            }
+            MarketplaceListing l = opt.get();
+            l.setStatus(newStatus.toUpperCase());
+            l.setModifiedDate(java.time.LocalDateTime.now(java.time.ZoneOffset.UTC));
+            marketplaceRepo.save(l);
+            return ResponseEntity.ok(l);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(errorMap("Failed to change listing status: " + e.getMessage()));
         }
     }
 
