@@ -16,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 import jakarta.annotation.PostConstruct;
 
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -78,7 +79,7 @@ public class BookService {
 
     @Transactional
     public Book createBook(String title, Long userId, String category) {
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.now(ZoneOffset.UTC);
         Book book = new Book();
         book.setTitle(title);
         book.setUserId(userId);
@@ -132,7 +133,7 @@ public class BookService {
         }
         if (title != null) book.setTitle(title);
         if (status != null) book.setStatus(status);
-        book.setModifiedDate(LocalDateTime.now());
+        book.setModifiedDate(LocalDateTime.now(ZoneOffset.UTC));
         return bookRepo.save(book);
     }
 
@@ -157,7 +158,7 @@ public class BookService {
         int expectedNumber = secondLast.getPageNumber() + 1;
         if (lastPage.getPageNumber() > expectedNumber) {
             lastPage.setPageNumber(expectedNumber);
-            lastPage.setModifiedDate(LocalDateTime.now());
+            lastPage.setModifiedDate(LocalDateTime.now(ZoneOffset.UTC));
             pageRepo.save(lastPage);
         }
     }
@@ -174,7 +175,7 @@ public class BookService {
                 throw new RuntimeException("Only the author can delete this book");
             }
             book.setStatus("DELETED");
-            book.setModifiedDate(LocalDateTime.now());
+            book.setModifiedDate(LocalDateTime.now(ZoneOffset.UTC));
             bookRepo.save(book);
         }
     }
@@ -185,7 +186,7 @@ public class BookService {
         if (bookOpt.isPresent()) {
             Book book = bookOpt.get();
             book.setStatus("ARCHIVED");
-            book.setModifiedDate(LocalDateTime.now());
+            book.setModifiedDate(LocalDateTime.now(ZoneOffset.UTC));
             bookRepo.save(book);
         }
     }
@@ -196,7 +197,7 @@ public class BookService {
         if (bookOpt.isPresent()) {
             Book book = bookOpt.get();
             book.setStatus("DRAFT");
-            book.setModifiedDate(LocalDateTime.now());
+            book.setModifiedDate(LocalDateTime.now(ZoneOffset.UTC));
             bookRepo.save(book);
         }
     }
@@ -306,7 +307,7 @@ public class BookService {
             throw new RuntimeException("Source is not a magazine");
         }
 
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.now(ZoneOffset.UTC);
         String hindiTitle = translationService.translateToHindi(source.getTitle());
 
         Book hindi = new Book();
@@ -487,7 +488,7 @@ public class BookService {
 
     @Transactional
     public Book createBookFromDocument(String title, Long userId, List<String> pageTexts) {
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.now(ZoneOffset.UTC);
         Book book = new Book();
         book.setTitle(title);
         book.setUserId(userId);
@@ -554,7 +555,7 @@ public class BookService {
 
     @Transactional
     public Book createBookFromPdfImages(String title, Long userId, List<String> imageUrls) {
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.now(ZoneOffset.UTC);
         Book book = new Book();
         book.setTitle(title);
         book.setUserId(userId);
@@ -695,7 +696,7 @@ public class BookService {
         if (bookOpt.isPresent() && requestUserId != null && !requestUserId.equals(bookOpt.get().getUserId())) {
             throw new RuntimeException("Only the author can add pages to this book");
         }
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.now(ZoneOffset.UTC);
         page.setBookId(bookId);
         page.setCreatedDate(now);
         page.setModifiedDate(now);
@@ -725,7 +726,7 @@ public class BookService {
         if (updated.getImageUrl2() != null) page.setImageUrl2(updated.getImageUrl2());
         if (updated.getFormat() != null) page.setFormat(updated.getFormat());
         if (updated.getPageNumber() > 0) page.setPageNumber(updated.getPageNumber());
-        page.setModifiedDate(LocalDateTime.now());
+        page.setModifiedDate(LocalDateTime.now(ZoneOffset.UTC));
         return pageRepo.save(page);
     }
 

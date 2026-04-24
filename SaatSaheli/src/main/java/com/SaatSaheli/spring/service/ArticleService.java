@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -27,7 +28,7 @@ public class ArticleService {
     private UserRepository userRepo;
 
     public Article createArticle(Long userId, String headline, String content, String imageUrl, String contentType, String status, String category) {
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.now(ZoneOffset.UTC);
         Article article = new Article();
         article.setUserId(userId);
         article.setHeadline(headline);
@@ -66,7 +67,7 @@ public class ArticleService {
         if (contentType != null) article.setContentType(contentType);
         if (status != null) article.setStatus(status.toUpperCase());
         if (category != null) article.setCategory(category);
-        article.setModifiedDate(LocalDateTime.now());
+        article.setModifiedDate(LocalDateTime.now(ZoneOffset.UTC));
         return articleRepo.save(article);
     }
 

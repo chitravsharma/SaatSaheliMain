@@ -27,6 +27,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -115,7 +116,7 @@ public class AuthController {
                 return ResponseEntity.status(HttpStatus.CONFLICT).body(errorMap("Account with this email already exists"));
             }
 
-            LocalDateTime now = LocalDateTime.now();
+            LocalDateTime now = LocalDateTime.now(ZoneOffset.UTC);
 
             User user = new User();
             user.setFirstName(getStr(body, "firstName"));
@@ -211,7 +212,7 @@ public class AuthController {
                 }
             }
 
-            LocalDateTime now = LocalDateTime.now();
+            LocalDateTime now = LocalDateTime.now(ZoneOffset.UTC);
             loginRecord.setLastLoginDate(now);
             loginRecord.setStatus("ACTIVE");
             loginRepo.save(loginRecord);
