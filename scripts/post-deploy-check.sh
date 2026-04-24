@@ -111,6 +111,19 @@ fi
 check "gallery caption: bogus id"   403 5    "/api/galleries/images/99999999" -X PUT \
       -H "Content-Type: application/json" -d '{"caption":"test","userId":1}'
 
+# --- #24 SuperAdmin act-on-behalf (Phase 1) ---
+# Content-write endpoints now require a JWT — body userId alone is no longer accepted.
+check "book create: no auth"        401 5    "/api/books/create" -X POST \
+      -H "Content-Type: application/json" -d '{"title":"probe","userId":1}'
+check "book update: no auth"        401 5    "/api/books/1" -X PUT \
+      -H "Content-Type: application/json" -d '{"userId":"1","title":"probe"}'
+check "recipe create: no auth"      401 5    "/api/recipes" -X POST \
+      -H "Content-Type: application/json" -d '{"recipeName":"probe","userId":1}'
+check "recipe update: no auth"      401 5    "/api/recipes/1" -X PUT \
+      -H "Content-Type: application/json" -d '{"userId":1}'
+# Audit-log endpoint is SUPER_ADMIN only — 401 without auth, 403 for non-SA (tested in Batch 6).
+check "audit log: no auth"          401 5    "/api/admin/audit-log"
+
 # --- Summary ---
 echo
 if [ "$FAIL" -eq 0 ]; then

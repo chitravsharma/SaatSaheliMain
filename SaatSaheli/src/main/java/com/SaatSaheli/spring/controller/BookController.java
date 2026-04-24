@@ -64,15 +64,26 @@ public class BookController {
     }
 
     @PostMapping("/create")
-    public ResponseEntity<?> createBook(@RequestBody Map<String, Object> body) {
+    public ResponseEntity<?> createBook(@RequestBody Map<String, Object> body, HttpServletRequest request) {
         try {
+            Long jwtUserId = (Long) request.getAttribute("jwtUserId");
+            if (jwtUserId == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorMap("Authentication required"));
+            }
+            Object bodyUserId = body.get("userId");
+            if (bodyUserId != null) {
+                Long parsed = Long.parseLong(bodyUserId.toString());
+                if (!jwtUserId.equals(parsed)) {
+                    return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                            .body(errorMap("Body userId does not match authenticated user"));
+                }
+            }
             String title = (String) body.get("title");
-            Long userId = body.get("userId") != null ? Long.parseLong(body.get("userId").toString()) : null;
             String category = body.get("category") != null ? body.get("category").toString() : null;
             if (title == null || title.isEmpty()) {
                 return ResponseEntity.badRequest().body(errorMap("Title is required"));
             }
-            Book book = bookService.createBook(title, userId, category);
+            Book book = bookService.createBook(title, jwtUserId, category);
             return ResponseEntity.ok(book);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -131,12 +142,24 @@ public class BookController {
     }
 
     @PutMapping("/{bookId}")
-    public ResponseEntity<?> updateBook(@PathVariable Long bookId, @RequestBody Map<String, String> body) {
+    public ResponseEntity<?> updateBook(@PathVariable Long bookId, @RequestBody Map<String, String> body,
+                                        HttpServletRequest request) {
         try {
+            Long jwtUserId = (Long) request.getAttribute("jwtUserId");
+            if (jwtUserId == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorMap("Authentication required"));
+            }
+            String bodyUserId = body.get("userId");
+            if (bodyUserId != null) {
+                Long parsed = Long.parseLong(bodyUserId);
+                if (!jwtUserId.equals(parsed)) {
+                    return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                            .body(errorMap("Body userId does not match authenticated user"));
+                }
+            }
             String title = body.get("title");
             String status = body.get("status");
-            Long reqUserId = body.get("userId") != null ? Long.parseLong(body.get("userId")) : null;
-            Book book = bookService.updateBook(bookId, title, status, reqUserId);
+            Book book = bookService.updateBook(bookId, title, status, jwtUserId);
             return ResponseEntity.ok(book);
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorMap(e.getMessage()));

@@ -2,12 +2,19 @@ package com.SaatSaheli.spring.model;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
+import org.hibernate.envers.Audited;
+import org.springframework.data.annotation.CreatedBy;
+import org.springframework.data.annotation.LastModifiedBy;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
 @Entity
 @Table(name = "recipes")
+@Audited
+@EntityListeners(AuditingEntityListener.class)
 public class Recipe {
 
     @Id
@@ -37,6 +44,14 @@ public class Recipe {
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     @Column(name = "modified_date")
     private LocalDateTime modifiedDate;
+
+    @CreatedBy
+    @Column(name = "created_by", updatable = false)
+    private Long createdBy;
+
+    @LastModifiedBy
+    @Column(name = "last_modified_by")
+    private Long lastModifiedBy;
 
     @Transient
     private List<RecipeImage> images = new ArrayList<>();
@@ -88,4 +103,10 @@ public class Recipe {
 
     public int getCommentCount() { return commentCount; }
     public void setCommentCount(int commentCount) { this.commentCount = commentCount; }
+
+    public Long getCreatedBy() { return createdBy; }
+    public void setCreatedBy(Long createdBy) { this.createdBy = createdBy; }
+
+    public Long getLastModifiedBy() { return lastModifiedBy; }
+    public void setLastModifiedBy(Long lastModifiedBy) { this.lastModifiedBy = lastModifiedBy; }
 }

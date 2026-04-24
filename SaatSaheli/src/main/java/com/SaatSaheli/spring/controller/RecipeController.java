@@ -2,6 +2,7 @@ package com.SaatSaheli.spring.controller;
 
 import com.SaatSaheli.spring.model.Recipe;
 import com.SaatSaheli.spring.service.RecipeService;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,20 +20,28 @@ public class RecipeController {
     private RecipeService recipeService;
 
     @PostMapping
-    public ResponseEntity<?> createRecipe(@RequestBody Map<String, Object> body) {
+    public ResponseEntity<?> createRecipe(@RequestBody Map<String, Object> body, HttpServletRequest request) {
         try {
-            Long userId = body.get("userId") != null ? Long.parseLong(body.get("userId").toString()) : null;
-            String recipeName = (String) body.get("recipeName");
-            if (userId == null) {
-                return ResponseEntity.badRequest().body(errorMap("userId is required"));
+            Long jwtUserId = (Long) request.getAttribute("jwtUserId");
+            if (jwtUserId == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorMap("Authentication required"));
             }
+            Object bodyUserId = body.get("userId");
+            if (bodyUserId != null) {
+                Long parsed = Long.parseLong(bodyUserId.toString());
+                if (!jwtUserId.equals(parsed)) {
+                    return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                            .body(errorMap("Body userId does not match authenticated user"));
+                }
+            }
+            String recipeName = (String) body.get("recipeName");
             if (recipeName == null || recipeName.isEmpty()) {
                 return ResponseEntity.badRequest().body(errorMap("Recipe name is required"));
             }
             @SuppressWarnings("unchecked")
             List<Map<String, String>> images = (List<Map<String, String>>) body.get("images");
             Recipe recipe = recipeService.createRecipe(
-                    userId,
+                    jwtUserId,
                     recipeName,
                     (String) body.get("cuisine"),
                     (String) body.get("ingredients"),
@@ -47,14 +56,26 @@ public class RecipeController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<?> updateRecipe(@PathVariable Long id, @RequestBody Map<String, Object> body) {
+    public ResponseEntity<?> updateRecipe(@PathVariable Long id, @RequestBody Map<String, Object> body,
+                                          HttpServletRequest request) {
         try {
-            Long userId = body.get("userId") != null ? Long.parseLong(body.get("userId").toString()) : null;
+            Long jwtUserId = (Long) request.getAttribute("jwtUserId");
+            if (jwtUserId == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorMap("Authentication required"));
+            }
+            Object bodyUserId = body.get("userId");
+            if (bodyUserId != null) {
+                Long parsed = Long.parseLong(bodyUserId.toString());
+                if (!jwtUserId.equals(parsed)) {
+                    return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                            .body(errorMap("Body userId does not match authenticated user"));
+                }
+            }
             @SuppressWarnings("unchecked")
             List<Map<String, String>> images = (List<Map<String, String>>) body.get("images");
             Recipe recipe = recipeService.updateRecipe(
                     id,
-                    userId,
+                    jwtUserId,
                     (String) body.get("recipeName"),
                     (String) body.get("cuisine"),
                     (String) body.get("ingredients"),
