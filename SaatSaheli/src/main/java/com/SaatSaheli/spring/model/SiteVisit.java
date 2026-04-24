@@ -15,12 +15,13 @@ public class SiteVisit {
     @Column(name = "visitor_id")
     private String visitorId; // anonymous fingerprint (random UUID stored in localStorage)
 
-    @Column(name = "page_path")
+    @Column(name = "page_path", columnDefinition = "TEXT")
     private String pagePath;
 
+    @Column(columnDefinition = "TEXT")
     private String referrer;
 
-    @Column(name = "user_agent")
+    @Column(name = "user_agent", columnDefinition = "TEXT")
     private String userAgent;
 
     private String device; // "desktop", "mobile", "tablet"

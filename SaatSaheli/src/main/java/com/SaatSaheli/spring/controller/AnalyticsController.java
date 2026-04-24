@@ -14,6 +14,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -42,23 +43,30 @@ public class AnalyticsController {
     public ResponseEntity<?> trackVisit(@RequestBody Map<String, Object> body) {
         try {
             SiteVisit visit = new SiteVisit();
-            visit.setVisitorId((String) body.get("visitorId"));
-            visit.setPagePath((String) body.get("pagePath"));
-            visit.setReferrer((String) body.get("referrer"));
-            visit.setUserAgent((String) body.get("userAgent"));
-            visit.setDevice((String) body.get("device"));
-            visit.setBrowser((String) body.get("browser"));
-            visit.setSessionId((String) body.get("sessionId"));
+            visit.setVisitorId(cap((String) body.get("visitorId"), 255));
+            // Text columns in the entity, but cap defensively so a stale prod
+            // schema with VARCHAR(255) doesn't drop the row.
+            visit.setPagePath(cap((String) body.get("pagePath"), 2000));
+            visit.setReferrer(cap((String) body.get("referrer"), 2000));
+            visit.setUserAgent(cap((String) body.get("userAgent"), 2000));
+            visit.setDevice(cap((String) body.get("device"), 32));
+            visit.setBrowser(cap((String) body.get("browser"), 64));
+            visit.setSessionId(cap((String) body.get("sessionId"), 128));
             if (body.get("userId") != null) {
                 visit.setUserId(Long.valueOf(body.get("userId").toString()));
             }
-            visit.setVisitedAt(LocalDateTime.now());
+            visit.setVisitedAt(LocalDateTime.now(ZoneOffset.UTC));
             visitRepo.save(visit);
             return ResponseEntity.ok(Map.of("status", "ok"));
         } catch (Exception e) {
             log.error("Error tracking visit", e);
             return ResponseEntity.ok(Map.of("status", "ok")); // don't fail the client
         }
+    }
+
+    private static String cap(String s, int max) {
+        if (s == null) return null;
+        return s.length() <= max ? s : s.substring(0, max);
     }
 
     /**
