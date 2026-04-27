@@ -9,7 +9,7 @@ import './Header.css';
 const welcomeMessage = process.env.REACT_APP_WELCOME_MESSAGE;
 
 const Header = () => {
-  const { user } = useAuth();
+  const { user, flashAccount, dismissAccountFlash } = useAuth();
   const strings = useStrings();
   const { language, setLanguage } = useLanguage();
   const navigate = useNavigate();
@@ -59,6 +59,7 @@ const Header = () => {
               <span className="header-site-name">{language === 'hi' ? '' : 'SAA7 SAHELI'}</span>
               {language === 'hi' && <span className="header-site-name-hi">सात सहेली</span>}
               <span className="header-tagline">{language === 'hi' ? 'जुनून और रचनात्मकता का समुदाय!' : 'A Community for Passion and Creativity!'}</span>
+              <span className="header-eyebrow">Create &nbsp;•&nbsp; Share &nbsp;•&nbsp; Inspire</span>
             </div>
           </Link>
           <button
@@ -112,7 +113,11 @@ const Header = () => {
             </Link>
           )}
           {user && (
-            <Link to="/account" className="nav-link" onClick={closeMobileNav}>
+            <Link
+              to="/account"
+              className={`nav-link${flashAccount ? " nav-link-flash" : ""}`}
+              onClick={() => { dismissAccountFlash(); closeMobileNav(); }}
+            >
               <svg className="nav-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
               My Account
             </Link>

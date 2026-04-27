@@ -15,7 +15,7 @@ export default function Login() {
   const navigate = useNavigate();
   const location = useLocation();
   const [searchParams] = useSearchParams();
-  const { login: authLogin } = useAuth();
+  const { login: authLogin, triggerAccountFlash } = useAuth();
   const strings = useStrings();
   const isRegisterPath = location.pathname.toLowerCase() === "/register";
   const initialMode = (isRegisterPath || searchParams.get("mode") === "signup") ? "signup" : "login";
@@ -265,6 +265,7 @@ export default function Login() {
           email: googleUser.email,
           provider: "google",
         });
+        triggerAccountFlash();
         saveUserAndRedirect(res.data);
       } catch (loginErr) {
         if (loginErr.response?.status === 401) {
@@ -276,6 +277,7 @@ export default function Login() {
             password: "",
             provider: "google",
           });
+          sessionStorage.setItem("ss_flash_account", "1");
           saveUserAndRedirect(res.data);
         } else {
           throw loginErr;

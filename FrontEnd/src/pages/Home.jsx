@@ -20,13 +20,15 @@ function resolveImageUrl(url) {
 
 function Home() {
   const strings = useStrings();
-  const { user } = useAuth();
+  const { user, flashAccount, dismissAccountFlash } = useAuth();
   const navigate = useNavigate();
   const [recentBooks, setRecentBooks] = useState([]);
   const [galleries, setGalleries] = useState([]);
   const [recentArticles, setRecentArticles] = useState([]);
   const [recentRecipes, setRecentRecipes] = useState([]);
   const [recentPodcasts, setRecentPodcasts] = useState([]);
+  const [magazines, setMagazines] = useState([]);
+  const [magazineIndex, setMagazineIndex] = useState(0);
   const [bookCounts, setBookCounts] = useState({ likes: {}, comments: {} });
   const [galleryCounts, setGalleryCounts] = useState({ likes: {}, comments: {} });
   const [articleCounts, setArticleCounts] = useState({ likes: {}, comments: {} });
@@ -50,12 +52,13 @@ function Home() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [booksRes, galleriesRes, articlesRes, recipesRes, podcastsRes, bookCountsRes, galleryCountsRes, articleCountsRes, podcastCountsRes] = await Promise.all([
+        const [booksRes, galleriesRes, articlesRes, recipesRes, podcastsRes, magazineRes, bookCountsRes, galleryCountsRes, articleCountsRes, podcastCountsRes] = await Promise.all([
           api.get(`${API}/api/books/search?status=PUBLISHED`),
           api.get(`${API}/api/galleries`),
           api.get(`${API}/api/articles`).catch(() => ({ data: [] })),
           api.get(`${API}/api/recipes`).catch(() => ({ data: [] })),
           api.get(`${API}/api/podcasts`).catch(() => ({ data: [] })),
+          api.get(`${API}/api/books/magazines`).catch(() => ({ data: [] })),
           api.get(`${API}/api/social/counts?targetType=BOOK`).catch(() => ({ data: { likes: {}, comments: {} } })),
           api.get(`${API}/api/social/counts?targetType=GALLERY`).catch(() => ({ data: { likes: {}, comments: {} } })),
           api.get(`${API}/api/social/counts?targetType=ARTICLE`).catch(() => ({ data: { likes: {}, comments: {} } })),
@@ -82,6 +85,17 @@ function Home() {
           .filter(p => p.status === "PUBLISHED");
         pods.sort((a, b) => new Date(b.createdDate) - new Date(a.createdDate));
         setRecentPodcasts(pods.slice(0, 6));
+
+        const mags = (Array.isArray(magazineRes.data) ? magazineRes.data : [])
+          .filter(m => m && m.id && (m.status === "PUBLISHED" || !m.status));
+        // Sort: prefer Hindi first so the rotation starts on the Hindi cover, then English.
+        mags.sort((a, b) => {
+          const aHi = a.language === "hi" ? 0 : 1;
+          const bHi = b.language === "hi" ? 0 : 1;
+          if (aHi !== bHi) return aHi - bHi;
+          return new Date(b.modifiedDate || b.createdDate) - new Date(a.modifiedDate || a.createdDate);
+        });
+        setMagazines(mags);
 
         setBookCounts(bookCountsRes.data || { likes: {}, comments: {} });
         setGalleryCounts(galleryCountsRes.data || { likes: {}, comments: {} });
@@ -237,6 +251,20 @@ function Home() {
     return () => clearTimeout(t);
   }, [actionError]);
 
+  // Rotate the hero magazine card between Hindi/English (and any other published editions) every 6s.
+  // Skipped if the user prefers reduced motion or there's only one magazine.
+  useEffect(() => {
+    if (magazines.length < 2) return;
+    if (typeof window !== "undefined" && window.matchMedia &&
+        window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      return;
+    }
+    const t = setInterval(() => {
+      setMagazineIndex(i => (i + 1) % magazines.length);
+    }, 6000);
+    return () => clearInterval(t);
+  }, [magazines]);
+
   return (
     <div className="home-container">
       {actionError && (
@@ -245,6 +273,7 @@ function Home() {
           <button onClick={() => setActionError("")} style={{ marginLeft: 12, background: "none", border: "none", color: "#b91c1c", cursor: "pointer", fontWeight: "bold" }} aria-label="Dismiss">&times;</button>
         </div>
       )}
+
       {/* Quick nav links */}
       <div className="home-tags">
         <Link to="/magazine" className="home-tag-link">
@@ -326,7 +355,11 @@ function Home() {
           Help
         </Link>
         {user && (
-          <Link to="/account" className="home-tag-link">
+          <Link
+            to="/account"
+            className={`home-tag-link${flashAccount ? " home-tag-link-flash" : ""}`}
+            onClick={dismissAccountFlash}
+          >
             <span className="home-tag-icon">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
             </span>
@@ -343,9 +376,93 @@ function Home() {
         )}
       </div>
 
+      {/* Hero — only shown to logged-out visitors; logged-in users go straight to content. */}
+      {!user && (
+        <section className="home-hero" aria-labelledby="home-hero-title">
+          <div className="home-hero-grid">
+            <div className="home-hero-left">
+              <h1 id="home-hero-title" className="home-hero-title">
+                Where your creativity<br />
+                <span className="home-hero-title-soft">gets a stage.</span>
+              </h1>
+              <p className="home-hero-who">For writers, artists, and storytellers.</p>
+              <ul className="home-hero-funnel">
+                <li><span className="home-hero-funnel-emoji" aria-hidden="true">📖</span> Publish your book</li>
+                <li><span className="home-hero-funnel-emoji" aria-hidden="true">🎨</span> Share your artwork</li>
+                <li><span className="home-hero-funnel-emoji" aria-hidden="true">🖼️</span> Create galleries</li>
+                <li><span className="home-hero-funnel-emoji" aria-hidden="true">🛍️</span> Buy / sell</li>
+              </ul>
+              <div className="home-hero-cta">
+                <Link to="/Login" className="home-hero-cta-btn">
+                  <span className="home-hero-cta-emoji" aria-hidden="true">👉</span>
+                  Login with Google &amp; Start
+                </Link>
+                <p className="home-hero-cta-secondary">
+                  <Link to="/magazine">Browse the magazine <span aria-hidden="true">→</span></Link>
+                  <span className="home-hero-cta-secondary-sep" aria-hidden="true">·</span>
+                  <a href="#explore-latest">See what creators are sharing <span aria-hidden="true">↓</span></a>
+                </p>
+              </div>
+            </div>
+
+            <aside className="home-hero-magazine" aria-label="Magazine">
+              <p className="home-hero-magazine-heading">
+                <span className="home-hero-magazine-emoji" aria-hidden="true">📖</span>
+                Get published in our magazine
+              </p>
+              <p className="home-hero-magazine-dek">A Hindi + English creative magazine &mdash; monthly issue.</p>
+              {(() => {
+                const mag = magazines[magazineIndex] || null;
+                return (
+                  <Link to="/magazine" className="home-hero-magazine-card">
+                    <div className="home-hero-magazine-fade" key={mag?.id || "placeholder"}>
+                      {mag && resolveImageUrl(mag.coverImageUrl) ? (
+                        <img
+                          src={resolveImageUrl(mag.coverImageUrl)}
+                          alt={mag.title || "Saat Saheli Magazine cover"}
+                          className="home-hero-magazine-coverimg"
+                          loading="lazy"
+                        />
+                      ) : (
+                        <span className="home-hero-magazine-cover" aria-hidden="true">📰</span>
+                      )}
+                      <div className="home-hero-magazine-meta">
+                        <p className="home-hero-magazine-title">
+                          {mag?.title || "Saat Saheli Magazine"}
+                        </p>
+                        <span className="home-hero-magazine-link">
+                          Browse Magazine <span aria-hidden="true">→</span>
+                        </span>
+                      </div>
+                    </div>
+                  </Link>
+                );
+              })()}
+            </aside>
+          </div>
+
+          <ul className="home-hero-promises" aria-label="What sets us apart">
+            <li>
+              <p className="home-hero-promises-title">No algorithm suppression</p>
+              <p className="home-hero-promises-sub">Every post reaches every reader.</p>
+            </li>
+            <li>
+              <p className="home-hero-promises-title">Real publication opportunity</p>
+              <p className="home-hero-promises-sub">Featured work prints in our monthly issue.</p>
+            </li>
+            <li>
+              <p className="home-hero-promises-title">Community visibility</p>
+              <p className="home-hero-promises-sub">An audience that actually reads.</p>
+            </li>
+          </ul>
+        </section>
+      )}
+
       {loading && <div className="loading-spinner" />}
 
-      {/* 1. Recently Added Books (top) */}
+      {/* 1. Recently Added Books (top) — also the anchor target for the hero "see what creators are sharing" link */}
+      <div id="explore-latest" />
+
       {!loading && (
         <div className="home-section home-section-books">
           {recentBooks.length === 0 && (

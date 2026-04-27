@@ -25,7 +25,7 @@
   flex-wrap: wrap;
   gap: 2px 14px;
   justify-content: center;
-  margin-bottom: 20px;
+  margin-bottom: 8px;
 }
 
 .home-tag-link {
@@ -47,6 +47,32 @@
 }
 .home-tag-link svg {
   vertical-align: middle;
+}
+
+/* Post-Google-login attention flash for "My Account" — three pulses then off. */
+.home-tag-link-flash {
+  border-radius: 6px;
+  padding: 2px 8px;
+  animation: home-tag-link-flash 1.4s ease-in-out 3;
+}
+@keyframes home-tag-link-flash {
+  0%, 100% {
+    background-color: transparent;
+    box-shadow: 0 0 0 0 rgba(201, 168, 76, 0);
+    color: #a0532b;
+  }
+  50% {
+    background-color: rgba(201, 168, 76, 0.28);
+    box-shadow: 0 0 0 6px rgba(201, 168, 76, 0.4);
+    color: #5f7e48;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .home-tag-link-flash {
+    animation: none;
+    background-color: rgba(201, 168, 76, 0.2);
+    box-shadow: 0 0 0 2px rgba(201, 168, 76, 0.5);
+  }
 }
 .home-tag-link:focus-visible {
   outline: 3px solid var(--accent-gold-hover);
@@ -917,6 +943,338 @@
   .home-book-card:hover,
   .home-gallery-card:hover,
   .home-tag-link:hover {
+    transform: none;
+  }
+}
+
+/* ── Hero (logged-out only) — magazine system: Playfair Display + Inter, terracotta + gold ── */
+.home-hero {
+  --mag-primary: #a0532b;        /* terracotta */
+  --mag-primary-deep: #7e3d1d;   /* hover/active */
+  --mag-accent: #c9a84c;         /* antique gold */
+  --mag-ink: #1a1a1a;
+  --mag-mute: #6b5a4a;
+  --mag-display: 'Playfair Display', 'Georgia', serif;
+  --mag-text: 'Inter', system-ui, sans-serif;
+
+  padding: 0 0 48px;
+  margin: 0;
+}
+.home-hero-grid {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: 32px;
+  align-items: center;
+}
+.home-hero-left {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 28px;
+  position: relative;
+}
+.home-hero-title {
+  margin: 0;
+  font-family: var(--mag-display);
+  font-size: clamp(2rem, 4.2vw, 3.4rem);
+  line-height: 1.1;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  color: var(--mag-ink);
+  text-align: left;
+}
+.home-hero-title-soft {
+  color: var(--mag-primary);
+  font-weight: 500;
+  font-style: italic;
+}
+.home-hero-who {
+  margin: -8px 0 0;
+  font-family: var(--mag-display);
+  font-style: italic;
+  font-weight: 500;
+  font-size: clamp(1.05rem, 1.6vw, 1.25rem);
+  color: var(--mag-mute);
+  line-height: 1.4;
+}
+.home-hero-funnel {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: 24px;
+  row-gap: 12px;
+  font-family: var(--mag-text);
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--mag-ink);
+}
+.home-hero-funnel li {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  text-align: left;
+}
+.home-hero-funnel-emoji {
+  font-size: 1.3rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.home-hero-cta {
+  margin-top: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: flex-start;
+}
+.home-hero-cta-secondary {
+  margin: 0;
+  font-family: var(--mag-text);
+  font-size: 0.88rem;
+  color: var(--mag-mute);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 12px;
+  align-items: baseline;
+}
+.home-hero-cta-secondary a {
+  color: var(--mag-primary-deep);
+  text-decoration: none;
+  font-weight: 600;
+  border-bottom: 1px solid transparent;
+  transition: border-color 0.15s ease;
+}
+.home-hero-cta-secondary a:hover,
+.home-hero-cta-secondary a:focus-visible {
+  border-bottom-color: var(--mag-primary-deep);
+  outline: none;
+}
+.home-hero-cta-secondary-sep {
+  color: var(--mag-accent);
+  font-weight: 700;
+}
+
+/* Anchor target — pull-up so the heading isn't hidden under the (potential) sticky header */
+#explore-latest {
+  scroll-margin-top: 24px;
+}
+.home-hero-cta-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  background: transparent;
+  color: var(--mag-primary-deep);
+  font-family: var(--mag-text);
+  font-size: 0.88rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 10px 22px;
+  border: 1.5px solid var(--mag-primary-deep);
+  border-radius: 4px;
+  text-decoration: none;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.home-hero-cta-btn:hover,
+.home-hero-cta-btn:focus-visible {
+  background: var(--mag-primary-deep);
+  color: #fff;
+  outline: none;
+}
+.home-hero-cta-emoji {
+  font-size: 1rem;
+  line-height: 1;
+}
+
+/* Right-column magazine card */
+.home-hero-magazine {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.home-hero-magazine-heading {
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--mag-text);
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--mag-primary);
+  padding-bottom: 7px;
+  border-bottom: 1px solid var(--mag-accent);
+  align-self: flex-start;
+}
+.home-hero-magazine-dek {
+  margin: 0;
+  font-family: var(--mag-text);
+  font-size: 0.92rem;
+  color: var(--mag-mute);
+  letter-spacing: 0.01em;
+}
+.home-hero-magazine-emoji {
+  font-size: 1.4rem;
+  line-height: 1;
+}
+.home-hero-magazine-card {
+  background: transparent;
+  border: 1px solid var(--border-default, #e6d8b8);
+  border-radius: 16px;
+  padding: 18px;
+  display: block;
+  text-decoration: none;
+  color: inherit;
+  box-shadow: 0 4px 18px rgba(160, 83, 43, 0.08);
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+}
+.home-hero-magazine-fade {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  animation: home-hero-magazine-fade-in 0.5s ease;
+}
+@keyframes home-hero-magazine-fade-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .home-hero-magazine-fade {
+    animation: none;
+  }
+}
+.home-hero-magazine-card:hover,
+.home-hero-magazine-card:focus-visible {
+  transform: translateY(-2px);
+  border-color: var(--accent-gold);
+  box-shadow: 0 10px 26px rgba(160, 83, 43, 0.18);
+  outline: none;
+}
+.home-hero-magazine-coverimg {
+  width: 110px;
+  height: 150px;
+  object-fit: cover;
+  border-radius: 8px;
+  flex-shrink: 0;
+  background: var(--bg-card-alt, #efe6cf);
+}
+.home-hero-magazine-cover {
+  font-size: 2.6rem;
+  line-height: 1;
+  width: 110px;
+  height: 150px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  background: var(--bg-card-alt, #efe6cf);
+  flex-shrink: 0;
+}
+.home-hero-magazine-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+.home-hero-magazine-title {
+  margin: 0;
+  font-family: var(--mag-display);
+  font-size: 1.2rem;
+  font-weight: 700;
+  line-height: 1.25;
+  color: var(--mag-ink);
+}
+.home-hero-magazine-link {
+  font-family: var(--mag-text);
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--mag-primary);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-hero-magazine-card {
+    transition: none;
+  }
+  .home-hero-magazine-card:hover,
+  .home-hero-magazine-card:focus-visible {
+    transform: none;
+  }
+}
+
+/* Editorial trust strip — three numbered promises below the hero grid */
+.home-hero-promises {
+  list-style: none;
+  margin: 40px 0 0;
+  padding: 28px 0 0;
+  border-top: 1px solid var(--mag-accent);
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 32px;
+}
+.home-hero-promises li {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-left: 14px;
+  border-left: 1px solid rgba(201, 168, 76, 0.4);
+}
+.home-hero-promises-title {
+  margin: 0;
+  font-family: var(--mag-display);
+  font-size: 1.1rem;
+  font-weight: 700;
+  line-height: 1.25;
+  color: var(--mag-ink);
+}
+.home-hero-promises-sub {
+  margin: 0;
+  font-family: var(--mag-text);
+  font-size: 0.88rem;
+  line-height: 1.5;
+  color: var(--mag-mute);
+}
+
+@media (max-width: 760px) {
+  .home-hero {
+    padding: 4px 0 32px;
+  }
+  .home-hero-grid {
+    grid-template-columns: 1fr;
+    gap: 28px;
+  }
+  .home-hero-funnel {
+    font-size: 1rem;
+    gap: 10px;
+  }
+  .home-hero-funnel-emoji {
+    font-size: 1.3rem;
+  }
+  .home-hero-cta-btn {
+    font-size: 0.82rem;
+    padding: 10px 20px;
+  }
+  .home-hero-magazine-card {
+    padding: 16px;
+  }
+  .home-hero-promises {
+    grid-template-columns: 1fr;
+    gap: 22px;
+    margin-top: 32px;
+    padding-top: 22px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-hero-cta-btn {
+    transition: none;
+  }
+  .home-hero-cta-btn:hover,
+  .home-hero-cta-btn:focus-visible {
     transform: none;
   }
 }

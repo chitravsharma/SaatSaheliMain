@@ -6,7 +6,9 @@ const INACTIVITY_TIMEOUT = 15 * 60 * 1000; // 15 minutes
 
 export function AuthProvider({ children }) {
     const [user, setUser] = useState(null);
+    const [flashAccount, setFlashAccount] = useState(false);
     const timerRef = useRef(null);
+    const flashTimerRef = useRef(null);
 
     const clearAuth = useCallback(() => {
         localStorage.removeItem("saatSaheliUser");
@@ -94,6 +96,20 @@ export function AuthProvider({ children }) {
         return () => window.removeEventListener("storage", onStorage);
     }, []);
 
+    // Briefly draw attention to "My Account" links across the site after a
+    // fresh Google sign-in. Auto-dismisses after 5.5s; can be dismissed early
+    // by either Header or Home when the user clicks the link.
+    const triggerAccountFlash = useCallback(() => {
+        setFlashAccount(true);
+        if (flashTimerRef.current) clearTimeout(flashTimerRef.current);
+        flashTimerRef.current = setTimeout(() => setFlashAccount(false), 5500);
+    }, []);
+
+    const dismissAccountFlash = useCallback(() => {
+        if (flashTimerRef.current) clearTimeout(flashTimerRef.current);
+        setFlashAccount(false);
+    }, []);
+
     const login = (userData) => {
         // Store user data
         const { token, ...userInfo } = userData;
@@ -114,7 +130,7 @@ export function AuthProvider({ children }) {
     const isPremiumOrAbove = ["Premium", "Gold", "Creator"].includes(userPlan);
 
     return (
-        <AuthContext.Provider value={{ user, login, logout, isAdmin, isSuperAdmin, userPlan, isPremiumOrAbove }}>
+        <AuthContext.Provider value={{ user, login, logout, isAdmin, isSuperAdmin, userPlan, isPremiumOrAbove, flashAccount, triggerAccountFlash, dismissAccountFlash }}>
             {children}
         </AuthContext.Provider>
     );

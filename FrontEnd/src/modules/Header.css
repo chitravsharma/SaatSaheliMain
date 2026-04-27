@@ -126,6 +126,18 @@
   max-width: 280px;
 }
 
+.header-eyebrow {
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  color: #b89240;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  line-height: 1.2;
+  margin-top: 2px;
+  opacity: 0.85;
+}
+
 /* Hamburger - hidden on desktop */
 .hamburger-btn {
   display: none;
@@ -291,6 +303,30 @@
   background-color: rgba(255, 255, 255, 0.1);
   color: #ffffff;
 }
+/* Post-Google-login attention flash for "My Account" — three pulses then off. */
+.nav-link-flash {
+  animation: nav-link-flash 1.4s ease-in-out 3;
+}
+@keyframes nav-link-flash {
+  0%, 100% {
+    background-color: transparent;
+    box-shadow: 0 0 0 0 rgba(201, 168, 76, 0);
+    color: #d0d8e8;
+  }
+  50% {
+    background-color: rgba(201, 168, 76, 0.22);
+    box-shadow: 0 0 0 6px rgba(201, 168, 76, 0.35);
+    color: #ffffff;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .nav-link-flash {
+    animation: none;
+    background-color: rgba(201, 168, 76, 0.18);
+    box-shadow: 0 0 0 2px rgba(201, 168, 76, 0.45);
+  }
+}
+
 .nav-link:focus-visible {
   outline: 3px solid var(--accent-gold-hover);
   outline-offset: 2px;
@@ -529,6 +565,11 @@
   .header-tagline {
     font-size: 0.8rem;
     max-width: 200px;
+  }
+
+  .header-eyebrow {
+    font-size: 0.62rem;
+    letter-spacing: 0.14em;
   }
 
   /* Show hamburger on mobile */
