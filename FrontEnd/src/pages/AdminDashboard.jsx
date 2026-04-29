@@ -122,6 +122,67 @@ const AdminDashboard = () => {
     const [resetPasswordUserId, setResetPasswordUserId] = useState(null);
     const [resetNewPassword, setResetNewPassword] = useState("");
 
+    // Hero Slides — fixed 8-slot decorative carousel on the home hero.
+    // sourceUrl = what admin pastes (page URL or direct image URL).
+    // imageUrl  = resolved direct image URL returned by backend (read-only in form).
+    const [heroSlides, setHeroSlides] = useState(() =>
+        Array.from({ length: 8 }, (_, i) => ({ slot: i + 1, name: "", sourceUrl: "", imageUrl: "" }))
+    );
+    const [heroSavingSlides, setHeroSavingSlides] = useState(false);
+
+    // Render resolved image URLs in the preview the same way the public site does.
+    const resolveHeroImageUrl = (url) => {
+        if (!url) return "";
+        if (url.startsWith("/uploads/")) return `${API}${url}`;
+        const match = url.match(/\/file\/d\/([^/]+)\//);
+        if (match) return `https://drive.google.com/thumbnail?id=${match[1]}&sz=w400`;
+        return url;
+    };
+
+    const fetchHeroSlides = useCallback(async () => {
+        try {
+            const res = await api.get(`${API}/api/hero-slides/all`);
+            const rows = Array.isArray(res.data) ? res.data : [];
+            const merged = Array.from({ length: 8 }, (_, i) => {
+                const found = rows.find(r => r.slot === i + 1);
+                return {
+                    slot: i + 1,
+                    name: found?.name || "",
+                    sourceUrl: found?.sourceUrl || "",
+                    imageUrl: found?.imageUrl || "",
+                };
+            });
+            setHeroSlides(merged);
+        } catch { /* ignore */ }
+    }, []);
+
+    const updateHeroSlide = (slot, field, value) => {
+        setHeroSlides(prev => prev.map(s => s.slot === slot ? { ...s, [field]: value } : s));
+    };
+
+    const clearHeroSlide = (slot) => {
+        setHeroSlides(prev => prev.map(s => s.slot === slot ? { ...s, name: "", sourceUrl: "", imageUrl: "" } : s));
+    };
+
+    const saveHeroSlides = async () => {
+        setHeroSavingSlides(true);
+        try {
+            const payload = {
+                slides: heroSlides.map(s => ({
+                    slot: s.slot,
+                    name: s.name,
+                    sourceUrl: s.sourceUrl,
+                })),
+            };
+            await api.put(`${API}/api/hero-slides`, payload);
+            setMessage("Hero slides saved");
+            fetchHeroSlides();
+        } catch {
+            setMessage("Failed to save hero slides");
+        }
+        setHeroSavingSlides(false);
+    };
+
     // Advertisement banner state
     const [advertisements, setAdvertisements] = useState([]);
     const [adTitle, setAdTitle] = useState("");
@@ -507,7 +568,8 @@ const AdminDashboard = () => {
         if (tab === "analytics") fetchAnalytics();
         if (tab === "advertisements") fetchAdvertisements();
         if (tab === "support") fetchSupportQueries();
-    }, [tab, fetchUsers, fetchBooks, fetchArticles, fetchRecipes, fetchGalleries, fetchListings, fetchAuditLog, fetchAnalytics, fetchAdvertisements, fetchSupportQueries]);
+        if (tab === "heroSlides") fetchHeroSlides();
+    }, [tab, fetchUsers, fetchBooks, fetchArticles, fetchRecipes, fetchGalleries, fetchListings, fetchAuditLog, fetchAnalytics, fetchAdvertisements, fetchSupportQueries, fetchHeroSlides]);
 
     const changeRole = async (userId, newRole) => {
         try {
@@ -907,6 +969,9 @@ const AdminDashboard = () => {
                 </button>
                 <button className={tab === "magazine" ? "active" : ""} onClick={() => setTab("magazine")}>
                     Magazine
+                </button>
+                <button className={tab === "heroSlides" ? "active" : ""} onClick={() => setTab("heroSlides")}>
+                    Hero Slides
                 </button>
                 {isSuperAdmin && (
                     <button className={tab === "advertisements" ? "active" : ""} onClick={() => setTab("advertisements")}>
@@ -2297,6 +2362,102 @@ const AdminDashboard = () => {
             })()}
             {tab === "magazine" && (
                 <MagazineEditor />
+            )}
+            {tab === "heroSlides" && (
+                <div className="admin-hero-slides">
+                    <h2 style={{ marginBottom: 4 }}>Hero Slides</h2>
+                    <p style={{ color: "#6b6258", marginTop: 0, fontSize: 14, lineHeight: 1.5 }}>
+                        Up to 8 decorative images rotate behind the home page hero. Empty rows are skipped.<br/>
+                        Paste a <b>page URL from this site</b> (e.g. <code>/read/2</code>, <code>/gallery/7?img=28</code>, <code>/recipes/2</code>, <code>/articles/12</code>, <code>/podcasts/3</code>) and we'll auto-pick the right image. Or paste a direct <code>https://...</code> image URL. Click <b>Save all</b> to persist; the preview thumb shows what the home page will display.
+                    </p>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 12, marginTop: 16 }}>
+                        {heroSlides.map((s) => {
+                            const empty = !s.sourceUrl && !s.name;
+                            const previewSrc = s.imageUrl ? resolveHeroImageUrl(s.imageUrl) : "";
+                            return (
+                                <div key={s.slot} style={{
+                                    display: "grid",
+                                    gridTemplateColumns: "60px 1fr 1.5fr 80px 90px",
+                                    gap: 10,
+                                    alignItems: "center",
+                                    padding: "10px 12px",
+                                    background: empty ? "#fafaf7" : "#fff",
+                                    border: "1px solid #e7e2d8",
+                                    borderRadius: 8,
+                                }}>
+                                    <div style={{ fontWeight: 600, color: "#6b6258" }}>Slot {s.slot}</div>
+                                    <input
+                                        type="text"
+                                        value={s.name}
+                                        onChange={(e) => updateHeroSlide(s.slot, "name", e.target.value)}
+                                        placeholder="Name (alt text / caption)"
+                                        maxLength={120}
+                                        style={{ padding: "8px 10px", border: "1px solid #d6cfc1", borderRadius: 6 }}
+                                    />
+                                    <input
+                                        type="text"
+                                        value={s.sourceUrl}
+                                        onChange={(e) => updateHeroSlide(s.slot, "sourceUrl", e.target.value)}
+                                        placeholder="/read/2  •  /gallery/7?img=28  •  /recipes/2  •  https://..."
+                                        style={{ padding: "8px 10px", border: "1px solid #d6cfc1", borderRadius: 6 }}
+                                    />
+                                    {previewSrc ? (
+                                        <img
+                                            src={previewSrc}
+                                            alt={s.name || `Slot ${s.slot} preview`}
+                                            style={{ width: 70, height: 44, objectFit: "cover", borderRadius: 4, border: "1px solid #e7e2d8" }}
+                                            onError={(e) => { e.currentTarget.style.opacity = 0.2; }}
+                                            title={s.imageUrl}
+                                        />
+                                    ) : s.sourceUrl ? (
+                                        <span style={{ color: "#a64646", fontSize: 11, textAlign: "center" }} title="No image found for this URL">no img</span>
+                                    ) : (
+                                        <span style={{ color: "#aaa", fontSize: 12, textAlign: "center" }}>—</span>
+                                    )}
+                                    <button
+                                        type="button"
+                                        onClick={() => clearHeroSlide(s.slot)}
+                                        disabled={empty}
+                                        style={{
+                                            padding: "6px 10px",
+                                            background: empty ? "#f3f0e9" : "#fff",
+                                            border: "1px solid #d6cfc1",
+                                            borderRadius: 6,
+                                            cursor: empty ? "default" : "pointer",
+                                            color: empty ? "#aaa" : "#a64646",
+                                        }}
+                                    >Clear</button>
+                                </div>
+                            );
+                        })}
+                    </div>
+                    <div style={{ marginTop: 16, display: "flex", gap: 12, alignItems: "center" }}>
+                        <button
+                            type="button"
+                            onClick={saveHeroSlides}
+                            disabled={heroSavingSlides}
+                            style={{
+                                padding: "10px 18px",
+                                background: "#d97706",
+                                color: "#fff",
+                                border: "none",
+                                borderRadius: 6,
+                                fontWeight: 600,
+                                cursor: heroSavingSlides ? "wait" : "pointer",
+                                opacity: heroSavingSlides ? 0.7 : 1,
+                            }}
+                        >{heroSavingSlides ? "Saving..." : "Save all"}</button>
+                        <button
+                            type="button"
+                            onClick={fetchHeroSlides}
+                            disabled={heroSavingSlides}
+                            style={{ padding: "10px 14px", background: "#fff", border: "1px solid #d6cfc1", borderRadius: 6, cursor: "pointer" }}
+                        >Reload</button>
+                        <span style={{ color: "#6b6258", fontSize: 13 }}>
+                            {heroSlides.filter(s => s.imageUrl).length} / 8 active
+                        </span>
+                    </div>
+                </div>
             )}
         </div>
     );

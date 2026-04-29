@@ -42,6 +42,19 @@ function Home() {
   const [busyActions, setBusyActions] = useState(new Set());
   const [testimonials, setTestimonials] = useState([]);
   const [heroBackdropIdx, setHeroBackdropIdx] = useState(0);
+  const [adminHeroSlides, setAdminHeroSlides] = useState([]);
+  // Mobile-only carousel that swaps the hero photo through:
+  // girl image → slide 1 → ... → slide 8 → girl image → ...
+  const [isMobileHero, setIsMobileHero] = useState(false);
+  const [mobileHeroIdx, setMobileHeroIdx] = useState(0);
+
+  // Admin-curated hero backdrops (fixed 8 slots). If empty / endpoint fails,
+  // we fall back to the auto-scraped creator content below.
+  useEffect(() => {
+    api.get(`${API}/api/hero-slides`)
+      .then(res => setAdminHeroSlides(Array.isArray(res.data) ? res.data : []))
+      .catch(() => setAdminHeroSlides([]));
+  }, []);
 
   // Fetch testimonials (recent feedback with ratings)
   useEffect(() => {
@@ -266,9 +279,14 @@ function Home() {
     return () => clearInterval(t);
   }, [magazines]);
 
-  // Compose a backdrop carousel from creator-uploaded content so the hero copy
-  // sits over a soft, slowly-rotating mosaic of real user creations.
+  // Compose a backdrop carousel. Prefer admin-curated hero slides; if none are
+  // configured, fall back to a soft mosaic of real creator content.
   const heroBackdrops = useMemo(() => {
+    if (adminHeroSlides.length > 0) {
+      return adminHeroSlides
+        .map(s => resolveImageUrl(s.imageUrl))
+        .filter(Boolean);
+    }
     const urls = [];
     galleries.forEach(g => {
       const cover = resolveImageUrl(g.coverImageUrl || (g.images && g.images[0]?.imageUrl));
@@ -296,7 +314,7 @@ function Home() {
       [urls[i], urls[j]] = [urls[j], urls[i]];
     }
     return urls;
-  }, [galleries, recentBooks, recentArticles, recentRecipes, recentPodcasts]);
+  }, [adminHeroSlides, galleries, recentBooks, recentArticles, recentRecipes, recentPodcasts]);
 
   useEffect(() => {
     if (heroBackdrops.length < 2) return;
@@ -309,6 +327,47 @@ function Home() {
     }, 5500);
     return () => clearInterval(t);
   }, [heroBackdrops]);
+
+  // Track mobile viewport so the hero photo can rotate on phones (and only there).
+  useEffect(() => {
+    if (typeof window === "undefined" || !window.matchMedia) return;
+    const mq = window.matchMedia("(max-width: 760px)");
+    const update = () => setIsMobileHero(mq.matches);
+    update();
+    if (mq.addEventListener) mq.addEventListener("change", update);
+    else mq.addListener(update);
+    return () => {
+      if (mq.removeEventListener) mq.removeEventListener("change", update);
+      else mq.removeListener(update);
+    };
+  }, []);
+
+  // Mobile-only carousel: cycle the hero photo through the girl image first,
+  // then each active hero backdrop, then back to the girl image. Effectively
+  // the girl image is just slide 0 in a 1+N rotation.
+  const mobileHeroSequence = useMemo(
+    () => ["/images/SSheroimg.jpg", ...heroBackdrops],
+    [heroBackdrops]
+  );
+
+  useEffect(() => {
+    if (!isMobileHero) return;
+    if (mobileHeroSequence.length < 2) return;
+    if (typeof window !== "undefined" && window.matchMedia &&
+        window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      return;
+    }
+    const t = setInterval(() => {
+      setMobileHeroIdx(i => (i + 1) % mobileHeroSequence.length);
+    }, 5500);
+    return () => clearInterval(t);
+  }, [isMobileHero, mobileHeroSequence]);
+
+  // On mobile, swap the photo src through the rotation; on desktop the photo
+  // stays static (the .home-hero-creator-backdrop on the right rotates instead).
+  const heroPhotoSrc = isMobileHero && mobileHeroSequence.length > 1
+    ? mobileHeroSequence[mobileHeroIdx % mobileHeroSequence.length]
+    : "/images/SSheroimg.jpg";
 
   return (
     <div className="home-container">
@@ -427,7 +486,8 @@ function Home() {
           <div className="home-hero-grid">
             <div className="home-hero-visual" aria-hidden="true">
               <img
-                src="/images/SSheroimg.jpg"
+                key={heroPhotoSrc}
+                src={heroPhotoSrc}
                 alt=""
                 className="home-hero-visual-img"
                 loading="eager"
