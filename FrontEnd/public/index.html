@@ -3,10 +3,19 @@
   <head>
     <meta charset="utf-8" />
     <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#0f1923" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#d97706" />
     <meta name="description" content="Saat Saheli - A Community for Passion and Creativity. Create, share, and explore books, art, music, and more." />
-    <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
+
+    <!-- PWA — iOS-specific (Safari ignores manifest icons + display mode) -->
+    <link rel="apple-touch-icon" sizes="180x180" href="%PUBLIC_URL%/icons/icon-180.png" />
+    <link rel="apple-touch-icon" sizes="152x152" href="%PUBLIC_URL%/icons/icon-152.png" />
+    <link rel="apple-touch-icon" sizes="167x167" href="%PUBLIC_URL%/icons/icon-167.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="SaatSaheli" />
+    <meta name="mobile-web-app-capable" content="yes" />
+
     <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
 
     <!-- Magazine typography — Playfair Display (display serif) + Inter (UI sans) -->

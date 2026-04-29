@@ -1,25 +1,56 @@
 {
+  "id": "/",
+  "name": "SaatSaheli — Community for Passion and Creativity",
   "short_name": "SaatSaheli",
-  "name": "Saat Saheli - A Community for Passion and Creativity",
+  "description": "Create, share, and explore books, recipes, galleries, podcasts, and more.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "theme_color": "#d97706",
+  "background_color": "#ede4d3",
+  "lang": "en",
+  "dir": "ltr",
+  "categories": ["lifestyle", "social", "books"],
   "icons": [
+    { "src": "favicon.ico", "sizes": "32x32", "type": "image/x-icon" },
+    { "src": "icons/icon-96.png",  "sizes": "96x96",   "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-144.png", "sizes": "144x144", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-152.png", "sizes": "152x152", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-167.png", "sizes": "167x167", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-180.png", "sizes": "180x180", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "screenshots": [
     {
-      "src": "favicon.ico",
-      "sizes": "64x64 32x32 24x24 16x16",
-      "type": "image/x-icon"
+      "src": "icons/screenshot-wide.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "SaatSaheli on desktop"
     },
     {
-      "src": "logo192.png",
+      "src": "icons/screenshot-mobile.png",
+      "sizes": "540x960",
       "type": "image/png",
-      "sizes": "192x192"
-    },
-    {
-      "src": "logo512.png",
-      "type": "image/png",
-      "sizes": "512x512"
+      "label": "SaatSaheli on mobile"
     }
   ],
-  "start_url": ".",
-  "display": "standalone",
-  "theme_color": "#0f1923",
-  "background_color": "#0f1923"
+  "shortcuts": [
+    {
+      "name": "My Account",
+      "short_name": "Account",
+      "url": "/account",
+      "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Buy / Sell",
+      "short_name": "Marketplace",
+      "url": "/marketplace",
+      "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }]
+    }
+  ]
 }
