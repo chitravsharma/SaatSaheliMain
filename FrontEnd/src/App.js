@@ -27,6 +27,7 @@ import UserManual from './pages/UserManual';
 import AdminManual from './pages/AdminManual';
 import GalleryView from './pages/GalleryView';
 import Pricing from './pages/Pricing';
+import Advertise from './pages/Advertise';
 import Articles from './pages/Articles';
 import Podcasts from './pages/Podcasts';
 import Magazine from './pages/Magazine';
@@ -99,6 +100,7 @@ function App() {
           <Route path="/recipes/:recipeId" element={<RecipeView />} />
           <Route path="/recipes/:recipeId/edit" element={<ProtectedRoute><RequireProfile><RecipeEditor /></RequireProfile></ProtectedRoute>} />
           <Route path="/pricing" element={<Pricing />} />
+          <Route path="/advertise" element={<Advertise />} />
           <Route path="/marketplace" element={<Marketplace />} />
           <Route path="/checkout" element={<ProtectedRoute><Checkout /></ProtectedRoute>} />
           <Route path="/manual" element={<UserManual />} />

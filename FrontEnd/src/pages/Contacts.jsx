@@ -1,4 +1,5 @@
 import React, { useRef, useState } from 'react';
+import { Link } from 'react-router-dom';
 import axios from 'axios';
 import ReCAPTCHA from 'react-google-recaptcha';
 import './Contacts.css';
@@ -122,6 +123,35 @@ const Contact = () => {
                 onChange={(e) => setSubject(e.target.value)}
                 required
               />
+              {/^.*\b(advertis|sponsor|promot|ad slot|ad space)/i.test(subject) && (
+                <div role="status" style={{
+                  marginTop: 8,
+                  padding: "10px 14px",
+                  background: "#fff5e6",
+                  border: "1px solid #f5d99a",
+                  borderRadius: 8,
+                  fontSize: 14,
+                  color: "#7e3d1d",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 10,
+                  flexWrap: "wrap",
+                }}>
+                  <span>📣 Looking to advertise on SaatSaheli? Use our dedicated form with packages + placements.</span>
+                  <Link
+                    to="/advertise"
+                    style={{
+                      marginLeft: "auto",
+                      padding: "6px 14px",
+                      background: "#a0532b",
+                      color: "#fff",
+                      borderRadius: 6,
+                      textDecoration: "none",
+                      fontWeight: 600,
+                    }}
+                  >Open advertising form →</Link>
+                </div>
+              )}
             </div>
 
             <div className="contact-field">

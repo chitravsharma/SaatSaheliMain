@@ -108,6 +108,10 @@ const Header = () => {
             <svg className="nav-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
             {strings.header.navAbout}
           </Link>
+          <Link to="/advertise" className="nav-link" onClick={closeMobileNav}>
+            <svg className="nav-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 11l18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 11-5.8-1.6"/></svg>
+            Advertise
+          </Link>
           <div className="header-browse-menu" ref={browseMenuRef}>
             <button
               type="button"
@@ -221,35 +225,37 @@ const Header = () => {
             <option value="ur">اردو</option>
           </select>
 
-          <form className="header-search-form" onSubmit={handleSearchSubmit}>
-            <select
-              className="header-search-type"
-              value={searchType}
-              onChange={(e) => setSearchType(e.target.value)}
-            >
-              <option value="">All</option>
-              <option value="book">Book</option>
-              <option value="poem">Poem</option>
-              <option value="article">Article</option>
-              <option value="blog">Blog</option>
-              <option value="author">Author</option>
-              <option value="Art">Art</option>
-              <option value="Music">Music</option>
-              <option value="Tech">Tech</option>
-              <option value="Creativity">Creativity</option>
-              <option value="Community">Community</option>
-            </select>
-            <input
-              type="text"
-              className="header-search-input"
-              placeholder="Search..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-            <button type="submit" className="header-search-btn" aria-label="Search">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-            </button>
-          </form>
+          {user && (
+            <form className="header-search-form" onSubmit={handleSearchSubmit}>
+              <select
+                className="header-search-type"
+                value={searchType}
+                onChange={(e) => setSearchType(e.target.value)}
+              >
+                <option value="">All</option>
+                <option value="book">Book</option>
+                <option value="poem">Poem</option>
+                <option value="article">Article</option>
+                <option value="blog">Blog</option>
+                <option value="author">Author</option>
+                <option value="Art">Art</option>
+                <option value="Music">Music</option>
+                <option value="Tech">Tech</option>
+                <option value="Creativity">Creativity</option>
+                <option value="Community">Community</option>
+              </select>
+              <input
+                type="text"
+                className="header-search-input"
+                placeholder="Search..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+              <button type="submit" className="header-search-btn" aria-label="Search">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              </button>
+            </form>
+          )}
         </nav>
       </div>
     </header>

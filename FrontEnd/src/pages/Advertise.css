@@ -1,0 +1,458 @@
+/* Match the magazine-editorial palette used in the Home hero refresh:
+   terracotta primary, antique gold accent, cream background, Playfair
+   display + Inter UI. Reuse the CSS vars exposed by .home-hero where
+   possible; redeclare locally so the page can stand on its own when
+   visited directly. */
+.advertise-page {
+  --mag-primary: #a0532b;
+  --mag-primary-deep: #7e3d1d;
+  --mag-accent: #c9a84c;
+  --mag-ink: #1a1a1a;
+  --mag-mute: #6b5a4a;
+  --mag-soft: #fcf6e9;
+  --mag-display: 'Playfair Display', 'Georgia', serif;
+  --mag-text: 'Inter', system-ui, -apple-system, sans-serif;
+
+  max-width: 1100px;
+  margin: 32px auto 64px;
+  padding: 0 20px;
+  font-family: var(--mag-text);
+  color: var(--mag-ink);
+}
+
+.advertise-hero {
+  text-align: center;
+  margin: 24px 0 48px;
+}
+
+.advertise-eyebrow {
+  margin: 0;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--mag-primary);
+}
+
+.advertise-h1 {
+  margin: 10px 0 14px;
+  font-family: var(--mag-display);
+  font-weight: 700;
+  font-size: clamp(1.9rem, 4.2vw, 3rem);
+  line-height: 1.12;
+  letter-spacing: -0.012em;
+}
+
+.advertise-lede {
+  margin: 0 auto;
+  max-width: 620px;
+  font-size: 1.05rem;
+  line-height: 1.55;
+  color: var(--mag-mute);
+}
+
+/* Three-package grid */
+.advertise-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  margin-bottom: 32px;
+}
+
+.advertise-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  background: #ffffff;
+  border: 1px solid #e7e2d8;
+  border-radius: 14px;
+  padding: 26px 22px 22px;
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+.advertise-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 22px rgba(122, 96, 60, 0.10);
+}
+
+.advertise-card-accent {
+  border-color: var(--mag-accent);
+  box-shadow: 0 4px 18px rgba(201, 168, 76, 0.18);
+  background: linear-gradient(180deg, #fffbef 0%, #ffffff 60%);
+}
+
+.advertise-card-ribbon {
+  position: absolute;
+  top: -12px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 4px 14px;
+  background: var(--mag-accent);
+  color: #1a1a1a;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  border-radius: 999px;
+}
+
+.advertise-card-name {
+  margin: 0 0 6px;
+  font-family: var(--mag-display);
+  font-size: 1.4rem;
+  font-weight: 700;
+}
+
+.advertise-card-price {
+  margin: 0 0 12px;
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+}
+.advertise-card-price-amount {
+  font-family: var(--mag-display);
+  font-size: 2.1rem;
+  font-weight: 700;
+  color: var(--mag-primary);
+  line-height: 1;
+}
+.advertise-card-price-cadence {
+  font-size: 0.95rem;
+  color: var(--mag-mute);
+}
+
+.advertise-card-blurb {
+  margin: 0 0 16px;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: var(--mag-mute);
+}
+
+.advertise-card-features {
+  list-style: none;
+  margin: 0 0 22px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex: 1;
+}
+.advertise-card-features li {
+  font-size: 0.95rem;
+  line-height: 1.4;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+.advertise-card-tick {
+  flex: 0 0 auto;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: rgba(201, 168, 76, 0.18);
+  color: var(--mag-primary-deep);
+  font-size: 0.78rem;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.advertise-card-cta {
+  margin-top: auto;
+  padding: 12px 18px;
+  background: var(--mag-primary);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-family: var(--mag-text);
+  font-size: 0.95rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  transition: background 0.16s ease;
+}
+.advertise-card-cta:hover {
+  background: var(--mag-primary-deep);
+}
+.advertise-card-cta-ghost {
+  background: transparent;
+  color: var(--mag-primary);
+  border: 1.5px solid var(--mag-primary);
+}
+.advertise-card-cta-ghost:hover {
+  background: var(--mag-primary);
+  color: #fff;
+}
+
+/* Placements — dark editorial panel listing where ads can appear. Pure
+   informational; the form below has the actual checkbox selector. */
+.advertise-placements {
+  display: grid;
+  grid-template-columns: 0.9fr 1.1fr;
+  gap: 32px;
+  align-items: center;
+  background: #3b2430;
+  color: #fff;
+  border-radius: 18px;
+  padding: 36px 32px;
+  margin-bottom: 32px;
+}
+.advertise-placements .advertise-eyebrow {
+  color: var(--mag-accent);
+}
+.advertise-placements-h2 {
+  margin: 8px 0 10px;
+  font-family: var(--mag-display);
+  font-size: clamp(1.5rem, 3vw, 2rem);
+  font-weight: 700;
+  line-height: 1.15;
+}
+.advertise-placements-lede {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.78);
+  font-size: 0.98rem;
+  line-height: 1.55;
+}
+.advertise-placements-grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.advertise-placement-pill {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(255, 255, 255, 0.10);
+  backdrop-filter: blur(2px);
+  padding: 14px 16px;
+  border-radius: 12px;
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+.advertise-placement-tick {
+  flex: 0 0 auto;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--mag-accent);
+  color: #1a1a1a;
+  font-size: 0.78rem;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Placement checkbox pills inside the form */
+.advertise-checkbox-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.advertise-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border: 1px solid #d6cfc1;
+  border-radius: 8px;
+  background: #fffefb;
+  cursor: pointer;
+  font-size: 0.92rem;
+  transition: border-color 0.14s ease, background 0.14s ease;
+}
+.advertise-checkbox input {
+  margin: 0;
+  accent-color: var(--mag-primary);
+}
+.advertise-checkbox:hover {
+  border-color: var(--mag-primary);
+}
+.advertise-checkbox-on {
+  border-color: var(--mag-primary);
+  background: #fff5ed;
+  font-weight: 600;
+  color: var(--mag-primary-deep);
+}
+
+/* Custom sponsorship — full width below the three cards */
+.advertise-custom {
+  display: grid;
+  grid-template-columns: 1.6fr 1fr;
+  gap: 24px;
+  align-items: center;
+  background: var(--mag-soft);
+  border: 1px solid #ecdcc4;
+  border-radius: 14px;
+  padding: 28px;
+  margin-bottom: 48px;
+}
+.advertise-custom-text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.advertise-custom .advertise-card-cta {
+  justify-self: end;
+  align-self: center;
+  white-space: nowrap;
+}
+
+/* Inquiry form */
+.advertise-form-wrap {
+  background: #ffffff;
+  border: 1px solid #e7e2d8;
+  border-radius: 14px;
+  padding: 32px 28px;
+}
+.advertise-form-title {
+  margin: 0 0 6px;
+  font-family: var(--mag-display);
+  font-size: 1.6rem;
+  font-weight: 700;
+}
+.advertise-form-sub {
+  margin: 0 0 22px;
+  color: var(--mag-mute);
+  font-size: 0.98rem;
+  line-height: 1.5;
+}
+.advertise-mail {
+  color: var(--mag-primary);
+  font-weight: 600;
+  text-decoration: none;
+  border-bottom: 1px solid currentColor;
+}
+.advertise-mail:hover {
+  color: var(--mag-primary-deep);
+}
+
+.advertise-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.advertise-field-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+.advertise-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.advertise-field label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--mag-ink);
+}
+.advertise-field input,
+.advertise-field select,
+.advertise-field textarea {
+  padding: 10px 12px;
+  border: 1px solid #d6cfc1;
+  border-radius: 8px;
+  font-family: var(--mag-text);
+  font-size: 0.98rem;
+  background: #fffefb;
+  color: var(--mag-ink);
+}
+.advertise-field input:focus,
+.advertise-field select:focus,
+.advertise-field textarea:focus {
+  outline: 2px solid rgba(160, 83, 43, 0.25);
+  border-color: var(--mag-primary);
+}
+.advertise-field textarea {
+  resize: vertical;
+  min-height: 110px;
+}
+
+.advertise-recaptcha {
+  margin-top: 4px;
+}
+
+.advertise-submit {
+  align-self: flex-start;
+  padding: 12px 28px;
+  background: var(--mag-primary);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-family: var(--mag-text);
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.16s ease;
+}
+.advertise-submit:hover { background: var(--mag-primary-deep); }
+.advertise-submit:disabled {
+  background: #b89a85;
+  cursor: wait;
+}
+
+.advertise-error {
+  background: #fef2f2;
+  color: #b91c1c;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 0.95rem;
+}
+.advertise-sent {
+  background: #ecfdf5;
+  color: #065f46;
+  border: 1px solid #a7f3d0;
+  border-radius: 8px;
+  padding: 18px;
+  font-size: 1rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+/* Mobile */
+@media (max-width: 760px) {
+  .advertise-page {
+    margin: 16px auto 40px;
+  }
+  .advertise-hero {
+    margin: 8px 0 28px;
+  }
+  .advertise-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  .advertise-card-accent {
+    /* Drop the ribbon offset margin trick on stacked layout */
+    margin-top: 12px;
+  }
+  .advertise-custom {
+    grid-template-columns: 1fr;
+    padding: 22px;
+  }
+  .advertise-custom .advertise-card-cta {
+    justify-self: stretch;
+    align-self: stretch;
+  }
+  .advertise-form-wrap {
+    padding: 22px 18px;
+  }
+  .advertise-field-row {
+    grid-template-columns: 1fr;
+  }
+  .advertise-placements {
+    grid-template-columns: 1fr;
+    padding: 24px 20px;
+    gap: 20px;
+  }
+  .advertise-placements-grid {
+    grid-template-columns: 1fr;
+  }
+  .advertise-checkbox-grid {
+    grid-template-columns: 1fr;
+  }
+}
