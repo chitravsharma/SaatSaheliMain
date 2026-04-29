@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import api, { getAnonId } from "../utils/api";
 import { useAuth } from "../AuthContext";
@@ -41,6 +41,7 @@ function Home() {
   const [actionError, setActionError] = useState("");
   const [busyActions, setBusyActions] = useState(new Set());
   const [testimonials, setTestimonials] = useState([]);
+  const [heroBackdropIdx, setHeroBackdropIdx] = useState(0);
 
   // Fetch testimonials (recent feedback with ratings)
   useEffect(() => {
@@ -265,6 +266,50 @@ function Home() {
     return () => clearInterval(t);
   }, [magazines]);
 
+  // Compose a backdrop carousel from creator-uploaded content so the hero copy
+  // sits over a soft, slowly-rotating mosaic of real user creations.
+  const heroBackdrops = useMemo(() => {
+    const urls = [];
+    galleries.forEach(g => {
+      const cover = resolveImageUrl(g.coverImageUrl || (g.images && g.images[0]?.imageUrl));
+      if (cover) urls.push(cover);
+    });
+    recentBooks.forEach(b => {
+      const cover = resolveImageUrl(b.coverImageUrl);
+      if (cover) urls.push(cover);
+    });
+    recentArticles.forEach(a => {
+      const cover = resolveImageUrl(a.imageUrl);
+      if (cover) urls.push(cover);
+    });
+    recentRecipes.forEach(r => {
+      const cover = resolveImageUrl(r.images && r.images[0]?.imageUrl);
+      if (cover) urls.push(cover);
+    });
+    recentPodcasts.forEach(p => {
+      const cover = resolveImageUrl(p.coverImageUrl);
+      if (cover) urls.push(cover);
+    });
+    // Shuffle so successive loads/refreshes don't always lead with the same item.
+    for (let i = urls.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [urls[i], urls[j]] = [urls[j], urls[i]];
+    }
+    return urls;
+  }, [galleries, recentBooks, recentArticles, recentRecipes, recentPodcasts]);
+
+  useEffect(() => {
+    if (heroBackdrops.length < 2) return;
+    if (typeof window !== "undefined" && window.matchMedia &&
+        window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      return;
+    }
+    const t = setInterval(() => {
+      setHeroBackdropIdx(i => (i + 1) % heroBackdrops.length);
+    }, 5500);
+    return () => clearInterval(t);
+  }, [heroBackdrops]);
+
   return (
     <div className="home-container">
       {actionError && (
@@ -380,66 +425,98 @@ function Home() {
       {!user && (
         <section className="home-hero" aria-labelledby="home-hero-title">
           <div className="home-hero-grid">
+            <div className="home-hero-visual" aria-hidden="true">
+              <img
+                src="/images/SSheroimg.jpg"
+                alt=""
+                className="home-hero-visual-img"
+                loading="eager"
+                fetchPriority="high"
+              />
+            </div>
+
             <div className="home-hero-left">
               <h1 id="home-hero-title" className="home-hero-title">
-                Where your creativity<br />
-                <span className="home-hero-title-soft">gets a stage.</span>
+                Give your creativity<br />
+                <span className="home-hero-title-soft">a stage.</span>
               </h1>
-              <p className="home-hero-who">For writers, artists, and storytellers.</p>
+              <p className="home-hero-title-hi" lang="hi">जहाँ आपकी रचना को मंच मिलता है</p>
+              <p className="home-hero-who">For writers, artists &amp; storytellers.</p>
               <ul className="home-hero-funnel">
-                <li><span className="home-hero-funnel-emoji" aria-hidden="true">📖</span> Publish your book</li>
-                <li><span className="home-hero-funnel-emoji" aria-hidden="true">🎨</span> Share your artwork</li>
-                <li><span className="home-hero-funnel-emoji" aria-hidden="true">🖼️</span> Create galleries</li>
-                <li><span className="home-hero-funnel-emoji" aria-hidden="true">🛍️</span> Buy / sell</li>
+                <li>
+                  <svg className="home-hero-funnel-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <path d="M12 20h9" />
+                    <path d="M16.5 3.5a2.121 2.121 0 113 3L7 19l-4 1 1-4 12.5-12.5z" />
+                  </svg>
+                  Write &amp; publish
+                </li>
+                <li>
+                  <svg className="home-hero-funnel-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <circle cx="13.5" cy="6.5" r="1.2" />
+                    <circle cx="17.5" cy="10.5" r="1.2" />
+                    <circle cx="8.5" cy="7.5" r="1.2" />
+                    <circle cx="6.5" cy="12.5" r="1.2" />
+                    <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.93 0 1.65-.75 1.65-1.69 0-.44-.18-.83-.44-1.12-.29-.29-.44-.65-.44-1.12a1.64 1.64 0 011.67-1.67h2c3.05 0 5.55-2.5 5.55-5.55C21.97 6.01 17.46 2 12 2z" />
+                  </svg>
+                  Share your art
+                </li>
               </ul>
               <div className="home-hero-cta">
                 <Link to="/Login" className="home-hero-cta-btn">
-                  <span className="home-hero-cta-emoji" aria-hidden="true">👉</span>
-                  Login with Google &amp; Start
+                  <span className="home-hero-cta-btn-label">Join &amp; Share Your Creativity</span>
+                  <span className="home-hero-cta-btn-arrow" aria-hidden="true">→</span>
                 </Link>
-                <p className="home-hero-cta-secondary">
-                  <Link to="/magazine">Browse the magazine <span aria-hidden="true">→</span></Link>
-                  <span className="home-hero-cta-secondary-sep" aria-hidden="true">·</span>
-                  <a href="#explore-latest">See what creators are sharing <span aria-hidden="true">↓</span></a>
-                </p>
+                <p className="home-hero-cta-trust">Be part of a growing creative community.</p>
+                <div className="home-hero-cta-secondary">
+                  <Link to="/magazine" className="home-hero-ghostbtn">Browse Magazine <span aria-hidden="true">→</span></Link>
+                  <a href="#explore-latest" className="home-hero-ghostbtn">See What Creators Share <span aria-hidden="true">↓</span></a>
+                </div>
               </div>
             </div>
-
-            <aside className="home-hero-magazine" aria-label="Magazine">
-              <p className="home-hero-magazine-heading">
-                <span className="home-hero-magazine-emoji" aria-hidden="true">📖</span>
-                Get published in our magazine
-              </p>
-              <p className="home-hero-magazine-dek">A Hindi + English creative magazine &mdash; monthly issue.</p>
-              {(() => {
-                const mag = magazines[magazineIndex] || null;
-                return (
-                  <Link to="/magazine" className="home-hero-magazine-card">
-                    <div className="home-hero-magazine-fade" key={mag?.id || "placeholder"}>
-                      {mag && resolveImageUrl(mag.coverImageUrl) ? (
-                        <img
-                          src={resolveImageUrl(mag.coverImageUrl)}
-                          alt={mag.title || "Saat Saheli Magazine cover"}
-                          className="home-hero-magazine-coverimg"
-                          loading="lazy"
-                        />
-                      ) : (
-                        <span className="home-hero-magazine-cover" aria-hidden="true">📰</span>
-                      )}
-                      <div className="home-hero-magazine-meta">
-                        <p className="home-hero-magazine-title">
-                          {mag?.title || "Saat Saheli Magazine"}
-                        </p>
-                        <span className="home-hero-magazine-link">
-                          Browse Magazine <span aria-hidden="true">→</span>
-                        </span>
-                      </div>
-                    </div>
-                  </Link>
-                );
-              })()}
-            </aside>
+            {heroBackdrops.length > 0 && (
+              <div
+                key={heroBackdrops[heroBackdropIdx]}
+                className="home-hero-creator-backdrop"
+                style={{ backgroundImage: `url(${heroBackdrops[heroBackdropIdx]})` }}
+                aria-hidden="true"
+              />
+            )}
           </div>
+
+          <aside className="home-hero-magazine" aria-label="Magazine">
+            <p className="home-hero-magazine-heading">
+              <span className="home-hero-magazine-emoji" aria-hidden="true">📖</span>
+              Get published in our magazine
+            </p>
+            <p className="home-hero-magazine-dek">A Hindi + English creative magazine &mdash; monthly issue.</p>
+            {(() => {
+              const mag = magazines[magazineIndex] || null;
+              return (
+                <Link to="/magazine" className="home-hero-magazine-card">
+                  <div className="home-hero-magazine-fade" key={mag?.id || "placeholder"}>
+                    {mag && resolveImageUrl(mag.coverImageUrl) ? (
+                      <img
+                        src={resolveImageUrl(mag.coverImageUrl)}
+                        alt={mag.title || "Saat Saheli Magazine cover"}
+                        className="home-hero-magazine-coverimg"
+                        loading="lazy"
+                      />
+                    ) : (
+                      <span className="home-hero-magazine-cover" aria-hidden="true">📰</span>
+                    )}
+                    <div className="home-hero-magazine-meta">
+                      <p className="home-hero-magazine-title">
+                        {mag?.title || "Saat Saheli Magazine"}
+                      </p>
+                      <span className="home-hero-magazine-link">
+                        Browse Magazine <span aria-hidden="true">→</span>
+                      </span>
+                    </div>
+                  </div>
+                </Link>
+              );
+            })()}
+          </aside>
 
           <ul className="home-hero-promises" aria-label="What sets us apart">
             <li>

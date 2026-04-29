@@ -16,12 +16,14 @@ const Header = () => {
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [writingDropdownOpen, setWritingDropdownOpen] = useState(false);
+  const [browseDropdownOpen, setBrowseDropdownOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchType, setSearchType] = useState("");
   const menuRef = useRef(null);
   const writingMenuRef = useRef(null);
+  const browseMenuRef = useRef(null);
 
-  // Close user menu and writing dropdown when clicking outside
+  // Close user menu and dropdowns when clicking outside
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (menuRef.current && !menuRef.current.contains(e.target)) {
@@ -30,6 +32,9 @@ const Header = () => {
       if (writingMenuRef.current && !writingMenuRef.current.contains(e.target)) {
         setWritingDropdownOpen(false);
       }
+      if (browseMenuRef.current && !browseMenuRef.current.contains(e.target)) {
+        setBrowseDropdownOpen(false);
+      }
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
@@ -37,6 +42,7 @@ const Header = () => {
 
   // Close mobile nav on route change (link click)
   const closeMobileNav = () => setMobileNavOpen(false);
+  const closeBrowseDropdown = () => { setBrowseDropdownOpen(false); closeMobileNav(); };
 
   const handleSearchSubmit = (e) => {
     e.preventDefault();
@@ -102,10 +108,35 @@ const Header = () => {
             <svg className="nav-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
             {strings.header.navAbout}
           </Link>
-          <Link to="/manual" className="nav-link" onClick={closeMobileNav}>
-            <svg className="nav-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
-            User Manual
-          </Link>
+          <div className="header-browse-menu" ref={browseMenuRef}>
+            <button
+              type="button"
+              className="nav-link nav-link-browse"
+              onClick={() => setBrowseDropdownOpen(!browseDropdownOpen)}
+              aria-expanded={browseDropdownOpen}
+              aria-haspopup="true"
+            >
+              <svg className="nav-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+              Browse
+              <svg className="nav-dropdown-arrow" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+            {browseDropdownOpen && (
+              <div className="header-browse-dropdown" role="menu">
+                <Link to="/magazine" className="header-browse-item" role="menuitem" onClick={closeBrowseDropdown}>Magazine</Link>
+                <Link to="/books" className="header-browse-item" role="menuitem" onClick={closeBrowseDropdown}>Books</Link>
+                <Link to="/poems" className="header-browse-item" role="menuitem" onClick={closeBrowseDropdown}>Poems</Link>
+                <Link to="/articles" className="header-browse-item" role="menuitem" onClick={closeBrowseDropdown}>Articles</Link>
+                <Link to="/blogs" className="header-browse-item" role="menuitem" onClick={closeBrowseDropdown}>Blogs</Link>
+                <Link to="/recipes" className="header-browse-item" role="menuitem" onClick={closeBrowseDropdown}>Recipes</Link>
+                <Link to="/podcasts" className="header-browse-item" role="menuitem" onClick={closeBrowseDropdown}>Podcasts</Link>
+                <Link to="/writers" className="header-browse-item" role="menuitem" onClick={closeBrowseDropdown}>Writers</Link>
+                <Link to="/writers?type=artist" className="header-browse-item" role="menuitem" onClick={closeBrowseDropdown}>Artists</Link>
+                <Link to="/galleries" className="header-browse-item" role="menuitem" onClick={closeBrowseDropdown}>Galleries</Link>
+                <Link to="/marketplace" className="header-browse-item" role="menuitem" onClick={closeBrowseDropdown}>Buy / Sell</Link>
+                <Link to="/manual" className="header-browse-item" role="menuitem" onClick={closeBrowseDropdown}>User Manual</Link>
+              </div>
+            )}
+          </div>
           {user && (
             <Link to="/chat" className="nav-link" onClick={closeMobileNav}>
               <svg className="nav-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>

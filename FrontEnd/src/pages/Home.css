@@ -19,13 +19,12 @@
   margin-bottom: 28px;
 }
 
-/* ── Quick nav links ── */
+/* ── Quick nav links ──
+   Hidden everywhere: these duplicate the header nav and sit on top of the
+   hero, making the page feel link-heavy. Users reach the same destinations
+   via the header hamburger and the section links further down the page. */
 .home-tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 2px 14px;
-  justify-content: center;
-  margin-bottom: 8px;
+  display: none;
 }
 
 .home-tag-link {
@@ -887,26 +886,6 @@
     gap: 8px;
   }
 
-  .home-tags {
-    gap: 0px 10px;
-    margin-bottom: 12px;
-  }
-
-  .home-tag-link {
-    font-size: 0.75rem;
-    padding: 0;
-    line-height: 1.2;
-  }
-
-  .home-tag-icon {
-    font-size: 0.8rem;
-  }
-
-  .home-tag-link svg {
-    width: 13px;
-    height: 13px;
-  }
-
   .home-section-heading {
     font-size: 1.25rem;
   }
@@ -962,16 +941,160 @@
 }
 .home-hero-grid {
   display: grid;
-  grid-template-columns: 1.4fr 1fr;
-  gap: 32px;
+  grid-template-columns: 0.85fr 1.25fr;
+  gap: 16px;
   align-items: center;
+  position: relative;
+}
+.home-hero-visual {
+  position: relative;
+  width: 100%;
+  max-width: 360px;
+  justify-self: center;
+  aspect-ratio: 4 / 5;
+}
+/* Soft left→right fade so the right edge of the photo bleeds into the
+   page bg, easing the eye across to the copy column. Lower opacity
+   than before — the cut-out figure no longer needs as much help. */
+.home-hero-visual::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to right,
+    transparent 65%,
+    rgba(252, 246, 233, 0.18) 92%,
+    rgba(252, 246, 233, 0.32) 100%
+  );
+  pointer-events: none;
+}
+.home-hero-visual-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  /* Two-layer mask composited via intersect so BOTH must be opaque for a
+     pixel to show:
+       1. Linear top→bottom — top stays clean, bottom fades to transparent.
+          Keeps the chest-up portion fully visible while the laptop area
+          merges into the page.
+       2. Radial centered upper — fogs the four corners while leaving the
+          central figure opaque. */
+  /* Three-layer mask, intersected:
+       1. Linear top→bottom — chest-up clean, laptop area fades.
+       2. Radial offset LEFT (center at 38%) — biases fog to the right
+          side so the top-right corner is heavily foggy and the
+          top-left only lightly so.
+       3. Linear left→right — adds a small extra fog ramp on the right
+          corner specifically. */
+  -webkit-mask-image:
+    linear-gradient(
+      to bottom,
+      rgba(0, 0, 0, 0.65) 0%,
+      #000 15%,
+      #000 60%,
+      rgba(0, 0, 0, 0.45) 80%,
+      transparent 100%
+    ),
+    radial-gradient(
+      ellipse 88% 96% at 38% 40%,
+      #000 44%,
+      rgba(0, 0, 0, 0.78) 65%,
+      rgba(0, 0, 0, 0.3) 85%,
+      transparent 100%
+    ),
+    linear-gradient(
+      to right,
+      #000 55%,
+      rgba(0, 0, 0, 0.7) 78%,
+      rgba(0, 0, 0, 0.3) 92%,
+      transparent 100%
+    );
+  -webkit-mask-composite: source-in;
+  mask-image:
+    linear-gradient(
+      to bottom,
+      rgba(0, 0, 0, 0.65) 0%,
+      #000 15%,
+      #000 60%,
+      rgba(0, 0, 0, 0.45) 80%,
+      transparent 100%
+    ),
+    radial-gradient(
+      ellipse 88% 96% at 38% 40%,
+      #000 44%,
+      rgba(0, 0, 0, 0.78) 65%,
+      rgba(0, 0, 0, 0.3) 85%,
+      transparent 100%
+    ),
+    linear-gradient(
+      to right,
+      #000 55%,
+      rgba(0, 0, 0, 0.7) 78%,
+      rgba(0, 0, 0, 0.3) 92%,
+      transparent 100%
+    );
+  mask-composite: intersect;
 }
 .home-hero-left {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 28px;
+  gap: 24px;
   position: relative;
+  z-index: 2;
+}
+/* Rotating creator-content panel — pinned to the right edge of the hero grid,
+   spanning from just below the H1's "creativity" word down to the grid
+   bottom. 60% transparent and corner-fogged so it reads as ambient
+   atmosphere behind the copy, not as foreground content. */
+.home-hero-creator-backdrop {
+  position: absolute;
+  right: 0;
+  top: 16px;
+  bottom: 0;
+  width: 44%;
+  max-width: 380px;
+  background-size: cover;
+  background-position: center;
+  border-radius: 8px;
+  filter: saturate(1.05);
+  opacity: 0;
+  pointer-events: none;
+  z-index: 0;
+  animation: home-hero-creator-fadein 0.9s ease-out forwards;
+}
+/* Cream overlay — radial-gradient from soft wash at center to fully-opaque
+   page bg color at the edges. The image stays visible in the middle but
+   corners blend completely into the page background. */
+.home-hero-creator-backdrop::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(
+    ellipse 75% 82% at 50% 50%,
+    rgba(252, 246, 233, 0.55) 22%,
+    rgba(252, 246, 233, 0.78) 55%,
+    rgba(252, 246, 233, 0.96) 85%,
+    #fcf6e9 100%
+  );
+  pointer-events: none;
+}
+@keyframes home-hero-creator-fadein {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .home-hero-creator-backdrop {
+    animation: none;
+    opacity: 1;
+  }
+}
+@media (max-width: 760px) {
+  .home-hero-creator-backdrop {
+    display: none;
+  }
 }
 .home-hero-title {
   margin: 0;
@@ -988,6 +1111,16 @@
   font-weight: 500;
   font-style: italic;
 }
+.home-hero-title-hi {
+  margin: 4px 0 0;
+  font-family: var(--mag-display);
+  font-style: italic;
+  font-weight: 500;
+  font-size: clamp(1rem, 1.5vw, 1.2rem);
+  line-height: 1.4;
+  color: var(--mag-primary);
+  letter-spacing: 0.005em;
+}
 .home-hero-who {
   margin: -8px 0 0;
   font-family: var(--mag-display);
@@ -1001,10 +1134,9 @@
   list-style: none;
   padding: 0;
   margin: 0;
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  column-gap: 24px;
-  row-gap: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
   font-family: var(--mag-text);
   font-size: 1rem;
   font-weight: 500;
@@ -1021,6 +1153,13 @@
   line-height: 1;
   flex-shrink: 0;
 }
+.home-hero-funnel-icon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  color: var(--mag-primary);
+  stroke-width: 1.6;
+}
 
 .home-hero-cta {
   margin-top: 6px;
@@ -1031,29 +1170,36 @@
 }
 .home-hero-cta-secondary {
   margin: 0;
-  font-family: var(--mag-text);
-  font-size: 0.88rem;
-  color: var(--mag-mute);
   display: flex;
   flex-wrap: wrap;
-  gap: 6px 12px;
-  align-items: baseline;
+  gap: 10px;
+  align-items: center;
 }
-.home-hero-cta-secondary a {
-  color: var(--mag-primary-deep);
-  text-decoration: none;
-  font-weight: 600;
-  border-bottom: 1px solid transparent;
-  transition: border-color 0.15s ease;
-}
-.home-hero-cta-secondary a:hover,
-.home-hero-cta-secondary a:focus-visible {
-  border-bottom-color: var(--mag-primary-deep);
-  outline: none;
-}
-.home-hero-cta-secondary-sep {
-  color: var(--mag-accent);
+.home-hero-ghostbtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 16px;
+  font-family: var(--mag-text);
+  font-size: 0.78rem;
   font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--mag-primary-deep);
+  background: transparent;
+  border: 1.5px solid var(--mag-accent);
+  border-radius: 4px;
+  text-decoration: none;
+  transition: background 0.18s ease, color 0.18s ease,
+    border-color 0.18s ease, transform 0.18s ease;
+}
+.home-hero-ghostbtn:hover,
+.home-hero-ghostbtn:focus-visible {
+  background: rgba(201, 168, 76, 0.14);
+  border-color: var(--mag-primary);
+  color: var(--mag-primary-deep);
+  transform: translateY(-1px);
+  outline: none;
 }
 
 /* Anchor target — pull-up so the heading isn't hidden under the (potential) sticky header */
@@ -1064,32 +1210,53 @@
   display: inline-flex;
   align-items: center;
   gap: 10px;
-  background: transparent;
-  color: var(--mag-primary-deep);
+  /* Match the site header's midnight gradient. */
+  background: linear-gradient(135deg, #1a1a2e 0%, #2d2d44 30%, #3a3a55 60%, #4a4a6a 85%, #5a5a7a 100%);
+  color: #fff;
   font-family: var(--mag-text);
-  font-size: 0.88rem;
+  font-size: 0.95rem;
   font-weight: 700;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
-  padding: 10px 22px;
-  border: 1.5px solid var(--mag-primary-deep);
+  padding: 12px 26px;
+  border: 1.5px solid #1a1a2e;
   border-radius: 4px;
   text-decoration: none;
-  transition: background 0.15s ease, color 0.15s ease;
+  box-shadow: 0 4px 14px rgba(26, 26, 46, 0.28);
+  transition: background 0.18s ease, border-color 0.18s ease,
+    transform 0.18s ease, box-shadow 0.18s ease;
 }
 .home-hero-cta-btn:hover,
 .home-hero-cta-btn:focus-visible {
-  background: var(--mag-primary-deep);
+  background: linear-gradient(135deg, #2a2a44 0%, #3d3d58 30%, #4a4a6a 60%, #5a5a7a 85%, #6a6a8a 100%);
+  border-color: var(--mag-accent);
   color: #fff;
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 12px 30px rgba(26, 26, 46, 0.42);
   outline: none;
 }
-.home-hero-cta-emoji {
-  font-size: 1rem;
+.home-hero-cta-btn-label {
   line-height: 1;
 }
-
-/* Right-column magazine card */
+.home-hero-cta-btn-arrow {
+  font-size: 1.1rem;
+  line-height: 1;
+}
+.home-hero-cta-trust {
+  margin: 0;
+  font-family: var(--mag-display);
+  font-style: italic;
+  font-size: clamp(1.05rem, 1.4vw, 1.2rem);
+  font-weight: 600;
+  color: var(--mag-primary-deep);
+  letter-spacing: 0.005em;
+  line-height: 1.4;
+}
+/* Magazine band — sits below the hero grid, full width.
+   No border-top here: the trust strip below already carries the gold
+   divider, so two stacked dividers would feel stripey. */
 .home-hero-magazine {
+  margin-top: 32px;
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -1245,27 +1412,69 @@
   }
   .home-hero-grid {
     grid-template-columns: 1fr;
-    gap: 28px;
+    gap: 0;
+  }
+  .home-hero-visual {
+    max-width: 200px;
+    margin: 0 auto;
+  }
+  .home-hero-left {
+    gap: 16px;
+    /* Pull the H1 up so "Give your creativity" sits over the image's
+       faded bottom — the existing bottom-fog mask makes the title
+       readable on the cream wash. */
+    margin-top: -52px;
+    z-index: 2;
+    align-items: center;
+    text-align: center;
+  }
+  .home-hero-cta {
+    align-items: center;
+  }
+  .home-hero-cta-secondary {
+    justify-content: center;
+  }
+  .home-hero-funnel {
+    align-items: center;
+  }
+  .home-hero-magazine {
+    margin-top: 24px;
   }
   .home-hero-funnel {
     font-size: 1rem;
-    gap: 10px;
+    gap: 8px;
   }
   .home-hero-funnel-emoji {
-    font-size: 1.3rem;
+    font-size: 1.25rem;
   }
   .home-hero-cta-btn {
-    font-size: 0.82rem;
-    padding: 10px 20px;
+    font-size: 0.92rem;
+    padding: 12px 22px;
   }
   .home-hero-magazine-card {
-    padding: 16px;
+    padding: 12px;
+    border-radius: 12px;
+    box-shadow: 0 2px 10px rgba(160, 83, 43, 0.06);
+  }
+  .home-hero-magazine-fade {
+    gap: 12px;
+  }
+  .home-hero-magazine-coverimg,
+  .home-hero-magazine-cover {
+    width: 80px;
+    height: 110px;
+  }
+  .home-hero-magazine-dek {
+    display: none;
+  }
+  .home-hero-magazine-title {
+    font-size: 1.05rem;
   }
   .home-hero-promises {
     grid-template-columns: 1fr;
-    gap: 22px;
-    margin-top: 32px;
-    padding-top: 22px;
+    gap: 18px;
+    margin-top: 28px;
+    padding-top: 20px;
   }
 }
 
