@@ -108,10 +108,6 @@ const Header = () => {
             <svg className="nav-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
             {strings.header.navAbout}
           </Link>
-          <Link to="/advertise" className="nav-link" onClick={closeMobileNav}>
-            <svg className="nav-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 11l18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 11-5.8-1.6"/></svg>
-            Advertise
-          </Link>
           <div className="header-browse-menu" ref={browseMenuRef}>
             <button
               type="button"
@@ -126,18 +122,58 @@ const Header = () => {
             </button>
             {browseDropdownOpen && (
               <div className="header-browse-dropdown" role="menu">
-                <Link to="/magazine" className="header-browse-item" role="menuitem" onClick={closeBrowseDropdown}>Magazine</Link>
-                <Link to="/books" className="header-browse-item" role="menuitem" onClick={closeBrowseDropdown}>Books</Link>
-                <Link to="/poems" className="header-browse-item" role="menuitem" onClick={closeBrowseDropdown}>Poems</Link>
-                <Link to="/articles" className="header-browse-item" role="menuitem" onClick={closeBrowseDropdown}>Articles</Link>
-                <Link to="/blogs" className="header-browse-item" role="menuitem" onClick={closeBrowseDropdown}>Blogs</Link>
-                <Link to="/recipes" className="header-browse-item" role="menuitem" onClick={closeBrowseDropdown}>Recipes</Link>
-                <Link to="/podcasts" className="header-browse-item" role="menuitem" onClick={closeBrowseDropdown}>Podcasts</Link>
-                <Link to="/writers" className="header-browse-item" role="menuitem" onClick={closeBrowseDropdown}>Writers</Link>
-                <Link to="/writers?type=artist" className="header-browse-item" role="menuitem" onClick={closeBrowseDropdown}>Artists</Link>
-                <Link to="/galleries" className="header-browse-item" role="menuitem" onClick={closeBrowseDropdown}>Galleries</Link>
-                <Link to="/marketplace" className="header-browse-item" role="menuitem" onClick={closeBrowseDropdown}>Buy / Sell</Link>
-                <Link to="/manual" className="header-browse-item" role="menuitem" onClick={closeBrowseDropdown}>User Manual</Link>
+                <Link to="/magazine" className="header-browse-item" role="menuitem" onClick={closeBrowseDropdown}>
+                  <svg className="nav-icon" style={{ color: "#8a3a24" }} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+                  Magazine
+                </Link>
+                <Link to="/books" className="header-browse-item" role="menuitem" onClick={closeBrowseDropdown}>
+                  <svg className="nav-icon" style={{ color: "#a0532b" }} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+                  Books
+                </Link>
+                <Link to="/poems" className="header-browse-item" role="menuitem" onClick={closeBrowseDropdown}>
+                  <svg className="nav-icon" style={{ color: "#7c3aed" }} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20.24 12.24a6 6 0 0 0-8.49-8.49L5 10.5V19h8.5z"/><line x1="16" y1="8" x2="2" y2="22"/><line x1="17.5" y1="15" x2="9" y2="15"/></svg>
+                  Poems
+                </Link>
+                <Link to="/articles" className="header-browse-item" role="menuitem" onClick={closeBrowseDropdown}>
+                  <svg className="nav-icon" style={{ color: "#2c5d6b" }} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                  Articles
+                </Link>
+                <Link to="/blogs" className="header-browse-item" role="menuitem" onClick={closeBrowseDropdown}>
+                  <svg className="nav-icon" style={{ color: "#059669" }} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>
+                  Blogs
+                </Link>
+                <Link to="/recipes" className="header-browse-item" role="menuitem" onClick={closeBrowseDropdown}>
+                  <svg className="nav-icon" style={{ color: "#ea580c" }} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>
+                  Recipes
+                </Link>
+                <Link to="/podcasts" className="header-browse-item" role="menuitem" onClick={closeBrowseDropdown}>
+                  <svg className="nav-icon" style={{ color: "#db2777" }} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+                  Podcasts
+                </Link>
+                <Link to="/writers" className="header-browse-item" role="menuitem" onClick={closeBrowseDropdown}>
+                  <svg className="nav-icon" style={{ color: "#d4a017" }} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 19l7-7 3 3-7 7-3-3z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18z"/><path d="M2 2l7.586 7.586"/><circle cx="11" cy="11" r="2"/></svg>
+                  Writers
+                </Link>
+                <Link to="/writers?type=artist" className="header-browse-item" role="menuitem" onClick={closeBrowseDropdown}>
+                  <svg className="nav-icon" style={{ color: "#ec4899" }} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="13.5" cy="6.5" r="1.5"/><circle cx="17.5" cy="10.5" r="1.5"/><circle cx="8.5" cy="7.5" r="1.5"/><circle cx="6.5" cy="12.5" r="1.5"/><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10c1.66 0 3-1.34 3-3 0-.78-.29-1.49-.78-2.03a1.5 1.5 0 0 1 1.06-2.56h1.84c2.7 0 4.88-2.18 4.88-4.88C22 5.96 17.52 2 12 2z"/></svg>
+                  Artists
+                </Link>
+                <Link to="/galleries" className="header-browse-item" role="menuitem" onClick={closeBrowseDropdown}>
+                  <svg className="nav-icon" style={{ color: "#0891b2" }} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                  Galleries
+                </Link>
+                <Link to="/marketplace" className="header-browse-item" role="menuitem" onClick={closeBrowseDropdown}>
+                  <svg className="nav-icon" style={{ color: "#2563eb" }} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+                  Buy / Sell
+                </Link>
+                <Link to="/manual" className="header-browse-item" role="menuitem" onClick={closeBrowseDropdown}>
+                  <svg className="nav-icon" style={{ color: "#64748b" }} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                  User Manual
+                </Link>
+                <Link to="/advertise" className="header-browse-item" role="menuitem" onClick={closeBrowseDropdown}>
+                  <svg className="nav-icon" style={{ color: "#dc2626" }} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 11l18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/></svg>
+                  Advertise
+                </Link>
               </div>
             )}
           </div>

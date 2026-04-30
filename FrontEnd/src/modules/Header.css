@@ -565,12 +565,18 @@
   flex-direction: column;
 }
 .header-browse-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
   padding: 10px 18px;
   color: var(--text-primary);
   text-decoration: none;
   font-size: 0.9rem;
   font-weight: 500;
   transition: background-color 0.15s, color 0.15s;
+}
+.header-browse-item .nav-icon {
+  flex-shrink: 0;
 }
 .header-browse-item:hover {
   background-color: rgba(160, 83, 43, 0.08);
