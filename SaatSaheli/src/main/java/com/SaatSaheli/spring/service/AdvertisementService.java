@@ -95,7 +95,7 @@ public class AdvertisementService {
     }
 
     private static final java.util.Set<String> VALID_PLACEMENTS =
-            java.util.Set.of("HEADER_TOP", "FOOTER_TOP", "SIDE_RAIL");
+            java.util.Set.of("HEADER_TOP", "FOOTER_TOP", "SIDE_RAIL", "ARTICLE_TOP", "PODCAST_TOP");
 
     private String normalizePlacement(String placement) {
         if (placement == null || placement.trim().isEmpty()) return "HEADER_TOP";

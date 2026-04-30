@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import api, { profileUrl } from "../utils/api";
 import { useAuth } from "../AuthContext";
+import AdBanner from "../modules/AdBanner";
 import "./Podcasts.css";
 
 const API = process.env.REACT_APP_API_URL;
@@ -471,6 +472,7 @@ function Podcasts() {
 
   return (
     <div className="podcasts-page">
+      <AdBanner placement="PODCAST_TOP" />
       <h1>
         <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" strokeWidth="2" style={{ verticalAlign: "middle", marginRight: 8 }}>
           <path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>

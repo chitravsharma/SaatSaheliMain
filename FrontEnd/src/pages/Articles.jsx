@@ -4,6 +4,7 @@ import api, { profileUrl, getAnonId } from "../utils/api";
 import { useAuth } from "../AuthContext";
 import useProfile from "../hooks/useProfile";
 import ImageEditor from "../components/ImageEditor";
+import AdBanner from "../modules/AdBanner";
 import "../Articles.css";
 
 const API = process.env.REACT_APP_API_URL;
@@ -487,6 +488,7 @@ function Articles() {
 
   return (
     <div className="articles-page">
+      <AdBanner placement="ARTICLE_TOP" />
       <h1>{filterType ? `${filterType === "Poetry" ? "Poems" : filterType + "s"}` : "Writing"}</h1>
       {message && <div className="art-message">{message}</div>}
 

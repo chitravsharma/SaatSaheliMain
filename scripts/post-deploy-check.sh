@@ -111,6 +111,45 @@ fi
 check "gallery caption: bogus id"   403 5    "/api/galleries/images/99999999" -X PUT \
       -H "Content-Type: application/json" -d '{"caption":"test","userId":1}'
 
+# --- Advertisement placements (active list per placement) ---
+# Whitelist: HEADER_TOP, FOOTER_TOP, SIDE_RAIL, ARTICLE_TOP, PODCAST_TOP.
+# Each is a public GET that returns 200 + JSON array (empty if no active ads).
+check "ads active: HEADER_TOP"      200 5    "/api/advertisements/active/HEADER_TOP"
+check "ads active: FOOTER_TOP"      200 5    "/api/advertisements/active/FOOTER_TOP"
+check "ads active: SIDE_RAIL"       200 5    "/api/advertisements/active/SIDE_RAIL"
+check "ads active: ARTICLE_TOP"     200 5    "/api/advertisements/active/ARTICLE_TOP"
+check "ads active: PODCAST_TOP"     200 5    "/api/advertisements/active/PODCAST_TOP"
+# Unknown placement is coerced server-side to HEADER_TOP — endpoint must still 200.
+check "ads active: unknown coerced" 200 5    "/api/advertisements/active/NOT_A_REAL_PLACEMENT"
+# Mutating endpoint reachability — current behavior: returns 400 because the
+# controller validates body.userId. TODO(security): controller does not enforce
+# JWT yet (was missed in the X-User-Id removal sweep). Tighten this to 401 once
+# AdvertisementController checks request.getAttribute("jwtUserId").
+check "ad create: no auth (validated)" 400 5 "/api/advertisements" -X POST \
+      -H "Content-Type: application/json" -d '{"title":"probe","placement":"ARTICLE_TOP","contentType":"text"}'
+
+# --- Static asset checks (file system; only run when invoked from inside repo) ---
+# Account avatar must match PublicProfile dimensions (140x180 desktop, 120x150 mobile, 10px corners).
+ACCT_CSS="$(dirname "$0")/../FrontEnd/src/Account.css"
+PUB_CSS="$(dirname "$0")/../FrontEnd/src/PublicProfile.css"
+if [ -f "$ACCT_CSS" ] && [ -f "$PUB_CSS" ]; then
+  if grep -q "width: 140px;" "$ACCT_CSS" \
+     && grep -q "height: 180px;" "$ACCT_CSS" \
+     && grep -q "border-radius: 10px;" "$ACCT_CSS" \
+     && grep -q "width: 120px;" "$ACCT_CSS" \
+     && grep -q "height: 150px;" "$ACCT_CSS" \
+     && ! grep -A 5 "\.acct-profile-avatar {" "$ACCT_CSS" | grep -q "border-radius: 50%;"; then
+    printf "${GREEN}PASS${NC}  %-40s  %s\n" "account avatar: matches public" "ok"
+    PASS=$((PASS+1))
+  else
+    printf "${RED}FAIL${NC}  %-40s  %s\n" "account avatar: matches public" "Account.css avatar does not match PublicProfile dimensions"
+    FAIL=$((FAIL+1))
+    FAILED_TESTS+=("account avatar: matches public")
+  fi
+else
+  printf "${YELLOW}SKIP${NC}  %-40s  %s\n" "account avatar: matches public" "css files not present (running outside repo)"
+fi
+
 # --- #24 SuperAdmin act-on-behalf (Phase 1) ---
 # Content-write endpoints now require a JWT — body userId alone is no longer accepted.
 check "book create: no auth"        401 5    "/api/books/create" -X POST \

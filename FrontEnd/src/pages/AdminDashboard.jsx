@@ -2009,6 +2009,8 @@ const AdminDashboard = () => {
                                     <option value="HEADER_TOP">Header (top of every page)</option>
                                     <option value="FOOTER_TOP">Footer (above footer links)</option>
                                     <option value="SIDE_RAIL">Side rail (home page)</option>
+                                    <option value="ARTICLE_TOP">Article top (writing pages)</option>
+                                    <option value="PODCAST_TOP">Podcast top (podcasts page)</option>
                                 </select>
                             </div>
                             <div className="admin-maint-field">
@@ -2114,6 +2116,8 @@ const AdminDashboard = () => {
                                             <td style={{ fontSize: "0.8rem" }}>
                                                 {ad.placement === "FOOTER_TOP" ? "Footer"
                                                     : ad.placement === "SIDE_RAIL" ? "Side rail"
+                                                    : ad.placement === "ARTICLE_TOP" ? "Article top"
+                                                    : ad.placement === "PODCAST_TOP" ? "Podcast top"
                                                     : "Header"}
                                             </td>
                                             <td style={{ textTransform: "capitalize" }}>{ad.animation}</td>

@@ -8,6 +8,8 @@ const PLACEMENT_CLASSES = {
   HEADER_TOP: "ad-banner-header",
   FOOTER_TOP: "ad-banner-footer",
   SIDE_RAIL: "ad-banner-side",
+  ARTICLE_TOP: "ad-banner-header",
+  PODCAST_TOP: "ad-banner-header",
 };
 
 const AdBanner = ({ placement }) => {
