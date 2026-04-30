@@ -39,7 +39,8 @@ const Contact = () => {
         email: email.trim(),
         subject: subject.trim(),
         message: message.trim(),
-        website: honeypot,
+        // Honeypot kept in DOM but always empty in payload — see Advertise.jsx.
+        website: "",
         recaptchaToken,
       });
       setSent(true);
@@ -85,7 +86,7 @@ const Contact = () => {
 
             {/* Honeypot — hidden from real users, bots auto-fill it */}
             <div style={{ position: 'absolute', left: '-9999px' }} aria-hidden="true">
-              <input type="text" name="confirm_email_hp" tabIndex="-1" autoComplete="off"
+              <input type="text" name="ssh_alt_tagline" tabIndex="-1" autoComplete="off"
                 value={honeypot} onChange={(e) => setHoneypot(e.target.value)} />
             </div>
 

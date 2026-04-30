@@ -71,7 +71,7 @@ const PLACEMENTS = [
   "Homepage banner",
   "Magazine issue pages",
   "Article pages",
-  "Podcast page",
+  "Podcast",
   "Creator gallery pages",
   "Newsletter / social mention",
 ];
@@ -93,6 +93,11 @@ const Advertise = () => {
 
   const choosePackage = (key) => {
     setPackageInterest(key);
+    // If the user already submitted an inquiry, clicking any package CTA
+    // (Starter / Growth / Featured / Custom) reopens the form so they can
+    // submit another one.
+    setSent(false);
+    setError("");
     setTimeout(() => {
       const f = document.getElementById("advertise-form");
       if (f) f.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -128,9 +133,13 @@ const Advertise = () => {
       await axios.post(`${API_BASE}/api/contact`, {
         name: name.trim(),
         email: email.trim(),
-        subject: `Advertising — ${packageInterest}`,
+        subject: `Advertise with SaatSaheli — Submission (${packageInterest})`,
         message: body,
-        website: honeypot,
+        // Honeypot is always empty in the SPA payload — autofill/extensions
+        // keep filling the hidden field, so we ignore the local state and let
+        // reCAPTCHA + rate limit do the bot defense. The field stays in DOM
+        // to bait dumb bots that scrape the HTML and POST what they see.
+        website: "",
         recaptchaToken,
       });
       setSent(true);
@@ -256,7 +265,7 @@ const Advertise = () => {
             <div style={{ position: "absolute", left: "-9999px" }} aria-hidden="true">
               <input
                 type="text"
-                name="confirm_email_hp"
+                name="ssh_alt_tagline"
                 tabIndex="-1"
                 autoComplete="off"
                 value={honeypot}

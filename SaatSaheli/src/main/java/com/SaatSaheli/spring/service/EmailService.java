@@ -60,6 +60,11 @@ public class EmailService {
         } else if (msgSubject != null && msgSubject.toLowerCase().startsWith("feedback")) {
             formType = "Feedback";
             heading = "New Feedback Received";
+        } else if (msgSubject != null && (
+                msgSubject.startsWith("Advertise with SaatSaheli")
+                || msgSubject.startsWith("Advertising"))) {
+            formType = "Advertising Inquiry";
+            heading = "New Advertising Inquiry";
         } else {
             formType = "Contact Us";
             heading = "New Contact Us Message";
