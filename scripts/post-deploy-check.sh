@@ -121,12 +121,14 @@ check "ads active: ARTICLE_TOP"     200 5    "/api/advertisements/active/ARTICLE
 check "ads active: PODCAST_TOP"     200 5    "/api/advertisements/active/PODCAST_TOP"
 # Unknown placement is coerced server-side to HEADER_TOP — endpoint must still 200.
 check "ads active: unknown coerced" 200 5    "/api/advertisements/active/NOT_A_REAL_PLACEMENT"
-# Mutating endpoint reachability — current behavior: returns 400 because the
-# controller validates body.userId. TODO(security): controller does not enforce
-# JWT yet (was missed in the X-User-Id removal sweep). Tighten this to 401 once
-# AdvertisementController checks request.getAttribute("jwtUserId").
-check "ad create: no auth (validated)" 400 5 "/api/advertisements" -X POST \
+# Mutating endpoints require admin JWT — without it should 401, never 500.
+# Includes update, toggle, delete in case they regress separately.
+check "ad create: no auth"          401 5    "/api/advertisements" -X POST \
       -H "Content-Type: application/json" -d '{"title":"probe","placement":"ARTICLE_TOP","contentType":"text"}'
+check "ad update: no auth"          401 5    "/api/advertisements/1" -X PUT \
+      -H "Content-Type: application/json" -d '{"title":"probe"}'
+check "ad toggle: no auth"          401 5    "/api/advertisements/1/toggle" -X PUT
+check "ad delete: no auth"          401 5    "/api/advertisements/1" -X DELETE
 
 # --- Static asset checks (file system; only run when invoked from inside repo) ---
 # Account avatar must match PublicProfile dimensions (140x180 desktop, 120x150 mobile, 10px corners).

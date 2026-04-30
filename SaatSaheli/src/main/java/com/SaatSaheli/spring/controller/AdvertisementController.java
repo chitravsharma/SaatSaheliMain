@@ -10,6 +10,9 @@ import org.springframework.web.bind.annotation.*;
 
 import com.SaatSaheli.spring.model.Advertisement;
 import com.SaatSaheli.spring.service.AdvertisementService;
+import com.SaatSaheli.spring.util.RoleUtil;
+
+import jakarta.servlet.http.HttpServletRequest;
 
 @RestController
 @RequestMapping("/api/advertisements")
@@ -66,14 +69,13 @@ public class AdvertisementController {
 
     // Admin: create advertisement
     @PostMapping
-    public ResponseEntity<?> createAdvertisement(@RequestBody Map<String, Object> body) {
+    public ResponseEntity<?> createAdvertisement(@RequestBody Map<String, Object> body, HttpServletRequest request) {
         try {
-            Long userId = body.get("userId") != null ? Long.parseLong(body.get("userId").toString()) : null;
-            String title = (String) body.get("title");
+            ResponseEntity<?> guard = guardAdmin(request);
+            if (guard != null) return guard;
+            Long userId = (Long) request.getAttribute("jwtUserId");
 
-            if (userId == null) {
-                return ResponseEntity.badRequest().body(errorMap("userId is required"));
-            }
+            String title = (String) body.get("title");
             if (title == null || title.trim().isEmpty()) {
                 return ResponseEntity.badRequest().body(errorMap("Title is required"));
             }
@@ -99,8 +101,10 @@ public class AdvertisementController {
 
     // Admin: update advertisement
     @PutMapping("/{id}")
-    public ResponseEntity<?> updateAdvertisement(@PathVariable Long id, @RequestBody Map<String, Object> body) {
+    public ResponseEntity<?> updateAdvertisement(@PathVariable Long id, @RequestBody Map<String, Object> body, HttpServletRequest request) {
         try {
+            ResponseEntity<?> guard = guardAdmin(request);
+            if (guard != null) return guard;
             String title = (String) body.get("title");
             String contentType = (String) body.get("contentType");
             String htmlContent = (String) body.get("htmlContent");
@@ -125,8 +129,10 @@ public class AdvertisementController {
 
     // Admin: toggle active status
     @PutMapping("/{id}/toggle")
-    public ResponseEntity<?> toggleActive(@PathVariable Long id) {
+    public ResponseEntity<?> toggleActive(@PathVariable Long id, HttpServletRequest request) {
         try {
+            ResponseEntity<?> guard = guardAdmin(request);
+            if (guard != null) return guard;
             Advertisement ad = adService.toggleActive(id);
             return ResponseEntity.ok(ad);
         } catch (RuntimeException e) {
@@ -139,8 +145,10 @@ public class AdvertisementController {
 
     // Admin: delete advertisement
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> deleteAdvertisement(@PathVariable Long id) {
+    public ResponseEntity<?> deleteAdvertisement(@PathVariable Long id, HttpServletRequest request) {
         try {
+            ResponseEntity<?> guard = guardAdmin(request);
+            if (guard != null) return guard;
             adService.deleteAdvertisement(id);
             return ResponseEntity.ok(Map.of("message", "Advertisement deleted successfully"));
         } catch (RuntimeException e) {
@@ -149,6 +157,24 @@ public class AdvertisementController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(errorMap("Failed to delete advertisement: " + e.getMessage()));
         }
+    }
+
+    /**
+     * Guard helper: returns null if the request has a valid JWT for an
+     * admin/super-admin user, otherwise returns the appropriate error response
+     * (401 if no token, 403 if token belongs to a non-admin).
+     * Body.userId is no longer accepted — caller identity comes only from the JWT.
+     */
+    private ResponseEntity<?> guardAdmin(HttpServletRequest request) {
+        Long jwtUserId = (Long) request.getAttribute("jwtUserId");
+        String jwtRole = (String) request.getAttribute("jwtRole");
+        if (jwtUserId == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorMap("Authentication required"));
+        }
+        if (!RoleUtil.isAdmin(jwtRole)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorMap("Admin role required"));
+        }
+        return null;
     }
 
     private Map<String, String> errorMap(String message) {
