@@ -128,7 +128,10 @@ const MagazineSubmit = () => {
         email: email.trim(),
         subject: `Magazine Submission: ${type} — ${title.trim()}`,
         message: fullMessage,
-        confirm_email_hp: honeypot,
+        // Honeypot kept in DOM but always empty in payload — see Advertise.jsx.
+        // Was previously sent under the wrong key (`confirm_email_hp`); the
+        // backend reads `website`, so the honeypot was effectively bypassed.
+        website: "",
       });
       setTrackingId(res?.data?.trackingId || '');
       setSent(true);
@@ -193,7 +196,7 @@ const MagazineSubmit = () => {
 
             {/* Honeypot */}
             <div style={{ position: 'absolute', left: '-9999px' }} aria-hidden="true">
-              <input type="text" name="confirm_email_hp" tabIndex="-1" autoComplete="off"
+              <input type="text" name="ssh_alt_tagline" tabIndex="-1" autoComplete="off"
                 value={honeypot} onChange={(e) => setHoneypot(e.target.value)} />
             </div>
 

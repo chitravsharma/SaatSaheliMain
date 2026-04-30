@@ -75,7 +75,8 @@ const HelpSupport = () => {
         email: email.trim(),
         subject: `Help & Support: ${types}`,
         message: fullMessage,
-        website: honeypot,
+        // Honeypot kept in DOM but always empty in payload — see Advertise.jsx.
+        website: "",
       });
       setTrackingId(res?.data?.trackingId || '');
       setSent(true);
@@ -135,7 +136,7 @@ const HelpSupport = () => {
 
             {/* Honeypot */}
             <div style={{ position: 'absolute', left: '-9999px' }} aria-hidden="true">
-              <input type="text" name="confirm_email_hp" tabIndex="-1" autoComplete="off"
+              <input type="text" name="ssh_alt_tagline" tabIndex="-1" autoComplete="off"
                 value={honeypot} onChange={(e) => setHoneypot(e.target.value)} />
             </div>
 
