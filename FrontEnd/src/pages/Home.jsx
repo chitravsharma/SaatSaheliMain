@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import api, { getAnonId } from "../utils/api";
+import api, { getAnonId, profileUrl } from "../utils/api";
 import { useAuth } from "../AuthContext";
 import { useStrings } from "../LanguageContext";
 import AdBanner from "../modules/AdBanner";
@@ -652,11 +652,14 @@ function Home() {
                             </div>
                             <div className="home-book-info">
                               <span className="home-book-title">{book.title}</span>
-                              {category !== magLabel && book.authorName && (
-                                <span className="home-book-author">by {book.authorName}</span>
-                              )}
                             </div>
                           </Link>
+                          {category !== magLabel && book.authorName && (
+                            <Link
+                              to={profileUrl(book.userId, book.authorName)}
+                              className="home-book-author"
+                            >by {book.authorName}</Link>
+                          )}
                           <div className="home-card-social">
                             <button className={`ss-btn-icon-sm ${isLiked ? "active" : ""}`} onClick={() => handleLike("BOOK", book.id)} title="Like">
                               <svg width="14" height="14" viewBox="0 0 24 24" fill={isLiked ? "#e74c3c" : "none"} stroke={isLiked ? "#e74c3c" : "currentColor"} strokeWidth="2"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
@@ -729,9 +732,14 @@ function Home() {
                     </div>
                     <div className="home-gallery-info">
                       <span className="home-gallery-title">{gallery.title}</span>
-                      {gallery.authorName && <span className="home-gallery-author">by {gallery.authorName}</span>}
                     </div>
                   </Link>
+                  {gallery.authorName && (
+                    <Link
+                      to={profileUrl(gallery.userId, gallery.authorName)}
+                      className="home-gallery-author"
+                    >by {gallery.authorName}</Link>
+                  )}
                   <div className="home-card-social">
                     <button className={`ss-btn-icon-sm ${isLiked ? "active" : ""}`} onClick={() => handleLike("GALLERY", gallery.id)} title="Like">
                       <svg width="14" height="14" viewBox="0 0 24 24" fill={isLiked ? "#e74c3c" : "none"} stroke={isLiked ? "#e74c3c" : "currentColor"} strokeWidth="2"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
@@ -774,10 +782,15 @@ function Home() {
                     {article.contentType || "Article"}
                   </span>
                   <span className="home-article-title">{article.headline}</span>
-                  {article.authorName && <span className="home-article-author">by {article.authorName}</span>}
                   <span className="home-article-date">{new Date(article.createdDate).toLocaleDateString()}</span>
                 </div>
               </Link>
+              {article.authorName && (
+                <Link
+                  to={profileUrl(article.userId, article.authorName)}
+                  className="home-article-author home-article-author-link"
+                >by {article.authorName}</Link>
+              )}
               <div className="home-card-social">
                 <button className={`ss-btn-icon-sm ${userLikes[`ARTICLE_${article.id}`] ? "active" : ""}`} onClick={() => handleLike("ARTICLE", article.id)} title="Like">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill={userLikes[`ARTICLE_${article.id}`] ? "#e74c3c" : "none"} stroke={userLikes[`ARTICLE_${article.id}`] ? "#e74c3c" : "currentColor"} strokeWidth="2"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
@@ -809,10 +822,15 @@ function Home() {
                   <span className="home-article-type home-article-type-poetry">Podcast</span>
                   <span className="home-article-title">{podcast.title}</span>
                   {podcast.category && <span className="home-article-author">{podcast.category}</span>}
-                  {podcast.authorName && <span className="home-article-author">by {podcast.authorName}</span>}
                   <span className="home-article-date">{new Date(podcast.createdDate).toLocaleDateString()}</span>
                 </div>
               </Link>
+              {podcast.authorName && (
+                <Link
+                  to={profileUrl(podcast.userId, podcast.authorName)}
+                  className="home-article-author home-article-author-link"
+                >by {podcast.authorName}</Link>
+              )}
               <div className="home-card-social">
                 <button className={`ss-btn-icon-sm ${userLikes[`PODCAST_${podcast.id}`] ? "active" : ""}`} onClick={() => handleLike("PODCAST", podcast.id)} title="Like">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill={userLikes[`PODCAST_${podcast.id}`] ? "#e74c3c" : "none"} stroke={userLikes[`PODCAST_${podcast.id}`] ? "#e74c3c" : "currentColor"} strokeWidth="2"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
@@ -864,7 +882,7 @@ function Home() {
                     <Link to="/writers?type=poet" className="ss-btn ss-btn-outline">Meet Our Poets</Link>
                   </div>
                 </div>
-                <ScrollRow className="home-articles-row">{poems.map(renderArticleCard)}</ScrollRow>
+                <ScrollRow className={`home-articles-row ${poems.length < 5 ? "home-row-few" : ""}`}>{poems.map(renderArticleCard)}</ScrollRow>
               </div>
             )}
 
@@ -877,7 +895,7 @@ function Home() {
                     <Link to="/writers?type=writer" className="ss-btn ss-btn-outline">Meet Our Writers</Link>
                   </div>
                 </div>
-                <ScrollRow className="home-articles-row">{blogs.map(renderArticleCard)}</ScrollRow>
+                <ScrollRow className={`home-articles-row ${blogs.length < 5 ? "home-row-few" : ""}`}>{blogs.map(renderArticleCard)}</ScrollRow>
               </div>
             )}
 
@@ -890,7 +908,7 @@ function Home() {
                     <Link to="/writers?type=writer" className="ss-btn ss-btn-outline">Meet Our Writers</Link>
                   </div>
                 </div>
-                <ScrollRow className="home-articles-row">{arts.map(renderArticleCard)}</ScrollRow>
+                <ScrollRow className={`home-articles-row ${arts.length < 5 ? "home-row-few" : ""}`}>{arts.map(renderArticleCard)}</ScrollRow>
               </div>
             )}
 
@@ -903,7 +921,7 @@ function Home() {
                     <Link to="/writers?type=cook" className="ss-btn ss-btn-outline">Meet Our Cooks</Link>
                   </div>
                 </div>
-                <ScrollRow className="home-articles-row">{recentRecipes.map(renderRecipeCard)}</ScrollRow>
+                <ScrollRow className={`home-articles-row ${recentRecipes.length < 5 ? "home-row-few" : ""}`}>{recentRecipes.map(renderRecipeCard)}</ScrollRow>
               </div>
             )}
 
@@ -916,7 +934,7 @@ function Home() {
                     <Link to="/writers" className="ss-btn ss-btn-outline">Meet Our Creators</Link>
                   </div>
                 </div>
-                <ScrollRow className="home-articles-row">{recentPodcasts.map(renderPodcastCard)}</ScrollRow>
+                <ScrollRow className={`home-articles-row ${recentPodcasts.length < 5 ? "home-row-few" : ""}`}>{recentPodcasts.map(renderPodcastCard)}</ScrollRow>
               </div>
             )}
           </>

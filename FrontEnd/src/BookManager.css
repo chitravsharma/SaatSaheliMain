@@ -1485,11 +1485,12 @@
 }
 
 .rb-book-author {
-  color: var(--text-muted);
+  color: var(--accent-blue, #2563eb);
   font-size: 0.9rem;
   text-decoration: none;
+  cursor: pointer;
 }
-.rb-book-author:hover { text-decoration: underline; }
+.rb-book-author:hover { text-decoration: underline; color: var(--accent-blue-hover, #1d4ed8); }
 
 .rb-social-bar {
   display: flex;

@@ -232,10 +232,14 @@
 }
 
 .home-gallery-author {
+  display: block;
   font-size: 0.72rem;
   color: var(--text-subtle);
   font-style: italic;
+  text-decoration: none;
+  padding: 0 14px 8px;
 }
+a.home-gallery-author:hover { text-decoration: underline; color: var(--accent-blue, #2563eb); }
 
 /* ── Category groups ── */
 .home-categories {
@@ -387,13 +391,17 @@
 }
 
 .home-book-author {
+  display: block;
   font-size: 0.72rem;
   color: #795548;
   font-style: italic;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  text-decoration: none;
+  padding: 0 14px 8px;
 }
+.home-book-author:hover { text-decoration: underline; color: #5d4037; }
 
 /* ── Card social actions (like/comment/favorite) ── */
 .home-card-social {
@@ -463,6 +471,20 @@
   flex: 0 0 280px;
   scroll-snap-align: start;
   min-width: 0;
+}
+
+/* When there are fewer than 5 items, swap the swipe-row for a wrapping grid
+   so visitors see all items at once on narrow viewports instead of feeling
+   like there's only one. */
+.home-articles-row.home-row-few {
+  flex-wrap: wrap;
+  scroll-snap-type: none;
+  overflow-x: visible;
+}
+.home-articles-row.home-row-few > .home-article-card {
+  scroll-snap-align: none;
+  flex: 1 1 280px;
+  max-width: 320px;
 }
 
 .home-articles-row::-webkit-scrollbar {
@@ -562,6 +584,12 @@
   font-size: 0.8rem;
   color: var(--accent-blue-light);
 }
+.home-article-author-link {
+  display: block;
+  text-decoration: none;
+  padding: 0 14px 8px;
+}
+.home-article-author-link:hover { text-decoration: underline; color: var(--accent-blue, #2563eb); }
 
 .home-article-date {
   font-size: 0.75rem;
