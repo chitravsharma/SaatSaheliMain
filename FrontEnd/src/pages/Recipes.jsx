@@ -13,6 +13,9 @@ export default function Recipes() {
   const [recipes, setRecipes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  // Author-grouped browse: which authors are expanded.
+  // Default closed — click reveals that cook's recipes.
+  const [expandedAuthors, setExpandedAuthors] = useState({});
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -22,6 +25,45 @@ export default function Recipes() {
       .catch(() => setError("Failed to load recipes. Please try again later."))
       .finally(() => setLoading(false));
   }, []);
+
+  // Group recipes by author so the entry point is a directory of cooks.
+  const groups = recipes.reduce((acc, r) => {
+    const key = (r.authorName || "Unknown cook").trim();
+    (acc[key] ||= []).push(r);
+    return acc;
+  }, {});
+  const authors = Object.keys(groups).sort((a, b) => a.localeCompare(b));
+
+  const renderRecipeCard = (r) => {
+    const cover = r.images && r.images.length > 0 ? r.images[0].imageUrl : null;
+    const hasImage = !!cover;
+    return (
+      <Link
+        key={r.id}
+        to={`/recipes/${r.id}`}
+        className={`recipe-card ${hasImage ? "" : "recipe-card-compact"}`}
+        aria-label={`Open recipe: ${r.recipeName || "Untitled"}`}
+      >
+        {hasImage && (
+          <div className="recipe-cover">
+            <img src={cover} alt="" loading="lazy" />
+          </div>
+        )}
+        <div className="recipe-meta">
+          <div className="recipe-title">{r.recipeName || "Untitled"}</div>
+          {r.cuisine && <div className="recipe-cuisine">{r.cuisine}</div>}
+          {r.authorName && (
+            <div className="recipe-author">
+              by{" "}
+              <Link to={profileUrl(r.userId, r.authorName)} onClick={(e) => e.stopPropagation()}>
+                {r.authorName}
+              </Link>
+            </div>
+          )}
+        </div>
+      </Link>
+    );
+  };
 
   return (
     <div className="recipes-page">
@@ -44,38 +86,36 @@ export default function Recipes() {
         <p className="recipes-status">No recipes yet. Be the first to share!</p>
       )}
 
-      <div className="recipes-grid">
-        {recipes.map((r) => {
-          const cover = r.images && r.images.length > 0 ? r.images[0].imageUrl : null;
-          const hasImage = !!cover;
-          return (
-            <Link
-              key={r.id}
-              to={`/recipes/${r.id}`}
-              className={`recipe-card ${hasImage ? "" : "recipe-card-compact"}`}
-              aria-label={`Open recipe: ${r.recipeName || "Untitled"}`}
-            >
-              {hasImage && (
-                <div className="recipe-cover">
-                  <img src={cover} alt="" loading="lazy" />
-                </div>
-              )}
-              <div className="recipe-meta">
-                <div className="recipe-title">{r.recipeName || "Untitled"}</div>
-                {r.cuisine && <div className="recipe-cuisine">{r.cuisine}</div>}
-                {r.authorName && (
-                  <div className="recipe-author">
-                    by{" "}
-                    <Link to={profileUrl(r.userId, r.authorName)} onClick={(e) => e.stopPropagation()}>
-                      {r.authorName}
-                    </Link>
+      {!loading && !error && recipes.length > 0 && (
+        <ul className="recipes-author-list">
+          {authors.map((author) => {
+            const isOpen = !!expandedAuthors[author];
+            const works = groups[author].slice().sort(
+              (a, b) => (a.recipeName || "").localeCompare(b.recipeName || "")
+            );
+            return (
+              <li key={author} className="recipes-author-row">
+                <button
+                  type="button"
+                  className={`recipes-author-btn ${isOpen ? "recipes-author-btn-open" : ""}`}
+                  onClick={() => setExpandedAuthors((s) => ({ ...s, [author]: !s[author] }))}
+                  aria-expanded={isOpen}
+                >
+                  <span className="recipes-author-dot" />
+                  <span className="recipes-author-name">By {author}</span>
+                  <span className="recipes-author-count">{works.length}</span>
+                  <svg className="recipes-author-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                </button>
+                {isOpen && (
+                  <div className="recipes-author-works">
+                    {works.map(renderRecipeCard)}
                   </div>
                 )}
-              </div>
-            </Link>
-          );
-        })}
-      </div>
+              </li>
+            );
+          })}
+        </ul>
+      )}
     </div>
   );
 }

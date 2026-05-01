@@ -45,6 +45,9 @@ function Articles() {
 
   const [tab, setTab] = useState("published"); // default to browse all
   const [filterType, setFilterType] = useState(urlContentType || "");
+  // Browse-All grouping: which "<type>::<authorName>" buckets are expanded.
+  // Default closed — user clicks an author row to reveal that author's items.
+  const [expandedAuthors, setExpandedAuthors] = useState({});
   const [copiedId, setCopiedId] = useState(null);
   const [articles, setArticles] = useState([]);
   const [publicArticles, setPublicArticles] = useState([]);
@@ -643,7 +646,16 @@ function Articles() {
           ]
             .filter(sec => !filterType || filterType === sec.type)
             .map(sec => {
-              const items = publicArticles.filter(a => a.contentType === sec.type);
+              const items = publicArticles
+                .filter(a => a.contentType === sec.type);
+              // Group by author so the default Browse view is a directory of
+              // writers, not a wall of mixed titles.
+              const groups = items.reduce((acc, a) => {
+                const key = (a.authorName || "Unknown author").trim();
+                (acc[key] ||= []).push(a);
+                return acc;
+              }, {});
+              const authors = Object.keys(groups).sort((a, b) => a.localeCompare(b));
               return (
                 <div key={sec.type} className="art-browse-section">
                   <h3 className={`art-browse-heading art-browse-heading-${sec.type.toLowerCase()}`}>
@@ -654,21 +666,45 @@ function Articles() {
                     <p className="art-browse-empty">No published {sec.label.toLowerCase()} yet.</p>
                   ) : (
                     <ul className="art-browse-list">
-                      {items.map(article => (
-                        <li key={article.id} className="art-browse-item" onClick={() => {
-                          setFilterType(sec.type);
-                          setTab("published");
-                          const el = document.getElementById(`art-detail-${article.id}`);
-                          if (el) el.scrollIntoView({ behavior: "smooth" });
-                        }}>
-                          <span className={`art-browse-dot art-browse-dot-${sec.type.toLowerCase()}`} />
-                          <div className="art-browse-item-info">
-                            <span className="art-browse-item-title">{article.headline}</span>
-                            {article.authorName && <span className="art-browse-item-author">by {article.authorName}</span>}
-                          </div>
-                          <span className="art-browse-item-date">{new Date(article.createdDate).toLocaleDateString()}</span>
-                        </li>
-                      ))}
+                      {authors.map(author => {
+                        const key = `${sec.type}::${author}`;
+                        const isOpen = !!expandedAuthors[key];
+                        const works = groups[author].slice().sort(
+                          (a, b) => (a.headline || "").localeCompare(b.headline || "")
+                        );
+                        return (
+                          <li key={key} className="art-browse-author-row">
+                            <button
+                              type="button"
+                              className={`art-browse-author-btn ${isOpen ? "art-browse-author-btn-open" : ""}`}
+                              onClick={() => setExpandedAuthors(s => ({ ...s, [key]: !s[key] }))}
+                              aria-expanded={isOpen}
+                            >
+                              <span className={`art-browse-dot art-browse-dot-${sec.type.toLowerCase()}`} />
+                              <span className="art-browse-author-name">By {author}</span>
+                              <span className="art-browse-author-count">{works.length}</span>
+                              <svg className="art-browse-author-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                            </button>
+                            {isOpen && (
+                              <ul className="art-browse-author-works">
+                                {works.map(article => (
+                                  <li key={article.id} className="art-browse-item" onClick={() => {
+                                    setFilterType(sec.type);
+                                    setTab("published");
+                                    const el = document.getElementById(`art-detail-${article.id}`);
+                                    if (el) el.scrollIntoView({ behavior: "smooth" });
+                                  }}>
+                                    <div className="art-browse-item-info">
+                                      <span className="art-browse-item-title">{article.headline}</span>
+                                    </div>
+                                    <span className="art-browse-item-date">{new Date(article.createdDate).toLocaleDateString()}</span>
+                                  </li>
+                                ))}
+                              </ul>
+                            )}
+                          </li>
+                        );
+                      })}
                     </ul>
                   )}
                 </div>
@@ -680,11 +716,15 @@ function Articles() {
             {(filterType
               ? publicArticles.filter(a => a.contentType === filterType)
               : publicArticles
-            ).map(article => (
-              <div key={article.id} id={`art-detail-${article.id}`}>
-                {renderArticleCard(article, userId && article.userId === userId)}
-              </div>
-            ))}
+            )
+              .slice()
+              .sort((a, b) => (a.authorName || "").localeCompare(b.authorName || "")
+                || (a.headline || "").localeCompare(b.headline || ""))
+              .map(article => (
+                <div key={article.id} id={`art-detail-${article.id}`}>
+                  {renderArticleCard(article, userId && article.userId === userId)}
+                </div>
+              ))}
           </div>
         </div>
       )}

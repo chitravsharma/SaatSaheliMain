@@ -494,6 +494,72 @@
   flex-shrink: 0;
 }
 
+/* Author-grouped Browse view: each row is "By <Name> (n) ▾" — click to expand. */
+.art-browse-author-row {
+  list-style: none;
+}
+
+.art-browse-author-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 12px 14px;
+  border: none;
+  background: transparent;
+  color: var(--text-primary);
+  text-align: left;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.15s;
+  font: inherit;
+}
+.art-browse-author-btn:hover {
+  background: rgba(37, 99, 235, 0.08);
+}
+.art-browse-author-btn:focus-visible {
+  outline: 2px solid var(--accent-blue, #2563eb);
+  outline-offset: -2px;
+}
+
+.art-browse-author-name {
+  flex: 1;
+  font-weight: 600;
+  font-size: 0.95rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.art-browse-author-count {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  padding: 2px 8px;
+  border-radius: 10px;
+  flex-shrink: 0;
+}
+
+.art-browse-author-chevron {
+  color: var(--text-muted);
+  flex-shrink: 0;
+  transition: transform 0.2s;
+}
+.art-browse-author-btn-open .art-browse-author-chevron {
+  transform: rotate(180deg);
+}
+
+.art-browse-author-works {
+  list-style: none;
+  margin: 4px 0 8px 28px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  border-left: 2px solid var(--border-default);
+  padding-left: 12px;
+}
+
 /* Category selector */
 .art-category-selector {
   display: flex;
@@ -541,17 +607,27 @@
 .art-card-image-wrap {
   margin-bottom: 12px;
   overflow: auto;
-  max-height: 600px;
+  max-height: 480px;
   border-radius: 8px;
   border: 1px solid var(--border-default);
+  background: var(--bg-body);
+  text-align: center;
 }
 
 .art-card-image-wrap .art-card-image {
   margin-bottom: 0;
   border: none;
   border-radius: 0;
-  max-height: none;
-  transition: width 0.2s ease;
+  /* Default cap so creators who don't resize don't blow out the page.
+     The owner's zoom controls pass inline maxHeight:none when zoomed > 100%,
+     so power users keep their override. Width comes from inline width:100%
+     too — modern browsers maintain aspect ratio when only max-height is set. */
+  max-height: 420px;
+  max-width: 100%;
+  height: auto;
+  object-fit: contain;
+  display: inline-block;
+  transition: width 0.2s ease, max-height 0.2s ease;
 }
 
 .art-card-image-controls {
