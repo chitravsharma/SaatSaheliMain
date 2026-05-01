@@ -89,7 +89,14 @@ function Home() {
 
         const arts = Array.isArray(articlesRes.data) ? articlesRes.data : [];
         arts.sort((a, b) => new Date(b.createdDate) - new Date(a.createdDate));
-        setRecentArticles(arts.slice(0, 18)); // enough for split rows
+        // Cap per content type so a sparse type (e.g. 2 Blogs) isn't dropped
+        // when there are many recent items of another type (e.g. 18 Poems).
+        const topNByType = (predicate) => arts.filter(predicate).slice(0, 6);
+        setRecentArticles([
+          ...topNByType(a => a.contentType === "Poetry"),
+          ...topNByType(a => a.contentType === "Blog"),
+          ...topNByType(a => !a.contentType || (a.contentType !== "Poetry" && a.contentType !== "Blog")),
+        ]);
 
         const recs = Array.isArray(recipesRes.data) ? recipesRes.data : [];
         recs.sort((a, b) => new Date(b.createdDate) - new Date(a.createdDate));
