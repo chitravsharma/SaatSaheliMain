@@ -1,5 +1,6 @@
 import React, { useState, useRef, useCallback, useEffect } from "react";
 import { useStrings } from "./LanguageContext";
+import { optimizeCloudinary } from "./utils/imageUrl";
 
 const PAGE_W = 400;
 const PAGE_H = 500;
@@ -13,7 +14,7 @@ function resolveImageUrl(url) {
   if (match) {
     return `https://drive.google.com/thumbnail?id=${match[1]}&sz=w400`;
   }
-  return url;
+  return optimizeCloudinary(url);
 }
 
 const defaultLayout = (key) => ({

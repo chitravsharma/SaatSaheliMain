@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef, useCallback } from "react";
 import HTMLFlipBook from "react-pageflip";
 import axios from "axios";
 import { useStrings } from "./LanguageContext";
+import { optimizeCloudinary } from "./utils/imageUrl";
 
 // Resolve image URL (supports local uploads and Drive URLs)
 function resolveImageUrl(url) {
@@ -15,7 +16,7 @@ function resolveImageUrl(url) {
   if (match) {
     return `https://drive.google.com/thumbnail?id=${match[1]}&sz=w400`;
   }
-  return url;
+  return optimizeCloudinary(url);
 }
 
 // Parse JSON format string into text style + layout + coverDesign + magazine fields

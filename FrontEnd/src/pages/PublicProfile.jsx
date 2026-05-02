@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import api, { profileUrl } from "../utils/api";
 import { useStrings } from "../LanguageContext";
+import { optimizeCloudinary } from "../utils/imageUrl";
 import "../PublicProfile.css";
 import "./Home.css";
 
@@ -12,7 +13,7 @@ function resolveImageUrl(url) {
   if (url.startsWith("/uploads/")) return `${API}${url}`;
   const match = url.match(/\/file\/d\/([^/]+)\//);
   if (match) return `https://drive.google.com/thumbnail?id=${match[1]}&sz=w200`;
-  return url;
+  return optimizeCloudinary(url);
 }
 
 function PublicProfile() {

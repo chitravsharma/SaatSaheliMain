@@ -1,6 +1,7 @@
 import React, { useState, useRef, useCallback } from "react";
 import axios from "axios";
 import ImageEditor from "./ImageEditor";
+import { optimizeCloudinary } from "../utils/imageUrl";
 import "./CoverPageDesigner.css";
 
 const GENERATE_API = `${process.env.REACT_APP_API_URL}/api/generate-image`;
@@ -167,7 +168,7 @@ function CoverPageDesigner({ type, bookTitle, authorName, imageUrl, onImageChang
     if (url.startsWith("/uploads/")) return `${process.env.REACT_APP_API_URL}${url}`;
     const match = url.match(/\/file\/d\/([^/]+)\//);
     if (match) return `https://drive.google.com/thumbnail?id=${match[1]}&sz=w400`;
-    return url;
+    return optimizeCloudinary(url);
   };
 
   // Get canvas-compatible font family

@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import api from "../utils/api";
 import { useAuth } from "../AuthContext";
 import useProfile from "../hooks/useProfile";
+import { optimizeCloudinary } from "../utils/imageUrl";
 import "./Writers.css";
 import "./Galleries.css";
 
@@ -13,7 +14,7 @@ function resolveImageUrl(url) {
   if (url.startsWith("/uploads/")) return `${API}${url}`;
   const match = url.match(/\/file\/d\/([^/]+)\//);
   if (match) return `https://drive.google.com/thumbnail?id=${match[1]}&sz=w400`;
-  return url;
+  return optimizeCloudinary(url);
 }
 
 export default function Galleries() {

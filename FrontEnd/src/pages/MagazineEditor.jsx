@@ -4,6 +4,7 @@ import { useAuth } from "../AuthContext";
 import { useStrings } from "../LanguageContext";
 import FlipBook from "../FlipBook";
 import ImageEditor from "../components/ImageEditor";
+import { optimizeCloudinary } from "../utils/imageUrl";
 import "./MagazineEditor.css";
 
 const API = process.env.REACT_APP_API_URL;
@@ -507,7 +508,7 @@ const MagazineEditor = () => {
     if (url.startsWith("/uploads/")) return `${API}${url}`;
     const match = url.match(/\/file\/d\/([^/]+)\//);
     if (match) return `https://drive.google.com/thumbnail?id=${match[1]}&sz=w400`;
-    return url;
+    return optimizeCloudinary(url);
   };
 
   const selectedTextBlock = textBlocks.find((tb) => tb.id === selectedBlockId);

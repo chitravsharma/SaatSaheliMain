@@ -5,6 +5,7 @@ import { useAuth } from "../AuthContext";
 import useProfile from "../hooks/useProfile";
 import ImageEditor from "../components/ImageEditor";
 import AdBanner from "../modules/AdBanner";
+import { optimizeCloudinary } from "../utils/imageUrl";
 import "../Articles.css";
 
 const API = process.env.REACT_APP_API_URL;
@@ -14,7 +15,7 @@ function resolveImageUrl(url) {
   if (url.startsWith("/uploads/")) return `${API}${url}`;
   const match = url.match(/\/file\/d\/([^/]+)\//);
   if (match) return `https://drive.google.com/thumbnail?id=${match[1]}&sz=w400`;
-  return url;
+  return optimizeCloudinary(url);
 }
 
 const CATEGORY_OPTIONS = ["Tech", "Creativity", "Community", "Art", "Music", "DIY", "Other"];

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
 import { useStrings } from "../LanguageContext";
+import { optimizeCloudinary } from "../utils/imageUrl";
 import "../BookManager.css";
 
 const API_BASE = process.env.REACT_APP_API_URL;
@@ -12,7 +13,7 @@ function resolveImageUrl(url) {
   if (url.startsWith("/uploads/")) return `${API_BASE}${url}`;
   const match = url.match(/\/file\/d\/([^/]+)\//);
   if (match) return `https://drive.google.com/thumbnail?id=${match[1]}&sz=w200`;
-  return url;
+  return optimizeCloudinary(url);
 }
 
 const CONTENT_TYPE_MAP = {
