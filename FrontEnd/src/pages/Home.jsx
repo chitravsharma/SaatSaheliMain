@@ -11,6 +11,21 @@ import "./Magazine.css";
 
 const API = process.env.REACT_APP_API_URL;
 
+// Hero backdrop carousel — self-hosted JPGs in FrontEnd/public/images/heroes/.
+// Bundled with the React build, served by Render's static handler with browser
+// caching, so $0 of Cloudinary bandwidth per home pageview. To swap a hero
+// photo: replace the slot file under public/images/heroes/ and redeploy. The
+// AdminDashboard "Hero Slides" tab still configures /api/hero-slides for any
+// future surface that wants admin-curated images, but Home.jsx no longer reads
+// from it.
+const STATIC_HERO_BACKDROPS = [
+  "/images/heroes/slot1.jpg",
+  "/images/heroes/slot2.jpg",
+  "/images/heroes/slot3.jpg",
+  "/images/heroes/slot4.jpg",
+  "/images/heroes/slot5.jpg",
+];
+
 function resolveImageUrl(url) {
   if (!url) return null;
   if (url.startsWith("/uploads/")) return `${API}${url}`;
@@ -43,20 +58,10 @@ function Home() {
   const [busyActions, setBusyActions] = useState(new Set());
   const [testimonials, setTestimonials] = useState([]);
   const [heroBackdropIdx, setHeroBackdropIdx] = useState(0);
-  const [adminHeroSlides, setAdminHeroSlides] = useState([]);
   // Mobile-only carousel that swaps the hero photo through:
   // girl image → slide 1 → ... → slide N → girl image → ...
   const [isMobileHero, setIsMobileHero] = useState(false);
   const [mobileHeroIdx, setMobileHeroIdx] = useState(0);
-
-  // Admin-curated hero backdrops (fixed slot count, see HeroSlideService.SLOT_COUNT).
-  // If empty / endpoint fails,
-  // we fall back to the auto-scraped creator content below.
-  useEffect(() => {
-    api.get(`${API}/api/hero-slides`)
-      .then(res => setAdminHeroSlides(Array.isArray(res.data) ? res.data : []))
-      .catch(() => setAdminHeroSlides([]));
-  }, []);
 
   // Fetch testimonials (recent feedback with ratings)
   useEffect(() => {
@@ -288,42 +293,10 @@ function Home() {
     return () => clearInterval(t);
   }, [magazines]);
 
-  // Compose a backdrop carousel. Prefer admin-curated hero slides; if none are
-  // configured, fall back to a soft mosaic of real creator content.
-  const heroBackdrops = useMemo(() => {
-    if (adminHeroSlides.length > 0) {
-      return adminHeroSlides
-        .map(s => resolveImageUrl(s.imageUrl))
-        .filter(Boolean);
-    }
-    const urls = [];
-    galleries.forEach(g => {
-      const cover = resolveImageUrl(g.coverImageUrl || (g.images && g.images[0]?.imageUrl));
-      if (cover) urls.push(cover);
-    });
-    recentBooks.forEach(b => {
-      const cover = resolveImageUrl(b.coverImageUrl);
-      if (cover) urls.push(cover);
-    });
-    recentArticles.forEach(a => {
-      const cover = resolveImageUrl(a.imageUrl);
-      if (cover) urls.push(cover);
-    });
-    recentRecipes.forEach(r => {
-      const cover = resolveImageUrl(r.images && r.images[0]?.imageUrl);
-      if (cover) urls.push(cover);
-    });
-    recentPodcasts.forEach(p => {
-      const cover = resolveImageUrl(p.coverImageUrl);
-      if (cover) urls.push(cover);
-    });
-    // Shuffle so successive loads/refreshes don't always lead with the same item.
-    for (let i = urls.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [urls[i], urls[j]] = [urls[j], urls[i]];
-    }
-    return urls;
-  }, [adminHeroSlides, galleries, recentBooks, recentArticles, recentRecipes, recentPodcasts]);
+  // Hero backdrop carousel uses self-hosted static images (see STATIC_HERO_BACKDROPS
+  // at top of file). Memoized to a stable reference so the rotation effect below
+  // doesn't re-fire on unrelated state updates.
+  const heroBackdrops = useMemo(() => STATIC_HERO_BACKDROPS, []);
 
   useEffect(() => {
     if (heroBackdrops.length < 2) return;
