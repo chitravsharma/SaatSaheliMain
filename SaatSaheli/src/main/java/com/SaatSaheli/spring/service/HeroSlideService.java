@@ -33,7 +33,7 @@ import java.util.regex.Pattern;
 public class HeroSlideService {
 
     private static final Logger log = LoggerFactory.getLogger(HeroSlideService.class);
-    public static final int SLOT_COUNT = 8;
+    public static final int SLOT_COUNT = 5;
 
     @Autowired
     private HeroSlideRepository repo;
@@ -62,8 +62,9 @@ public class HeroSlideService {
     private static final Pattern ARTICLE_RE  = Pattern.compile("^/articles/(\\d+)/?$");
     private static final Pattern PODCAST_RE  = Pattern.compile("^/podcasts/(\\d+)/?$");
 
-    // Ensure slots 1..8 always exist as rows (with empty content). Lets the admin
-    // form render a stable 8-slot grid without per-slot create logic.
+    // Ensure slots 1..SLOT_COUNT always exist as rows (with empty content). Lets the
+    // admin form render a stable grid without per-slot create logic. Slots above
+    // SLOT_COUNT may exist from prior config; getAllSlots/getActiveSlots filter them out.
     @PostConstruct
     public void seedEmptySlots() {
         try {
@@ -96,13 +97,21 @@ public class HeroSlideService {
     }
 
     public List<HeroSlide> getAllSlots() {
-        return repo.findAllByOrderBySlotAsc();
+        List<HeroSlide> all = repo.findAllByOrderBySlotAsc();
+        List<HeroSlide> kept = new ArrayList<>();
+        for (HeroSlide s : all) {
+            if (s.getSlot() != null && s.getSlot() >= 1 && s.getSlot() <= SLOT_COUNT) {
+                kept.add(s);
+            }
+        }
+        return kept;
     }
 
     public List<HeroSlide> getActiveSlots() {
         List<HeroSlide> all = repo.findAllByOrderBySlotAsc();
         List<HeroSlide> active = new ArrayList<>();
         for (HeroSlide s : all) {
+            if (s.getSlot() == null || s.getSlot() < 1 || s.getSlot() > SLOT_COUNT) continue;
             if (s.getImageUrl() != null && !s.getImageUrl().trim().isEmpty()) {
                 active.add(s);
             }

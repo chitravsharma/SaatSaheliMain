@@ -45,11 +45,12 @@ function Home() {
   const [heroBackdropIdx, setHeroBackdropIdx] = useState(0);
   const [adminHeroSlides, setAdminHeroSlides] = useState([]);
   // Mobile-only carousel that swaps the hero photo through:
-  // girl image → slide 1 → ... → slide 8 → girl image → ...
+  // girl image → slide 1 → ... → slide N → girl image → ...
   const [isMobileHero, setIsMobileHero] = useState(false);
   const [mobileHeroIdx, setMobileHeroIdx] = useState(0);
 
-  // Admin-curated hero backdrops (fixed 8 slots). If empty / endpoint fails,
+  // Admin-curated hero backdrops (fixed slot count, see HeroSlideService.SLOT_COUNT).
+  // If empty / endpoint fails,
   // we fall back to the auto-scraped creator content below.
   useEffect(() => {
     api.get(`${API}/api/hero-slides`)

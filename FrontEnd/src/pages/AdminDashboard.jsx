@@ -122,11 +122,12 @@ const AdminDashboard = () => {
     const [resetPasswordUserId, setResetPasswordUserId] = useState(null);
     const [resetNewPassword, setResetNewPassword] = useState("");
 
-    // Hero Slides — fixed 8-slot decorative carousel on the home hero.
+    // Hero Slides — fixed 5-slot decorative carousel on the home hero.
     // sourceUrl = what admin pastes (page URL or direct image URL).
     // imageUrl  = resolved direct image URL returned by backend (read-only in form).
+    const HERO_SLOT_COUNT = 5;
     const [heroSlides, setHeroSlides] = useState(() =>
-        Array.from({ length: 8 }, (_, i) => ({ slot: i + 1, name: "", sourceUrl: "", imageUrl: "" }))
+        Array.from({ length: HERO_SLOT_COUNT }, (_, i) => ({ slot: i + 1, name: "", sourceUrl: "", imageUrl: "" }))
     );
     const [heroSavingSlides, setHeroSavingSlides] = useState(false);
 
@@ -143,7 +144,7 @@ const AdminDashboard = () => {
         try {
             const res = await api.get(`${API}/api/hero-slides/all`);
             const rows = Array.isArray(res.data) ? res.data : [];
-            const merged = Array.from({ length: 8 }, (_, i) => {
+            const merged = Array.from({ length: HERO_SLOT_COUNT }, (_, i) => {
                 const found = rows.find(r => r.slot === i + 1);
                 return {
                     slot: i + 1,
