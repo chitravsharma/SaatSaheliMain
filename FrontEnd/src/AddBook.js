@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import api from "./utils/api";
+import { optimizeCloudinary } from "./utils/imageUrl";
 import HTMLFlipBook from "react-pageflip";
 
 const API = `${process.env.REACT_APP_API_URL}/api/books`;
@@ -192,7 +193,7 @@ function AddBook() {
                                     <p>{page.content}</p>
                                     {page.imageUrl && (
                                         <img
-                                            src={page.imageUrl}
+                                            src={optimizeCloudinary(page.imageUrl)}
                                             alt="Page"
                                             style={{ maxWidth: "100%", height: "auto" }}
                                         />

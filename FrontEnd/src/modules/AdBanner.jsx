@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import api from "../utils/api";
+import { optimizeCloudinary } from "../utils/imageUrl";
 import "./AdBanner.css";
 
 const API = process.env.REACT_APP_API_URL;
@@ -60,10 +61,10 @@ const AdBanner = ({ placement }) => {
             {ad.contentType === "image" && ad.imageUrl && (
               ad.linkUrl ? (
                 <a href={ad.linkUrl} target="_blank" rel="noopener noreferrer">
-                  <img src={ad.imageUrl} alt={ad.title} className="ad-banner-image" style={imgStyle} />
+                  <img src={optimizeCloudinary(ad.imageUrl)} alt={ad.title} className="ad-banner-image" style={imgStyle} />
                 </a>
               ) : (
-                <img src={ad.imageUrl} alt={ad.title} className="ad-banner-image" style={imgStyle} />
+                <img src={optimizeCloudinary(ad.imageUrl)} alt={ad.title} className="ad-banner-image" style={imgStyle} />
               )
             )}
             {ad.contentType === "html" && (

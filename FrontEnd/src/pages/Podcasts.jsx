@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import api, { profileUrl } from "../utils/api";
+import { optimizeCloudinary } from "../utils/imageUrl";
 import { useAuth } from "../AuthContext";
 import AdBanner from "../modules/AdBanner";
 import "./Podcasts.css";
@@ -371,7 +372,7 @@ function Podcasts() {
     <div key={podcast.id} className="podcast-card">
       <div className="podcast-card-top">
         {podcast.coverImageUrl ? (
-          <img src={podcast.coverImageUrl} alt={podcast.title} className="podcast-cover" />
+          <img src={optimizeCloudinary(podcast.coverImageUrl)} alt={podcast.title} className="podcast-cover" />
         ) : (
           <div className="podcast-cover-placeholder">
             <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" strokeWidth="1.5">

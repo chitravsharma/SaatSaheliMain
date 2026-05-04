@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import api from "../utils/api";
+import { optimizeCloudinary } from "../utils/imageUrl";
 import { useAuth } from "../AuthContext";
 import "./Recipes.css";
 import "./RecipeEditor.css";
@@ -190,7 +191,7 @@ export default function RecipeEditor() {
           <div className="recipe-images-grid">
             {images.map((img, idx) => (
               <div key={idx} className="recipe-image-slot">
-                <img src={img.imageUrl} alt={img.caption || "Recipe photo"} />
+                <img src={optimizeCloudinary(img.imageUrl)} alt={img.caption || "Recipe photo"} />
                 <button type="button" className="recipe-image-remove" onClick={() => removeImage(idx)} title="Remove">
                   &times;
                 </button>

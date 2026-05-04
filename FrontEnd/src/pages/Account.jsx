@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import api, { profileUrl } from "../utils/api";
+import { optimizeCloudinary } from "../utils/imageUrl";
 import { useAuth } from "../AuthContext";
 import { useStrings } from "../LanguageContext";
 import TermsGate from "../components/TermsGate";
@@ -267,7 +268,7 @@ function Account() {
           <div className="acct-avatar-wrap">
             {profile && profile.profileImageUrl ? (
               <img
-                src={profile.profileImageUrl.startsWith("http") ? profile.profileImageUrl : `${process.env.REACT_APP_API_URL}${profile.profileImageUrl}`}
+                src={optimizeCloudinary(profile.profileImageUrl.startsWith("http") ? profile.profileImageUrl : `${process.env.REACT_APP_API_URL}${profile.profileImageUrl}`)}
                 alt={profile.displayName || user.name}
                 className="acct-profile-avatar"
               />
@@ -503,7 +504,7 @@ function Account() {
                     {galleryImages.map((img) => (
                       <div key={img.id} className="acct-gallery-cell">
                         <div className="acct-gallery-item">
-                          <img src={img.imageUrl} alt={img.caption || "Gallery photo"} className="acct-gallery-img" />
+                          <img src={optimizeCloudinary(img.imageUrl)} alt={img.caption || "Gallery photo"} className="acct-gallery-img" />
                           <button className="acct-gallery-remove" onClick={() => removeGalleryImage(img.id)} title="Remove">&times;</button>
                         </div>
                         {editingCaptionId === img.id ? (

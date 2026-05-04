@@ -826,7 +826,7 @@ function Home() {
           return (
             <div key={`p-${podcast.id}`} className={`home-article-card ${hasImage ? "" : "home-article-card-compact"}`}>
               <Link to={`/podcasts`} className="home-article-link">
-                {hasImage && <img src={podcast.coverImageUrl} alt={podcast.title} className="home-article-img" />}
+                {hasImage && <img src={optimizeCloudinary(podcast.coverImageUrl)} alt={podcast.title} className="home-article-img" />}
                 <div className="home-article-info">
                   <span className="home-article-type home-article-type-poetry">Podcast</span>
                   <span className="home-article-title">{podcast.title}</span>

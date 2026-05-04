@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import api from "../utils/api";
+import { optimizeCloudinary } from "../utils/imageUrl";
 import { useAuth } from "../AuthContext";
 import useProfile from "../hooks/useProfile";
 import "./Marketplace.css";
@@ -166,14 +167,14 @@ export default function Marketplace() {
     <div key={item.id} className="mp-card">
       <div className="mp-card-images">
         {item.image1Url ? (
-          <img src={item.image1Url} alt={item.title} className="mp-card-img" />
+          <img src={optimizeCloudinary(item.image1Url)} alt={item.title} className="mp-card-img" />
         ) : (
           <div className="mp-card-img-placeholder">
             <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
           </div>
         )}
         {item.image2Url && (
-          <img src={item.image2Url} alt={`${item.title} 2`} className="mp-card-img mp-card-img-2" />
+          <img src={optimizeCloudinary(item.image2Url)} alt={`${item.title} 2`} className="mp-card-img mp-card-img-2" />
         )}
       </div>
       <div className="mp-card-info">

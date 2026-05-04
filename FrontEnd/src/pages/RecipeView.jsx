@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import api, { profileUrl } from "../utils/api";
+import { optimizeCloudinary } from "../utils/imageUrl";
 import { useAuth } from "../AuthContext";
 import "./Recipes.css";
 import "./RecipeView.css";
@@ -223,7 +224,7 @@ export default function RecipeView() {
               <aside className="recipe-instructions-images">
                 {recipe.images.map((img) => (
                   <figure key={img.id} className="recipe-image-figure">
-                    <img src={img.imageUrl} alt={img.caption || "Recipe photo"} />
+                    <img src={optimizeCloudinary(img.imageUrl)} alt={img.caption || "Recipe photo"} />
                     {img.caption && <figcaption>{img.caption}</figcaption>}
                   </figure>
                 ))}

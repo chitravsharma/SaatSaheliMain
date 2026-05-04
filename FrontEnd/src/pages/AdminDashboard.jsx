@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import api from "../utils/api";
+import { optimizeCloudinary } from "../utils/imageUrl";
 import { useAuth } from "../AuthContext";
 import { useStrings } from "../LanguageContext";
 import MagazineEditor from "./MagazineEditor";
@@ -2124,7 +2125,7 @@ const AdminDashboard = () => {
                                             <td style={{ textTransform: "capitalize" }}>{ad.animation}</td>
                                             <td style={{ maxWidth: 200 }}>
                                                 {ad.contentType === "image" && ad.imageUrl && (
-                                                    <img src={ad.imageUrl} alt={ad.title} style={{ maxWidth: 120, maxHeight: 60, borderRadius: 4 }} />
+                                                    <img src={optimizeCloudinary(ad.imageUrl)} alt={ad.title} style={{ maxWidth: 120, maxHeight: 60, borderRadius: 4 }} />
                                                 )}
                                                 {ad.contentType === "html" && (
                                                     <div style={{ fontSize: "0.7rem", maxHeight: 60, overflow: "hidden" }} dangerouslySetInnerHTML={{ __html: ad.htmlContent }} />

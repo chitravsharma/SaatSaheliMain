@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate, Link, useSearchParams } from "react-router-dom";
 import api, { profileUrl } from "../utils/api";
+import { optimizeCloudinary } from "../utils/imageUrl";
 import { useAuth } from "../AuthContext";
 import { useStrings } from "../LanguageContext";
 import "./GalleryView.css";
@@ -331,7 +332,7 @@ function GalleryView() {
                 tabIndex={0}
                 onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") openLightbox(i); }}
               >
-                <img src={img.imageUrl} alt={img.caption || `Photo ${i + 1}`} className="gv-grid-img" />
+                <img src={optimizeCloudinary(img.imageUrl)} alt={img.caption || `Photo ${i + 1}`} className="gv-grid-img" />
                 {img.caption && <div className="gv-grid-caption">{img.caption}</div>}
               </div>
               <div className="gv-image-actions" onClick={(e) => e.stopPropagation()}>
@@ -411,7 +412,7 @@ function GalleryView() {
           <div className="gv-lightbox-content" onClick={(e) => e.stopPropagation()}>
             <button className="gv-lightbox-close" onClick={closeLightbox} aria-label="Close">&times;</button>
             <button className="gv-lightbox-prev" onClick={prevImage} aria-label="Previous image">&lsaquo;</button>
-            <img src={images[lightboxIndex].imageUrl} alt={images[lightboxIndex].caption || ""} className="gv-lightbox-img" />
+            <img src={optimizeCloudinary(images[lightboxIndex].imageUrl)} alt={images[lightboxIndex].caption || ""} className="gv-lightbox-img" />
             <button className="gv-lightbox-next" onClick={nextImage} aria-label="Next image">&rsaquo;</button>
             {images[lightboxIndex].caption && (
               <div className="gv-lightbox-caption">{images[lightboxIndex].caption}</div>
