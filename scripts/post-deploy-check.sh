@@ -152,6 +152,28 @@ else
   printf "${YELLOW}SKIP${NC}  %-40s  %s\n" "account avatar: matches public" "css files not present (running outside repo)"
 fi
 
+# --- Hero slides cap + static-hosted backdrops (2026-05-04) ---
+# Hero slot count was cut 8 → 5. Public endpoint must return exactly 5 entries
+# even if older DB rows for slots 6-8 still exist (service filters them).
+hero_count=$(curl -sS --max-time 10 "${BASE_URL}/api/hero-slides" | python3 -c "import json,sys; d=json.load(sys.stdin); print(len(d) if isinstance(d,list) else -1)" 2>/dev/null || echo "-1")
+if [ "$hero_count" = "5" ]; then
+  printf "${GREEN}PASS${NC}  %-40s  %s\n" "hero slides count = 5" "ok"
+  PASS=$((PASS+1))
+else
+  printf "${RED}FAIL${NC}  %-40s  got %s, expected 5\n" "hero slides count = 5" "$hero_count"
+  FAIL=$((FAIL+1))
+  FAILED_TESTS+=("hero slides count = 5")
+fi
+# Hero backdrops are now self-hosted JPGs (not Cloudinary). Each slot file must
+# return 200; if any 404s, Home.jsx will show a broken image on the home page.
+for n in 1 2 3 4 5; do
+  check "static hero: slot${n}.jpg"   200 5    "/images/heroes/slot${n}.jpg"
+done
+
+# --- /sponsor-us pitch page (2026-05-04) ---
+# SPA fallback should serve index.html — 200 with text/html.
+check "sponsor-us route"            200 5    "/sponsor-us"
+
 # --- #24 SuperAdmin act-on-behalf (Phase 1) ---
 # Content-write endpoints now require a JWT — body userId alone is no longer accepted.
 check "book create: no auth"        401 5    "/api/books/create" -X POST \
