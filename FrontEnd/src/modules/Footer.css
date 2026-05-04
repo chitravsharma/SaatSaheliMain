@@ -26,6 +26,71 @@
   margin-bottom: 12px;
 }
 
+/* Sponsor logo strip — auto-hides via React when SPONSORS list is empty.
+   Sits above the link nav, separated by a thin rule. */
+.footer-sponsors {
+  max-width: 960px;
+  margin: 0 auto 16px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 14px 24px;
+}
+.footer-sponsors-label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: #a0a8b8;
+}
+.footer-sponsors-list {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 16px 22px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.footer-sponsor-logo {
+  height: 32px;
+  width: auto;
+  max-width: 140px;
+  object-fit: contain;
+  opacity: 0.85;
+  filter: grayscale(20%);
+  transition: opacity 0.18s, filter 0.18s, transform 0.18s;
+}
+.footer-sponsors-list a:hover .footer-sponsor-logo,
+.footer-sponsors-list a:focus-visible .footer-sponsor-logo {
+  opacity: 1;
+  filter: none;
+  transform: translateY(-1px);
+}
+.footer-sponsors-list a:focus-visible {
+  outline: 3px solid var(--accent-gold-hover, #c79a3b);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+.footer-sponsors-link {
+  color: #d0d8e8;
+  text-decoration: none;
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 4px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 999px;
+  transition: background 0.18s, color 0.18s, border-color 0.18s;
+}
+.footer-sponsors-link:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.4);
+}
+
 .footer-link {
   color: #d0d8e8;
   text-decoration: none;

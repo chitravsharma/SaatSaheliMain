@@ -1,0 +1,32 @@
+/* SponsorUs page — overrides on top of Advertise.css.
+   Most styles are inherited; only the section heads need a tighter rhythm
+   since this page has multiple package grids stacked. */
+
+.sponsor-page .sponsor-section-head {
+  text-align: center;
+  margin: 3rem auto 1.5rem;
+  max-width: 720px;
+}
+
+.sponsor-page .sponsor-section-head .advertise-placements-h2 {
+  margin: 0.25rem 0 0.5rem;
+}
+
+.sponsor-page .sponsor-section-head .advertise-placements-lede {
+  margin: 0;
+}
+
+.sponsor-page .sponsor-value {
+  max-width: 1080px;
+  margin: 2.5rem auto;
+  padding: 0 1.5rem;
+  text-align: center;
+}
+
+.sponsor-page .sponsor-value .advertise-placements-h2 {
+  margin-bottom: 1rem;
+}
+
+.sponsor-page .sponsor-value .advertise-placements-grid {
+  justify-content: center;
+}
