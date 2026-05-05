@@ -468,7 +468,7 @@ a.home-gallery-author:hover { text-decoration: underline; color: var(--accent-bl
 }
 
 .home-articles-row > .home-article-card {
-  flex: 0 0 280px;
+  flex: 0 0 210px;
   scroll-snap-align: start;
   min-width: 0;
 }
@@ -483,8 +483,8 @@ a.home-gallery-author:hover { text-decoration: underline; color: var(--accent-bl
 }
 .home-articles-row.home-row-few > .home-article-card {
   scroll-snap-align: none;
-  flex: 1 1 280px;
-  max-width: 320px;
+  flex: 1 1 200px;
+  max-width: 220px;
 }
 
 .home-articles-row::-webkit-scrollbar {
@@ -519,7 +519,8 @@ a.home-gallery-author:hover { text-decoration: underline; color: var(--accent-bl
 
 .home-article-img {
   width: 100%;
-  height: 140px;
+  aspect-ratio: 4 / 3;
+  height: auto;
   object-fit: cover;
 }
 
@@ -689,10 +690,20 @@ a.home-gallery-author:hover { text-decoration: underline; color: var(--accent-bl
 }
 
 .home-testimonials-row {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  display: flex;
   gap: 16px;
+  overflow-x: auto;
+  padding-bottom: 8px;
   margin-bottom: 16px;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+}
+.home-testimonials-row::-webkit-scrollbar {
+  height: 4px;
+}
+.home-testimonials-row::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+  border-radius: 4px;
 }
 
 .home-testimonial-card {
@@ -704,6 +715,10 @@ a.home-gallery-author:hover { text-decoration: underline; color: var(--accent-bl
   flex-direction: column;
   gap: 10px;
   transition: transform 0.2s, box-shadow 0.2s;
+  flex: 0 0 280px;
+  min-width: 280px;
+  max-width: 280px;
+  scroll-snap-align: start;
 }
 
 .home-testimonial-card:hover {
@@ -732,10 +747,17 @@ a.home-gallery-author:hover { text-decoration: underline; color: var(--accent-bl
   line-height: 1.6;
   font-style: italic;
   margin: 0;
-  overflow: hidden;
-  display: -webkit-box;
-  -webkit-line-clamp: 4;
-  -webkit-box-orient: vertical;
+  max-height: 7.5em;
+  overflow-y: auto;
+  padding-right: 4px;
+  -webkit-overflow-scrolling: touch;
+}
+.home-testimonial-message::-webkit-scrollbar {
+  width: 4px;
+}
+.home-testimonial-message::-webkit-scrollbar-thumb {
+  background: rgba(135, 169, 107, 0.45);
+  border-radius: 4px;
 }
 
 .home-testimonial-footer {
@@ -763,8 +785,10 @@ a.home-gallery-author:hover { text-decoration: underline; color: var(--accent-bl
 }
 
 @media (max-width: 600px) {
-  .home-testimonials-row {
-    grid-template-columns: 1fr;
+  .home-testimonial-card {
+    flex: 0 0 86%;
+    min-width: 86%;
+    max-width: 86%;
   }
 }
 
@@ -1300,6 +1324,35 @@ a.home-gallery-author:hover { text-decoration: underline; color: var(--accent-bl
   letter-spacing: 0.005em;
   line-height: 1.4;
 }
+/* Two-column feature row: Magazine | Podcast. Sits between the hero block
+   and the content scroll-rows. Stacks on narrow screens. CSS vars used by
+   the magazine card styles are scoped to .home-hero, so we re-declare them
+   here so the same card styles work outside the hero. */
+.home-feature-row {
+  --mag-primary: #a0532b;
+  --mag-primary-deep: #7e3d1d;
+  --mag-accent: #c9a84c;
+  --mag-ink: #1a1a1a;
+  --mag-mute: #6b5a4a;
+  --mag-display: 'Playfair Display', 'Georgia', serif;
+  --mag-text: 'Inter', system-ui, sans-serif;
+
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 32px;
+  align-items: stretch;
+  margin: 24px 0 32px;
+}
+.home-feature-row > .home-hero-magazine {
+  margin-top: 0;
+}
+@media (max-width: 760px) {
+  .home-feature-row {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+}
+
 /* Magazine band — sits below the hero grid, full width.
    No border-top here: the trust strip below already carries the gold
    divider, so two stacked dividers would feel stripey. */

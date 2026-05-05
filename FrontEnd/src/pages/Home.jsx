@@ -52,8 +52,6 @@ function Home() {
   const [userFavorites, setUserFavorites] = useState({});
   const [loading, setLoading] = useState(true);
   const [shareCopiedId, setShareCopiedId] = useState(null);
-  const [podcastShareCopiedId, setPodcastShareCopiedId] = useState(null);
-  const [podcastCounts, setPodcastCounts] = useState({ likes: {}, comments: {} });
   const [actionError, setActionError] = useState("");
   const [busyActions, setBusyActions] = useState(new Set());
   const [testimonials, setTestimonials] = useState([]);
@@ -65,7 +63,7 @@ function Home() {
 
   // Fetch testimonials (recent feedback with ratings)
   useEffect(() => {
-    api.get(`${API}/api/contact/reviews?limit=6`)
+    api.get(`${API}/api/contact/reviews?limit=24`)
       .then(res => setTestimonials(Array.isArray(res.data) ? res.data : []))
       .catch(() => setTestimonials([]));
   }, []);
@@ -73,7 +71,7 @@ function Home() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [booksRes, galleriesRes, articlesRes, recipesRes, podcastsRes, magazineRes, bookCountsRes, galleryCountsRes, articleCountsRes, podcastCountsRes] = await Promise.all([
+        const [booksRes, galleriesRes, articlesRes, recipesRes, podcastsRes, magazineRes, bookCountsRes, galleryCountsRes, articleCountsRes] = await Promise.all([
           api.get(`${API}/api/books/search?status=PUBLISHED`),
           api.get(`${API}/api/galleries`),
           api.get(`${API}/api/articles`).catch(() => ({ data: [] })),
@@ -83,7 +81,6 @@ function Home() {
           api.get(`${API}/api/social/counts?targetType=BOOK`).catch(() => ({ data: { likes: {}, comments: {} } })),
           api.get(`${API}/api/social/counts?targetType=GALLERY`).catch(() => ({ data: { likes: {}, comments: {} } })),
           api.get(`${API}/api/social/counts?targetType=ARTICLE`).catch(() => ({ data: { likes: {}, comments: {} } })),
-          api.get(`${API}/api/social/counts?targetType=PODCAST`).catch(() => ({ data: { likes: {}, comments: {} } })),
         ]);
 
         const books = Array.isArray(booksRes.data) ? booksRes.data : [];
@@ -128,7 +125,6 @@ function Home() {
         setBookCounts(bookCountsRes.data || { likes: {}, comments: {} });
         setGalleryCounts(galleryCountsRes.data || { likes: {}, comments: {} });
         setArticleCounts(articleCountsRes.data || { likes: {}, comments: {} });
-        setPodcastCounts(podcastCountsRes.data || { likes: {}, comments: {} });
       } catch (err) {
         console.error("Failed to fetch home page data:", err);
       } finally {
@@ -234,18 +230,6 @@ function Home() {
       await navigator.clipboard.writeText(`${text}\n${url}`);
       setShareCopiedId(article.id);
       setTimeout(() => setShareCopiedId(null), 2000);
-    }
-  };
-
-  const handlePodcastShare = async (podcast) => {
-    const url = `${window.location.origin}/podcasts`;
-    const text = `Check out "${podcast.title}" on Saat Saheli!`;
-    if (navigator.share) {
-      try { await navigator.share({ title: podcast.title, text, url }); } catch { /* cancelled */ }
-    } else {
-      await navigator.clipboard.writeText(`${text}\n${url}`);
-      setPodcastShareCopiedId(podcast.id);
-      setTimeout(() => setPodcastShareCopiedId(null), 2000);
     }
   };
 
@@ -525,41 +509,6 @@ function Home() {
             )}
           </div>
 
-          <aside className="home-hero-magazine" aria-label="Magazine">
-            <p className="home-hero-magazine-heading">
-              <span className="home-hero-magazine-emoji" aria-hidden="true">📖</span>
-              Get published in our magazine
-            </p>
-            <p className="home-hero-magazine-dek">A Hindi + English creative magazine &mdash; monthly issue.</p>
-            {(() => {
-              const mag = magazines[magazineIndex] || null;
-              return (
-                <Link to="/magazine" className="home-hero-magazine-card">
-                  <div className="home-hero-magazine-fade" key={mag?.id || "placeholder"}>
-                    {mag && resolveImageUrl(mag.coverImageUrl) ? (
-                      <img
-                        src={resolveImageUrl(mag.coverImageUrl)}
-                        alt={mag.title || "Saat Saheli Magazine cover"}
-                        className="home-hero-magazine-coverimg"
-                        loading="lazy"
-                      />
-                    ) : (
-                      <span className="home-hero-magazine-cover" aria-hidden="true">📰</span>
-                    )}
-                    <div className="home-hero-magazine-meta">
-                      <p className="home-hero-magazine-title">
-                        {mag?.title || "Saat Saheli Magazine"}
-                      </p>
-                      <span className="home-hero-magazine-link">
-                        Browse Magazine <span aria-hidden="true">→</span>
-                      </span>
-                    </div>
-                  </div>
-                </Link>
-              );
-            })()}
-          </aside>
-
           <ul className="home-hero-promises" aria-label="What sets us apart">
             <li>
               <p className="home-hero-promises-title">No algorithm suppression</p>
@@ -576,6 +525,100 @@ function Home() {
           </ul>
         </section>
       )}
+
+      {/* Magazine + Podcast feature row — two columns on desktop, stacks on mobile.
+         Sits between the hero (or quick-nav) and the content scroll-rows. */}
+      <section className="home-feature-row" aria-label="Featured">
+        <aside className="home-hero-magazine" aria-label="Magazine">
+          <p className="home-hero-magazine-heading">
+            <span className="home-hero-magazine-emoji" aria-hidden="true">📖</span>
+            Get published in our magazine
+          </p>
+          <p className="home-hero-magazine-dek">A Hindi + English creative magazine &mdash; monthly issue.</p>
+          {(() => {
+            const mag = magazines[magazineIndex] || null;
+            return (
+              <Link to="/magazine" className="home-hero-magazine-card">
+                <div className="home-hero-magazine-fade" key={mag?.id || "placeholder"}>
+                  {mag && resolveImageUrl(mag.coverImageUrl) ? (
+                    <img
+                      src={resolveImageUrl(mag.coverImageUrl)}
+                      alt={mag.title || "Saat Saheli Magazine cover"}
+                      className="home-hero-magazine-coverimg"
+                      loading="lazy"
+                    />
+                  ) : (
+                    <span className="home-hero-magazine-cover" aria-hidden="true">📰</span>
+                  )}
+                  <div className="home-hero-magazine-meta">
+                    <p className="home-hero-magazine-title">
+                      {mag?.title || "Saat Saheli Magazine"}
+                    </p>
+                    <span className="home-hero-magazine-link">
+                      Browse Magazine <span aria-hidden="true">→</span>
+                    </span>
+                  </div>
+                </div>
+              </Link>
+            );
+          })()}
+        </aside>
+
+        <aside className="home-hero-magazine home-feature-podcast" aria-label="Podcast">
+          <p className="home-hero-magazine-heading">
+            <span className="home-hero-magazine-emoji" aria-hidden="true">🎙️</span>
+            Join our podcast
+          </p>
+          <p className="home-hero-magazine-dek">Show your creative side &mdash; share your voice.</p>
+          {(() => {
+            const pod = recentPodcasts[0] || null;
+            const ytId = (() => {
+              const u = pod?.youtubeUrl;
+              if (!u) return "";
+              const t = String(u).trim();
+              if (/^[A-Za-z0-9_-]{11}$/.test(t)) return t;
+              try {
+                const parsed = new URL(t);
+                if (parsed.hostname.includes("youtu.be")) return parsed.pathname.slice(1).split("/")[0] || "";
+                if (parsed.hostname.includes("youtube.com")) {
+                  if (parsed.pathname.startsWith("/embed/") || parsed.pathname.startsWith("/shorts/")) {
+                    return parsed.pathname.split("/")[2] || "";
+                  }
+                  return parsed.searchParams.get("v") || "";
+                }
+              } catch { /* not a URL */ }
+              return "";
+            })();
+            const thumb = ytId
+              ? `https://img.youtube.com/vi/${ytId}/hqdefault.jpg`
+              : (pod?.coverImageUrl ? resolveImageUrl(pod.coverImageUrl) : "");
+            return (
+              <Link to="/podcasts" className="home-hero-magazine-card">
+                <div className="home-hero-magazine-fade" key={pod?.id || "placeholder"}>
+                  {thumb ? (
+                    <img
+                      src={thumb}
+                      alt={pod?.title || "Saat Saheli podcast cover"}
+                      className="home-hero-magazine-coverimg"
+                      loading="lazy"
+                    />
+                  ) : (
+                    <span className="home-hero-magazine-cover" aria-hidden="true">🎧</span>
+                  )}
+                  <div className="home-hero-magazine-meta">
+                    <p className="home-hero-magazine-title">
+                      {pod?.title || "Saat Saheli Podcast"}
+                    </p>
+                    <span className="home-hero-magazine-link">
+                      Listen now <span aria-hidden="true">→</span>
+                    </span>
+                  </div>
+                </div>
+              </Link>
+            );
+          })()}
+        </aside>
+      </section>
 
       {loading && <div className="loading-spinner" />}
 
@@ -794,46 +837,6 @@ function Home() {
           );
         };
 
-        const renderPodcastCard = (podcast) => {
-          const hasImage = !!podcast.coverImageUrl;
-          return (
-            <div key={`p-${podcast.id}`} className={`home-article-card ${hasImage ? "" : "home-article-card-compact"}`}>
-              <Link to={`/podcasts`} className="home-article-link">
-                {hasImage && <img src={optimizeCloudinary(podcast.coverImageUrl)} alt={podcast.title} className="home-article-img" />}
-                <div className="home-article-info">
-                  <span className="home-article-type home-article-type-poetry">Podcast</span>
-                  <span className="home-article-title">{podcast.title}</span>
-                  {podcast.category && <span className="home-article-author">{podcast.category}</span>}
-                  <span className="home-article-date">{new Date(podcast.createdDate).toLocaleDateString()}</span>
-                </div>
-              </Link>
-              {podcast.authorName && (
-                <Link
-                  to={profileUrl(podcast.userId, podcast.authorName)}
-                  className="home-article-author home-article-author-link"
-                >by {podcast.authorName}</Link>
-              )}
-              <div className="home-card-social">
-                <button className={`ss-btn-icon-sm ${userLikes[`PODCAST_${podcast.id}`] ? "active" : ""}`} onClick={() => handleLike("PODCAST", podcast.id)} title="Like">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill={userLikes[`PODCAST_${podcast.id}`] ? "#e74c3c" : "none"} stroke={userLikes[`PODCAST_${podcast.id}`] ? "#e74c3c" : "currentColor"} strokeWidth="2"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
-                  <span>{podcastCounts.likes[podcast.id] || 0}</span>
-                </button>
-                <Link to="/podcasts" className="ss-btn-icon-sm" title="Comments">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
-                  <span>{podcastCounts.comments[podcast.id] || 0}</span>
-                </Link>
-                <button className={`ss-btn-icon-sm ${userFavorites[`PODCAST_${podcast.id}`] ? "active" : ""}`} onClick={() => handleFavorite("PODCAST", podcast.id)} title="Favorite">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill={userFavorites[`PODCAST_${podcast.id}`] ? "#d4a017" : "none"} stroke={userFavorites[`PODCAST_${podcast.id}`] ? "#d4a017" : "currentColor"} strokeWidth="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-                </button>
-                <button className="ss-btn-icon-sm" onClick={() => handlePodcastShare(podcast)} title="Share">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
-                  {podcastShareCopiedId === podcast.id ? <span>Copied!</span> : <span>Share</span>}
-                </button>
-              </div>
-            </div>
-          );
-        };
-
         const renderRecipeCard = (recipe) => {
           const cover = recipe.images && recipe.images[0]?.imageUrl;
           const hasImage = !!cover;
@@ -864,7 +867,7 @@ function Home() {
                     <Link to="/writers?type=poet" className="ss-btn ss-btn-outline">Meet Our Poets</Link>
                   </div>
                 </div>
-                <ScrollRow className={`home-articles-row ${poems.length < 5 ? "home-row-few" : ""}`}>{poems.map(renderArticleCard)}</ScrollRow>
+                <ScrollRow className="home-articles-row">{poems.map(renderArticleCard)}</ScrollRow>
               </div>
             )}
 
@@ -877,7 +880,7 @@ function Home() {
                     <Link to="/writers?type=writer" className="ss-btn ss-btn-outline">Meet Our Writers</Link>
                   </div>
                 </div>
-                <ScrollRow className={`home-articles-row ${blogs.length < 5 ? "home-row-few" : ""}`}>{blogs.map(renderArticleCard)}</ScrollRow>
+                <ScrollRow className="home-articles-row">{blogs.map(renderArticleCard)}</ScrollRow>
               </div>
             )}
 
@@ -890,7 +893,7 @@ function Home() {
                     <Link to="/writers?type=writer" className="ss-btn ss-btn-outline">Meet Our Writers</Link>
                   </div>
                 </div>
-                <ScrollRow className={`home-articles-row ${arts.length < 5 ? "home-row-few" : ""}`}>{arts.map(renderArticleCard)}</ScrollRow>
+                <ScrollRow className="home-articles-row">{arts.map(renderArticleCard)}</ScrollRow>
               </div>
             )}
 
@@ -907,18 +910,6 @@ function Home() {
               </div>
             )}
 
-            {!loading && recentPodcasts.length > 0 && (
-              <div className="home-section home-section-articles">
-                <div className="home-section-header">
-                  <h2 className="home-section-heading">Podcasts</h2>
-                  <div className="home-section-actions">
-                    <Link to="/podcasts" className="ss-btn ss-btn-outline">See all Podcasts</Link>
-                    <Link to="/writers" className="ss-btn ss-btn-outline">Meet Our Creators</Link>
-                  </div>
-                </div>
-                <ScrollRow className={`home-articles-row ${recentPodcasts.length < 5 ? "home-row-few" : ""}`}>{recentPodcasts.map(renderPodcastCard)}</ScrollRow>
-              </div>
-            )}
           </>
         );
       })()}
@@ -927,7 +918,7 @@ function Home() {
       {!loading && testimonials.length > 0 && (
         <div className="home-section home-section-testimonials">
           <h2 className="home-section-heading">What Our Readers Say</h2>
-          <div className="home-testimonials-row">
+          <ScrollRow className={`home-testimonials-row ${testimonials.length < 4 ? "home-row-few" : ""}`}>
             {testimonials.map((t, idx) => {
               const stars = t.rating === "Excellent" ? 5
                 : t.rating === "Good" ? 4
@@ -948,7 +939,7 @@ function Home() {
                 </div>
               );
             })}
-          </div>
+          </ScrollRow>
           <div className="home-section-more home-feedback-more">
             <Link to="/feedback" className="ss-btn ss-btn-outline home-feedback-cta">Share Your Feedback</Link>
           </div>
