@@ -58,6 +58,7 @@ public class PodcastController {
             }
             String description = (String) body.get("description");
             String audioUrl = (String) body.get("audioUrl");
+            String youtubeUrl = (String) body.get("youtubeUrl");
             String coverImageUrl = (String) body.get("coverImageUrl");
             String language = (String) body.get("language");
             String category = (String) body.get("category");
@@ -66,7 +67,7 @@ public class PodcastController {
                     ? Integer.valueOf(body.get("durationSeconds").toString()) : null;
 
             Podcast podcast = podcastService.createPodcast(userId, title, description, audioUrl,
-                    coverImageUrl, language, category, status, durationSeconds);
+                    youtubeUrl, coverImageUrl, language, category, status, durationSeconds);
             return ResponseEntity.ok(podcast);
         } catch (Exception e) {
             log.error("Error creating podcast", e);
@@ -83,6 +84,7 @@ public class PodcastController {
             String title = (String) body.get("title");
             String description = (String) body.get("description");
             String audioUrl = (String) body.get("audioUrl");
+            String youtubeUrl = (String) body.get("youtubeUrl");
             String coverImageUrl = (String) body.get("coverImageUrl");
             String language = (String) body.get("language");
             String category = (String) body.get("category");
@@ -91,7 +93,7 @@ public class PodcastController {
                     ? Integer.valueOf(body.get("durationSeconds").toString()) : null;
 
             Podcast podcast = podcastService.updatePodcast(id, userId, title, description, audioUrl,
-                    coverImageUrl, language, category, status, durationSeconds);
+                    youtubeUrl, coverImageUrl, language, category, status, durationSeconds);
             return ResponseEntity.ok(podcast);
         } catch (Exception e) {
             log.error("Error updating podcast", e);

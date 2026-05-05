@@ -482,7 +482,8 @@ CREATE TABLE public.podcasts (
     modified_date timestamp(6) without time zone,
     status character varying(255),
     title character varying(255) NOT NULL,
-    user_id bigint NOT NULL
+    user_id bigint NOT NULL,
+    youtube_url character varying(255)
 );
 
 

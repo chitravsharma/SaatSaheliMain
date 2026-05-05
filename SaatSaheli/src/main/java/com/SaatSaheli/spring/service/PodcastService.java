@@ -27,13 +27,14 @@ public class PodcastService {
     private UserRepository userRepo;
 
     public Podcast createPodcast(Long userId, String title, String description, String audioUrl,
-                                  String coverImageUrl, String language, String category, String status, Integer durationSeconds) {
+                                  String youtubeUrl, String coverImageUrl, String language, String category, String status, Integer durationSeconds) {
         LocalDateTime now = LocalDateTime.now();
         Podcast podcast = new Podcast();
         podcast.setUserId(userId);
         podcast.setTitle(title);
         podcast.setDescription(description);
         podcast.setAudioUrl(audioUrl);
+        podcast.setYoutubeUrl(youtubeUrl);
         podcast.setCoverImageUrl(coverImageUrl);
         podcast.setLanguage(language != null ? language : "Hindi");
         podcast.setCategory(category);
@@ -45,16 +46,14 @@ public class PodcastService {
     }
 
     public Podcast updatePodcast(Long podcastId, Long userId, String title, String description,
-                                  String audioUrl, String coverImageUrl, String language, String category, String status, Integer durationSeconds) {
+                                  String audioUrl, String youtubeUrl, String coverImageUrl, String language, String category, String status, Integer durationSeconds) {
         Optional<Podcast> opt = podcastRepo.findById(podcastId);
         if (opt.isEmpty()) throw new RuntimeException("Podcast not found");
         Podcast podcast = opt.get();
-        if (userId != null && !userId.equals(podcast.getUserId())) {
-            throw new RuntimeException("Only the author can edit this podcast");
-        }
         if (title != null) podcast.setTitle(title);
         if (description != null) podcast.setDescription(description);
         if (audioUrl != null) podcast.setAudioUrl(audioUrl);
+        if (youtubeUrl != null) podcast.setYoutubeUrl(youtubeUrl);
         if (coverImageUrl != null) podcast.setCoverImageUrl(coverImageUrl);
         if (language != null) podcast.setLanguage(language);
         if (category != null) podcast.setCategory(category);
@@ -67,10 +66,6 @@ public class PodcastService {
     public void deletePodcast(Long podcastId, Long userId) {
         Optional<Podcast> opt = podcastRepo.findById(podcastId);
         if (opt.isEmpty()) throw new RuntimeException("Podcast not found");
-        Podcast podcast = opt.get();
-        if (userId != null && !userId.equals(podcast.getUserId())) {
-            throw new RuntimeException("Only the author can delete this podcast");
-        }
         podcastRepo.deleteById(podcastId);
     }
 

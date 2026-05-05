@@ -18,6 +18,27 @@ function formatTime(s) {
   return `${m}:${sec.toString().padStart(2, "0")}`;
 }
 
+function extractYoutubeId(input) {
+  if (!input) return "";
+  const trimmed = String(input).trim();
+  if (/^[A-Za-z0-9_-]{11}$/.test(trimmed)) return trimmed;
+  try {
+    const u = new URL(trimmed);
+    if (u.hostname.includes("youtu.be")) {
+      return u.pathname.slice(1).split("/")[0];
+    }
+    if (u.hostname.includes("youtube.com")) {
+      if (u.pathname.startsWith("/embed/") || u.pathname.startsWith("/shorts/")) {
+        return u.pathname.split("/")[2] || "";
+      }
+      return u.searchParams.get("v") || "";
+    }
+  } catch {
+    return "";
+  }
+  return "";
+}
+
 function PodcastAudio({ src }) {
   const audioRef = useRef(null);
   const [playing, setPlaying] = useState(false);
@@ -102,6 +123,7 @@ function Podcasts() {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [audioUrl, setAudioUrl] = useState("");
+  const [youtubeUrl, setYoutubeUrl] = useState("");
   const [coverImageUrl, setCoverImageUrl] = useState("");
   const [language, setLanguage] = useState("Hindi");
   const [category, setCategory] = useState("");
@@ -281,13 +303,16 @@ function Podcasts() {
 
   const handleSave = async () => {
     if (!title.trim()) { showMsg("Title is required"); return; }
-    if (!audioUrl) { showMsg("Please upload an audio file"); return; }
+    if (!audioUrl && !youtubeUrl.trim()) { showMsg("Please upload an audio file or provide a YouTube URL"); return; }
+    if (youtubeUrl.trim() && !extractYoutubeId(youtubeUrl)) { showMsg("YouTube URL is not recognized"); return; }
     setSaving(true);
     try {
       const status = publishOnSave ? "PUBLISHED" : "DRAFT";
       const body = {
         userId, title: title.trim(), description: description.trim(),
-        audioUrl, coverImageUrl, language, category: category || null, status,
+        audioUrl: audioUrl || null,
+        youtubeUrl: youtubeUrl.trim() || null,
+        coverImageUrl, language, category: category || null, status,
       };
       if (editingId) {
         await api.put(`${API}/api/podcasts/${editingId}`, body);
@@ -323,6 +348,7 @@ function Podcasts() {
     setTitle(podcast.title);
     setDescription(podcast.description || "");
     setAudioUrl(podcast.audioUrl || "");
+    setYoutubeUrl(podcast.youtubeUrl || "");
     setCoverImageUrl(podcast.coverImageUrl || "");
     setLanguage(podcast.language || "Hindi");
     setCategory(podcast.category || "");
@@ -337,6 +363,7 @@ function Podcasts() {
     setTitle("");
     setDescription("");
     setAudioUrl("");
+    setYoutubeUrl("");
     setCoverImageUrl("");
     setLanguage("Hindi");
     setCategory("");
@@ -397,11 +424,30 @@ function Podcasts() {
         </div>
       </div>
 
-      {podcast.audioUrl && (
-        <div className="podcast-player">
-          <PodcastAudio src={podcast.audioUrl} />
-        </div>
-      )}
+      {(() => {
+        const ytId = extractYoutubeId(podcast.youtubeUrl);
+        if (ytId) {
+          return (
+            <div className="podcast-youtube">
+              <iframe
+                src={`https://www.youtube.com/embed/${ytId}`}
+                title={podcast.title}
+                frameBorder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              />
+            </div>
+          );
+        }
+        if (podcast.audioUrl) {
+          return (
+            <div className="podcast-player">
+              <PodcastAudio src={podcast.audioUrl} />
+            </div>
+          );
+        }
+        return null;
+      })()}
 
       <div className="podcast-actions-bar">
         <button className={`ss-btn-icon-sm ${userLikes[podcast.id] ? "active" : ""}`} onClick={() => handleLike(podcast.id)} title="Like">
@@ -553,7 +599,34 @@ function Podcasts() {
                 </div>
               </div>
               <div className="podcast-field">
-                <label>Audio File / ऑडियो फ़ाइल *</label>
+                <label>YouTube video URL or ID</label>
+                <input
+                  type="text"
+                  value={youtubeUrl}
+                  onChange={e => setYoutubeUrl(e.target.value)}
+                  placeholder="e.g. https://youtu.be/7XX0gA-3pS0"
+                  className="bm-input"
+                />
+                {youtubeUrl.trim() && extractYoutubeId(youtubeUrl) && (
+                  <div className="podcast-youtube-preview" style={{ marginTop: 8 }}>
+                    <iframe
+                      src={`https://www.youtube.com/embed/${extractYoutubeId(youtubeUrl)}`}
+                      title="YouTube preview"
+                      frameBorder="0"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                      style={{ width: "100%", aspectRatio: "16/9", border: 0, borderRadius: 8 }}
+                    />
+                  </div>
+                )}
+                {youtubeUrl.trim() && !extractYoutubeId(youtubeUrl) && (
+                  <div style={{ color: "#c0392b", fontSize: "0.85em", marginTop: 4 }}>
+                    Not a recognized YouTube URL. Use the share link (e.g. https://youtu.be/...) or the 11-char ID.
+                  </div>
+                )}
+              </div>
+              <div className="podcast-field">
+                <label>Audio File / ऑडियो फ़ाइल {youtubeUrl.trim() ? "(optional when YouTube URL set)" : "*"}</label>
                 {audioUrl ? (
                   <div className="podcast-audio-preview">
                     <audio controls src={audioUrl} style={{ width: "100%" }} />

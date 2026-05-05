@@ -31,6 +31,9 @@ public class Podcast {
     @Column(name = "audio_url")
     private String audioUrl;
 
+    @Column(name = "youtube_url")
+    private String youtubeUrl;
+
     @Column(name = "cover_image_url")
     private String coverImageUrl;
 
@@ -76,6 +79,9 @@ public class Podcast {
 
     public String getAudioUrl() { return audioUrl; }
     public void setAudioUrl(String audioUrl) { this.audioUrl = audioUrl; }
+
+    public String getYoutubeUrl() { return youtubeUrl; }
+    public void setYoutubeUrl(String youtubeUrl) { this.youtubeUrl = youtubeUrl; }
 
     public String getCoverImageUrl() { return coverImageUrl; }
     public void setCoverImageUrl(String coverImageUrl) { this.coverImageUrl = coverImageUrl; }
