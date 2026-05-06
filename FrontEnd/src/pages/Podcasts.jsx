@@ -116,6 +116,7 @@ function Podcasts() {
   const [openComments, setOpenComments] = useState(null);
   const [podcastComments, setPodcastComments] = useState({});
   const [newCommentText, setNewCommentText] = useState("");
+  const [activatedYt, setActivatedYt] = useState(() => new Set());
 
   // Create/Edit form
   const [showForm, setShowForm] = useState(false);
@@ -427,16 +428,37 @@ function Podcasts() {
       {(() => {
         const ytId = extractYoutubeId(podcast.youtubeUrl);
         if (ytId) {
+          const isActive = activatedYt.has(podcast.id);
+          if (isActive) {
+            return (
+              <div className="podcast-youtube">
+                <iframe
+                  src={`https://www.youtube.com/embed/${ytId}?autoplay=1`}
+                  title={podcast.title}
+                  frameBorder="0"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                />
+              </div>
+            );
+          }
           return (
-            <div className="podcast-youtube">
-              <iframe
-                src={`https://www.youtube.com/embed/${ytId}`}
-                title={podcast.title}
-                frameBorder="0"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
+            <button
+              type="button"
+              className="podcast-youtube podcast-youtube-lite"
+              onClick={() => setActivatedYt(prev => new Set(prev).add(podcast.id))}
+              aria-label={`Play ${podcast.title} on YouTube`}
+            >
+              <img
+                src={`https://i.ytimg.com/vi/${ytId}/mqdefault.jpg`}
+                alt=""
+                loading="lazy"
+                className="podcast-youtube-lite-thumb"
               />
-            </div>
+              <span className="podcast-youtube-lite-play" aria-hidden="true">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="#fff"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+              </span>
+            </button>
           );
         }
         if (podcast.audioUrl) {
