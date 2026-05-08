@@ -87,7 +87,8 @@ function Home() {
         books.sort((a, b) => new Date(b.modifiedDate) - new Date(a.modifiedDate));
         setRecentBooks(books.slice(0, 12));
 
-        const gals = Array.isArray(galleriesRes.data) ? galleriesRes.data : [];
+        const gals = (Array.isArray(galleriesRes.data) ? galleriesRes.data : [])
+          .filter(g => Array.isArray(g.images) && g.images.length > 0);
         gals.sort((a, b) => new Date(b.modifiedDate) - new Date(a.modifiedDate));
         setGalleries(gals.slice(0, 8));
 

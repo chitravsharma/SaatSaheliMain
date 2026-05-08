@@ -272,8 +272,10 @@
   max-width: 90vw;
   max-height: 90vh;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
+  gap: 14px;
 }
 
 .gv-lightbox-img {
@@ -318,21 +320,18 @@
 .gv-lightbox-next { right: -60px; }
 
 .gv-lightbox-caption {
-  position: absolute;
-  bottom: -36px;
-  left: 0;
-  right: 0;
+  color: rgba(255, 255, 255, 0.95);
+  font-size: 1rem;
+  line-height: 1.5;
   text-align: center;
-  color: var(--text-primary);
-  font-size: 0.9rem;
+  max-width: 85vw;
+  padding: 0 20px;
+  white-space: pre-wrap;
 }
 
 .gv-lightbox-counter {
-  position: absolute;
-  bottom: -36px;
-  right: 0;
-  color: var(--text-muted);
-  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.65);
+  font-size: 0.85rem;
 }
 
 /* Error banner */
