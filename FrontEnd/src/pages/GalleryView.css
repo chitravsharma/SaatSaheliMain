@@ -319,6 +319,31 @@
 .gv-lightbox-prev { left: -60px; }
 .gv-lightbox-next { right: -60px; }
 
+.gv-grid-img-broken {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  aspect-ratio: 1;
+  background: linear-gradient(135deg, #efe6d4, #d9c89a);
+  color: #6b5a2e;
+  font-size: 0.85rem;
+  font-style: italic;
+}
+
+.gv-lightbox-img-broken {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 60vw;
+  min-height: 40vh;
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 1.1rem;
+  font-style: italic;
+  border-radius: 4px;
+}
+
 .gv-lightbox-caption {
   color: rgba(255, 255, 255, 0.95);
   font-size: 1rem;

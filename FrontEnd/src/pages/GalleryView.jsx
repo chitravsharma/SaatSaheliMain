@@ -27,6 +27,7 @@ function GalleryView() {
   const [error, setError] = useState("");
   const [imageStates, setImageStates] = useState({}); // {imageId: {liked, likeCount, favorited}}
   const [imageShareCopied, setImageShareCopied] = useState(null); // imageId briefly
+  const [brokenImageIds, setBrokenImageIds] = useState(new Set());
   const commentInputRef = useRef(null);
   const loginPromptRef = useRef(null);
 
@@ -332,7 +333,20 @@ function GalleryView() {
                 tabIndex={0}
                 onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") openLightbox(i); }}
               >
-                <img src={optimizeCloudinary(img.imageUrl)} alt={img.caption || `Photo ${i + 1}`} className="gv-grid-img" />
+                {brokenImageIds.has(img.id) ? (
+                  <div className="gv-grid-img gv-grid-img-broken" aria-label="Image unavailable">
+                    <span>Image unavailable</span>
+                  </div>
+                ) : (
+                  <img
+                    src={optimizeCloudinary(img.imageUrl)}
+                    alt={img.caption || `Photo ${i + 1}`}
+                    className="gv-grid-img"
+                    loading="lazy"
+                    decoding="async"
+                    onError={() => setBrokenImageIds(prev => new Set(prev).add(img.id))}
+                  />
+                )}
                 {img.caption && <div className="gv-grid-caption">{img.caption}</div>}
               </div>
               <div className="gv-image-actions" onClick={(e) => e.stopPropagation()}>
@@ -412,7 +426,20 @@ function GalleryView() {
           <div className="gv-lightbox-content" onClick={(e) => e.stopPropagation()}>
             <button className="gv-lightbox-close" onClick={closeLightbox} aria-label="Close">&times;</button>
             <button className="gv-lightbox-prev" onClick={prevImage} aria-label="Previous image">&lsaquo;</button>
-            <img src={optimizeCloudinary(images[lightboxIndex].imageUrl)} alt={images[lightboxIndex].caption || ""} className="gv-lightbox-img" />
+            {brokenImageIds.has(images[lightboxIndex].id) ? (
+              <div className="gv-lightbox-img gv-lightbox-img-broken">
+                Image unavailable
+              </div>
+            ) : (
+              <img
+                src={optimizeCloudinary(images[lightboxIndex].imageUrl)}
+                alt={images[lightboxIndex].caption || ""}
+                className="gv-lightbox-img"
+                decoding="async"
+                loading="eager"
+                onError={() => setBrokenImageIds(prev => new Set(prev).add(images[lightboxIndex].id))}
+              />
+            )}
             <button className="gv-lightbox-next" onClick={nextImage} aria-label="Next image">&rsaquo;</button>
             {images[lightboxIndex].caption && (
               <div className="gv-lightbox-caption">{images[lightboxIndex].caption}</div>
