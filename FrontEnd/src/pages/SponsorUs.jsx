@@ -320,7 +320,7 @@ const SponsorUs = () => {
           <a href={`mailto:${INQUIRY_EMAIL}?subject=Sponsorship%20Inquiry`} className="advertise-mail">
             {INQUIRY_EMAIL}
           </a>
-          . We respond within a couple of business days.
+          . We will respond within 24 hours.
         </p>
 
         {sent ? (
