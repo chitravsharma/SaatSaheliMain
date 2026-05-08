@@ -30,6 +30,37 @@ const SitePolicies = () => {
     <div className="policies-section">
       <h2>{strings.sitePolicies.privacyHeading}</h2>
       <p>{strings.sitePolicies.privacyBody}</p>
+
+      <h3>{strings.sitePolicies.privacyCollectHeading}</h3>
+      <p>{strings.sitePolicies.privacyCollectIntro}</p>
+      <ul>
+        {strings.sitePolicies.privacyCollectList.map((item) => (
+          <li key={item}>{item}</li>
+        ))}
+      </ul>
+
+      <h3>{strings.sitePolicies.privacyUseHeading}</h3>
+      <p>{strings.sitePolicies.privacyUseIntro}</p>
+      <ul>
+        {strings.sitePolicies.privacyUseList.map((item) => (
+          <li key={item}>{item}</li>
+        ))}
+      </ul>
+
+      <h3>{strings.sitePolicies.privacyProcessorsHeading}</h3>
+      <p>{strings.sitePolicies.privacyProcessorsIntro}</p>
+      <ul>
+        {strings.sitePolicies.privacyProcessors.map((p) => (
+          <li key={p.name}><strong>{p.name}</strong> — {p.desc}</li>
+        ))}
+      </ul>
+      <p>{strings.sitePolicies.privacyProcessorsNote}</p>
+
+      <h3>{strings.sitePolicies.privacyCookiesHeading}</h3>
+      <p>{strings.sitePolicies.privacyCookiesBody}</p>
+
+      <h3>{strings.sitePolicies.privacyDeleteHeading}</h3>
+      <p>{strings.sitePolicies.privacyDeleteBody}</p>
     </div>
 
     <div className="policies-section">

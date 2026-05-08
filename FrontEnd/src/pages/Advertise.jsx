@@ -250,7 +250,7 @@ const Advertise = () => {
           <a href={`mailto:${INQUIRY_EMAIL}?subject=Advertising%20Inquiry`} className="advertise-mail">
             {INQUIRY_EMAIL}
           </a>
-          . We'll get back to you within a couple of business days.
+          . We will get back to you within 24 hours.
         </p>
 
         {sent ? (
@@ -389,6 +389,7 @@ const Advertise = () => {
             >
               {sending ? "Sending…" : "Send inquiry"}
             </button>
+            <p className="advertise-response-time">We will get back to you within 24 hours.</p>
           </form>
         )}
       </section>

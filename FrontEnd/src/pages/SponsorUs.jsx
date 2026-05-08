@@ -440,6 +440,7 @@ const SponsorUs = () => {
             >
               {sending ? "Sending…" : "Send inquiry"}
             </button>
+            <p className="advertise-response-time">We will get back to you within 24 hours.</p>
           </form>
         )}
       </section>

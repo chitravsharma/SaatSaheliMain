@@ -27,11 +27,11 @@
 }
 
 .policies-section {
-  background: linear-gradient(145deg, var(--bg-card), #2e2820);
+  background: var(--bg-card);
   border: 1px solid var(--border-default);
   border-radius: 16px;
   padding: 28px 32px;
-  box-shadow: 0 4px 24px rgba(37, 99, 235, 0.08);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
   margin-bottom: 20px;
 }
 
@@ -40,6 +40,13 @@
   font-weight: 700;
   color: var(--accent-gold);
   margin: 0 0 12px;
+}
+
+.policies-section h3 {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 20px 0 8px;
 }
 
 .policies-section p,

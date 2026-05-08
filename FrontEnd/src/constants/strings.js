@@ -39,6 +39,7 @@ export const en = {
   },
 
   footer: {
+    about: "About",
     contactUs: "Contact Us",
     sitePolicies: "Site Policies",
     feedback: "Feedback",
@@ -151,7 +152,41 @@ export const en = {
     contentAcceptance: "By creating any content on SaatSaheli, you confirm that you have read, understood, and agree to abide by these content guidelines.",
     privacyHeading: "Privacy Policy",
     privacyBody:
-      "We value your privacy. SaatSaheli collects only the information necessary to provide our services, including your name, email address, and content you create. We do not sell or share your personal information with third parties. Your data is stored securely and used solely for operating the platform.",
+      "We respect your privacy and are transparent about how SaatSaheli collects, uses, and protects your information. This section explains what we do, who we share data with, and the rights you have over your information.",
+    privacyCollectHeading: "Information We Collect",
+    privacyCollectIntro: "When you use SaatSaheli we collect:",
+    privacyCollectList: [
+      "Account info you provide: name, email, and optional profile details such as bio, location, and profile photo.",
+      "Content you create: books, articles, recipes, podcasts, galleries, comments, and the images or audio you upload.",
+      "Authentication data: hashed passwords (we never store plain text), or your Google account identifier if you sign in with Google.",
+      "Technical data: IP address, browser type, device, and pages visited — collected automatically and used only in aggregate to operate and improve the platform.",
+    ],
+    privacyUseHeading: "How We Use Your Data",
+    privacyUseIntro: "We use your information only to:",
+    privacyUseList: [
+      "Provide and operate the platform you signed up for.",
+      "Personalize your experience — your favorites, drafts, language preference, and settings.",
+      "Communicate with you about your account, content, or important platform updates.",
+      "Diagnose technical issues and improve the platform.",
+      "Comply with legal obligations.",
+    ],
+    privacyProcessorsHeading: "Service Providers",
+    privacyProcessorsIntro: "SaatSaheli uses these third-party services to operate. Each receives only the minimum data it needs:",
+    privacyProcessors: [
+      { name: "Render", desc: "Hosts the SaatSaheli backend application." },
+      { name: "Neon", desc: "Stores the SaatSaheli database (your account info and content)." },
+      { name: "Cloudinary", desc: "Stores and serves the images you upload." },
+      { name: "Cloudflare", desc: "Delivers static assets and DNS for saatsaheli.com." },
+      { name: "Google Analytics 4", desc: "Collects anonymous usage statistics (page views, session counts) so we can understand how the site is used. We do not send names, emails, or content through this." },
+      { name: "Google OAuth", desc: "Used only when you choose 'Sign in with Google' to verify your Google identity." },
+    ],
+    privacyProcessorsNote: "We do not sell your data. We do not share it with advertisers. We do not share your personal information with anyone outside the providers listed above.",
+    privacyCookiesHeading: "Cookies and Tracking",
+    privacyCookiesBody:
+      "We use a small number of cookies and similar storage. A session cookie keeps you signed in. Local storage holds your language preference and unsynced draft content so you don't lose work. Google Analytics sets analytics cookies to count visits anonymously. You can clear all of these from your browser settings at any time.",
+    privacyDeleteHeading: "Your Rights and Data Deletion",
+    privacyDeleteBody:
+      "You can update or delete your profile at any time from your account settings. To delete your full account and all associated content, email us at the address below from your registered email. We will delete your data within 30 days of confirming the request, except where law requires us to retain certain records (for example, transaction logs).",
     accountHeading: "Account Policy",
     accountRules: [
       "Users must provide accurate information when creating an account",
@@ -165,7 +200,7 @@ export const en = {
     contactHeading: "Contact",
     contactBody: "For questions about these policies, please reach out to us at",
     contactEmail: "avikaventures.info@gmail.com",
-    lastUpdated: "Last updated: February 2026",
+    lastUpdated: "Last updated: May 2026",
   },
 
   login: {
@@ -673,6 +708,7 @@ export const hi = {
   },
 
   footer: {
+    about: "हमारे बारे में",
     contactUs: "संपर्क करें",
     sitePolicies: "साइट नीतियां",
     feedback: "प्रतिक्रिया",
@@ -781,7 +817,41 @@ export const hi = {
       "सातसहेली इन दिशानिर्देशों का उल्लंघन करने वाली किसी भी सामग्री को हटाने का अधिकार रखती है।",
     privacyHeading: "गोपनीयता नीति",
     privacyBody:
-      "हम आपकी गोपनीयता को महत्व देते हैं। सातसहेली केवल हमारी सेवाएं प्रदान करने के लिए आवश्यक जानकारी एकत्र करती है, जिसमें आपका नाम, ईमेल पता और आपके द्वारा बनाई गई सामग्री शामिल है। हम आपकी व्यक्तिगत जानकारी तीसरे पक्ष को नहीं बेचते या साझा नहीं करते। आपका डेटा सुरक्षित रूप से संग्रहीत है और केवल मंच के संचालन के लिए उपयोग किया जाता है।",
+      "हम आपकी गोपनीयता का सम्मान करते हैं और सातसहेली आपकी जानकारी कैसे एकत्र, उपयोग और सुरक्षित करती है, इसके बारे में पारदर्शी हैं। यह खंड बताता है कि हम क्या करते हैं, हम किसके साथ डेटा साझा करते हैं, और आपकी जानकारी पर आपके अधिकार क्या हैं।",
+    privacyCollectHeading: "हम कौन सी जानकारी एकत्र करते हैं",
+    privacyCollectIntro: "जब आप सातसहेली का उपयोग करते हैं तो हम एकत्र करते हैं:",
+    privacyCollectList: [
+      "आपके द्वारा प्रदान की गई खाता जानकारी: नाम, ईमेल, और वैकल्पिक प्रोफ़ाइल विवरण जैसे बायो, स्थान और प्रोफ़ाइल फोटो।",
+      "आपके द्वारा बनाई गई सामग्री: किताबें, लेख, व्यंजन, पॉडकास्ट, गैलरियाँ, टिप्पणियाँ, और आपके द्वारा अपलोड की गई छवियाँ या ऑडियो।",
+      "प्रमाणीकरण डेटा: हैश किए गए पासवर्ड (हम कभी भी प्लेन टेक्स्ट संग्रहीत नहीं करते), या यदि आप Google से साइन इन करते हैं तो आपकी Google खाता पहचान।",
+      "तकनीकी डेटा: IP पता, ब्राउज़र प्रकार, डिवाइस, और देखे गए पृष्ठ — स्वचालित रूप से एकत्र किए जाते हैं और केवल समग्र रूप में मंच के संचालन और सुधार के लिए उपयोग किए जाते हैं।",
+    ],
+    privacyUseHeading: "हम आपके डेटा का उपयोग कैसे करते हैं",
+    privacyUseIntro: "हम आपकी जानकारी का उपयोग केवल इसके लिए करते हैं:",
+    privacyUseList: [
+      "आपके द्वारा साइन अप किए गए मंच को प्रदान करना और संचालित करना।",
+      "आपके अनुभव को व्यक्तिगत बनाना — आपके पसंदीदा, ड्राफ्ट, भाषा वरीयता और सेटिंग्स।",
+      "आपके खाते, सामग्री या महत्वपूर्ण मंच अपडेट के बारे में आपसे संवाद करना।",
+      "तकनीकी समस्याओं का निदान करना और मंच में सुधार करना।",
+      "कानूनी दायित्वों का पालन करना।",
+    ],
+    privacyProcessorsHeading: "सेवा प्रदाता",
+    privacyProcessorsIntro: "सातसहेली संचालन के लिए इन तृतीय-पक्ष सेवाओं का उपयोग करती है। प्रत्येक को केवल वह न्यूनतम डेटा प्राप्त होता है जिसकी उसे आवश्यकता होती है:",
+    privacyProcessors: [
+      { name: "Render", desc: "सातसहेली बैकएंड एप्लिकेशन को होस्ट करता है।" },
+      { name: "Neon", desc: "सातसहेली डेटाबेस संग्रहीत करता है (आपकी खाता जानकारी और सामग्री)।" },
+      { name: "Cloudinary", desc: "आपके द्वारा अपलोड की गई छवियों को संग्रहीत और वितरित करता है।" },
+      { name: "Cloudflare", desc: "saatsaheli.com के लिए स्थैतिक संपत्तियाँ और DNS वितरित करता है।" },
+      { name: "Google Analytics 4", desc: "गुमनाम उपयोग आँकड़े (पृष्ठ दृश्य, सत्र संख्या) एकत्र करता है ताकि हम समझ सकें कि साइट का उपयोग कैसे किया जाता है। हम इसके माध्यम से नाम, ईमेल या सामग्री नहीं भेजते।" },
+      { name: "Google OAuth", desc: "केवल तब उपयोग किया जाता है जब आप 'Google से साइन इन करें' चुनते हैं ताकि आपकी Google पहचान सत्यापित हो सके।" },
+    ],
+    privacyProcessorsNote: "हम आपका डेटा नहीं बेचते। हम इसे विज्ञापनदाताओं के साथ साझा नहीं करते। हम आपकी व्यक्तिगत जानकारी ऊपर सूचीबद्ध प्रदाताओं के अलावा किसी के साथ साझा नहीं करते।",
+    privacyCookiesHeading: "कुकीज़ और ट्रैकिंग",
+    privacyCookiesBody:
+      "हम कुछ कुकीज़ और समान संग्रहण का उपयोग करते हैं। एक सत्र कुकी आपको साइन इन रखती है। स्थानीय भंडारण आपकी भाषा वरीयता और बिना सिंक की गई ड्राफ्ट सामग्री रखता है ताकि आप अपना काम न खोएं। Google Analytics गुमनाम रूप से दौरों की गिनती करने के लिए विश्लेषण कुकीज़ सेट करता है। आप किसी भी समय अपनी ब्राउज़र सेटिंग्स से इन सभी को साफ़ कर सकते हैं।",
+    privacyDeleteHeading: "आपके अधिकार और डेटा हटाना",
+    privacyDeleteBody:
+      "आप किसी भी समय अपनी खाता सेटिंग्स से अपनी प्रोफ़ाइल अपडेट या हटा सकते हैं। अपने पूरे खाते और सभी संबंधित सामग्री को हटाने के लिए, अपने पंजीकृत ईमेल से नीचे दिए गए पते पर हमें ईमेल करें। हम अनुरोध की पुष्टि के 30 दिनों के भीतर आपका डेटा हटा देंगे, सिवाय इसके कि कानून हमें कुछ रिकॉर्ड (उदाहरण के लिए, लेन-देन लॉग) रखने की आवश्यकता हो।",
     accountHeading: "खाता नीति",
     accountRules: [
       "खाता बनाते समय उपयोगकर्ताओं को सही जानकारी देनी होगी",
@@ -795,7 +865,7 @@ export const hi = {
     contactHeading: "संपर्क",
     contactBody: "इन नीतियों के बारे में प्रश्नों के लिए, कृपया हमसे संपर्क करें",
     contactEmail: "avikaventures.info@gmail.com",
-    lastUpdated: "अंतिम अपडेट: फरवरी 2026",
+    lastUpdated: "अंतिम अपडेट: मई 2026",
   },
 
   login: {

@@ -34,6 +34,7 @@ const Footer = () => {
       )}
       <nav className="footer-links" aria-label="Footer navigation">
         <Link to="/" className="footer-link">Home</Link>
+        <Link to="/about" className="footer-link">{strings.footer.about}</Link>
         <Link to="/contacts" className="footer-link">{strings.footer.contactUs}</Link>
         <Link to="/advertise" className="footer-link">Advertise</Link>
         <Link to="/sponsor-us" className="footer-link">Sponsor us</Link>
