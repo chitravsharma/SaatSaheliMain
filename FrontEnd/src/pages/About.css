@@ -368,6 +368,7 @@
   padding: 16px;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
   transition: transform 0.15s ease, box-shadow 0.15s ease;
+  text-align: left;
 }
 
 .about-team-card:hover {
@@ -381,8 +382,8 @@
 
 .about-team-photo {
   width: 80px;
-  height: 80px;
-  border-radius: 50%;
+  height: 100px;
+  border-radius: 8px;
   object-fit: cover;
   border: 2px solid var(--accent-gold-hover, #d4a017);
   display: block;
@@ -442,5 +443,23 @@
 
 .about-team-teaser:hover {
   color: var(--accent-blue, #2b6cb0);
+  text-decoration: underline;
+}
+
+.about-team-linkedin {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #0a66c2;
+  text-decoration: none;
+  width: fit-content;
+  transition: color 0.15s;
+}
+
+.about-team-linkedin:hover {
+  color: #084d92;
   text-decoration: underline;
 }

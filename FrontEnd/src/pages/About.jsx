@@ -13,6 +13,8 @@ function firstSentence(text) {
   return sentence.length > 140 ? sentence.slice(0, 137) + '…' : sentence;
 }
 
+const FOUNDER_LINKEDIN_URL = "https://www.linkedin.com/in/chitra-vsharma/";
+
 const categoryIcons = {
   Art: "\uD83C\uDFA8",
   Music: "\uD83C\uDFB5",
@@ -72,6 +74,20 @@ const About = () => {
                   {m.headline && <p className="about-team-headline">{m.headline}</p>}
                   {teaser && (
                     <Link to={url} className="about-team-teaser">{teaser}</Link>
+                  )}
+                  {m.teamRole && m.teamRole.toLowerCase().includes('founder') && (
+                    <a
+                      href={FOUNDER_LINKEDIN_URL}
+                      target="_blank"
+                      rel="noopener noreferrer me"
+                      className="about-team-linkedin"
+                      aria-label="Connect on LinkedIn"
+                    >
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                        <path d="M19 0h-14C2.24 0 0 2.24 0 5v14c0 2.76 2.24 5 5 5h14c2.76 0 5-2.24 5-5V5c0-2.76-2.24-5-5-5zM8 19H5V8h3v11zM6.5 6.73c-.97 0-1.75-.79-1.75-1.75S5.53 3.23 6.5 3.23s1.75.79 1.75 1.75S7.47 6.73 6.5 6.73zM20 19h-3v-5.6c0-3.37-4-3.11-4 0V19h-3V8h3v1.76c1.4-2.58 7-2.78 7 2.46V19z"/>
+                      </svg>
+                      Connect on LinkedIn
+                    </a>
                   )}
                 </div>
               </div>

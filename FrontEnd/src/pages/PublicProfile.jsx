@@ -8,6 +8,9 @@ import "./Home.css";
 
 const API = process.env.REACT_APP_API_URL;
 
+// TODO: replace with profile.linkedinUrl when the field lands on the user model.
+const FOUNDER_LINKEDIN_URL = "https://www.linkedin.com/in/chitra-vsharma/";
+
 function resolveImageUrl(url) {
   if (!url) return null;
   if (url.startsWith("/uploads/")) return `${API}${url}`;
@@ -193,6 +196,20 @@ function PublicProfile() {
           {profile.location && <p className="pub-profile-location">{profile.location}</p>}
           {profile.createdDate && !profile.teamRole && (
             <p className="pub-profile-member">{s.memberSince} {new Date(profile.createdDate).toLocaleDateString()}</p>
+          )}
+          {profile.teamRole && profile.teamRole.toLowerCase().includes('founder') && (
+            <a
+              href={FOUNDER_LINKEDIN_URL}
+              target="_blank"
+              rel="noopener noreferrer me"
+              className="pub-profile-linkedin"
+              aria-label="Connect on LinkedIn"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="#0a66c2" aria-hidden="true">
+                <path d="M19 0h-14C2.24 0 0 2.24 0 5v14c0 2.76 2.24 5 5 5h14c2.76 0 5-2.24 5-5V5c0-2.76-2.24-5-5-5zM8 19H5V8h3v11zM6.5 6.73c-.97 0-1.75-.79-1.75-1.75S5.53 3.23 6.5 3.23s1.75.79 1.75 1.75S7.47 6.73 6.5 6.73zM20 19h-3v-5.6c0-3.37-4-3.11-4 0V19h-3V8h3v1.76c1.4-2.58 7-2.78 7 2.46V19z"/>
+              </svg>
+              Connect on LinkedIn
+            </a>
           )}
         </div>
       </div>
