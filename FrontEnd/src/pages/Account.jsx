@@ -209,6 +209,23 @@ function Account() {
     }
   };
 
+  const handleToggleGalleryStatus = async (galleryId) => {
+    const gal = galleries.find(g => g.id === galleryId);
+    if (!gal) return;
+    const next = gal.status === "PUBLISHED" ? "DRAFT" : "PUBLISHED";
+    try {
+      const res = await api.put(`${API_GALLERIES}/${galleryId}`, {
+        status: next,
+        userId: user.userId,
+      });
+      setGalleries(galleries.map(g => g.id === galleryId ? { ...g, ...res.data } : g));
+      setGalleryMsg(next === "PUBLISHED" ? "Gallery published!" : "Gallery moved to draft.");
+    } catch (err) {
+      console.error("Failed to toggle gallery status:", err);
+      setGalleryMsg("Failed to update gallery status");
+    }
+  };
+
   const userInterests = profile?.interests ? profile.interests.split(",").map(s => s.trim()) : [];
 
   if (!user) {
@@ -452,6 +469,9 @@ function Account() {
                         onClick={() => handleSelectGallery(g.id)}
                       >
                         {g.title}
+                        {g.status === "DRAFT" && (
+                          <span style={{ marginLeft: 6, padding: "1px 6px", background: "#fbbf24", color: "#3a2a00", borderRadius: 3, fontSize: "0.65rem", fontWeight: 700, letterSpacing: "0.5px" }}>DRAFT</span>
+                        )}
                       </button>
                       <button
                         className="acct-gallery-edit"
@@ -555,6 +575,22 @@ function Account() {
                     <Link to={`/gallery/${selectedGalleryId}`} className="ss-btn ss-btn-outline ss-btn-sm" style={{ marginLeft: 8 }}>
                       View Gallery
                     </Link>
+                    {(() => {
+                      const sel = galleries.find(g => g.id === selectedGalleryId);
+                      if (!sel) return null;
+                      const isPublished = sel.status === "PUBLISHED";
+                      return (
+                        <button
+                          type="button"
+                          className={`ss-btn ss-btn-sm ${isPublished ? "ss-btn-outline" : "ss-btn-primary"}`}
+                          onClick={() => handleToggleGalleryStatus(selectedGalleryId)}
+                          style={{ marginLeft: 8 }}
+                          title={isPublished ? "Move back to draft (hides from public gallery list)" : "Publish (makes this gallery visible on /galleries and Home)"}
+                        >
+                          {isPublished ? "Unpublish" : "Publish"}
+                        </button>
+                      );
+                    })()}
                   </div>
                 </>
               )}

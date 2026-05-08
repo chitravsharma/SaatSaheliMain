@@ -68,10 +68,11 @@ public class GalleryController {
             }
             String title = (String) body.get("title");
             String description = (String) body.get("description");
+            String status = body.get("status") == null ? null : body.get("status").toString();
             if (title == null || title.trim().isEmpty()) {
                 return ResponseEntity.badRequest().body(errorMap("Title is required"));
             }
-            Gallery gallery = galleryService.createGallery(title.trim(), description, jwtUserId);
+            Gallery gallery = galleryService.createGallery(title.trim(), description, jwtUserId, status);
             return ResponseEntity.ok(gallery);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorMap(e.getMessage()));
@@ -96,7 +97,8 @@ public class GalleryController {
             }
             String title = body.get("title");
             String description = body.get("description");
-            return ResponseEntity.ok(galleryService.updateGallery(id, title, description, jwtUserId));
+            String status = body.get("status");
+            return ResponseEntity.ok(galleryService.updateGallery(id, title, description, status, jwtUserId));
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorMap(e.getMessage()));
         }

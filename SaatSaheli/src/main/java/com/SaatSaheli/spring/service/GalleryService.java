@@ -37,16 +37,23 @@ public class GalleryService {
     private CommentRepository commentRepo;
 
     @Transactional
-    public Gallery createGallery(String title, String description, Long userId) {
+    public Gallery createGallery(String title, String description, Long userId, String status) {
         LocalDateTime now = LocalDateTime.now();
         Gallery gallery = new Gallery();
         gallery.setTitle(title);
         gallery.setDescription(description);
         gallery.setUserId(userId);
-        gallery.setStatus("PUBLISHED");
+        gallery.setStatus(normalizeStatus(status, "DRAFT"));
         gallery.setCreatedDate(now);
         gallery.setModifiedDate(now);
         return galleryRepo.save(gallery);
+    }
+
+    /** Normalize a user-supplied status to DRAFT or PUBLISHED. Falls back to {@code fallback} for unrecognized values. */
+    private String normalizeStatus(String s, String fallback) {
+        if (s == null) return fallback;
+        String up = s.trim().toUpperCase();
+        return ("PUBLISHED".equals(up) || "DRAFT".equals(up)) ? up : fallback;
     }
 
     public Gallery getGallery(Long id) {
@@ -82,7 +89,7 @@ public class GalleryService {
         return galleries;
     }
 
-    public Gallery updateGallery(Long id, String title, String description, Long requestUserId) {
+    public Gallery updateGallery(Long id, String title, String description, String status, Long requestUserId) {
         Optional<Gallery> opt = galleryRepo.findById(id);
         if (opt.isEmpty()) throw new RuntimeException("Gallery not found");
         Gallery gallery = opt.get();
@@ -91,6 +98,7 @@ public class GalleryService {
         }
         if (title != null) gallery.setTitle(title);
         if (description != null) gallery.setDescription(description);
+        if (status != null) gallery.setStatus(normalizeStatus(status, gallery.getStatus()));
         gallery.setModifiedDate(LocalDateTime.now());
         return galleryRepo.save(gallery);
     }
