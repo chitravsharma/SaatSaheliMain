@@ -2,7 +2,7 @@ package com.SaatSaheli.spring.controller;
 
 import com.SaatSaheli.spring.model.Gallery;
 import com.SaatSaheli.spring.model.GalleryImage;
-import com.SaatSaheli.spring.service.CloudinaryService;
+import com.SaatSaheli.spring.service.MediaStorageService;
 import com.SaatSaheli.spring.service.GalleryService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,7 +22,7 @@ public class GalleryController {
     private GalleryService galleryService;
 
     @Autowired
-    private CloudinaryService cloudinaryService;
+    private MediaStorageService mediaStorage;
 
     @GetMapping
     public ResponseEntity<?> getPublishedGalleries() {
@@ -121,7 +121,7 @@ public class GalleryController {
             @RequestParam(value = "caption", required = false) String caption,
             @RequestParam(value = "userId", required = false) Long userId) {
         try {
-            String imageUrl = cloudinaryService.uploadFile(file);
+            String imageUrl = mediaStorage.uploadFile(file);
             GalleryImage img = galleryService.addImage(galleryId, imageUrl, caption, userId);
             return ResponseEntity.ok(img);
         } catch (RuntimeException e) {

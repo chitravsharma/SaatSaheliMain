@@ -21,7 +21,7 @@ import static java.util.Map.entry;
 public class ImageGenerationService {
 
     @Autowired
-    private CloudinaryService cloudinaryService;
+    private MediaStorageService mediaStorage;
 
     private static final Pattern DEVANAGARI = Pattern.compile("[\\u0900-\\u097F]");
     private static final String TRANSLATION_MODEL = "Helsinki-NLP/opus-mt-hi-en";
@@ -107,7 +107,7 @@ public class ImageGenerationService {
 
         // Upload to Cloudinary for persistent storage
         String filename = UUID.randomUUID() + ".png";
-        return cloudinaryService.uploadBytes(imageBytes, filename, "image/png");
+        return mediaStorage.uploadBytes(imageBytes, filename, "image/png");
     }
 
     private String translateHindiToEnglish(String hindiText) throws IOException {

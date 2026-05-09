@@ -3,10 +3,16 @@ package com.SaatSaheli.spring.service;
 import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.imageio.IIOImage;
 import javax.imageio.ImageIO;
+import javax.imageio.ImageWriteParam;
+import javax.imageio.ImageWriter;
+import javax.imageio.stream.MemoryCacheImageOutputStream;
+import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -16,7 +22,8 @@ import java.util.Set;
 import java.util.UUID;
 
 @Service
-public class CloudinaryService {
+@ConditionalOnProperty(name = "app.media.storage", havingValue = "cloudinary", matchIfMissing = true)
+public class CloudinaryService implements MediaStorageService {
 
     private final Cloudinary cloudinary;
 
@@ -80,5 +87,28 @@ public class CloudinaryService {
         byte[] data = baos.toByteArray();
         String filename = UUID.randomUUID() + "." + format;
         return uploadBytes(data, filename, "image/" + format);
+    }
+
+    public String saveJpegImage(BufferedImage image, float quality) throws IOException {
+        BufferedImage rgb = image;
+        if (image.getColorModel().hasAlpha() || image.getType() != BufferedImage.TYPE_INT_RGB) {
+            rgb = new BufferedImage(image.getWidth(), image.getHeight(), BufferedImage.TYPE_INT_RGB);
+            Graphics2D g = rgb.createGraphics();
+            g.drawImage(image, 0, 0, null);
+            g.dispose();
+        }
+        ImageWriter writer = ImageIO.getImageWritersByFormatName("jpeg").next();
+        ImageWriteParam param = writer.getDefaultWriteParam();
+        param.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);
+        param.setCompressionQuality(quality);
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        try (MemoryCacheImageOutputStream out = new MemoryCacheImageOutputStream(baos)) {
+            writer.setOutput(out);
+            writer.write(null, new IIOImage(rgb, null, null), param);
+        } finally {
+            writer.dispose();
+        }
+        String filename = UUID.randomUUID() + ".jpg";
+        return uploadBytes(baos.toByteArray(), filename, "image/jpeg");
     }
 }

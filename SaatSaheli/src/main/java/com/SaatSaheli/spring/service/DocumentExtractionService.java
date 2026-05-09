@@ -20,7 +20,7 @@ public class DocumentExtractionService {
     private static final int DOCX_PAGE_CHAR_LIMIT = 500;
 
     @Autowired
-    private CloudinaryService cloudinaryService;
+    private MediaStorageService mediaStorage;
 
     public List<String> extractText(MultipartFile file) throws IOException {
         String filename = file.getOriginalFilename();
@@ -43,7 +43,7 @@ public class DocumentExtractionService {
             PDFRenderer renderer = new PDFRenderer(doc);
             int totalPages = doc.getNumberOfPages();
             for (int i = 0; i < totalPages; i++) {
-                String url = cloudinaryService.saveBufferedImage(
+                String url = mediaStorage.saveBufferedImage(
                         renderer.renderImageWithDPI(i, 150), "png");
                 imageUrls.add(url);
             }
