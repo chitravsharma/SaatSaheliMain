@@ -89,10 +89,10 @@ function Account() {
   const handleGalleryUpload = async (e) => {
     const files = Array.from(e.target.files);
     if (!files.length || !selectedGalleryId) return;
-    const MAX_SIZE = 5 * 1024 * 1024; // 5MB
+    const MAX_SIZE = 15 * 1024 * 1024; // 15MB — matches Spring multipart max in application.properties
     const oversized = files.filter(f => f.size > MAX_SIZE);
     if (oversized.length) {
-      setGalleryMsg(`${oversized.length} file(s) exceed the 5MB size limit.`);
+      setGalleryMsg(`${oversized.length} file(s) exceed the 15MB size limit.`);
       return;
     }
     setUploadingGallery(true);
@@ -166,12 +166,18 @@ function Account() {
       return;
     }
     try {
-      const res = await api.put(`${API_GALLERIES}/${editingGalleryId}`, {
-        title: editGalleryTitle.trim(),
-        description: editGalleryDescription,
+      const newTitle = editGalleryTitle.trim();
+      const newDescription = editGalleryDescription;
+      await api.put(`${API_GALLERIES}/${editingGalleryId}`, {
+        title: newTitle,
+        description: newDescription,
         userId: user.userId,
       });
-      setGalleries(galleries.map(g => g.id === editingGalleryId ? { ...g, ...res.data } : g));
+      // Only update edited fields locally — backend response doesn't include
+      // the images array, so spreading would blow away g.images.
+      setGalleries(galleries.map(g => g.id === editingGalleryId
+        ? { ...g, title: newTitle, description: newDescription }
+        : g));
       setEditingGalleryId(null);
       setGalleryMsg("Gallery updated.");
     } catch (err) {
@@ -214,11 +220,13 @@ function Account() {
     if (!gal) return;
     const next = gal.status === "PUBLISHED" ? "DRAFT" : "PUBLISHED";
     try {
-      const res = await api.put(`${API_GALLERIES}/${galleryId}`, {
+      await api.put(`${API_GALLERIES}/${galleryId}`, {
         status: next,
         userId: user.userId,
       });
-      setGalleries(galleries.map(g => g.id === galleryId ? { ...g, ...res.data } : g));
+      // Only update status locally — backend's update response doesn't include
+      // the images array, and spreading the response would blow away g.images.
+      setGalleries(galleries.map(g => g.id === galleryId ? { ...g, status: next } : g));
       setGalleryMsg(next === "PUBLISHED" ? "Gallery published!" : "Gallery moved to draft.");
     } catch (err) {
       console.error("Failed to toggle gallery status:", err);
@@ -461,32 +469,88 @@ function Account() {
 
               {/* Gallery tabs */}
               {galleries.length > 0 && (
-                <div className="acct-gallery-tabs" style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 12 }}>
-                  {galleries.map(g => (
-                    <div key={g.id} style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                      <button
-                        className={`ss-btn ss-btn-sm ${selectedGalleryId === g.id ? "ss-btn-primary" : "ss-btn-outline"}`}
+                <div
+                  role="tablist"
+                  aria-label="Your galleries"
+                  className="acct-gallery-tabs"
+                  style={{
+                    display: "flex",
+                    flexWrap: "wrap",
+                    gap: 4,
+                    borderBottom: "2px solid var(--border-default)",
+                    marginBottom: 16,
+                    paddingBottom: 0,
+                  }}
+                >
+                  {galleries.map(g => {
+                    const isActive = selectedGalleryId === g.id;
+                    return (
+                      <div
+                        key={g.id}
+                        role="tab"
+                        aria-selected={isActive}
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 8,
+                          padding: "8px 14px",
+                          marginBottom: -2,
+                          borderBottom: isActive ? "3px solid var(--accent-blue)" : "3px solid transparent",
+                          background: isActive ? "var(--bg-card)" : "transparent",
+                          borderTopLeftRadius: 6,
+                          borderTopRightRadius: 6,
+                          cursor: "pointer",
+                          transition: "background 0.15s",
+                        }}
                         onClick={() => handleSelectGallery(g.id)}
                       >
-                        {g.title}
+                        <span
+                          style={{
+                            fontSize: "0.9rem",
+                            fontWeight: isActive ? 700 : 500,
+                            color: isActive ? "var(--accent-blue)" : "var(--text-primary)",
+                          }}
+                        >
+                          {g.title}
+                        </span>
                         {g.status === "DRAFT" && (
-                          <span style={{ marginLeft: 6, padding: "1px 6px", background: "#fbbf24", color: "#3a2a00", borderRadius: 3, fontSize: "0.65rem", fontWeight: 700, letterSpacing: "0.5px" }}>DRAFT</span>
+                          <span style={{ padding: "1px 6px", background: "#fbbf24", color: "#3a2a00", borderRadius: 3, fontSize: "0.65rem", fontWeight: 700, letterSpacing: "0.5px" }}>DRAFT</span>
                         )}
-                      </button>
-                      <button
-                        className="acct-gallery-edit"
-                        onClick={() => startEditGallery(g)}
-                        title="Edit gallery"
-                        style={{ background: "none", border: "none", color: "var(--accent-blue)", cursor: "pointer", fontSize: "0.9rem", padding: "0 4px" }}
-                      >✎</button>
-                      <button
-                        className="acct-gallery-remove"
-                        onClick={() => handleDeleteGallery(g.id)}
-                        title="Delete gallery"
-                        style={{ background: "none", border: "none", color: "#e74c3c", cursor: "pointer", fontSize: "1rem" }}
-                      >&times;</button>
-                    </div>
-                  ))}
+                        <button
+                          className="acct-gallery-edit"
+                          onClick={(e) => { e.stopPropagation(); startEditGallery(g); }}
+                          title="Edit gallery name and description"
+                          aria-label={`Edit ${g.title}`}
+                          style={{
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: 4,
+                            background: "var(--accent-blue)",
+                            color: "#fff",
+                            border: 0,
+                            borderRadius: 4,
+                            padding: "3px 8px",
+                            fontSize: "0.72rem",
+                            fontWeight: 600,
+                            cursor: "pointer",
+                            lineHeight: 1,
+                          }}
+                        >
+                          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                            <path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 1 1 3 3L7 19l-4 1 1-4Z"/>
+                          </svg>
+                          Edit
+                        </button>
+                        <button
+                          className="acct-gallery-remove"
+                          onClick={(e) => { e.stopPropagation(); handleDeleteGallery(g.id); }}
+                          title="Delete gallery"
+                          aria-label={`Delete ${g.title}`}
+                          style={{ background: "none", border: "none", color: "#e74c3c", cursor: "pointer", fontSize: "1.15rem", padding: "0 2px", lineHeight: 1 }}
+                        >&times;</button>
+                      </div>
+                    );
+                  })}
                 </div>
               )}
 
