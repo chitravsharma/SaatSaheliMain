@@ -120,6 +120,10 @@ public class GalleryController {
             @RequestParam("file") MultipartFile file,
             @RequestParam(value = "caption", required = false) String caption,
             @RequestParam(value = "userId", required = false) Long userId) {
+        if (isHeicLike(file)) {
+            return ResponseEntity.status(HttpStatus.UNSUPPORTED_MEDIA_TYPE)
+                    .body(errorMap("HEIC/HEIF images aren't supported in browsers. Please convert to JPEG or PNG before uploading."));
+        }
         try {
             String imageUrl = mediaStorage.uploadFile(file);
             GalleryImage img = galleryService.addImage(galleryId, imageUrl, caption, userId);
@@ -154,6 +158,24 @@ public class GalleryController {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorMap(e.getMessage()));
         }
+    }
+
+    // HEIC/HEIF detection. Browsers other than Safari can't decode these, so reject at upload
+    // rather than store a file the gallery grid will render as "Image unavailable".
+    // Check both content type and extension because some browsers send application/octet-stream for HEIC.
+    private boolean isHeicLike(MultipartFile file) {
+        if (file == null) return false;
+        String ct = file.getContentType();
+        if (ct != null) {
+            String c = ct.toLowerCase();
+            if (c.contains("heic") || c.contains("heif")) return true;
+        }
+        String name = file.getOriginalFilename();
+        if (name != null) {
+            String n = name.toLowerCase();
+            if (n.endsWith(".heic") || n.endsWith(".heif")) return true;
+        }
+        return false;
     }
 
     private Map<String, String> errorMap(String message) {
