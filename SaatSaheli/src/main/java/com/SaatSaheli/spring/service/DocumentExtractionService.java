@@ -37,14 +37,19 @@ public class DocumentExtractionService {
         }
     }
 
+    // PDF page rendering: 100 DPI JPEG @ 0.85 quality keeps text legible while
+    // cutting per-page heap allocation ~2× (vs 150 DPI) and stored size ~10×
+    // (vs PNG). At 150 DPI PNG one page is ~5 MP / ~20 MB BufferedImage —
+    // a 20-page PDF rendered concurrently was the suspect in the 2026-05-09
+    // and 2026-05-14 Render OOMs.
     public List<String> extractPdfAsImages(MultipartFile file) throws IOException {
         List<String> imageUrls = new ArrayList<>();
         try (PDDocument doc = PDDocument.load(file.getInputStream())) {
             PDFRenderer renderer = new PDFRenderer(doc);
             int totalPages = doc.getNumberOfPages();
             for (int i = 0; i < totalPages; i++) {
-                String url = mediaStorage.saveBufferedImage(
-                        renderer.renderImageWithDPI(i, 150), "png");
+                String url = mediaStorage.saveJpegImage(
+                        renderer.renderImageWithDPI(i, 100), 0.85f);
                 imageUrls.add(url);
             }
         }
