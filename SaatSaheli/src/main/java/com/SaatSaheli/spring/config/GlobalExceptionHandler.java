@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.context.request.async.AsyncRequestNotUsableException;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.util.Map;
 
@@ -34,6 +35,15 @@ public class GlobalExceptionHandler {
     @ExceptionHandler({AsyncRequestNotUsableException.class, ClientAbortException.class})
     public void handleClientDisconnect(Exception e) {
         log.debug("Client disconnected before response completed: {}", e.getMessage());
+    }
+
+    // Missing static resource — mostly scanner probes (e.g. /api/.env, /.git/config).
+    // Return 404 without a stack trace; debug-level so legitimate misses are still inspectable.
+    @ExceptionHandler(NoResourceFoundException.class)
+    public ResponseEntity<?> handleNoResourceFound(NoResourceFoundException e) {
+        log.debug("No static resource: {}", e.getResourcePath());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(Map.of("error", "Not found"));
     }
 
     @ExceptionHandler(Exception.class)
