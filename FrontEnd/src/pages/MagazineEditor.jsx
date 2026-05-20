@@ -200,7 +200,13 @@ const MagazineEditor = () => {
         setBorderColor(fmt.border?.color || "#333333");
         setBorderWidth(fmt.border?.width?.replace("px", "") || "2");
         setTextBlocks(fmt.textBlocks || []);
-        setImageBlocks(fmt.imageBlocks || []);
+        // Fallback for PDF-imported pages saved with the older layout.image1 shape:
+        // the canvas only knows how to render imageBlocks, so synthesize one from page.imageUrl.
+        let blocks = fmt.imageBlocks || [];
+        if (blocks.length === 0 && page.imageUrl) {
+          blocks = [{ id: `imported-${num}`, url: page.imageUrl, x: 0, y: 0, width: 550, height: 700 }];
+        }
+        setImageBlocks(blocks);
       } catch {
         resetPageState();
       }
@@ -439,14 +445,29 @@ const MagazineEditor = () => {
   /* ── Document upload ── */
   const handleDocUpload = async (file) => {
     if (!file || !magazine) return;
+
+    // If the magazine already has pages, ask whether to replace or append.
+    // Replace makes the imported PDF's first page the cover; append keeps existing pages.
+    let mode = "append";
+    if (pages && pages.length > 0) {
+      const replaceLabel = s.importModeReplace || "Replace";
+      const appendLabel = s.importModeAppend || "Append";
+      const promptText = (s.importModePrompt ||
+        "This magazine already has pages. Replace them with the imported PDF (first page becomes the cover), or append the imported pages to the end?") +
+        `\n\nOK = ${replaceLabel}    Cancel = ${appendLabel}`;
+      mode = window.confirm(promptText) ? "replace" : "append";
+    }
+
     setDocUploading(true);
     try {
       const formData = new FormData();
       formData.append("file", file);
       formData.append("magazineId", magazine.id);
+      formData.append("mode", mode);
       const res = await api.post(`${API}/api/admin/magazine/upload-document`, formData);
       setMagazine(res.data);
       setPages(res.data.pages || []);
+      setSelectedPageNum(null);
       showMsg(s.docImported || "Document pages imported!");
     } catch (e) {
       showMsg("Upload failed: " + (e.response?.data?.error || e.message));

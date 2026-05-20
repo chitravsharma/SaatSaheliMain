@@ -660,6 +660,10 @@ export const en = {
     newEditionPrompt: "Enter title for new magazine edition:",
     newEditionCreated: "New edition created!",
     docImported: "Document pages imported!",
+    importModePrompt: "This magazine already has pages. Replace them with the imported PDF (first page becomes the cover), or append the imported pages to the end?",
+    importModeReplace: "Replace",
+    importModeAppend: "Append",
+    importModeCancel: "Cancel",
   },
 
   dropdown: {
@@ -1325,6 +1329,10 @@ export const hi = {
     newEditionPrompt: "नए पत्रिका संस्करण का शीर्षक दर्ज करें:",
     newEditionCreated: "नया संस्करण बनाया गया!",
     docImported: "दस्तावेज़ पृष्ठ आयातित!",
+    importModePrompt: "इस पत्रिका में पहले से पृष्ठ हैं। क्या आप उन्हें इस PDF से बदलना चाहते हैं (पहला पृष्ठ कवर बनेगा), या नए पृष्ठ अंत में जोड़ना चाहते हैं?",
+    importModeReplace: "बदलें",
+    importModeAppend: "जोड़ें",
+    importModeCancel: "रद्द करें",
   },
 
   dropdown: {

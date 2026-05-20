@@ -564,8 +564,6 @@ public class BookService {
         book.setModifiedDate(now);
         book = bookRepo.save(book);
 
-        String fullPageFormat = "{\"layout\":{\"image1\":{\"x\":10,\"y\":0,\"width\":530,\"height\":700}}}";
-
         if (imageUrls.size() >= 2) {
             // Cover page — use first page of the PDF as cover image
             Page cover = new Page();
@@ -573,7 +571,7 @@ public class BookService {
             cover.setPageNumber(1);
             cover.setContent(title);
             cover.setImageUrl(imageUrls.get(0));
-            cover.setFormat(fullPageFormat);
+            cover.setFormat(pdfPageFormat(1, imageUrls.get(0)));
             cover.setCreatedDate(now);
             cover.setModifiedDate(now);
             pageRepo.save(cover);
@@ -584,7 +582,7 @@ public class BookService {
                 page.setBookId(book.getId());
                 page.setPageNumber(i + 1);
                 page.setImageUrl(imageUrls.get(i));
-                page.setFormat(fullPageFormat);
+                page.setFormat(pdfPageFormat(i + 1, imageUrls.get(i)));
                 page.setCreatedDate(now);
                 page.setModifiedDate(now);
                 pageRepo.save(page);
@@ -595,7 +593,7 @@ public class BookService {
             back.setBookId(book.getId());
             back.setPageNumber(imageUrls.size());
             back.setImageUrl(imageUrls.get(imageUrls.size() - 1));
-            back.setFormat(fullPageFormat);
+            back.setFormat(pdfPageFormat(imageUrls.size(), imageUrls.get(imageUrls.size() - 1)));
             back.setCreatedDate(now);
             back.setModifiedDate(now);
             pageRepo.save(back);
@@ -606,7 +604,7 @@ public class BookService {
             cover.setPageNumber(1);
             cover.setContent(title);
             cover.setImageUrl(imageUrls.get(0));
-            cover.setFormat(fullPageFormat);
+            cover.setFormat(pdfPageFormat(1, imageUrls.get(0)));
             cover.setCreatedDate(now);
             cover.setModifiedDate(now);
             pageRepo.save(cover);
@@ -739,5 +737,15 @@ public class BookService {
             }
         }
         pageRepo.deleteById(pageId);
+    }
+
+    // Page format for PDF-imported pages: a single image block at full-page bounds.
+    // The MagazineEditor canvas renders imageBlocks; the older layout.image1 shape was a no-op there.
+    private String pdfPageFormat(int pageNumber, String imageUrl) {
+        String safeUrl = imageUrl == null ? "" :
+                imageUrl.replace("\\", "\\\\").replace("\"", "\\\"");
+        return "{\"imageBlocks\":[{\"id\":\"imported-" + pageNumber
+                + "\",\"url\":\"" + safeUrl
+                + "\",\"x\":10,\"y\":0,\"width\":530,\"height\":700}]}";
     }
 }

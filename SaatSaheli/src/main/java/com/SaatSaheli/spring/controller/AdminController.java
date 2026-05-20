@@ -835,6 +835,7 @@ public class AdminController {
             @RequestParam("file") MultipartFile file,
             @RequestParam(value = "magazineId", required = false) Long magazineId,
             @RequestParam(value = "title", required = false) String title,
+            @RequestParam(value = "mode", required = false, defaultValue = "append") String mode,
             HttpServletRequest request) {
         User caller = verifyCaller(getAuthUserId(request), false);
         if (caller == null) {
@@ -856,7 +857,23 @@ public class AdminController {
             }
             if (title != null && !title.trim().isEmpty()) {
                 bookService.updateBook(magazine.getId(), title.trim(), null, null);
+                magazine = bookService.getBook(magazine.getId());
             }
+
+            // Replace mode wipes existing pages so the imported PDF's first page becomes the cover.
+            boolean replace = "replace".equalsIgnoreCase(mode);
+            if (replace) {
+                List<Page> existing = bookService.getPagesByBookId(magazine.getId());
+                if (existing != null && !existing.isEmpty()) {
+                    for (Page p : existing) {
+                        bookService.deletePage(p.getId(), null);
+                    }
+                }
+            }
+
+            int startPage = replace ? 1
+                    : (magazine.getPages() != null ? magazine.getPages().size() + 1 : 1);
+            String magazineTitle = magazine.getTitle();
 
             // Extract pages from document and add them to the magazine
             if (isPdf) {
@@ -864,13 +881,21 @@ public class AdminController {
                 if (imageUrls.isEmpty()) {
                     return ResponseEntity.badRequest().body(errorMap("No pages could be rendered from the PDF"));
                 }
-                int startPage = magazine.getPages() != null ? magazine.getPages().size() + 1 : 1;
                 for (int i = 0; i < imageUrls.size(); i++) {
+                    int pageNum = startPage + i;
                     Page page = new Page();
                     page.setBookId(magazine.getId());
-                    page.setPageNumber(startPage + i);
+                    page.setPageNumber(pageNum);
                     page.setImageUrl(imageUrls.get(i));
-                    page.setFormat("{\"layout\":{\"image1\":{\"x\":0,\"y\":0,\"width\":550,\"height\":700}}}");
+                    // Cover page (pageNumber == 1) carries the magazine title as its text content,
+                    // mirroring BookService.createBookFromPdfImages so search/exports/TTS can find it.
+                    if (pageNum == 1 && magazineTitle != null && !magazineTitle.isEmpty()) {
+                        page.setContent(magazineTitle);
+                    }
+                    // Write as imageBlocks so the MagazineEditor canvas renders it; FlipBook still reads imageUrl.
+                    page.setFormat("{\"imageBlocks\":[{\"id\":\"imported-" + pageNum
+                            + "\",\"url\":" + escapeJson(imageUrls.get(i))
+                            + ",\"x\":0,\"y\":0,\"width\":550,\"height\":700}]}");
                     page.setCreatedDate(java.time.LocalDateTime.now());
                     page.setModifiedDate(java.time.LocalDateTime.now());
                     bookService.addPage(magazine.getId(), page, null);
@@ -880,11 +905,11 @@ public class AdminController {
                 if (pageTexts.isEmpty()) {
                     return ResponseEntity.badRequest().body(errorMap("No text could be extracted from the document"));
                 }
-                int startPage = magazine.getPages() != null ? magazine.getPages().size() + 1 : 1;
                 for (int i = 0; i < pageTexts.size(); i++) {
+                    int pageNum = startPage + i;
                     Page page = new Page();
                     page.setBookId(magazine.getId());
-                    page.setPageNumber(startPage + i);
+                    page.setPageNumber(pageNum);
                     page.setContent(pageTexts.get(i));
                     String format = "{\"textBlocks\":[{\"id\":\"tb" + System.currentTimeMillis() + i +
                             "\",\"content\":" + escapeJson(pageTexts.get(i)) +
