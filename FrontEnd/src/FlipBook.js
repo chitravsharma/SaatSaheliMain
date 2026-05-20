@@ -133,13 +133,10 @@ function FlipBook({ bookId }) {
   const [zoomIndex, setZoomIndex] = useState(DEFAULT_ZOOM_INDEX);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [pinchZoom, setPinchZoom] = useState(1);
-  const [ttsPlaying, setTtsPlaying] = useState(false);
-  const [ttsPaused, setTtsPaused] = useState(false);
-  const [ttsReadAll, setTtsReadAll] = useState(false); // podcast mode - read all pages
   const flipBookRef = useRef(null);
   const pinchRef = useRef({ startDist: 0, startZoom: 1 });
   const fullscreenRef = useRef(null);
-  const ttsPageRef = useRef(0); // track which page TTS is reading for podcast mode
+  const audioCtxRef = useRef(null);
   const pageSize = usePageSize(isFullscreen);
 
   const zoomLevel = ZOOM_LEVELS[zoomIndex] * pinchZoom;
@@ -238,15 +235,61 @@ function FlipBook({ bookId }) {
   });
 
 
+  // Soft page-flip "swoosh" — brown noise with a sweeping bandpass filter
+  // (mimics air moving past paper). Web Audio API only, no asset file.
+  // Lazily initializes AudioContext on first flip; browser audio is gated
+  // behind user gesture, and a page flip qualifies.
+  const playFlipSound = useCallback(() => {
+    try {
+      const Ctx = window.AudioContext || window.webkitAudioContext;
+      if (!Ctx) return;
+      if (!audioCtxRef.current) audioCtxRef.current = new Ctx();
+      const ctx = audioCtxRef.current;
+      if (ctx.state === "suspended") ctx.resume();
+      const now = ctx.currentTime;
+      const duration = 0.13;
+      const sampleRate = ctx.sampleRate;
+      const buffer = ctx.createBuffer(1, Math.floor(sampleRate * duration), sampleRate);
+      const data = buffer.getChannelData(0);
+      // Brown noise (integrated white noise — smoother, lower-frequency-heavy)
+      let last = 0;
+      for (let i = 0; i < data.length; i++) {
+        const white = Math.random() * 2 - 1;
+        last = (last + 0.02 * white) / 1.02;
+        data[i] = last * 3.5;
+      }
+      const source = ctx.createBufferSource();
+      source.buffer = buffer;
+      // Bandpass that sweeps from high → low: gives the "swoosh through air" feel
+      const filter = ctx.createBiquadFilter();
+      filter.type = "bandpass";
+      filter.Q.value = 0.9;
+      filter.frequency.setValueAtTime(3500, now);
+      filter.frequency.exponentialRampToValueAtTime(900, now + duration);
+      // Amplitude envelope — quick attack, smooth decay
+      const gain = ctx.createGain();
+      gain.gain.setValueAtTime(0.0001, now);
+      gain.gain.exponentialRampToValueAtTime(0.10, now + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+      source.connect(filter);
+      filter.connect(gain);
+      gain.connect(ctx.destination);
+      source.start(now);
+    } catch {
+      // Web Audio not supported / blocked — silent fallback
+    }
+  }, []);
+
   const onFlip = useCallback((e) => {
     setCurrentPage(e.data);
+    playFlipSound();
     // Reset scroll position when page changes
     const container = scrollContainerRef.current;
     if (container) {
       container.scrollTop = 0;
       container.scrollLeft = 0;
     }
-  }, []);
+  }, [playFlipSound]);
 
   const handleZoomIn = useCallback(() => {
     setZoomIndex((prev) => Math.min(prev + 1, ZOOM_LEVELS.length - 1));
@@ -261,94 +304,6 @@ function FlipBook({ bookId }) {
   const handleZoomReset = useCallback(() => {
     setZoomIndex(DEFAULT_ZOOM_INDEX);
     setPinchZoom(1);
-  }, []);
-
-  // Text-to-Speech functions
-  const getPageText = useCallback((pageIndex) => {
-    if (pageIndex < 0 || pageIndex >= pages.length) return "";
-    const page = pages[pageIndex];
-    const raw = page.content || "";
-    // Strip HTML tags for TTS
-    const div = document.createElement("div");
-    div.innerHTML = raw;
-    return div.textContent || "";
-  }, [pages]);
-
-  const stopTts = useCallback(() => {
-    window.speechSynthesis?.cancel();
-    setTtsPlaying(false);
-    setTtsPaused(false);
-    setTtsReadAll(false);
-  }, []);
-
-  const speakPage = useCallback((pageIndex, readAll) => {
-    if (!window.speechSynthesis) return;
-    window.speechSynthesis.cancel();
-    const text = getPageText(pageIndex);
-    if (!text.trim()) {
-      // Skip empty pages in podcast mode
-      if (readAll && pageIndex < pages.length - 1) {
-        const next = pageIndex + 1;
-        ttsPageRef.current = next;
-        flipBookRef.current?.pageFlip()?.turnToPage(next);
-        setTimeout(() => speakPage(next, true), 500);
-        return;
-      }
-      setTtsPlaying(false);
-      setTtsReadAll(false);
-      return;
-    }
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.rate = 0.95;
-    utterance.pitch = 1;
-    utterance.onend = () => {
-      if (readAll && pageIndex < pages.length - 1) {
-        const next = pageIndex + 1;
-        ttsPageRef.current = next;
-        flipBookRef.current?.pageFlip()?.turnToPage(next);
-        setTimeout(() => speakPage(next, true), 500);
-      } else {
-        setTtsPlaying(false);
-        setTtsReadAll(false);
-      }
-    };
-    utterance.onerror = () => {
-      setTtsPlaying(false);
-      setTtsReadAll(false);
-    };
-    setTtsPlaying(true);
-    setTtsPaused(false);
-    window.speechSynthesis.speak(utterance);
-  }, [getPageText, pages.length]);
-
-  const handleTtsReadPage = useCallback(() => {
-    if (ttsPlaying && !ttsPaused) {
-      // Pause
-      window.speechSynthesis?.pause();
-      setTtsPaused(true);
-    } else if (ttsPlaying && ttsPaused) {
-      // Resume
-      window.speechSynthesis?.resume();
-      setTtsPaused(false);
-    } else {
-      // Start reading current page
-      speakPage(currentPage, false);
-    }
-  }, [ttsPlaying, ttsPaused, currentPage, speakPage]);
-
-  const handleTtsPodcast = useCallback(() => {
-    if (ttsReadAll) {
-      stopTts();
-      return;
-    }
-    setTtsReadAll(true);
-    ttsPageRef.current = currentPage;
-    speakPage(currentPage, true);
-  }, [ttsReadAll, currentPage, speakPage, stopTts]);
-
-  // Stop TTS when component unmounts
-  useEffect(() => {
-    return () => window.speechSynthesis?.cancel();
   }, []);
 
   const totalPages = pages.length;
@@ -568,20 +523,6 @@ function FlipBook({ bookId }) {
     </div>
   );
 
-  const ttsControls = (
-    <div className="flipbook-tts-controls">
-      <button className={`flipbook-tts-btn ${ttsPlaying && !ttsPaused ? "flipbook-tts-active" : ""}`} onClick={handleTtsReadPage} title={ttsPlaying ? (ttsPaused ? "Resume reading" : "Pause reading") : "Read this page aloud"}>
-        {ttsPlaying && !ttsPaused ? "\u23F8" : "\u25B6"} {ttsPlaying ? (ttsPaused ? "Resume" : "Pause") : "Read"}
-      </button>
-      <button className={`flipbook-tts-btn ${ttsReadAll ? "flipbook-tts-podcast" : ""}`} onClick={handleTtsPodcast} title={ttsReadAll ? "Stop podcast" : "Read aloud as podcast (all pages)"}>
-        {ttsReadAll ? "\u23F9 Stop" : "\u{1F399} Podcast"}
-      </button>
-      {ttsPlaying && (
-        <button className="flipbook-tts-btn" onClick={stopTts} title="Stop reading">&#x23F9;</button>
-      )}
-    </div>
-  );
-
   const fullscreenBtn = (
     <button className="flipbook-fullscreen-btn" onClick={toggleFullscreen} aria-label={isFullscreen ? strings.flipBook.exitFullscreen : strings.flipBook.fullscreen} title={isFullscreen ? strings.flipBook.exitFullscreen : strings.flipBook.fullscreen}>
       {isFullscreen ? "\u2715" : "\u26F6"}
@@ -602,7 +543,6 @@ function FlipBook({ bookId }) {
           <div className="flipbook-toolbar">
             {navArrows}
             {zoomControls}
-            {ttsControls}
             {fullscreenBtn}
           </div>
         )}
