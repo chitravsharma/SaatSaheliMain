@@ -7,17 +7,7 @@ import java.io.IOException;
 
 /**
  * Storage backend for uploaded media (images, audio, PDFs).
- *
- * <p>Two implementations:
- * <ul>
- *   <li>{@link CloudinaryService} — current/legacy backend, picked when
- *       {@code app.media.storage=cloudinary} (default).</li>
- *   <li>{@link R2StorageService} — Cloudflare R2 (S3-compatible), picked
- *       when {@code app.media.storage=r2}. Free egress, lower cost.</li>
- * </ul>
- *
- * <p>The four method signatures intentionally mirror the original
- * Cloudinary API so call sites don't change during the migration.
+ * Implemented by {@link R2StorageService} (Cloudflare R2, S3-compatible).
  */
 public interface MediaStorageService {
 

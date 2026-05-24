@@ -1,7 +1,6 @@
 package com.SaatSaheli.spring.service;
 
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
@@ -27,23 +26,16 @@ import java.util.Set;
 import java.util.UUID;
 
 /**
- * Cloudflare R2 implementation of {@link MediaStorageService}.
+ * Cloudflare R2 implementation of {@link MediaStorageService} — the sole media
+ * backend. Uses the AWS S3 SDK v2 against R2's S3-compatible endpoint.
  *
- * <p>Activated when {@code app.media.storage=r2}. Mirrors {@link CloudinaryService}'s
- * 4-method surface so call sites don't change. Uses the AWS S3 SDK v2 against
- * R2's S3-compatible endpoint.
+ * <p>Strips EXIF/GPS metadata locally before upload by re-encoding through
+ * ImageIO. Files are written under {@code saatsaheli/} prefix.
  *
- * <p>Strips EXIF/GPS metadata locally (same as the Cloudinary impl) before upload
- * by re-encoding through ImageIO. Files are written under {@code saatsaheli/} prefix
- * to match Cloudinary's folder structure for easy migration.
- *
- * <p>Returned URLs are public URLs (either the R2 custom-domain base or, if not
- * configured, the bucket's default S3-compatible URL — which is NOT publicly readable
- * out of the box; configure a custom domain via Cloudflare R2 settings or expose the
- * bucket via a Worker).
+ * <p>Returned URLs are public URLs served via the R2 custom-domain base
+ * configured in {@code R2_PUBLIC_BASE_URL} (e.g. media.saatsaheli.com).
  */
 @Service
-@ConditionalOnProperty(name = "app.media.storage", havingValue = "r2")
 public class R2StorageService implements MediaStorageService {
 
     private static final Set<String> IMAGE_TYPES = Set.of(

@@ -116,12 +116,6 @@
 			<artifactId>spring-dotenv</artifactId>
 			<version>4.0.0</version>
 		</dependency>
-		<!-- Cloudinary for file uploads (legacy, being migrated off — see project_saatsaheli_r2_migration.md) -->
-		<dependency>
-			<groupId>com.cloudinary</groupId>
-			<artifactId>cloudinary-http45</artifactId>
-			<version>1.38.0</version>
-		</dependency>
 		<!-- AWS S3 SDK v2 — used for Cloudflare R2 (S3-compatible) media storage -->
 		<dependency>
 			<groupId>software.amazon.awssdk</groupId>
