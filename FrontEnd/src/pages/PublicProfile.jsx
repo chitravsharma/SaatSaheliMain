@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import api, { profileUrl } from "../utils/api";
+import { useGatedClick } from "../contexts/LoginGateContext";
 import { useStrings } from "../LanguageContext";
 import { optimizeCloudinary } from "../utils/imageUrl";
 import "../PublicProfile.css";
@@ -21,6 +22,7 @@ function resolveImageUrl(url) {
 
 function PublicProfile() {
   const { userId } = useParams();
+  const gateClick = useGatedClick();
   const strings = useStrings();
   const navigate = useNavigate();
   const s = strings.publicProfile;
@@ -227,7 +229,7 @@ function PublicProfile() {
           <div className="home-books-row">
             {books.map((book) => (
               <div key={book.id} className="home-book-card">
-                <Link to={`/read/${book.id}`} className="home-book-link">
+                <Link to={`/read/${book.id}`} className="home-book-link" onClick={gateClick(`/read/${book.id}`)}>
                   <div className="home-book-cover">
                     {book.coverImageUrl ? (
                       <img src={resolveImageUrl(book.coverImageUrl)} alt={book.title} className="home-book-cover-img" />

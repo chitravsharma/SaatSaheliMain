@@ -1,0 +1,173 @@
+.login-gate-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.65);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9100;
+  padding: 16px;
+}
+
+.login-gate-modal {
+  position: relative;
+  background: var(--bg-card, #fff);
+  border-radius: 14px;
+  max-width: 440px;
+  width: 100%;
+  padding: 28px 28px 20px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25);
+  text-align: center;
+}
+
+.login-gate-close {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  background: transparent;
+  border: none;
+  font-size: 1.8rem;
+  line-height: 1;
+  color: var(--text-secondary, #666);
+  cursor: pointer;
+  padding: 4px 10px;
+  border-radius: 6px;
+}
+
+.login-gate-close:hover {
+  background: rgba(0, 0, 0, 0.05);
+  color: var(--text-primary, #222);
+}
+
+.login-gate-modal h2 {
+  font-family: 'Playfair Display', 'Georgia', serif;
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 0 0 8px;
+  color: var(--accent-gold, #a45a2a);
+}
+
+.login-gate-subtitle {
+  margin: 0 0 20px;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: var(--text-primary, #333);
+}
+
+.login-gate-error {
+  background: #fdecea;
+  color: #8a1f12;
+  border: 1px solid #f5c2bc;
+  border-radius: 6px;
+  padding: 8px 12px;
+  margin-bottom: 14px;
+  font-size: 0.85rem;
+  text-align: left;
+}
+
+.login-gate-google {
+  display: flex;
+  justify-content: center;
+  margin: 6px 0 14px;
+}
+
+.login-gate-divider {
+  display: flex;
+  align-items: center;
+  text-align: center;
+  margin: 12px 0;
+  color: var(--text-secondary, #888);
+  font-size: 0.82rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.login-gate-divider::before,
+.login-gate-divider::after {
+  content: "";
+  flex: 1;
+  border-bottom: 1px solid var(--border-default, #e2dcd2);
+}
+
+.login-gate-divider span {
+  padding: 0 12px;
+}
+
+.login-gate-actions {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.login-gate-btn {
+  flex: 1;
+  padding: 11px 14px;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.15s, transform 0.05s;
+  border: 1px solid transparent;
+}
+
+.login-gate-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.login-gate-btn-primary {
+  background: var(--accent-gold, #a45a2a);
+  color: #fff;
+}
+
+.login-gate-btn-primary:hover:not(:disabled) {
+  background: var(--accent-gold-hover, #8c4a22);
+}
+
+.login-gate-btn-secondary {
+  background: transparent;
+  color: var(--accent-gold, #a45a2a);
+  border-color: var(--accent-gold, #a45a2a);
+}
+
+.login-gate-btn-secondary:hover:not(:disabled) {
+  background: rgba(164, 90, 42, 0.08);
+}
+
+.login-gate-cancel {
+  background: transparent;
+  border: none;
+  margin-top: 8px;
+  padding: 6px 12px;
+  color: var(--text-secondary, #777);
+  font-size: 0.85rem;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.login-gate-cancel:hover:not(:disabled) {
+  color: var(--text-primary, #333);
+}
+
+@media (max-width: 480px) {
+  .login-gate-modal {
+    padding: 24px 20px 18px;
+  }
+
+  .login-gate-modal h2 {
+    font-size: 1.3rem;
+  }
+
+  .login-gate-actions {
+    flex-direction: column;
+  }
+}
+
+@media (forced-colors: active) {
+  .login-gate-modal {
+    border: 2px solid ButtonText;
+  }
+}

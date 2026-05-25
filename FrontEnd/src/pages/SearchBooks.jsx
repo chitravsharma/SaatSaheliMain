@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
+import { useAuth } from "../AuthContext";
+import { useLoginGate } from "../contexts/LoginGateContext";
 import { useStrings } from "../LanguageContext";
 import { optimizeCloudinary } from "../utils/imageUrl";
 import "../BookManager.css";
@@ -26,6 +28,8 @@ function SearchBooks() {
   const strings = useStrings();
   const navigate = useNavigate();
   const location = useLocation();
+  const { user } = useAuth();
+  const { requireLogin } = useLoginGate();
   const [query, setQuery] = useState("");
   const [searchType, setSearchType] = useState("");
   const [bookResults, setBookResults] = useState([]);
@@ -113,7 +117,12 @@ function SearchBooks() {
   }, [location.search, doSearch]);
 
   const handleSelectBook = (book) => {
-    navigate(`/read/${book.id}`);
+    const path = `/read/${book.id}`;
+    if (!user) {
+      requireLogin(path);
+      return;
+    }
+    navigate(path);
   };
 
   const handleSelectArticle = (article) => {
