@@ -3,6 +3,7 @@ import { useNavigate, Link } from "react-router-dom";
 import api, { profileUrl } from "../utils/api";
 import { optimizeCloudinary } from "../utils/imageUrl";
 import { useAuth } from "../AuthContext";
+import { useGatedClick } from "../contexts/LoginGateContext";
 import { useStrings } from "../LanguageContext";
 import TermsGate from "../components/TermsGate";
 import "../Account.css";
@@ -17,6 +18,7 @@ const API_RECIPES = `${API}/api/recipes`;
 
 function Account() {
   const { user } = useAuth();
+  const gateClick = useGatedClick();
   const strings = useStrings();
   const navigate = useNavigate();
   const [books, setBooks] = useState([]);
@@ -406,7 +408,7 @@ function Account() {
             {books.map((book) => (
               <tr key={book.id}>
                 <td>
-                  <Link to={`/read/${book.id}`} className="acct-book-link">
+                  <Link to={`/read/${book.id}`} className="acct-book-link" onClick={gateClick(`/read/${book.id}`)}>
                     {book.title}
                   </Link>
                 </td>

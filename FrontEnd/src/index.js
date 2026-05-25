@@ -6,13 +6,16 @@ import reportWebVitals from './reportWebVitals';
 import { BrowserRouter } from 'react-router-dom';
 import { AuthProvider } from './AuthContext';
 import { LanguageProvider } from './LanguageContext';
+import { LoginGateProvider } from './contexts/LoginGateContext';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
    <BrowserRouter>
     <LanguageProvider>
       <AuthProvider>
-        <App />
+        <LoginGateProvider>
+          <App />
+        </LoginGateProvider>
       </AuthProvider>
     </LanguageProvider>
   </BrowserRouter>

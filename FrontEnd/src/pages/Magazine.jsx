@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import api from "../utils/api";
 import { Link } from "react-router-dom";
 import { useAuth } from "../AuthContext";
+import { useGatedClick } from "../contexts/LoginGateContext";
 import { useStrings } from "../LanguageContext";
 import { optimizeCloudinary } from "../utils/imageUrl";
 import "./Home.css";
@@ -20,6 +21,7 @@ function resolveImageUrl(url) {
 const Magazine = () => {
   const strings = useStrings();
   const { user } = useAuth();
+  const gateClick = useGatedClick();
   const [magazines, setMagazines] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
@@ -188,7 +190,7 @@ const Magazine = () => {
 
           return (
             <div key={mag.id} className="home-book-card">
-              <Link to={`/read/${mag.id}`} className="home-book-link">
+              <Link to={`/read/${mag.id}`} className="home-book-link" onClick={gateClick(`/read/${mag.id}`)}>
                 <div className="home-book-cover">
                   {mag.coverImageUrl ? (
                     <img
@@ -214,7 +216,7 @@ const Magazine = () => {
                   <svg width="14" height="14" viewBox="0 0 24 24" fill={isLiked ? "#e74c3c" : "none"} stroke={isLiked ? "#e74c3c" : "currentColor"} strokeWidth="2"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
                   <span>{likeC}</span>
                 </button>
-                <Link to={`/read/${mag.id}`} className="ss-btn-icon-sm" title="Comments">
+                <Link to={`/read/${mag.id}`} className="ss-btn-icon-sm" title="Comments" onClick={gateClick(`/read/${mag.id}`)}>
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
                   <span>{commentC}</span>
                 </Link>
