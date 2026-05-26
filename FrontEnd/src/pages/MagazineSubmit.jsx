@@ -1,5 +1,7 @@
-import React, { useState, useRef } from 'react';
-import axios from 'axios';
+import React, { useState, useRef, useEffect } from 'react';
+import api from '../utils/api';
+import { useAuth } from '../AuthContext';
+import { useLoginGate } from '../contexts/LoginGateContext';
 import './HelpSupport.css';
 
 const API_BASE = process.env.REACT_APP_API_URL;
@@ -13,27 +15,139 @@ const SUBMISSION_TYPES = [
   "Photography",
 ];
 
+// country → state/region → cities. Cities lists end with "Other" so users can
+// type a city that isn't in the dropdown. States lists also end with "Other".
+// For Singapore (city-state) we still keep a single state so the dropdowns
+// stay consistent.
 const COUNTRIES = {
-  "India": ["Mumbai", "Delhi", "Bangalore", "Hyderabad", "Chennai", "Kolkata", "Pune", "Ahmedabad", "Jaipur", "Lucknow", "Chandigarh", "Bhopal", "Indore", "Nagpur", "Surat", "Patna", "Kochi", "Coimbatore", "Vadodara", "Visakhapatnam", "Other"],
-  "United States": ["New York", "Los Angeles", "Chicago", "Houston", "Phoenix", "San Francisco", "Seattle", "Boston", "Atlanta", "Dallas", "Denver", "Miami", "Washington DC", "San Diego", "Philadelphia", "Other"],
-  "United Kingdom": ["London", "Manchester", "Birmingham", "Leeds", "Glasgow", "Edinburgh", "Bristol", "Liverpool", "Oxford", "Cambridge", "Other"],
-  "Canada": ["Toronto", "Vancouver", "Montreal", "Calgary", "Ottawa", "Edmonton", "Winnipeg", "Quebec City", "Other"],
-  "Australia": ["Sydney", "Melbourne", "Brisbane", "Perth", "Adelaide", "Canberra", "Gold Coast", "Other"],
-  "United Arab Emirates": ["Dubai", "Abu Dhabi", "Sharjah", "Ajman", "Other"],
-  "Singapore": ["Singapore"],
-  "Germany": ["Berlin", "Munich", "Frankfurt", "Hamburg", "Cologne", "Stuttgart", "Other"],
-  "France": ["Paris", "Lyon", "Marseille", "Toulouse", "Nice", "Other"],
-  "Nepal": ["Kathmandu", "Pokhara", "Lalitpur", "Biratnagar", "Other"],
-  "Bangladesh": ["Dhaka", "Chittagong", "Khulna", "Rajshahi", "Other"],
-  "Sri Lanka": ["Colombo", "Kandy", "Galle", "Jaffna", "Other"],
-  "Other": ["Other"],
+  "India": {
+    "Maharashtra": ["Mumbai", "Pune", "Nagpur", "Other"],
+    "Delhi": ["Delhi", "Other"],
+    "Karnataka": ["Bangalore", "Other"],
+    "Telangana": ["Hyderabad", "Other"],
+    "Tamil Nadu": ["Chennai", "Coimbatore", "Other"],
+    "West Bengal": ["Kolkata", "Other"],
+    "Gujarat": ["Ahmedabad", "Surat", "Vadodara", "Other"],
+    "Rajasthan": ["Jaipur", "Other"],
+    "Uttar Pradesh": ["Lucknow", "Other"],
+    "Chandigarh": ["Chandigarh", "Other"],
+    "Madhya Pradesh": ["Bhopal", "Indore", "Other"],
+    "Bihar": ["Patna", "Other"],
+    "Kerala": ["Kochi", "Other"],
+    "Andhra Pradesh": ["Visakhapatnam", "Other"],
+    "Other": ["Other"],
+  },
+  "United States": {
+    "New York": ["New York", "Other"],
+    "California": ["Los Angeles", "San Francisco", "San Diego", "Other"],
+    "Illinois": ["Chicago", "Other"],
+    "Texas": ["Houston", "Dallas", "Other"],
+    "Arizona": ["Phoenix", "Other"],
+    "Washington": ["Seattle", "Other"],
+    "Massachusetts": ["Boston", "Other"],
+    "Georgia": ["Atlanta", "Other"],
+    "Colorado": ["Denver", "Other"],
+    "Florida": ["Miami", "Other"],
+    "District of Columbia": ["Washington DC", "Other"],
+    "Pennsylvania": ["Philadelphia", "Other"],
+    "Other": ["Other"],
+  },
+  "United Kingdom": {
+    "England": ["London", "Manchester", "Birmingham", "Leeds", "Bristol", "Liverpool", "Oxford", "Cambridge", "Other"],
+    "Scotland": ["Glasgow", "Edinburgh", "Other"],
+    "Other": ["Other"],
+  },
+  "Canada": {
+    "Ontario": ["Toronto", "Ottawa", "Other"],
+    "British Columbia": ["Vancouver", "Other"],
+    "Quebec": ["Montreal", "Quebec City", "Other"],
+    "Alberta": ["Calgary", "Edmonton", "Other"],
+    "Manitoba": ["Winnipeg", "Other"],
+    "Other": ["Other"],
+  },
+  "Australia": {
+    "New South Wales": ["Sydney", "Other"],
+    "Victoria": ["Melbourne", "Other"],
+    "Queensland": ["Brisbane", "Gold Coast", "Other"],
+    "Western Australia": ["Perth", "Other"],
+    "South Australia": ["Adelaide", "Other"],
+    "Australian Capital Territory": ["Canberra", "Other"],
+    "Other": ["Other"],
+  },
+  "United Arab Emirates": {
+    "Dubai": ["Dubai", "Other"],
+    "Abu Dhabi": ["Abu Dhabi", "Other"],
+    "Sharjah": ["Sharjah", "Other"],
+    "Ajman": ["Ajman", "Other"],
+    "Other": ["Other"],
+  },
+  "Singapore": {
+    "Singapore": ["Singapore"],
+  },
+  "Germany": {
+    "Berlin": ["Berlin", "Other"],
+    "Bavaria": ["Munich", "Other"],
+    "Hesse": ["Frankfurt", "Other"],
+    "Hamburg": ["Hamburg", "Other"],
+    "North Rhine-Westphalia": ["Cologne", "Other"],
+    "Baden-Württemberg": ["Stuttgart", "Other"],
+    "Other": ["Other"],
+  },
+  "France": {
+    "Île-de-France": ["Paris", "Other"],
+    "Auvergne-Rhône-Alpes": ["Lyon", "Other"],
+    "Provence-Alpes-Côte d'Azur": ["Marseille", "Nice", "Other"],
+    "Occitania": ["Toulouse", "Other"],
+    "Other": ["Other"],
+  },
+  "Nepal": {
+    "Bagmati": ["Kathmandu", "Lalitpur", "Other"],
+    "Gandaki": ["Pokhara", "Other"],
+    "Province No. 1": ["Biratnagar", "Other"],
+    "Other": ["Other"],
+  },
+  "Bangladesh": {
+    "Dhaka": ["Dhaka", "Other"],
+    "Chittagong": ["Chittagong", "Other"],
+    "Khulna": ["Khulna", "Other"],
+    "Rajshahi": ["Rajshahi", "Other"],
+    "Other": ["Other"],
+  },
+  "Sri Lanka": {
+    "Western": ["Colombo", "Other"],
+    "Central": ["Kandy", "Other"],
+    "Southern": ["Galle", "Other"],
+    "Northern": ["Jaffna", "Other"],
+    "Other": ["Other"],
+  },
+  "Other": {
+    "Other": ["Other"],
+  },
 };
 
 const MagazineSubmit = () => {
+  const { user } = useAuth();
+  const { requireLogin } = useLoginGate();
+  const gateTriggeredRef = useRef(false);
+
+  // Anonymous visitor lands here directly — open the login modal once.
+  // After login the user state updates and the form renders normally.
+  useEffect(() => {
+    if (!user && !gateTriggeredRef.current) {
+      gateTriggeredRef.current = true;
+      requireLogin(window.location.pathname + window.location.search, {
+        title: "Login to Submit",
+        subtitle: "Sign in or create a free account to submit your creative work to Saat Saheli Magazine.",
+      });
+    }
+  }, [user, requireLogin]);
+
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [country, setCountry] = useState('');
+  const [state, setState] = useState('');
+  const [otherState, setOtherState] = useState('');
   const [city, setCity] = useState('');
   const [otherCity, setOtherCity] = useState('');
   const [submissionType, setSubmissionType] = useState('');
@@ -56,6 +170,8 @@ const MagazineSubmit = () => {
   const nameRef = useRef(null);
   const emailRef = useRef(null);
   const countryRef = useRef(null);
+  const stateRef = useRef(null);
+  const otherStateRef = useRef(null);
   const cityRef = useRef(null);
   const otherCityRef = useRef(null);
   const submissionTypeRef = useRef(null);
@@ -75,13 +191,19 @@ const MagazineSubmit = () => {
     }
   };
 
+  // When state=Other we skip the city dropdown and require free-text otherCity instead.
+  const cityIsValid = state === 'Other'
+    ? otherCity.trim() !== ''
+    : (city !== '' && (city !== 'Other' || otherCity.trim() !== ''));
+
   // All required fields filled? — used to enable/disable the submit button.
   const isFormValid =
     name.trim() !== '' &&
     email.trim() !== '' &&
     country !== '' &&
-    city !== '' &&
-    (city !== 'Other' || otherCity.trim() !== '') &&
+    state !== '' &&
+    (state !== 'Other' || otherState.trim() !== '') &&
+    cityIsValid &&
     submissionType !== '' &&
     (submissionType !== 'Other' || otherType.trim() !== '') &&
     title.trim() !== '' &&
@@ -97,8 +219,15 @@ const MagazineSubmit = () => {
     if (!name.trim())              { failValidation(nameRef);            return; }
     if (!email.trim())             { failValidation(emailRef);           return; }
     if (!country)                  { failValidation(countryRef);         return; }
-    if (!city)                     { failValidation(cityRef);            return; }
-    if (city === 'Other' && !otherCity.trim())             { failValidation(otherCityRef);       return; }
+    if (!state)                    { failValidation(stateRef);           return; }
+    if (state === 'Other' && !otherState.trim())           { failValidation(otherStateRef);      return; }
+    // When state=Other the city dropdown is disabled — require free-text city.
+    if (state === 'Other') {
+      if (!otherCity.trim())       { failValidation(otherCityRef);       return; }
+    } else {
+      if (!city)                   { failValidation(cityRef);            return; }
+      if (city === 'Other' && !otherCity.trim())           { failValidation(otherCityRef);       return; }
+    }
     if (!submissionType)           { failValidation(submissionTypeRef);  return; }
     if (submissionType === 'Other' && !otherType.trim())   { failValidation(otherTypeRef);       return; }
     if (!title.trim())             { failValidation(titleRef);           return; }
@@ -110,11 +239,12 @@ const MagazineSubmit = () => {
     setSending(true);
     try {
       const type = submissionType === 'Other' ? `Other: ${otherType.trim()}` : submissionType;
+      const stateValue = state === 'Other' ? otherState.trim() : state;
       const cityValue = city === 'Other' ? otherCity.trim() : city;
       const fullMessage = [
         `Submission Type: ${type}`,
         `Title: ${title.trim()}`,
-        `City & Country: ${cityValue}, ${country}`,
+        `Location: ${cityValue}, ${stateValue}, ${country}`,
         `Phone: ${phone.trim() || "Not provided"}`,
         `Previously Published: ${publishedBefore}`,
         `Instagram / Website: ${social.trim() || "Not provided"}`,
@@ -123,29 +253,56 @@ const MagazineSubmit = () => {
         description.trim(),
       ].join('\n');
 
-      const res = await axios.post(`${API_BASE}/api/contact`, {
+      const res = await api.post(`${API_BASE}/api/contact`, {
         name: name.trim(),
         email: email.trim(),
         subject: `Magazine Submission: ${type} — ${title.trim()}`,
         message: fullMessage,
         // Honeypot kept in DOM but always empty in payload — see Advertise.jsx.
-        // Was previously sent under the wrong key (`confirm_email_hp`); the
-        // backend reads `website`, so the honeypot was effectively bypassed.
         website: "",
       });
       setTrackingId(res?.data?.trackingId || '');
       setSent(true);
-      setName(''); setEmail(''); setPhone(''); setCountry(''); setCity(''); setOtherCity('');
+      setName(''); setEmail(''); setPhone(''); setCountry('');
+      setState(''); setOtherState(''); setCity(''); setOtherCity('');
       setSubmissionType(''); setOtherType(''); setTitle('');
       setDescription(''); setPublishedBefore(''); setSocial('');
       setOriginalWork('');
     } catch (err) {
-      setError('Failed to send. Please try later.');
+      setError(err.response?.data?.error || 'Failed to send. Please try later.');
     } finally {
       setSending(false);
       submittingRef.current = false;
     }
   };
+
+  if (!user) {
+    return (
+      <div className="hs-page">
+        <div className="hs-hero">
+          <h1>Saat Saheli Magazine — Creative Submission Form</h1>
+          <hr className="hs-divider" />
+        </div>
+        <div className="hs-form-card" style={{ textAlign: 'center', padding: '40px 24px' }}>
+          <h2 style={{ marginBottom: 12 }}>Login required</h2>
+          <p style={{ marginBottom: 20, color: '#666' }}>
+            Please sign in or create a free account to submit your creative work.
+          </p>
+          <button
+            type="button"
+            className="hs-submit"
+            style={{ maxWidth: 260, margin: '0 auto' }}
+            onClick={() => requireLogin(window.location.pathname + window.location.search, {
+              title: "Login to Submit",
+              subtitle: "Sign in or create a free account to submit your creative work to Saat Saheli Magazine.",
+            })}
+          >
+            Login to Submit
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="hs-page">
@@ -224,26 +381,56 @@ const MagazineSubmit = () => {
                 <label htmlFor="ms-country">Country *</label>
                 <select id="ms-country" value={country}
                   ref={countryRef}
-                  onChange={(e) => { setCountry(e.target.value); setCity(''); setOtherCity(''); }}
+                  onChange={(e) => {
+                    setCountry(e.target.value);
+                    setState(''); setOtherState('');
+                    setCity(''); setOtherCity('');
+                  }}
                   required style={{ padding: '12px 14px', border: '1px solid var(--border-strong)', borderRadius: 10, fontSize: '1rem', fontFamily: 'inherit', color: 'var(--text-primary)', background: 'var(--bg-body)' }}>
                   <option value="">Select Country</option>
                   {Object.keys(COUNTRIES).map((c) => <option key={c} value={c}>{c}</option>)}
                 </select>
               </div>
               <div className="hs-field">
+                <label htmlFor="ms-state">State / Region *</label>
+                <select id="ms-state" value={state}
+                  ref={stateRef}
+                  onChange={(e) => {
+                    setState(e.target.value);
+                    if (e.target.value !== 'Other') setOtherState('');
+                    setCity(''); setOtherCity('');
+                  }}
+                  required disabled={!country}
+                  style={{ padding: '12px 14px', border: '1px solid var(--border-strong)', borderRadius: 10, fontSize: '1rem', fontFamily: 'inherit', color: 'var(--text-primary)', background: 'var(--bg-body)' }}>
+                  <option value="">Select State / Region</option>
+                  {country && Object.keys(COUNTRIES[country] || {}).map((s) => <option key={s} value={s}>{s}</option>)}
+                </select>
+                {state === 'Other' && (
+                  <input type="text" placeholder="Enter your state / region..." value={otherState}
+                    ref={otherStateRef}
+                    onChange={(e) => setOtherState(e.target.value)} className="hs-other-input" />
+                )}
+              </div>
+              <div className="hs-field">
                 <label htmlFor="ms-city">City *</label>
                 <select id="ms-city" value={city}
                   ref={cityRef}
                   onChange={(e) => { setCity(e.target.value); if (e.target.value !== 'Other') setOtherCity(''); }}
-                  required disabled={!country}
+                  required disabled={!state || state === 'Other'}
                   style={{ padding: '12px 14px', border: '1px solid var(--border-strong)', borderRadius: 10, fontSize: '1rem', fontFamily: 'inherit', color: 'var(--text-primary)', background: 'var(--bg-body)' }}>
                   <option value="">Select City</option>
-                  {country && COUNTRIES[country]?.map((c) => <option key={c} value={c}>{c}</option>)}
+                  {country && state && state !== 'Other' && (COUNTRIES[country]?.[state] || []).map((c) => <option key={c} value={c}>{c}</option>)}
                 </select>
-                {city === 'Other' && (
+                {(city === 'Other' || state === 'Other') && (
                   <input type="text" placeholder="Enter your city..." value={otherCity}
                     ref={otherCityRef}
-                    onChange={(e) => setOtherCity(e.target.value)} className="hs-other-input" />
+                    onChange={(e) => {
+                      // When state=Other the city dropdown is empty/disabled, so we
+                      // free-text the city and shove it into the same otherCity field.
+                      // Force city to 'Other' so validation/payload treats it as free-text.
+                      if (state === 'Other') setCity('Other');
+                      setOtherCity(e.target.value);
+                    }} className="hs-other-input" />
                 )}
               </div>
             </fieldset>

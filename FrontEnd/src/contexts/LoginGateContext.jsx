@@ -12,17 +12,25 @@ const LoginGateContext = createContext({
  */
 export function LoginGateProvider({ children }) {
   const [returnTo, setReturnTo] = useState(null);
+  const [reason, setReason] = useState(null);
 
-  const requireLogin = useCallback((path) => {
+  // requireLogin(path) — opens the modal with default (reader) copy.
+  // requireLogin(path, { title, subtitle }) — overrides copy for non-reader gates
+  // like /magazine/submit.
+  const requireLogin = useCallback((path, reasonOverride) => {
     setReturnTo(path || "/");
+    setReason(reasonOverride || null);
   }, []);
 
-  const close = useCallback(() => setReturnTo(null), []);
+  const close = useCallback(() => {
+    setReturnTo(null);
+    setReason(null);
+  }, []);
 
   return (
     <LoginGateContext.Provider value={{ requireLogin }}>
       {children}
-      {returnTo !== null && <LoginGate returnTo={returnTo} onClose={close} />}
+      {returnTo !== null && <LoginGate returnTo={returnTo} reason={reason} onClose={close} />}
     </LoginGateContext.Provider>
   );
 }

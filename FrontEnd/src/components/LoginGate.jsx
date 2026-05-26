@@ -12,7 +12,9 @@ const GOOGLE_CLIENT_ID = process.env.REACT_APP_GOOGLE_CLIENT_ID;
  * Modal shown when an anonymous user tries to open a reader (book/magazine).
  * Offers inline Google sign-in or links to the full Login page for email/password.
  */
-function LoginGate({ returnTo, onClose }) {
+function LoginGate({ returnTo, reason, onClose }) {
+  const title = reason?.title || "Login to Read";
+  const subtitle = reason?.subtitle || "Sign in with Google or create a free account to continue reading.";
   const navigate = useNavigate();
   const { login: authLogin, triggerAccountFlash } = useAuth();
   const [error, setError] = useState("");
@@ -102,10 +104,8 @@ function LoginGate({ returnTo, onClose }) {
             ×
           </button>
 
-          <h2 id="login-gate-title">Login to Read</h2>
-          <p className="login-gate-subtitle">
-            Sign in with Google or create a free account to continue reading.
-          </p>
+          <h2 id="login-gate-title">{title}</h2>
+          <p className="login-gate-subtitle">{subtitle}</p>
 
           {error && <div className="login-gate-error" role="alert">{error}</div>}
 

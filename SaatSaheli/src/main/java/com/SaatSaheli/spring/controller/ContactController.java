@@ -56,12 +56,20 @@ public class ContactController {
     @PostMapping
     public ResponseEntity<?> submitContactForm(@RequestBody Map<String, String> body, HttpServletRequest request) {
         try {
+            // Authenticated callers (e.g. logged-in users submitting via the magazine
+            // form) have already proven they're human at login — skip honeypot +
+            // reCAPTCHA for them. Rate limit still applies as compromised-account
+            // / abuse defense.
+            boolean authenticated = getAuthUserId(request) != null;
+
             // Honeypot check — bots fill hidden fields, real users don't
-            String honeypot = body.get("website");
-            if (honeypot != null && !honeypot.trim().isEmpty()) {
-                log.warn("Honeypot field filled from IP {} — possible bot or autofill", request.getRemoteAddr());
-                return ResponseEntity.badRequest()
-                        .body(errorMap("Something went wrong with your submission. Please clear the form and try again."));
+            if (!authenticated) {
+                String honeypot = body.get("website");
+                if (honeypot != null && !honeypot.trim().isEmpty()) {
+                    log.warn("Honeypot field filled from IP {} — possible bot or autofill", request.getRemoteAddr());
+                    return ResponseEntity.badRequest()
+                            .body(errorMap("Something went wrong with your submission. Please clear the form and try again."));
+                }
             }
 
             // Rate limit: 5 submissions per 15 minutes per IP
@@ -72,10 +80,12 @@ public class ContactController {
             }
 
             // reCAPTCHA — must come before any DB writes
-            String recaptchaToken = body.get("recaptchaToken");
-            if (!recaptchaService.verify(recaptchaToken, clientIp)) {
-                return ResponseEntity.badRequest()
-                        .body(errorMap("Please complete the reCAPTCHA challenge."));
+            if (!authenticated) {
+                String recaptchaToken = body.get("recaptchaToken");
+                if (!recaptchaService.verify(recaptchaToken, clientIp)) {
+                    return ResponseEntity.badRequest()
+                            .body(errorMap("Please complete the reCAPTCHA challenge."));
+                }
             }
 
             String name = body.get("name");
