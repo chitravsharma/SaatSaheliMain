@@ -1,5 +1,6 @@
 import React, { useRef, useState } from "react";
 import axios from "axios";
+import api from "../utils/api";
 import ReCAPTCHA from "react-google-recaptcha";
 // SponsorUs reuses Advertise's typography, card, and form styles. The CSS is
 // generic enough that the .advertise-* class names stay readable on this page.
@@ -156,7 +157,7 @@ const SponsorUs = () => {
     const frequency = /year/i.test(pkg.cadence || "") ? "annual" : "one_time";
     setPayingKey(pkg.key);
     try {
-      const res = await axios.post(`${API_BASE}/api/support/create-checkout-session`, {
+      const res = await api.post(`/api/support/create-checkout-session`, {
         purpose: "sponsor",
         amount,
         currency: "usd",

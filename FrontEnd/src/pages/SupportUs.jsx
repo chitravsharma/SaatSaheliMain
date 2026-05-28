@@ -1,12 +1,8 @@
 import React, { useState } from "react";
-import axios from "axios";
+import api from "../utils/api";
 import { useAuth } from "../AuthContext";
 import "./Advertise.css";
 import "./SupportUs.css";
-
-// Empty string = same-origin (prod Docker build sets REACT_APP_API_URL=""), so
-// requests go to a relative /api/... path. Local dev sets an absolute URL.
-const API_BASE = process.env.REACT_APP_API_URL || "";
 
 const CURRENCIES = {
   inr: { code: "inr", symbol: "₹", label: "INR", presets: [100, 250, 500, 1000, 2500] },
@@ -46,7 +42,7 @@ const SupportUs = () => {
 
     setLoading(true);
     try {
-      const res = await axios.post(`${API_BASE}/api/support/create-checkout-session`, {
+      const res = await api.post(`/api/support/create-checkout-session`, {
         purpose: "donation",
         amount: effectiveAmount,
         currency: cur.code,
