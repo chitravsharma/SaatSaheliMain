@@ -108,6 +108,10 @@ const Header = () => {
             <svg className="nav-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
             {strings.header.navAbout}
           </Link>
+          <Link to="/support" className="nav-link nav-link-support" onClick={closeMobileNav}>
+            <svg className="nav-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+            Support us
+          </Link>
           <div className="header-browse-menu" ref={browseMenuRef}>
             <button
               type="button"
@@ -193,12 +197,6 @@ const Header = () => {
               My Account
             </Link>
           )}
-          {user && (
-            <Link to="/help-support" className="nav-link" onClick={closeMobileNav}>
-              <svg className="nav-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2a10 10 0 100 20 10 10 0 000-20z"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-              Need Help in Content Creation
-            </Link>
-          )}
           {user && (user.role === "ADMIN" || user.role === "SUPER_ADMIN") && (
             <Link to="/admin" className="nav-link" onClick={closeMobileNav}>
               <svg className="nav-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
@@ -223,7 +221,7 @@ const Header = () => {
                     {strings.header.myAccount}
                   </Link>
                   <Link to="/help-support" className="header-user-item" role="menuitem" onClick={() => { setUserMenuOpen(false); closeMobileNav(); }}>
-                    Help & Support
+                    Need help and Support
                   </Link>
                   <Link to="/pricing" className="header-user-item" role="menuitem" onClick={() => { setUserMenuOpen(false); closeMobileNav(); }}>
                     Upgrade

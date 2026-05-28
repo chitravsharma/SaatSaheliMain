@@ -130,6 +130,8 @@ const SponsorUs = () => {
   const [honeypot, setHoneypot] = useState("");
   const [recaptchaToken, setRecaptchaToken] = useState("");
   const recaptchaRef = useRef(null);
+  const [payingKey, setPayingKey] = useState("");
+  const [payError, setPayError] = useState("");
 
   const choosePackage = (key) => {
     setPackageInterest(key);
@@ -139,6 +141,41 @@ const SponsorUs = () => {
       const f = document.getElementById("sponsor-form");
       if (f) f.scrollIntoView({ behavior: "smooth", block: "start" });
     }, 0);
+  };
+
+  const handlePaySponsor = async (pkg) => {
+    setPayError("");
+    const amount = Number(String(pkg.price).replace(/[^0-9.]/g, ""));
+    if (!amount || isNaN(amount)) {
+      setPayError("This package isn't available for online payment — please use the inquiry form below.");
+      return;
+    }
+    if (!API_BASE) {
+      setPayError("Payment service is not available right now. Please use the inquiry form below.");
+      return;
+    }
+    // Annual site packages renew yearly; per-issue / per-episode are one-time.
+    const frequency = /year/i.test(pkg.cadence || "") ? "annual" : "one_time";
+    setPayingKey(pkg.key);
+    try {
+      const res = await axios.post(`${API_BASE}/api/support/create-checkout-session`, {
+        purpose: "sponsor",
+        amount,
+        currency: "usd",
+        frequency,
+        label: pkg.name,
+        cancelPath: "/sponsor-us",
+      });
+      if (res.data?.url) {
+        window.location.href = res.data.url;
+      } else {
+        setPayError("Could not start checkout. Please try again.");
+        setPayingKey("");
+      }
+    } catch (err) {
+      setPayError(err.response?.data?.error || "Could not start checkout. Please try again.");
+      setPayingKey("");
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -216,6 +253,10 @@ const SponsorUs = () => {
         </ul>
       </section>
 
+      {payError && (
+        <div className="advertise-error sponsor-pay-error" role="alert">{payError}</div>
+      )}
+
       <section aria-label="Site sponsorship packages">
         <header className="sponsor-section-head">
           <p className="advertise-eyebrow">Site sponsorship</p>
@@ -242,13 +283,23 @@ const SponsorUs = () => {
                   </li>
                 ))}
               </ul>
-              <button
-                type="button"
-                className="advertise-card-cta"
-                onClick={() => choosePackage(pkg.key)}
-              >
-                Become a sponsor
-              </button>
+              <div className="sponsor-card-actions">
+                <button
+                  type="button"
+                  className="advertise-card-cta"
+                  onClick={() => handlePaySponsor(pkg)}
+                  disabled={payingKey === pkg.key}
+                >
+                  {payingKey === pkg.key ? "Redirecting…" : `Sponsor now — ${pkg.price}/yr`}
+                </button>
+                <button
+                  type="button"
+                  className="advertise-card-cta advertise-card-cta-ghost"
+                  onClick={() => choosePackage(pkg.key)}
+                >
+                  Inquire first
+                </button>
+              </div>
             </article>
           ))}
         </div>
@@ -279,13 +330,23 @@ const SponsorUs = () => {
                   </li>
                 ))}
               </ul>
-              <button
-                type="button"
-                className="advertise-card-cta"
-                onClick={() => choosePackage(pkg.key)}
-              >
-                Sponsor this
-              </button>
+              <div className="sponsor-card-actions">
+                <button
+                  type="button"
+                  className="advertise-card-cta"
+                  onClick={() => handlePaySponsor(pkg)}
+                  disabled={payingKey === pkg.key}
+                >
+                  {payingKey === pkg.key ? "Redirecting…" : `Sponsor now — ${pkg.price}`}
+                </button>
+                <button
+                  type="button"
+                  className="advertise-card-cta advertise-card-cta-ghost"
+                  onClick={() => choosePackage(pkg.key)}
+                >
+                  Inquire first
+                </button>
+              </div>
             </article>
           ))}
         </div>

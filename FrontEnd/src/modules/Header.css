@@ -302,6 +302,18 @@
   background-color: rgba(255, 255, 255, 0.1);
   color: #ffffff;
 }
+/* Support us — gold pill CTA so it stands out against the dark header. */
+.nav-link-support {
+  background-color: var(--accent-gold, #d4a017);
+  color: #2c2620;
+}
+.nav-link-support:hover {
+  background-color: var(--accent-gold-hover, #b8860b);
+  color: #2c2620;
+}
+.nav-link-support .nav-icon {
+  opacity: 1;
+}
 /* Post-Google-login attention flash for "My Account" — three pulses then off. */
 .nav-link-flash {
   animation: nav-link-flash 1.4s ease-in-out 3;

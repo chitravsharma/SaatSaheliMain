@@ -1,7 +1,7 @@
 # SaatSaheli — Technical Design
 
 Living document. Updated as services / decisions change.
-Last revised: 2026-05-01.
+Last revised: 2026-05-10.
 
 ---
 
@@ -29,7 +29,12 @@ Last revised: 2026-05-01.
 - **Database:** **Neon Postgres** (paid Launch plan, autosuspend OFF).
   Connection via env vars `NEON_DB_URL` / `NEON_DB_USERNAME` / `NEON_DB_PASSWORD`.
   HikariCP pool: max 10, min idle 2, keepalive 5 min.
-- **Static assets:** **Cloudinary** for user-uploaded images and AI outputs.
+- **Static assets:** Routed via `MediaStorageService` (interface), with two
+  backends selectable by `MEDIA_STORAGE` env var: `r2` (Cloudflare R2,
+  primary going forward — Section 2.9) and `cloudinary` (legacy, retained
+  for rollback — Section 2.2). Both implement the same 4-method surface
+  so call sites in `FileUploadController`, `GalleryController`,
+  `ImageGenerationService`, and `DocumentExtractionService` are unchanged.
 - **Auth:** Google Sign-In (OAuth) + email/password fallback. JWT issued
   by backend, stored in localStorage, sent via `Authorization: Bearer …`.
   `JwtInterceptor` populates `request.getAttribute("jwtUserId" / "jwtRole")`;
@@ -85,7 +90,7 @@ Last revised: 2026-05-01.
 plus contractual indemnity) or Getty Generative AI (enterprise, ironclad
 provenance).
 
-### 2.2 Cloudinary (image hosting / CDN)
+### 2.2 Cloudinary (image hosting / CDN) — **being deprecated**
 
 | Setting | Value |
 |---|---|
@@ -95,11 +100,15 @@ provenance).
 | Code | `service/CloudinaryService.java`, `controller/FileUploadController.java` |
 | Endpoint exposed | `POST /api/upload` (multipart `file`) |
 
-- All user uploads + AI outputs go here. URLs persist; no migration needed
-  on backend redeploys.
-- **Plan:** Free tier (25 GB storage, 25 GB monthly bandwidth). Watch the
-  monthly bandwidth on the Cloudinary dashboard as photo-heavy
-  magazines/galleries scale.
+- **Status (2026-05-10):** Active in prod (`MEDIA_STORAGE=cloudinary`),
+  being migrated to Cloudflare R2 (Section 2.9). Code retained as the
+  fallback path for the `MEDIA_STORAGE` toggle so we can flip back via an
+  env var without a redeploy. Plan to remove in a follow-up commit once
+  R2 has been stable in prod for two weeks.
+- Free tier blew past 100% on 2026-05-03 (28.31 / 25 credits). Mitigations
+  shipped: hero carousel cut 8→5 then self-hosted as static JPGs, width
+  cap `w_1600,c_limit` injected, soft-deleted books purged. These bought
+  time until R2 cutover.
 - Public-by-default URLs (no signed-URL logic). Anything sensitive must
   not be uploaded.
 
@@ -152,6 +161,75 @@ without keys). In production both must be set.
 
 - Hand-rolled service worker (`public/sw.js`) + manifest. iOS apple-touch
   icons in `public/icons/`. Install only works once HTTPS is live.
+
+### 2.9 Cloudflare R2 (primary media storage going forward)
+
+| Setting | Value |
+|---|---|
+| Protocol | S3-compatible (AWS SDK v2) |
+| Bucket | `R2_BUCKET` env var |
+| Endpoint | `R2_ENDPOINT` env var (`https://<account-id>.r2.cloudflarestorage.com`) |
+| Public read URL | `R2_PUBLIC_BASE_URL` env var |
+| Auth | `R2_ACCESS_KEY_ID` / `R2_SECRET_ACCESS_KEY` |
+| Code | `service/R2StorageService.java`, `service/MediaStorageService.java` |
+| Toggle | `MEDIA_STORAGE=r2` selects this backend; `=cloudinary` reverts |
+
+**Why R2:**
+- $0.015/GB-month storage, **free egress**, no transformation/credit
+  metering. ~$0.50/month projected for SaatSaheli's ~5–10 GB library.
+- Free 10 GB tier covers current usage outright.
+- Cloudflare CDN included; pairs with Cloudflare Images (~$5/mo) later
+  if responsive `srcset` becomes a need.
+
+**Architecture:**
+- `MediaStorageService` interface declares the 4 methods all upload paths
+  use: `uploadFile`, `uploadBytes`, `saveBufferedImage`, `saveJpegImage`.
+- Both `CloudinaryService` and `R2StorageService` implement it.
+- Spring picks the bean by `MEDIA_STORAGE` env var. Flip is instant;
+  no redeploy needed beyond an env-var restart.
+- EXIF stripping (local `ImageIO` re-encode) sits **upstream** of the
+  storage layer — carries over unchanged.
+
+**Frontend dual-host:**
+- `FrontEnd/src/utils/imageUrl.js::optimizeCloudinary(url)` injects
+  `f_auto,q_auto,w_1600,c_limit` only when the URL points to
+  `res.cloudinary.com`. R2 URLs (and Drive thumbnails, `/uploads/`, etc.)
+  pass through unchanged. Same helper handles both backends — no
+  conditional logic at call sites.
+
+**CORS:**
+- R2 bucket requires an explicit CORS policy for `<img crossOrigin>` /
+  canvas reads (book cover designer uses canvas to export the composite).
+- Origins whitelisted: `http://localhost:3000`, `https://saatsaheli.com`,
+  `https://www.saatsaheli.com`. Methods `GET`, `HEAD`. `ExposeHeaders: ETag`.
+- Configured in the Cloudflare dashboard → bucket → Settings → CORS Policy.
+
+**Public URL strategy:**
+- Currently using R2's default `pub-<id>.r2.dev` domain.
+- **Pending:** custom domain `media.saatsaheli.com` (Cloudflare R2 → Custom
+  Domains → CNAME via Namecheap). Must land BEFORE the bulk Cloudinary→R2
+  copy + SQL URL rewrite, otherwise the rewrite has to be done twice.
+
+**Migration status (2026-05-10):**
+- Code shipped: R2StorageService, MediaStorageService router, frontend
+  dual-host helper — all on `postgres-migration` branch.
+- Local Phase 0 testing in progress with `MEDIA_STORAGE=r2`.
+- Pending: custom domain setup → bulk rclone copy → SQL URL rewrite on a
+  Neon branch → Render env flip → smoke test → cancel Cloudinary.
+
+**DB columns holding media URLs (needed by the Phase 4 SQL rewrite):**
+- `pages.image_url`, `pages.image_url_2`
+- `hero_slides.image_url`
+- `articles.image_url`
+- `recipe_images.image_url`
+- `users.profile_image_url`
+- `galleries.cover_image_url`
+- `advertisements.image_url`
+- `podcasts.cover_image_url`
+
+**Rollback:** set `MEDIA_STORAGE=cloudinary` and redeploy. Existing R2 URLs
+in the DB continue to serve from R2 (no DB rewrite needed) because
+`optimizeCloudinary()` passes non-Cloudinary URLs through unchanged.
 
 ---
 
@@ -223,22 +301,49 @@ Canvas: **550 × 700 px** (portrait) — hard-coded in
 
 ## 6. Local dev
 
-- Backend: `cd SaatSaheli && ./mvnw spring-boot:run -Dspring-boot.run.profiles=dev`
-  → port 8081, hits local Postgres `saatsaheli_dev`.
+- **Repo location:** `~/Code/GitHub/SaatSaheliMain` (relocated 2026-05-10
+  from `~/Documents/GitHub/SaatSaheliMain` after git index corruption;
+  former path archived as `SaatSaheliMain.corrupt-bak-2026-05-10`).
+  Outside `~/Documents` so the iCloud `bird` daemon does NOT touch
+  `node_modules` / `target` (was the source of multi-minute filesystem
+  stalls).
+- Backend: `cd SaatSaheli && ./mvnw clean spring-boot:run -Dspring-boot.run.profiles=dev`
+  → port 8081, hits local Postgres `saatsaheli_dev`. **Always** include
+  `-Dspring-boot.run.profiles=dev` — default profile = prod Neon.
 - Frontend: `cd FrontEnd && npm start` → port 3000, proxies API to 8081
   via `REACT_APP_API_URL`.
 - Smoke tests: `BASE_URL=http://localhost:8081 ./scripts/post-deploy-check.sh`.
+- When started from a background tool, logs land at
+  `/tmp/saatsaheli-logs/backend.log` and `/tmp/saatsaheli-logs/npm-ci.log`.
+
+**Local prerequisites that aren't obvious from the code:**
+- **Postgres.app 17.9** running on port 5432 with `saatsaheli_dev` DB
+  created from `SaatSaheli/db/schema.sql`.
+- **`.env` files** at `SaatSaheli/.env` and `FrontEnd/.env` (gitignored).
+  Both copied from a working clone; the repo only ships `.env.example`.
+- **Google OAuth client ID** in Google Cloud Console **must** include
+  `http://localhost:3000` under **Authorized JavaScript Origins** (no
+  path, no trailing slash — that's a separate field). If the GSI console
+  logs `The given origin is not allowed for the given client ID`, this
+  is the cause. Redirect URIs (with paths) go in the separate "Authorized
+  redirect URIs" section.
+- **R2 bucket CORS policy** (Section 2.9) must whitelist `localhost:3000`
+  or the book-cover designer canvas read will 403.
 
 **Recurring local-dev pitfalls:**
 - Stale iCloud-conflict files in `target/` (`* 2.class`) cause Maven
   "multiple main class candidates" failures. Fix: `rm -rf target` then
-  `./mvnw clean spring-boot:run …`.
+  `./mvnw clean spring-boot:run …`. Less likely now that repo lives
+  outside `~/Documents`, but Postgres.app metadata still lives there.
 - Frontend `node_modules` corruption (silently zero-byte/wrong-content
   package.json files) causes webpack errors that look like missing
   exports. Fix: `rm -rf FrontEnd/node_modules FrontEnd/package-lock.json && npm install`.
 - CRA dev server (`npm start`) hangs when launched as a background
   process via Claude Code's Bash. Workaround: user runs it in a real
   terminal.
+- `[GSI_LOGGER]` Cross-Origin-Opener-Policy warnings in the console are
+  downstream of the JavaScript-Origins rejection above — if you see both,
+  fix the origin first; the COOP warnings often disappear with it.
 
 ---
 
@@ -246,11 +351,13 @@ Canvas: **550 × 700 px** (portrait) — hard-coded in
 
 | Item | State | Doc |
 |---|---|---|
+| **R2 migration — Phase 3–7** | Code shipped; Cloudflare custom domain + rclone bulk-copy + Neon SQL rewrite + Render env flip + smoke test + Cloudinary cancel still pending | Section 2.9 / `memory/project_saatsaheli_r2_migration.md` |
 | Magazine sponsor mechanic (Plan A) | Designed, not started | (in chat — to be moved here when scoped) |
 | "Our Sponsors" cross-issue page (Plan B) | Designed | — |
 | Per-magazine size/orientation | Designed | Section 4 |
 | Privacy/tracker cleanup (self-host fonts, replace GA4, replace reCAPTCHA) | Logged | `memory/project_saatsaheli_tracker_cleanup.md` |
 | #24 SuperAdmin Phase 3 (admin UI) | Phase 1+2 shipped, Phase 3 pending | `memory/project_saatsaheli_superadmin_impersonation.md` |
+| Render OOM 2026-05-09 fix (DocumentExtractionService 150→100 DPI JPEG) | Written, never committed; lost when repo relocated. Re-do | `memory/project_saatsaheli_oom_2026-05-09.md` |
 
 ---
 
@@ -265,4 +372,16 @@ Canvas: **550 × 700 px** (portrait) — hard-coded in
   if you set it in Render's env vars.
 - **Cloudinary bandwidth is the scaling cliff.** Free tier 25 GB/month.
   Magazine + galleries are the heavy users. Watch the dashboard around
-  issue launches.
+  issue launches. (Pressure ends once R2 migration completes — Section 2.9.)
+- **`MEDIA_STORAGE` toggle is the R2 rollback lever.** Flip to
+  `cloudinary` + redeploy if R2 traffic ever misbehaves. Don't change it
+  on local without also verifying the right env vars are populated in
+  the relevant `.env`.
+- **Never leak secret values to the terminal.** `.env` greps must be
+  piped through `sed 's/=.*/=<redacted>/'`. R2 and Cloudinary secrets
+  have already leaked once each via unfiltered greps and forced
+  emergency rotations.
+- **Never commit `.env` files.** Both backend and frontend `.env` are
+  gitignored. The repo only ships `.env.example` placeholders. When
+  re-cloning, copy `.env` from a known-good source (the previous working
+  clone, or password-manager-archived copies).

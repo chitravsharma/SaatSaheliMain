@@ -1,13 +1,25 @@
 package com.SaatSaheli.spring.controller;
 
+import com.SaatSaheli.spring.model.PaymentTransaction;
 import com.SaatSaheli.spring.model.User;
+import com.SaatSaheli.spring.repository.PaymentTransactionRepository;
 import com.SaatSaheli.spring.repository.UserRepository;
+import com.SaatSaheli.spring.util.StripePaymentMapper;
 import com.stripe.Stripe;
+import com.stripe.exception.EventDataObjectDeserializationException;
 import com.stripe.exception.SignatureVerificationException;
+import com.stripe.exception.StripeException;
+import com.stripe.model.Charge;
+import com.stripe.model.Dispute;
 import com.stripe.model.Event;
+import com.stripe.model.EventDataObjectDeserializer;
+import com.stripe.model.StripeObject;
 import com.stripe.model.checkout.Session;
 import com.stripe.net.Webhook;
 import com.stripe.param.checkout.SessionCreateParams;
+import org.springframework.dao.DataIntegrityViolationException;
+
+import java.time.ZoneOffset;
 import jakarta.annotation.PostConstruct;
 import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
@@ -40,6 +52,9 @@ public class PaymentController {
 
     @Autowired
     private UserRepository userRepo;
+
+    @Autowired
+    private PaymentTransactionRepository txRepository;
 
     // Plan key → Stripe Price ID mapping (set these after creating products in Stripe Dashboard)
     private static final Map<String, String> PLAN_PRICE_IDS = Map.of(
@@ -127,32 +142,20 @@ public class PaymentController {
     @PostMapping("/webhook")
     public ResponseEntity<?> handleWebhook(@RequestBody String payload, @RequestHeader("Stripe-Signature") String sigHeader) {
         try {
-            Event event;
-            if (stripeWebhookSecret != null && !stripeWebhookSecret.isEmpty()) {
-                event = Webhook.constructEvent(payload, sigHeader, stripeWebhookSecret);
-            } else {
-                log.warn("Webhook secret not configured — skipping signature verification");
-                event = Event.GSON.fromJson(payload, Event.class);
+            // Never process an unverified event — a forged checkout.session.completed
+            // could otherwise upgrade any user's plan for free. The signing secret is
+            // mandatory; without it we cannot trust the payload.
+            if (stripeWebhookSecret == null || stripeWebhookSecret.isEmpty()) {
+                log.warn("Payments webhook called but stripe.webhook-secret is not configured");
+                return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(errorMap("Webhook not configured."));
             }
+            Event event = Webhook.constructEvent(payload, sigHeader, stripeWebhookSecret);
 
-            if ("checkout.session.completed".equals(event.getType())) {
-                Session session = (Session) event.getDataObjectDeserializer().getObject().orElse(null);
-                if (session != null) {
-                    String userIdStr = session.getMetadata().get("userId");
-                    String planKey = session.getMetadata().get("planKey");
-
-                    if (userIdStr != null && planKey != null) {
-                        Long userId = Long.parseLong(userIdStr);
-                        Optional<User> userOpt = userRepo.findById(userId);
-                        if (userOpt.isPresent()) {
-                            User user = userOpt.get();
-                            user.setPlan(planKey);
-                            user.setModifiedDate(LocalDateTime.now());
-                            userRepo.save(user);
-                            log.info("User {} upgraded to plan {}", userId, planKey);
-                        }
-                    }
-                }
+            switch (event.getType()) {
+                case "checkout.session.completed" -> handleCheckoutCompleted(event, payload);
+                case "charge.refunded" -> handleRefund(event);
+                case "charge.dispute.created", "charge.dispute.updated", "charge.dispute.closed" -> handleDispute(event);
+                default -> { /* event type not handled */ }
             }
 
             return ResponseEntity.ok(Map.of("received", true));
@@ -195,6 +198,123 @@ public class PaymentController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(errorMap("Failed to verify session"));
         }
+    }
+
+    /**
+     * Pulls the Checkout Session out of a webhook event, tolerant of an API-version
+     * mismatch between the account's events and the stripe-java SDK. When the safe
+     * deserializer returns empty (version skew), force-deserialize to read the id,
+     * then re-fetch via Session.retrieve so all fields are in the SDK's own version.
+     */
+    private StripeObject resolveObject(Event event) {
+        EventDataObjectDeserializer deserializer = event.getDataObjectDeserializer();
+        StripeObject obj = deserializer.getObject().orElse(null);
+        if (obj == null) {
+            try {
+                obj = deserializer.deserializeUnsafe();
+            } catch (EventDataObjectDeserializationException e) {
+                log.warn("Could not deserialize data object for event {}", event.getId(), e);
+                return null;
+            }
+        }
+        return obj;
+    }
+
+    private Session resolveSession(Event event) {
+        StripeObject obj = resolveObject(event);
+        if (!(obj instanceof Session)) {
+            return null;
+        }
+        Session fromEvent = (Session) obj;
+        try {
+            return Session.retrieve(fromEvent.getId());
+        } catch (StripeException e) {
+            log.warn("Could not re-retrieve session {}; using event payload copy", fromEvent.getId(), e);
+            return fromEvent;
+        }
+    }
+
+    private void handleCheckoutCompleted(Event event, String payload) {
+        Session session = resolveSession(event);
+        if (session == null) {
+            log.warn("Payments webhook: could not resolve Checkout Session from event {}", event.getId());
+            return;
+        }
+        Map<String, String> md = session.getMetadata();
+        String planKey = md != null ? md.get("planKey") : null;
+        // Only plan/subscription sessions carry planKey. Sessions without it (support /
+        // sponsor) belong to SupportController — skip so we don't mis-handle them here.
+        if (planKey == null) {
+            log.info("Payments webhook: session {} has no planKey; skipping", session.getId());
+            return;
+        }
+
+        String userIdStr = md.get("userId");
+        Long userId = userIdStr != null ? Long.parseLong(userIdStr) : null;
+        if (userId != null) {
+            userRepo.findById(userId).ifPresent(user -> {
+                user.setPlan(planKey);
+                user.setModifiedDate(LocalDateTime.now());
+                userRepo.save(user);
+                log.info("User {} upgraded to plan {}", userId, planKey);
+            });
+        }
+
+        if (txRepository.findByWebhookEventId(event.getId()).isPresent()) {
+            return;
+        }
+        PaymentTransaction tx = StripePaymentMapper.fromSession(
+                session, PaymentTransaction.TYPE_SUBSCRIPTION, userId, event.getId(), payload);
+        try {
+            txRepository.save(tx);
+            log.info("Recorded subscription payment: ref={} session={} amount={} {}",
+                    tx.getPaymentReferenceId(), session.getId(), tx.getAmount(), tx.getCurrency());
+        } catch (DataIntegrityViolationException dup) {
+            log.info("Subscription payment already recorded for event {}", event.getId());
+        }
+    }
+
+    private void handleRefund(Event event) {
+        StripeObject obj = resolveObject(event);
+        if (!(obj instanceof Charge)) {
+            return;
+        }
+        Charge charge = (Charge) obj;
+        String pi = charge.getPaymentIntent();
+        if (pi == null) {
+            return;
+        }
+        txRepository.findByProviderPaymentId(pi).ifPresent(tx -> {
+            boolean partial = charge.getAmountRefunded() != null && charge.getAmount() != null
+                    && charge.getAmountRefunded() < charge.getAmount();
+            tx.setRefundStatus(partial ? "Partial Refund" : "Refunded");
+            tx.setPaymentStatus("Refunded");
+            tx.setUpdatedAt(LocalDateTime.now(ZoneOffset.UTC));
+            tx.setUpdatedBy("stripe-webhook");
+            txRepository.save(tx);
+            log.info("Recorded refund on payment {} (pi={})", tx.getPaymentReferenceId(), pi);
+        });
+    }
+
+    private void handleDispute(Event event) {
+        StripeObject obj = resolveObject(event);
+        if (!(obj instanceof Dispute)) {
+            return;
+        }
+        Dispute dispute = (Dispute) obj;
+        String pi = dispute.getPaymentIntent();
+        if (pi == null) {
+            return;
+        }
+        txRepository.findByProviderPaymentId(pi).ifPresent(tx -> {
+            String reason = dispute.getReason() != null ? dispute.getReason() : "dispute";
+            tx.setDisputeStatus(reason + " / " + dispute.getStatus());
+            tx.setUpdatedAt(LocalDateTime.now(ZoneOffset.UTC));
+            tx.setUpdatedBy("stripe-webhook");
+            txRepository.save(tx);
+            log.info("Recorded dispute on payment {} (pi={}, status={})",
+                    tx.getPaymentReferenceId(), pi, dispute.getStatus());
+        });
     }
 
     private Map<String, String> errorMap(String message) {

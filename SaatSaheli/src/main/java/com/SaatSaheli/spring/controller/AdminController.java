@@ -6,9 +6,11 @@ import com.SaatSaheli.spring.model.Gallery;
 import com.SaatSaheli.spring.model.Login;
 import com.SaatSaheli.spring.model.MarketplaceListing;
 import com.SaatSaheli.spring.model.Page;
+import com.SaatSaheli.spring.model.PaymentTransaction;
 import com.SaatSaheli.spring.model.Recipe;
 import com.SaatSaheli.spring.model.User;
 import com.SaatSaheli.spring.repository.ArticleRepository;
+import com.SaatSaheli.spring.repository.PaymentTransactionRepository;
 import com.SaatSaheli.spring.repository.BookRepository;
 import com.SaatSaheli.spring.repository.GalleryRepository;
 import com.SaatSaheli.spring.repository.LoginRepository;
@@ -27,6 +29,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -67,6 +70,9 @@ public class AdminController {
 
     @Autowired
     private DocumentExtractionService documentExtractionService;
+
+    @Autowired
+    private PaymentTransactionRepository txRepo;
 
     private Long getAuthUserId(HttpServletRequest request) {
         Object val = request.getAttribute("jwtUserId");
@@ -702,6 +708,50 @@ public class AdminController {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(errorMap("Failed to fetch stats: " + e.getMessage()));
+        }
+    }
+
+    /**
+     * GET /api/admin/payments[?type=support|sponsor|subscription|payment|refund|other]
+     * Payment audit/report ledger for the admin Payments tab: rows plus per-currency
+     * gross/net totals (refunded rows excluded from totals) and counts per type.
+     */
+    @GetMapping("/payments")
+    public ResponseEntity<?> listPayments(HttpServletRequest request,
+                                          @RequestParam(value = "type", required = false) String type) {
+        try {
+            User caller = verifyCaller(getAuthUserId(request), false);
+            if (caller == null) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorMap("Admin access required"));
+            }
+
+            List<PaymentTransaction> txns = (type != null && !type.isBlank())
+                    ? txRepo.findByPaymentTypeAndDeletedFlagFalseOrderByCreatedAtDesc(type.trim())
+                    : txRepo.findByDeletedFlagFalseOrderByCreatedAtDesc();
+
+            Map<String, BigDecimal> grossByCurrency = new LinkedHashMap<>();
+            Map<String, BigDecimal> netByCurrency = new LinkedHashMap<>();
+            Map<String, Long> countByType = new LinkedHashMap<>();
+            for (PaymentTransaction t : txns) {
+                countByType.merge(t.getPaymentType() == null ? "other" : t.getPaymentType(), 1L, Long::sum);
+                boolean refunded = t.getRefundStatus() != null && !t.getRefundStatus().isBlank();
+                if (t.getAmount() != null && t.getCurrency() != null && !refunded) {
+                    String cur = t.getCurrency().toUpperCase();
+                    grossByCurrency.merge(cur, t.getAmount(), BigDecimal::add);
+                    if (t.getNetAmount() != null) netByCurrency.merge(cur, t.getNetAmount(), BigDecimal::add);
+                }
+            }
+
+            Map<String, Object> resp = new LinkedHashMap<>();
+            resp.put("transactions", txns);
+            resp.put("count", txns.size());
+            resp.put("grossByCurrency", grossByCurrency);
+            resp.put("netByCurrency", netByCurrency);
+            resp.put("countByType", countByType);
+            return ResponseEntity.ok(resp);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(errorMap("Failed to fetch payments: " + e.getMessage()));
         }
     }
 

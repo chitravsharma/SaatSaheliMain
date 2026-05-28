@@ -129,8 +129,10 @@ public class AuthController {
             }
             user.setGender(getStr(body, "gender"));
             user.setRole("USER");
-            String plan = getStr(body, "plan");
-            user.setPlan(plan.isEmpty() ? "Free" : plan);
+            // Plan is never taken from the signup payload — every new account starts
+            // on Free. Paid plans activate only via the Stripe payment webhook
+            // (POST /api/payments/webhook) after a confirmed payment.
+            user.setPlan("Free");
             user.setCreatedDate(now);
             user.setModifiedDate(now);
             user = userRepo.save(user);
@@ -499,8 +501,9 @@ public class AuthController {
             if (updated.getBio() != null) user.setBio(updated.getBio());
             if (updated.getInterests() != null) user.setInterests(updated.getInterests());
             if (updated.getFields() != null) user.setFields(updated.getFields());
-            // Plan changes should go through payment flow, but allow for now
-            if (updated.getPlan() != null) user.setPlan(updated.getPlan());
+            // Plan is intentionally NOT settable here. It activates only via the
+            // Stripe payment webhook after a confirmed payment, so any plan in the
+            // request body is silently ignored (same stance as role changes above).
             // teamRole is admin-only — silently ignore if caller is not admin
             if (updated.getTeamRole() != null) {
                 Optional<User> callerOpt = callerUserId != null ? userRepo.findById(callerUserId) : Optional.empty();

@@ -36,6 +36,8 @@ const toPSTDateTime = (dateStr) => {
     });
 };
 
+const fmtMoney = (amt, cur) => (amt == null ? "\u2014" : `${(cur || "").toUpperCase()} ${Number(amt).toFixed(2)}`);
+
 // Click-to-sort helpers for the admin tables. Cycle: unsorted \u2192 asc \u2192 desc \u2192 unsorted.
 // `type: "date"` accessors should return ISO strings (or null) \u2014 string compare handles
 // ordering correctly for ISO dates. `type: "string"` lower-cases for case-insensitive sort.
@@ -120,6 +122,10 @@ const AdminDashboard = () => {
     const [listingSort, setListingSort] = useState({ key: null, dir: "asc" });
     const [adSort, setAdSort] = useState({ key: null, dir: "asc" });
     const [querySort, setQuerySort] = useState({ key: null, dir: "asc" });
+    const [payments, setPayments] = useState([]);
+    const [paymentSummary, setPaymentSummary] = useState(null);
+    const [paymentTypeFilter, setPaymentTypeFilter] = useState("");
+    const [paymentsLoading, setPaymentsLoading] = useState(false);
     const [resetPasswordUserId, setResetPasswordUserId] = useState(null);
     const [resetNewPassword, setResetNewPassword] = useState("");
 
@@ -473,6 +479,17 @@ const AdminDashboard = () => {
         setSupportLoading(false);
     }, [user?.userId]);
 
+    const fetchPayments = useCallback(async () => {
+        setPaymentsLoading(true);
+        try {
+            const qs = paymentTypeFilter ? `?type=${encodeURIComponent(paymentTypeFilter)}` : "";
+            const res = await api.get(`${API}/api/admin/payments${qs}`);
+            setPayments(Array.isArray(res.data?.transactions) ? res.data.transactions : []);
+            setPaymentSummary(res.data || null);
+        } catch { /* ignore */ }
+        setPaymentsLoading(false);
+    }, [user?.userId, paymentTypeFilter]);
+
     const updateQueryStatus = async (queryId, newStatus) => {
         try {
             await api.put(`${API}/api/contact/${queryId}/status`, { status: newStatus });
@@ -570,8 +587,9 @@ const AdminDashboard = () => {
         if (tab === "analytics") fetchAnalytics();
         if (tab === "advertisements") fetchAdvertisements();
         if (tab === "support") fetchSupportQueries();
+        if (tab === "payments") fetchPayments();
         if (tab === "heroSlides") fetchHeroSlides();
-    }, [tab, fetchUsers, fetchBooks, fetchArticles, fetchRecipes, fetchGalleries, fetchListings, fetchAuditLog, fetchAnalytics, fetchAdvertisements, fetchSupportQueries, fetchHeroSlides]);
+    }, [tab, fetchUsers, fetchBooks, fetchArticles, fetchRecipes, fetchGalleries, fetchListings, fetchAuditLog, fetchAnalytics, fetchAdvertisements, fetchSupportQueries, fetchPayments, fetchHeroSlides]);
 
     const changeRole = async (userId, newRole) => {
         try {
@@ -968,6 +986,9 @@ const AdminDashboard = () => {
                 </button>
                 <button className={tab === "support" ? "active" : ""} onClick={() => setTab("support")}>
                     Support Queries
+                </button>
+                <button className={tab === "payments" ? "active" : ""} onClick={() => setTab("payments")}>
+                    Payments
                 </button>
                 <button className={tab === "magazine" ? "active" : ""} onClick={() => setTab("magazine")}>
                     Magazine
@@ -1575,6 +1596,100 @@ const AdminDashboard = () => {
                                                 {(l.status || "").toUpperCase() !== "REMOVED" && <option value="remove">Remove</option>}
                                                 <option value="delete">Delete</option>
                                             </select>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    )}
+                </div>
+            )}
+
+            {tab === "payments" && (
+                <div className="admin-table-wrap">
+                    <div className="admin-search-bar">
+                        <select
+                            className="admin-search-input"
+                            style={{ maxWidth: 180 }}
+                            value={paymentTypeFilter}
+                            onChange={(e) => setPaymentTypeFilter(e.target.value)}
+                        >
+                            <option value="">All types</option>
+                            <option value="support">Support</option>
+                            <option value="sponsor">Sponsor</option>
+                            <option value="subscription">Subscription</option>
+                            <option value="payment">Payment</option>
+                            <option value="refund">Refund</option>
+                            <option value="other">Other</option>
+                        </select>
+                        <span className="admin-search-count">
+                            {paymentSummary?.count ?? payments.length} payments
+                        </span>
+                        {paymentSummary?.grossByCurrency && Object.entries(paymentSummary.grossByCurrency).map(([cur, gross]) => (
+                            <span key={cur} className="admin-search-count">
+                                {cur} gross {Number(gross).toFixed(2)}
+                                {paymentSummary.netByCurrency?.[cur] != null && ` · net ${Number(paymentSummary.netByCurrency[cur]).toFixed(2)}`}
+                            </span>
+                        ))}
+                    </div>
+
+                    {paymentsLoading ? <p>{strings.common.loading}</p> : (
+                        <table className="admin-table">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Reference</th>
+                                    <th>Type</th>
+                                    <th>Provider</th>
+                                    <th>Payer</th>
+                                    <th>Amount</th>
+                                    <th>Fee</th>
+                                    <th>Net</th>
+                                    <th>Tax</th>
+                                    <th>Method</th>
+                                    <th>Status</th>
+                                    <th>Refund / Dispute</th>
+                                    <th>Receipt</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {payments.length === 0 ? (
+                                    <tr><td colSpan={13} style={{ textAlign: "center" }}>No payments yet.</td></tr>
+                                ) : payments.map((p) => (
+                                    <tr key={p.id}>
+                                        <td>{toPSTDateTime(p.createdAt)}</td>
+                                        <td className="admin-article-title">{p.paymentReferenceId || "—"}</td>
+                                        <td>
+                                            <span className={`status-badge status-${(p.paymentType || "other").toLowerCase()}`}>
+                                                {p.paymentType || "—"}
+                                            </span>
+                                        </td>
+                                        <td>{p.provider || "—"}</td>
+                                        <td>
+                                            {p.payerName || "—"}
+                                            {p.payerEmail && <div style={{ fontSize: "0.8em", opacity: 0.7 }}>{p.payerEmail}</div>}
+                                        </td>
+                                        <td>{fmtMoney(p.amount, p.currency)}</td>
+                                        <td>{p.gatewayFee != null ? Number(p.gatewayFee).toFixed(2) : "—"}</td>
+                                        <td>{p.netAmount != null ? Number(p.netAmount).toFixed(2) : "—"}</td>
+                                        <td>{p.taxAmount != null ? Number(p.taxAmount).toFixed(2) : "—"}</td>
+                                        <td>
+                                            {p.cardBrand ? `${p.cardBrand} ••${p.last4 || ""}` : (p.paymentMethod || "—")}
+                                        </td>
+                                        <td>
+                                            <span className={`status-badge status-${(p.paymentStatus || "").toLowerCase()}`}>
+                                                {p.paymentStatus || "—"}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            {p.refundStatus && <div>{p.refundStatus}</div>}
+                                            {p.disputeStatus && <div style={{ color: "#b00" }}>{p.disputeStatus}</div>}
+                                            {!p.refundStatus && !p.disputeStatus && "—"}
+                                        </td>
+                                        <td>
+                                            {p.receiptUrl
+                                                ? <a href={p.receiptUrl} target="_blank" rel="noreferrer">view</a>
+                                                : "—"}
                                         </td>
                                     </tr>
                                 ))}

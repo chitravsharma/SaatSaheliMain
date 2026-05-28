@@ -433,6 +433,16 @@ export default function Login() {
               <form className="auth-form" onSubmit={handleChangePassword}>
                 {error && <div className="auth-error" role="alert">{error}</div>}
                 {success && <div className="auth-success" role="status">{success}</div>}
+                <input
+                  type="text"
+                  name="username"
+                  autoComplete="username"
+                  value={loginEmail}
+                  readOnly
+                  tabIndex={-1}
+                  aria-hidden="true"
+                  style={{ position: "absolute", left: "-10000px", width: 1, height: 1, opacity: 0, pointerEvents: "none" }}
+                />
                 <p className="auth-forgot-info">
                   You logged in with a temporary password. Please create a new password to secure your account.
                 </p>

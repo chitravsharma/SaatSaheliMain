@@ -27,9 +27,11 @@ root.render(
 reportWebVitals();
 
 // Register the PWA service worker (FrontEnd/public/service-worker.js).
+// Production only — in dev the SW caches the stable-named dev bundle cache-first
+// and serves stale code across full reloads (breaks new routes after redirects).
 // Must be on HTTPS or localhost. Keep registration after React mounts so it
 // doesn't compete with the initial paint.
-if ("serviceWorker" in navigator) {
+if (process.env.NODE_ENV === "production" && "serviceWorker" in navigator) {
     window.addEventListener("load", () => {
         navigator.serviceWorker
             .register(`${process.env.PUBLIC_URL || ""}/service-worker.js`)

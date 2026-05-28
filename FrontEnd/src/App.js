@@ -39,6 +39,8 @@ import DownloadProtection from './components/DownloadProtection';
 import VisitorTracker from './components/VisitorTracker';
 import MaintenanceBanner from './components/MaintenanceBanner';
 import Checkout from './pages/Checkout';
+import SupportUs from './pages/SupportUs';
+import SupportThankYou from './pages/SupportThankYou';
 import Marketplace from './pages/Marketplace';
 import NotFound from './pages/NotFound';
 import HelpSupport from './pages/HelpSupport';
@@ -105,6 +107,8 @@ function App() {
           <Route path="/pricing" element={<Pricing />} />
           <Route path="/advertise" element={<Advertise />} />
           <Route path="/sponsor-us" element={<SponsorUs />} />
+          <Route path="/support" element={<SupportUs />} />
+          <Route path="/support/thank-you" element={<SupportThankYou />} />
           <Route path="/marketplace" element={<Marketplace />} />
           <Route path="/checkout" element={<ProtectedRoute><Checkout /></ProtectedRoute>} />
           <Route path="/manual" element={<UserManual />} />
