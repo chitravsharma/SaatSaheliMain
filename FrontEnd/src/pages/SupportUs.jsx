@@ -4,7 +4,9 @@ import { useAuth } from "../AuthContext";
 import "./Advertise.css";
 import "./SupportUs.css";
 
-const API_BASE = process.env.REACT_APP_API_URL;
+// Empty string = same-origin (prod Docker build sets REACT_APP_API_URL=""), so
+// requests go to a relative /api/... path. Local dev sets an absolute URL.
+const API_BASE = process.env.REACT_APP_API_URL || "";
 
 const CURRENCIES = {
   inr: { code: "inr", symbol: "₹", label: "INR", presets: [100, 250, 500, 1000, 2500] },
@@ -39,10 +41,6 @@ const SupportUs = () => {
 
     if (!effectiveAmount || isNaN(effectiveAmount) || effectiveAmount <= 0) {
       setError("Please choose or enter a valid amount.");
-      return;
-    }
-    if (!API_BASE) {
-      setError("Payment service is not available right now. Please try again later.");
       return;
     }
 

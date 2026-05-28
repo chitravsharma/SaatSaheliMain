@@ -7,7 +7,9 @@ import ReCAPTCHA from "react-google-recaptcha";
 import "./Advertise.css";
 import "./SponsorUs.css";
 
-const API_BASE = process.env.REACT_APP_API_URL;
+// Empty string = same-origin (prod Docker build sets REACT_APP_API_URL=""), so
+// requests go to a relative /api/... path. Local dev sets an absolute URL.
+const API_BASE = process.env.REACT_APP_API_URL || "";
 const RECAPTCHA_SITE_KEY = process.env.REACT_APP_RECAPTCHA_SITE_KEY;
 const INQUIRY_EMAIL = "avikaventures.info@gmail.com";
 
@@ -148,10 +150,6 @@ const SponsorUs = () => {
     const amount = Number(String(pkg.price).replace(/[^0-9.]/g, ""));
     if (!amount || isNaN(amount)) {
       setPayError("This package isn't available for online payment — please use the inquiry form below.");
-      return;
-    }
-    if (!API_BASE) {
-      setPayError("Payment service is not available right now. Please use the inquiry form below.");
       return;
     }
     // Annual site packages renew yearly; per-issue / per-episode are one-time.

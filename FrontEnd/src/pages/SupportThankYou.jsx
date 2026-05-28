@@ -4,7 +4,9 @@ import axios from "axios";
 import "./Advertise.css";
 import "./SupportUs.css";
 
-const API_BASE = process.env.REACT_APP_API_URL;
+// Empty string = same-origin (prod Docker build sets REACT_APP_API_URL=""), so
+// requests go to a relative /api/... path. Local dev sets an absolute URL.
+const API_BASE = process.env.REACT_APP_API_URL || "";
 
 const CURRENCY_SYMBOL = { inr: "₹", usd: "$" };
 
@@ -15,7 +17,7 @@ const SupportThankYou = () => {
   const [details, setDetails] = useState(null);
 
   useEffect(() => {
-    if (!sessionId || !API_BASE) {
+    if (!sessionId) {
       setState("error");
       return;
     }
