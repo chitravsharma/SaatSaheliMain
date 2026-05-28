@@ -1,7 +1,9 @@
 package com.SaatSaheli.spring.controller;
 
 import com.SaatSaheli.spring.model.PaymentTransaction;
+import com.SaatSaheli.spring.model.User;
 import com.SaatSaheli.spring.repository.PaymentTransactionRepository;
+import com.SaatSaheli.spring.repository.UserRepository;
 import com.SaatSaheli.spring.util.StripePaymentMapper;
 import com.stripe.Stripe;
 import com.stripe.exception.EventDataObjectDeserializationException;
@@ -59,8 +61,17 @@ public class SupportController {
     @Value("${app.frontend-url:http://localhost:3000}")
     private String frontendUrl;
 
+    @Value("${support.open-to-all:false}")
+    private boolean supportOpenToAll;
+
+    @Value("${support.test-user-email:}")
+    private String supportTestUserEmail;
+
     @Autowired
     private PaymentTransactionRepository txRepository;
+
+    @Autowired
+    private UserRepository userRepo;
 
     @PostConstruct
     public void init() {
@@ -83,6 +94,18 @@ public class SupportController {
         if (stripeSecretKey == null || stripeSecretKey.isEmpty()) {
             return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
                     .body(error("Payments are not configured yet. Please try again later."));
+        }
+
+        // Limited-testing gate: until SUPPORT_OPEN_TO_ALL=true, only the designated
+        // test user (by email) may complete a payment. The form stays visible to all;
+        // anyone else just gets this message instead of a checkout session.
+        if (!supportOpenToAll) {
+            String callerEmail = resolveCallerEmail(request);
+            if (supportTestUserEmail == null || supportTestUserEmail.isBlank()
+                    || callerEmail == null || !callerEmail.equalsIgnoreCase(supportTestUserEmail.trim())) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body(error("Support payments are in limited testing and aren't available for your account yet."));
+            }
         }
 
         try {
@@ -318,6 +341,16 @@ public class SupportController {
             // Concurrent delivery beat us to the unique webhook_event_id; treat as success.
             log.info("Transaction already recorded (concurrent delivery) for event {}", eventId);
         }
+    }
+
+    // Resolves the authenticated caller's email from the JWT (jwtUserId set by
+    // JwtInterceptor). Returns null for anonymous/unauthenticated requests.
+    private String resolveCallerEmail(HttpServletRequest request) {
+        Object val = request.getAttribute("jwtUserId");
+        if (!(val instanceof Long)) {
+            return null;
+        }
+        return userRepo.findById((Long) val).map(User::getEmail).orElse(null);
     }
 
     private static String clientIp(HttpServletRequest request) {
