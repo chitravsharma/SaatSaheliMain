@@ -40,7 +40,6 @@ const Footer = () => {
         <Link to="/sponsor-us" className="footer-link">Sponsor us</Link>
         <Link to="/support" className="footer-link">Support us</Link>
         <Link to="/policies" className="footer-link">{strings.footer.sitePolicies}</Link>
-        <Link to="/refund-policy" className="footer-link">Refund Policy</Link>
         <Link to="/feedback" className="footer-link">{strings.footer.feedback}</Link>
         <Link to="/manual" className="footer-link">Help</Link>
         {isAdmin && <Link to="/admin-manual" className="footer-link">Admin Manual</Link>}

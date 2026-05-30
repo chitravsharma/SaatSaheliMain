@@ -221,6 +221,7 @@ export default function Marketplace() {
         SaatSaheli is not responsible for any transactions, items, or outcomes of buying/selling.
         Buyers and sellers are fully responsible for their actions.
         <Link to="/policies" className="mp-policy-link"> Read full policies</Link>
+        <Link to="/refund-policy" className="mp-policy-link"> Refund Policy</Link>
       </p>
 
       {message && <div className="mp-message" onClick={() => setMessage("")} role="status">{message}</div>}
