@@ -97,6 +97,13 @@ const SupportUs = () => {
               >
                 Monthly
               </button>
+              <button
+                type="button"
+                className={`support-toggle-btn${frequency === "annual" ? " is-active" : ""}`}
+                onClick={() => setFrequency("annual")}
+              >
+                Yearly
+              </button>
             </div>
 
             <div className="support-toggle" role="group" aria-label="Currency">
@@ -165,7 +172,7 @@ const SupportUs = () => {
           <button type="submit" className="advertise-submit support-submit" disabled={loading}>
             {loading
               ? "Redirecting to secure checkout…"
-              : `Support with ${cur.symbol}${(effectiveAmount || 0).toLocaleString()}${frequency === "monthly" ? " / month" : ""}`}
+              : `Support with ${cur.symbol}${(effectiveAmount || 0).toLocaleString()}${frequency === "monthly" ? " / month" : frequency === "annual" ? " / year" : ""}`}
           </button>
           <p className="support-secure-note">
             Secure payment via Stripe. You'll be redirected to complete your contribution.
