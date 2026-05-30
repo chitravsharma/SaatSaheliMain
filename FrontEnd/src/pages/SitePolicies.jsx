@@ -13,6 +13,12 @@ const SitePolicies = () => {
     <div className="policies-section">
       <h2>{strings.sitePolicies.termsHeading}</h2>
       <p>{strings.sitePolicies.termsBody}</p>
+      <p>{strings.sitePolicies.termsListIntro}</p>
+      <ul>
+        {strings.sitePolicies.termsList.map((t) => (
+          <li key={t}>{t}</li>
+        ))}
+      </ul>
     </div>
 
     <div className="policies-section">
@@ -75,6 +81,21 @@ const SitePolicies = () => {
     <div className="policies-section">
       <h2>{strings.sitePolicies.ipHeading}</h2>
       <p>{strings.sitePolicies.ipBody}</p>
+    </div>
+
+    <div className="policies-section" id="refunds">
+      <h2>{strings.sitePolicies.refundHeading}</h2>
+      <p>{strings.sitePolicies.refundIntro}</p>
+      <h3>{strings.sitePolicies.refundDonationsHeading}</h3>
+      <p>{strings.sitePolicies.refundDonationsBody}</p>
+      <h3>{strings.sitePolicies.refundRecurringHeading}</h3>
+      <p>{strings.sitePolicies.refundRecurringBody}</p>
+      <h3>{strings.sitePolicies.refundSubscriptionsHeading}</h3>
+      <p>{strings.sitePolicies.refundSubscriptionsBody}</p>
+      <h3>{strings.sitePolicies.refundMarketplaceHeading}</h3>
+      <p>{strings.sitePolicies.refundMarketplaceBody}</p>
+      <h3>{strings.sitePolicies.refundHowHeading}</h3>
+      <p>{strings.sitePolicies.refundHowBody}</p>
     </div>
 
     <div className="policies-section policies-buysell">

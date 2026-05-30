@@ -17,6 +17,7 @@ import BookManager from './pages/BookManager';
 import SearchBooks from './pages/SearchBooks';
 import ReadBook from './pages/ReadBook';
 import SitePolicies from './pages/SitePolicies';
+import RefundPolicy from './pages/RefundPolicy';
 import Account from './pages/Account';
 import CategoryPage from './pages/CategoryPage';
 import TechPage from './pages/TechPage';
@@ -84,6 +85,8 @@ function App() {
           <Route path="/profile/:userId/:nameSlug" element={<PublicProfile />} />
           <Route path="/profile/:userId" element={<PublicProfile />} />
           <Route path="/policies" element={<SitePolicies />} />
+          <Route path="/refund-policy" element={<RefundPolicy />} />
+          <Route path="/refund" element={<RefundPolicy />} />
           <Route path="/category/tech" element={<TechPage />} />
           <Route path="/category/:category" element={<CategoryPage />} />
           <Route path="/admin" element={<ProtectedRoute requiredRole="ADMIN"><AdminDashboard /></ProtectedRoute>} />

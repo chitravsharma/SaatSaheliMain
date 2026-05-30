@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { Link } from "react-router-dom";
 import api from "../utils/api";
 import { useAuth } from "../AuthContext";
 import "./Advertise.css";
@@ -168,6 +169,12 @@ const SupportUs = () => {
           </button>
           <p className="support-secure-note">
             Secure payment via Stripe. You'll be redirected to complete your contribution.
+          </p>
+          <p className="support-secure-note">
+            Contributions are non-refundable except for charges made in error. See our{" "}
+            <Link to="/refund-policy" style={{ color: "#f59e0b", fontWeight: 600 }}>
+              Refund Policy
+            </Link>.
           </p>
         </form>
       </section>

@@ -1,4 +1,5 @@
 import React, { useRef, useState } from "react";
+import { Link } from "react-router-dom";
 import axios from "axios";
 import api from "../utils/api";
 import ReCAPTCHA from "react-google-recaptcha";
@@ -372,6 +373,11 @@ const SponsorUs = () => {
           Tell us about your idea
         </button>
       </section>
+
+      <p style={{ textAlign: "center", color: "#6b7280", fontSize: "0.9rem", margin: "0 auto 1.5rem", maxWidth: 640 }}>
+        Sponsorship payments are processed securely by Stripe and are non-refundable except for charges made in error. See our{" "}
+        <Link to="/refund-policy" style={{ color: "#f59e0b", fontWeight: 600 }}>Refund Policy</Link>.
+      </p>
 
       <section className="advertise-form-wrap" id="sponsor-form" aria-label="Sponsorship inquiry">
         <h2 className="advertise-form-title">Ready to support SaatSaheli?</h2>
