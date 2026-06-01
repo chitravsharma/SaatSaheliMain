@@ -61,6 +61,7 @@ const plans = [
       "Export books to PDF & DOCX",
       "Full magazine access",
       "Featured creator badge",
+      "Free content-creation help — book setup, image design & more",
       "Priority support & early access to new features",
     ],
     limitations: null,
