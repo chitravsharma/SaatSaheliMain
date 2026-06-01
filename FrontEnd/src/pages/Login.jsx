@@ -559,9 +559,8 @@ export default function Login() {
                     className="auth-plan-select"
                   >
                     <option value="Free">Free (Starter)</option>
-                    <option value="Premium">Premium — $9/month</option>
-                    <option value="Gold">Gold Member — $19/month</option>
-                    <option value="Creator">Creator / Pro — $39/month</option>
+                    <option value="Premium">Premium — $3/month</option>
+                    <option value="Creator">Creator / Pro — $7/month</option>
                   </select>
                   {selectedPlan !== "Free" && (
                     <p className="auth-plan-note">Paid plans require manual activation. Contact us at <a href="mailto:avikaventures.info@gmail.com">avikaventures.info@gmail.com</a> after signup.</p>
