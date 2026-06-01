@@ -10,12 +10,25 @@ const CURRENCIES = {
   usd: { code: "usd", symbol: "$", label: "USD", presets: [5, 10, 25, 50, 100] },
 };
 
+// Optional "cover the processing fee" amounts. USD = Stripe's 2.9% + $0.30.
+// INR fixed approximated (~₹25); account settles in USD so intl/conversion may vary slightly.
+const FEES = {
+  usd: { pct: 0.029, fixed: 0.30 },
+  inr: { pct: 0.029, fixed: 25 },
+};
+const feeFor = (amount, code) => {
+  const f = FEES[code];
+  if (!f || !amount || amount <= 0) return 0;
+  return Math.round((amount * f.pct + f.fixed) * 100) / 100;
+};
+
 const SupportUs = () => {
   const { user } = useAuth();
   const [currency, setCurrency] = useState("usd");
   const [frequency, setFrequency] = useState("one_time");
   const [amount, setAmount] = useState(CURRENCIES.usd.presets[2]);
   const [customAmount, setCustomAmount] = useState("");
+  const [coverFee, setCoverFee] = useState(false);
   const [name, setName] = useState("");
   const [email, setEmail] = useState(user?.email || "");
   const [message, setMessage] = useState("");
@@ -24,6 +37,8 @@ const SupportUs = () => {
 
   const cur = CURRENCIES[currency];
   const effectiveAmount = customAmount.trim() !== "" ? Number(customAmount) : amount;
+  const fee = coverFee ? feeFor(effectiveAmount, currency) : 0;
+  const totalAmount = Math.round((effectiveAmount + fee) * 100) / 100;
 
   const switchCurrency = (code) => {
     setCurrency(code);
@@ -45,7 +60,7 @@ const SupportUs = () => {
     try {
       const res = await api.post(`/api/support/create-checkout-session`, {
         purpose: "donation",
-        amount: effectiveAmount,
+        amount: totalAmount,
         currency: cur.code,
         frequency,
         name: name.trim(),
@@ -169,10 +184,19 @@ const SupportUs = () => {
             <textarea id="sup-message" rows={3} value={message} onChange={(e) => setMessage(e.target.value)} placeholder="A word of encouragement, or why you support us" />
           </div>
 
+          {effectiveAmount > 0 && (
+            <label className="support-coverfee" style={{ display: "flex", gap: "0.5rem", alignItems: "flex-start", margin: "0.25rem 0 0.85rem", fontSize: "0.9rem", color: "#4b5563", cursor: "pointer" }}>
+              <input type="checkbox" checked={coverFee} onChange={(e) => setCoverFee(e.target.checked)} style={{ marginTop: "0.2rem" }} />
+              <span>
+                Add <strong>{cur.symbol}{feeFor(effectiveAmount, currency).toFixed(2)}</strong> to cover processing fees so 100% of your {cur.symbol}{effectiveAmount.toLocaleString()} reaches SaatSaheli.
+              </span>
+            </label>
+          )}
+
           <button type="submit" className="advertise-submit support-submit" disabled={loading}>
             {loading
               ? "Redirecting to secure checkout…"
-              : `Support with ${cur.symbol}${(effectiveAmount || 0).toLocaleString()}${frequency === "monthly" ? " / month" : frequency === "annual" ? " / year" : ""}`}
+              : `Support with ${cur.symbol}${(totalAmount || 0).toLocaleString(undefined, { minimumFractionDigits: coverFee ? 2 : 0, maximumFractionDigits: 2 })}${coverFee ? " (incl. fees)" : ""}${frequency === "monthly" ? " / month" : frequency === "annual" ? " / year" : ""}`}
           </button>
           <p className="support-secure-note">
             Secure payment via Stripe. You'll be redirected to complete your contribution.
