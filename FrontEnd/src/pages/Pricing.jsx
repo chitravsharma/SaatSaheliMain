@@ -20,7 +20,6 @@ const plans = [
       "Community support",
     ],
     limitations: [
-      "Ads shown",
       "No PDF / DOCX export",
     ],
     bonus: null,
@@ -39,7 +38,6 @@ const plans = [
       "Up to 100 pages per book",
       "Up to 200 uploaded images",
       "Export books to PDF & DOCX",
-      "Ad-free experience",
       "Full magazine access",
       "Priority email support",
     ],
@@ -61,7 +59,6 @@ const plans = [
       "Up to 250 pages per book",
       "Up to 500 uploaded images",
       "Export books to PDF & DOCX",
-      "Ad-free experience",
       "Full magazine access",
       "Featured creator badge",
       "Priority support & early access to new features",
