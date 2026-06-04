@@ -301,6 +301,31 @@ a.home-gallery-author:hover { text-decoration: underline; color: var(--accent-bl
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
 }
 
+/* Call-for-submissions banner — sits at the right end of the magazine row,
+   spanning roughly two magazine cards. Keeps the banner's own aspect ratio
+   (no crop/letterbox) and centers vertically against the taller covers. */
+.home-magazine-banner {
+  flex: 0 0 auto;
+  align-self: center;
+  width: 340px; /* ~ two cards (2 x 162px + 16px gap) */
+  max-width: 78vw;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  scroll-snap-align: start;
+  transition: box-shadow 0.2s, transform 0.2s;
+  display: block;
+}
+.home-magazine-banner:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+}
+.home-magazine-banner img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
 .home-book-link {
   text-decoration: none;
   color: inherit;
@@ -945,6 +970,10 @@ a.home-gallery-author:hover { text-decoration: underline; color: var(--accent-bl
   .home-book-card {
     min-width: 130px;
     max-width: 145px;
+  }
+
+  .home-magazine-banner {
+    width: 290px; /* ~ two mobile cards (2 x 137px + 16px gap) */
   }
 
   .home-gallery-card {

@@ -704,6 +704,19 @@ function Home() {
                         </div>
                       );
                     })}
+                    {category === magLabel && (
+                      <Link
+                        to="/magazine/submit"
+                        className="home-magazine-banner"
+                        aria-label="Call for submissions — submit your creative work for the next magazine edition"
+                      >
+                        <img
+                          src="/images/magazine-cfs-banner.jpg"
+                          alt="Call for submissions — submit your creative work for the next magazine edition"
+                          loading="lazy"
+                        />
+                      </Link>
+                    )}
                   </ScrollRow>
                   {category === magLabel && (
                     <div style={{ textAlign: 'left', margin: '16px 0 8px' }}>
