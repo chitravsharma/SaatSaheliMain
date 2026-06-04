@@ -190,7 +190,17 @@ function CoverPageDesigner({ type, bookTitle, authorName, imageUrl, onImageChang
       img.crossOrigin = "anonymous";
       img.onload = () => resolve(img);
       img.onerror = () => reject(new Error("Failed to load image: " + src));
-      img.src = src;
+      // Cache-bust the cross-origin canvas load. A plain <img> preview caches
+      // this URL WITHOUT CORS headers (a no-Origin request gets no
+      // Access-Control-Allow-Origin), and Cloudflare's edge cache ignores
+      // `Vary: Origin` — so reusing that cached copy taints/fails the canvas.
+      // A unique query param forces a fresh fetch that returns the CORS header.
+      if (/^https?:/i.test(src)) {
+        const sep = src.includes("?") ? "&" : "?";
+        img.src = src + sep + "cors=" + Date.now();
+      } else {
+        img.src = src; // data:/blob: URLs (uploaded images) load as-is
+      }
     });
   };
 
