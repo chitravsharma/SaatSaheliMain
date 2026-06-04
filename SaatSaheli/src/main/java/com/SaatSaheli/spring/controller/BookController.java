@@ -12,6 +12,8 @@ import com.SaatSaheli.spring.repository.UserRepository;
 import com.SaatSaheli.spring.service.ExportService;
 import com.SaatSaheli.spring.util.RateLimiter;
 import com.SaatSaheli.spring.util.RoleUtil;
+import com.SaatSaheli.spring.util.PlanLimits;
+import com.SaatSaheli.spring.util.PlanLimitException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
@@ -85,6 +87,8 @@ public class BookController {
             }
             Book book = bookService.createBook(title, jwtUserId, category);
             return ResponseEntity.ok(book);
+        } catch (PlanLimitException e) {
+            return upgradeRequired(e.getMessage());
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(errorMap("Failed to create book: " + e.getMessage()));
@@ -121,6 +125,8 @@ public class BookController {
                 book = bookService.createBookFromDocument(title.trim(), userId, pageTexts);
             }
             return ResponseEntity.ok(book);
+        } catch (PlanLimitException e) {
+            return upgradeRequired(e.getMessage());
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(errorMap(e.getMessage()));
         } catch (Exception e) {
@@ -261,6 +267,8 @@ public class BookController {
                                      @RequestParam(required = false) Long userId) {
         try {
             return ResponseEntity.ok(bookService.addPage(bookId, page, userId));
+        } catch (PlanLimitException e) {
+            return upgradeRequired(e.getMessage());
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorMap(e.getMessage()));
         } catch (Exception e) {
@@ -349,13 +357,23 @@ public class BookController {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorMap("Authentication required"));
             }
             Optional<User> callerOpt = userRepo.findById(callerUserId);
-            if (callerOpt.isEmpty() || !RoleUtil.isSuperAdmin(callerOpt.get().getRole())) {
-                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorMap("Super Admin access required"));
+            if (callerOpt.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorMap("Authentication required"));
             }
+            User caller = callerOpt.get();
 
             Book book = bookService.getBook(bookId);
             if (book == null) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorMap("Book not found"));
+            }
+
+            // Export allowed for SUPER_ADMIN, or the book's owner on a plan that includes export (Premium/Creator).
+            boolean isSuper = RoleUtil.isSuperAdmin(caller.getRole());
+            boolean ownsAndCanExport = book.getUserId() != null
+                    && book.getUserId().equals(callerUserId)
+                    && PlanLimits.forPlan(caller.getPlan()).canExport;
+            if (!isSuper && !ownsAndCanExport) {
+                return upgradeRequired("Exporting books to PDF/DOCX is available on the Premium and Creator plans. Upgrade your plan to download your books.");
             }
 
             List<Page> pages = book.getPages();
@@ -395,5 +413,13 @@ public class BookController {
         Map<String, String> map = new HashMap<>();
         map.put("error", message);
         return map;
+    }
+
+    /** 403 body for plan-limit hits — the frontend shows an upgrade prompt on upgradeRequired. */
+    private ResponseEntity<?> upgradeRequired(String message) {
+        Map<String, Object> map = new HashMap<>();
+        map.put("error", message);
+        map.put("upgradeRequired", true);
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(map);
     }
 }

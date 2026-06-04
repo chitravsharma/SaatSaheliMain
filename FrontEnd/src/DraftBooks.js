@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import api from "./utils/api";
+import api, { isUpgradeRequiredError } from "./utils/api";
 import { optimizeCloudinary } from "./utils/imageUrl";
 import HTMLFlipBook from "react-pageflip";
 
@@ -84,6 +84,7 @@ function DraftBooks() {
             setImageUrl2("");
             setFormat("");
         } catch (err) {
+            if (isUpgradeRequiredError(err)) return; // global upgrade modal already shown
             setMessage("Failed to add page: " + err.message);
         }
     };

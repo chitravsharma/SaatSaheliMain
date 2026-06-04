@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useLocation, Link, useNavigate } from "react-router-dom";
-import api from "../utils/api";
+import api, { isUpgradeRequiredError } from "../utils/api";
 import FlipBook from "../FlipBook";
 import PageLayoutEditor from "../PageLayoutEditor";
 import CoverPageDesigner from "../components/CoverPageDesigner";
@@ -369,7 +369,8 @@ function BookManager() {
       showMessage(strings.bookManager.msgBookCreated);
       setView("edit");
     } catch (err) {
-      showMessage(strings.bookManager.msgCreateFailed(err.response?.data?.error || err.message));
+      // Plan-limit hits surface via the global upgrade modal — skip the inline message.
+      if (!isUpgradeRequiredError(err)) showMessage(strings.bookManager.msgCreateFailed(err.response?.data?.error || err.message));
     } finally {
       setLoading(false);
     }
@@ -457,7 +458,7 @@ function BookManager() {
       setCoverDesignData({});
       await fetchBookPages(selectedBook.id);
     } catch (err) {
-      showMessage(strings.bookManager.msgAddPageFailed);
+      if (!isUpgradeRequiredError(err)) showMessage(strings.bookManager.msgAddPageFailed);
     }
   };
 
@@ -1024,7 +1025,7 @@ function BookManager() {
         setDocFile(null);
         setView("edit");
       } catch (err) {
-        showMessage(strings.bookManager.msgDocUploadFailed(err.response?.data?.error || err.message));
+        if (!isUpgradeRequiredError(err)) showMessage(strings.bookManager.msgDocUploadFailed(err.response?.data?.error || err.message));
       } finally {
         setDocUploading(false);
       }

@@ -7,6 +7,8 @@ import com.SaatSaheli.spring.repository.BookRepository;
 import com.SaatSaheli.spring.repository.PageRepository;
 import com.SaatSaheli.spring.repository.UserRepository;
 import com.SaatSaheli.spring.util.RoleUtil;
+import com.SaatSaheli.spring.util.PlanLimits;
+import com.SaatSaheli.spring.util.PlanLimitException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -73,12 +75,67 @@ public class BookService {
         }
     }
 
+    // --- Plan-limit enforcement helpers -------------------------------------
+    private PlanLimits limitsForUser(Long userId) {
+        String plan = userId == null ? "Free"
+                : userRepo.findById(userId).map(User::getPlan).orElse("Free");
+        return PlanLimits.forPlan(plan);
+    }
+
+    /**
+     * Admins (ADMIN + SUPER_ADMIN) bypass plan caps — they manage platform
+     * content (e.g. the magazine upload workflow, which appends pages well past
+     * the per-book cap) and are not subject to subscription limits.
+     */
+    private boolean isPlanExempt(Long userId) {
+        if (userId == null) return false;
+        return userRepo.findById(userId)
+                .map(u -> RoleUtil.isAdmin(u.getRole()))
+                .orElse(false);
+    }
+
+    private void assertCanCreateBook(Long userId) {
+        if (userId == null || isPlanExempt(userId)) return;
+        PlanLimits lim = limitsForUser(userId);
+        // Count only live books — soft-deleted (DELETED) books no longer count
+        // against the cap. countBooksByUser excludes DELETED.
+        long count = countBooksByUser(userId);
+        if (count >= lim.maxBooks) {
+            throw new PlanLimitException("You've reached your " + lim.plan
+                    + " plan limit of " + lim.maxBooks + " books. Upgrade your plan to create more.");
+        }
+    }
+
+    private void assertImportPageCount(Long userId, int pageCount) {
+        if (isPlanExempt(userId)) return;
+        PlanLimits lim = limitsForUser(userId);
+        if (pageCount > lim.maxPagesPerBook) {
+            throw new PlanLimitException("This document has " + pageCount + " pages, which exceeds your "
+                    + lim.plan + " plan limit of " + lim.maxPagesPerBook
+                    + " pages per book. Upgrade your plan or split the document.");
+        }
+    }
+
+    private void assertCanAddPage(Long bookId) {
+        Book book = bookRepo.findById(bookId).orElse(null);
+        if (book == null || book.getUserId() == null) return;
+        if (isPlanExempt(book.getUserId())) return;
+        PlanLimits lim = limitsForUser(book.getUserId());
+        long pages = pageRepo.countByBookId(bookId);
+        if (pages >= lim.maxPagesPerBook) {
+            throw new PlanLimitException("This book has reached the " + lim.plan
+                    + " plan limit of " + lim.maxPagesPerBook
+                    + " pages. Upgrade your plan for more pages per book.");
+        }
+    }
+
     public Book createBook(String title, Long userId) {
         return createBook(title, userId, null);
     }
 
     @Transactional
     public Book createBook(String title, Long userId, String category) {
+        assertCanCreateBook(userId);
         LocalDateTime now = LocalDateTime.now(ZoneOffset.UTC);
         Book book = new Book();
         book.setTitle(title);
@@ -488,6 +545,8 @@ public class BookService {
 
     @Transactional
     public Book createBookFromDocument(String title, Long userId, List<String> pageTexts) {
+        assertCanCreateBook(userId);
+        assertImportPageCount(userId, pageTexts == null ? 0 : pageTexts.size());
         LocalDateTime now = LocalDateTime.now(ZoneOffset.UTC);
         Book book = new Book();
         book.setTitle(title);
@@ -555,6 +614,8 @@ public class BookService {
 
     @Transactional
     public Book createBookFromPdfImages(String title, Long userId, List<String> imageUrls) {
+        assertCanCreateBook(userId);
+        assertImportPageCount(userId, imageUrls == null ? 0 : imageUrls.size());
         LocalDateTime now = LocalDateTime.now(ZoneOffset.UTC);
         Book book = new Book();
         book.setTitle(title);
@@ -694,6 +755,7 @@ public class BookService {
         if (bookOpt.isPresent() && requestUserId != null && !requestUserId.equals(bookOpt.get().getUserId())) {
             throw new RuntimeException("Only the author can add pages to this book");
         }
+        assertCanAddPage(bookId);
         LocalDateTime now = LocalDateTime.now(ZoneOffset.UTC);
         page.setBookId(bookId);
         page.setCreatedDate(now);

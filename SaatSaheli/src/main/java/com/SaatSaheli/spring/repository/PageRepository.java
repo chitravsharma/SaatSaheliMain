@@ -11,6 +11,8 @@ import java.util.List;
 public interface PageRepository extends JpaRepository<Page, Long> {
     List<Page> findByBookIdOrderByPageNumberAsc(Long bookId);
 
+    long countByBookId(Long bookId);
+
     @Transactional
     void deleteByBookId(Long bookId);
 }

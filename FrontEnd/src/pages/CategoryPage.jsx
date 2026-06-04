@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
-import api from "../utils/api";
+import api, { isUpgradeRequiredError } from "../utils/api";
 import { useAuth } from "../AuthContext";
 import { useStrings } from "../LanguageContext";
 import "./CategoryPage.css";
@@ -116,7 +116,8 @@ function CategoryPage() {
             setView("mybooks");
             fetchMyBooks();
         } catch (err) {
-            showMessage(s.createFailed || "Failed to create book");
+            // Plan-limit hits surface via the global upgrade modal — skip the inline message.
+            if (!isUpgradeRequiredError(err)) showMessage(s.createFailed || "Failed to create book");
         }
         setCreating(false);
     };

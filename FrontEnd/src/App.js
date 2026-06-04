@@ -7,6 +7,7 @@ import Footer from './modules/Footer';
 import AdBanner from './modules/AdBanner';
 import ServerWakeUp from './components/ServerWakeUp';
 import ScrollToTop from './components/ScrollToTop';
+import UpgradeModal from './components/UpgradeModal';
 import { Routes, Route, useLocation } from 'react-router-dom';
 import Home from './pages/Home';
 import About from './pages/About';
@@ -64,6 +65,7 @@ function App() {
     <ServerWakeUp>
     <div className="App">
       <ScrollToTop />
+      <UpgradeModal />
       <VisitorTracker />
       <MaintenanceBanner />
       <Header />
