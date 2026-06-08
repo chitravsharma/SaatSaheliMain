@@ -167,6 +167,12 @@ public class R2StorageService implements MediaStorageService {
             writer.write(null, new IIOImage(rgb, null, null), param);
         } finally {
             writer.dispose();
+            // Release the temporary RGB copy's raster promptly. On image-heavy
+            // magazine PDFs this copy is a full-size second buffer per page;
+            // leaving it for the GC contributed to the Render 512 MB OOMs.
+            if (rgb != image) {
+                rgb.flush();
+            }
         }
         String filename = UUID.randomUUID() + ".jpg";
         return uploadBytes(baos.toByteArray(), filename, "image/jpeg");

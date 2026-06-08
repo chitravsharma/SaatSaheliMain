@@ -1,5 +1,6 @@
 package com.SaatSaheli.spring.service;
 
+import org.apache.pdfbox.io.MemoryUsageSetting;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.rendering.PDFRenderer;
 import org.apache.pdfbox.text.PDFTextStripper;
@@ -9,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -18,6 +20,15 @@ import java.util.List;
 public class DocumentExtractionService {
 
     private static final int DOCX_PAGE_CHAR_LIMIT = 500;
+
+    // Spill PDFBox's parse/scratch state to a temp file instead of holding it
+    // all in JVM heap. For image-heavy magazine PDFs the default in-memory
+    // scratch buffer is the dominant OOM driver on Render's 512 MB container
+    // (OOMs 2026-05-09/14/20 and 2026-06-08). Render disk is ephemeral, so
+    // spilling to /tmp is free here and trades heap pressure for disk I/O.
+    private static MemoryUsageSetting tempFileOnly() {
+        return MemoryUsageSetting.setupTempFileOnly();
+    }
 
     @Autowired
     private MediaStorageService mediaStorage;
@@ -44,13 +55,20 @@ public class DocumentExtractionService {
     // and 2026-05-14 Render OOMs.
     public List<String> extractPdfAsImages(MultipartFile file) throws IOException {
         List<String> imageUrls = new ArrayList<>();
-        try (PDDocument doc = PDDocument.load(file.getInputStream())) {
+        try (PDDocument doc = PDDocument.load(file.getInputStream(), tempFileOnly())) {
             PDFRenderer renderer = new PDFRenderer(doc);
             int totalPages = doc.getNumberOfPages();
             for (int i = 0; i < totalPages; i++) {
-                String url = mediaStorage.saveJpegImage(
-                        renderer.renderImageWithDPI(i, 100), 0.85f);
+                // Render, upload, then release the page raster before the next
+                // iteration. The renderer decodes embedded images at their
+                // source resolution (not the 100 DPI output), so each page can
+                // be tens of MB of heap; flush()+null lets it be reclaimed
+                // immediately rather than accumulating across a 36-page magazine.
+                BufferedImage page = renderer.renderImageWithDPI(i, 100);
+                String url = mediaStorage.saveJpegImage(page, 0.85f);
                 imageUrls.add(url);
+                page.flush();
+                page = null;
             }
         }
         return imageUrls;
@@ -58,7 +76,7 @@ public class DocumentExtractionService {
 
     private List<String> extractFromPdf(MultipartFile file) throws IOException {
         List<String> pages = new ArrayList<>();
-        try (PDDocument doc = PDDocument.load(file.getInputStream())) {
+        try (PDDocument doc = PDDocument.load(file.getInputStream(), tempFileOnly())) {
             PDFTextStripper stripper = new PDFTextStripper();
             int totalPages = doc.getNumberOfPages();
             for (int i = 1; i <= totalPages; i++) {
