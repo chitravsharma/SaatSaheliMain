@@ -711,7 +711,7 @@ function Home() {
                         aria-label="Call for submissions — submit your creative work for the next magazine edition"
                       >
                         <img
-                          src="/images/magazine-cfs-banner.jpg"
+                          src="/images/magazine-cfs-flyer.jpg"
                           alt="Call for submissions — submit your creative work for the next magazine edition"
                           loading="lazy"
                         />
