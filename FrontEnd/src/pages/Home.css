@@ -301,34 +301,6 @@ a.home-gallery-author:hover { text-decoration: underline; color: var(--accent-bl
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
 }
 
-/* Call-for-submissions banner — sits at the right end of the magazine row,
-   spanning roughly two magazine cards. Keeps the banner's own aspect ratio
-   (no crop/letterbox) and centers vertically against the taller covers. */
-/* Call-for-submissions flyer — sized like a magazine card so it reads as
-   another cover at the end of the magazine row. The artwork is a full
-   portrait poster (2:3), so we match the card WIDTH and let the height
-   follow naturally rather than cropping to the 3/4 cover frame. */
-.home-magazine-banner {
-  flex: 0 0 auto;
-  align-self: flex-start;
-  min-width: 155px;
-  max-width: 170px;
-  border-radius: 2px 8px 8px 2px;
-  overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-  scroll-snap-align: start;
-  transition: box-shadow 0.2s, transform 0.2s;
-  display: block;
-}
-.home-magazine-banner:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
-}
-.home-magazine-banner img {
-  display: block;
-  width: 100%;
-  height: auto;
-}
 
 .home-book-link {
   text-decoration: none;
@@ -974,11 +946,6 @@ a.home-gallery-author:hover { text-decoration: underline; color: var(--accent-bl
   .home-book-card {
     min-width: 130px;
     max-width: 145px;
-  }
-
-  .home-magazine-banner {
-    min-width: 130px;
-    max-width: 145px; /* match mobile magazine card width */
   }
 
   .home-gallery-card {
