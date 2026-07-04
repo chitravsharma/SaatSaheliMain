@@ -490,6 +490,24 @@ const AdminDashboard = () => {
         setPaymentsLoading(false);
     }, [user?.userId, paymentTypeFilter]);
 
+    const [refreshingReceiptId, setRefreshingReceiptId] = useState(null);
+    const refreshReceipt = async (paymentId) => {
+        setRefreshingReceiptId(paymentId);
+        try {
+            const res = await api.post(`${API}/api/admin/payments/${paymentId}/refresh-receipt`);
+            const tx = res.data?.transaction;
+            if (tx) {
+                setPayments(prev => prev.map(p => (p.id === paymentId ? { ...p, ...tx } : p)));
+            }
+            if (!res.data?.updated) {
+                window.alert("No receipt found on Stripe for this payment yet.");
+            }
+        } catch {
+            window.alert("Could not refresh receipt from Stripe.");
+        }
+        setRefreshingReceiptId(null);
+    };
+
     const updateQueryStatus = async (queryId, newStatus) => {
         try {
             await api.put(`${API}/api/contact/${queryId}/status`, { status: newStatus });
@@ -1639,6 +1657,7 @@ const AdminDashboard = () => {
                                 <tr>
                                     <th>Date</th>
                                     <th>Reference</th>
+                                    <th>Payment ID</th>
                                     <th>Type</th>
                                     <th>Provider</th>
                                     <th>Payer</th>
@@ -1654,11 +1673,14 @@ const AdminDashboard = () => {
                             </thead>
                             <tbody>
                                 {payments.length === 0 ? (
-                                    <tr><td colSpan={13} style={{ textAlign: "center" }}>No payments yet.</td></tr>
+                                    <tr><td colSpan={14} style={{ textAlign: "center" }}>No payments yet.</td></tr>
                                 ) : payments.map((p) => (
                                     <tr key={p.id}>
                                         <td>{toPSTDateTime(p.createdAt)}</td>
                                         <td className="admin-article-title">{p.paymentReferenceId || "—"}</td>
+                                        <td style={{ fontFamily: "monospace", fontSize: "0.8em", wordBreak: "break-all" }}>
+                                            {p.providerPaymentId || "—"}
+                                        </td>
                                         <td>
                                             <span className={`status-badge status-${(p.paymentType || "other").toLowerCase()}`}>
                                                 {p.paymentType || "—"}
@@ -1687,9 +1709,28 @@ const AdminDashboard = () => {
                                             {!p.refundStatus && !p.disputeStatus && "—"}
                                         </td>
                                         <td>
-                                            {p.receiptUrl
-                                                ? <a href={p.receiptUrl} target="_blank" rel="noreferrer">view</a>
-                                                : "—"}
+                                            {p.receiptUrl && <a href={p.receiptUrl} target="_blank" rel="noreferrer">view</a>}
+                                            {p.invoiceUrl && (
+                                                <>
+                                                    {p.receiptUrl && " · "}
+                                                    <a href={p.invoiceUrl} target="_blank" rel="noreferrer">invoice</a>
+                                                </>
+                                            )}
+                                            {!p.receiptUrl && !p.invoiceUrl && (
+                                                <button
+                                                    onClick={() => refreshReceipt(p.id)}
+                                                    disabled={refreshingReceiptId === p.id}
+                                                    title="Re-fetch the receipt from Stripe"
+                                                    style={{
+                                                        background: "none", border: "none", padding: 0,
+                                                        color: "#0a58ca", textDecoration: "underline",
+                                                        cursor: refreshingReceiptId === p.id ? "default" : "pointer",
+                                                        font: "inherit",
+                                                    }}
+                                                >
+                                                    {refreshingReceiptId === p.id ? "…" : "fetch"}
+                                                </button>
+                                            )}
                                         </td>
                                     </tr>
                                 ))}

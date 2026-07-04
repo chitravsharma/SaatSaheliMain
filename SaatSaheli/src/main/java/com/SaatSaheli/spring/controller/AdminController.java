@@ -22,8 +22,10 @@ import com.SaatSaheli.spring.service.ArticleService;
 import com.SaatSaheli.spring.service.BookService;
 import com.SaatSaheli.spring.service.DocumentExtractionService;
 import com.SaatSaheli.spring.util.RoleUtil;
+import com.SaatSaheli.spring.util.StripePaymentMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -73,6 +75,9 @@ public class AdminController {
 
     @Autowired
     private PaymentTransactionRepository txRepo;
+
+    @Value("${stripe.secret-key:}")
+    private String stripeSecretKey;
 
     private Long getAuthUserId(HttpServletRequest request) {
         Object val = request.getAttribute("jwtUserId");
@@ -752,6 +757,86 @@ public class AdminController {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(errorMap("Failed to fetch payments: " + e.getMessage()));
+        }
+    }
+
+    /**
+     * POST /api/admin/payments/{id}/refresh-receipt
+     * Self-healing recovery: re-fetches receipt_url / invoice_url for one ledger row
+     * directly from Stripe using the stored PaymentIntent / Session ids. Used when the
+     * original webhook enrichment failed and the row shows no receipt link.
+     */
+    @PostMapping("/payments/{id}/refresh-receipt")
+    public ResponseEntity<?> refreshReceipt(HttpServletRequest request, @PathVariable Long id) {
+        try {
+            User caller = verifyCaller(getAuthUserId(request), false);
+            if (caller == null) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorMap("Admin access required"));
+            }
+            if (stripeSecretKey == null || stripeSecretKey.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+                        .body(errorMap("Stripe not configured"));
+            }
+            Optional<PaymentTransaction> opt = txRepo.findById(id);
+            if (opt.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorMap("Payment not found"));
+            }
+            PaymentTransaction tx = opt.get();
+            boolean updated = StripePaymentMapper.refreshFromStripe(tx);
+            if (updated) {
+                tx.setUpdatedAt(LocalDateTime.now());
+                tx.setUpdatedBy("admin-refresh:" + caller.getId());
+                txRepo.save(tx);
+            }
+            Map<String, Object> resp = new LinkedHashMap<>();
+            resp.put("updated", updated);
+            resp.put("receiptUrl", tx.getReceiptUrl());
+            resp.put("invoiceUrl", tx.getInvoiceUrl());
+            resp.put("transaction", tx);
+            return ResponseEntity.ok(resp);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(errorMap("Failed to refresh receipt: " + e.getMessage()));
+        }
+    }
+
+    /**
+     * POST /api/admin/payments/backfill-receipts
+     * One-shot maintenance: fills receipt_url (and invoice_url) for every non-deleted row
+     * that is currently missing a receipt link, pulling from Stripe by stored ids. Safe to
+     * re-run — rows that already have a receipt are skipped.
+     */
+    @PostMapping("/payments/backfill-receipts")
+    public ResponseEntity<?> backfillReceipts(HttpServletRequest request) {
+        try {
+            User caller = verifyCaller(getAuthUserId(request), false);
+            if (caller == null) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorMap("Admin access required"));
+            }
+            if (stripeSecretKey == null || stripeSecretKey.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+                        .body(errorMap("Stripe not configured"));
+            }
+            List<PaymentTransaction> all = txRepo.findByDeletedFlagFalseOrderByCreatedAtDesc();
+            int scanned = 0, updated = 0;
+            for (PaymentTransaction tx : all) {
+                if (tx.getReceiptUrl() != null && !tx.getReceiptUrl().isBlank()) continue;
+                scanned++;
+                if (StripePaymentMapper.refreshFromStripe(tx)) {
+                    tx.setUpdatedAt(LocalDateTime.now());
+                    tx.setUpdatedBy("admin-backfill:" + caller.getId());
+                    txRepo.save(tx);
+                    updated++;
+                }
+            }
+            Map<String, Object> resp = new LinkedHashMap<>();
+            resp.put("scanned", scanned);
+            resp.put("updated", updated);
+            resp.put("totalRows", all.size());
+            return ResponseEntity.ok(resp);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(errorMap("Failed to backfill receipts: " + e.getMessage()));
         }
     }
 

@@ -3,6 +3,7 @@ package com.SaatSaheli.spring.util;
 import com.SaatSaheli.spring.model.PaymentTransaction;
 import com.stripe.model.BalanceTransaction;
 import com.stripe.model.Charge;
+import com.stripe.model.Invoice;
 import com.stripe.model.PaymentIntent;
 import com.stripe.model.checkout.Session;
 import com.stripe.param.PaymentIntentRetrieveParams;
@@ -74,7 +75,72 @@ public final class StripePaymentMapper {
         tx.setDeletedFlag(false);
 
         enrichFromCharge(tx, session.getPaymentIntent());
+        enrichInvoiceFromSession(tx, session);
         return tx;
+    }
+
+    /**
+     * For subscription / invoiced payments the durable receipt lives on the Stripe
+     * Invoice (hosted_invoice_url), not the Charge. Best-effort: leaves invoice_url
+     * null for one-time payments (session has no invoice) or on lookup failure.
+     */
+    private static void enrichInvoiceFromSession(PaymentTransaction tx, Session session) {
+        String invoiceId = session.getInvoice();
+        if (invoiceId == null) return;
+        try {
+            Invoice inv = Invoice.retrieve(invoiceId);
+            if (inv.getHostedInvoiceUrl() != null) tx.setInvoiceUrl(inv.getHostedInvoiceUrl());
+        } catch (Exception e) {
+            log.warn("Could not enrich invoice url from session {}: {}", session.getId(), e.getMessage());
+        }
+    }
+
+    /**
+     * Self-healing backfill for an existing ledger row: re-derives receipt_url (from the
+     * charge behind the stored PaymentIntent) and invoice_url (from the stored Checkout
+     * Session's invoice) using only ids already persisted. Best-effort per-field; returns
+     * true if any field changed. Callers persist + set updatedAt/updatedBy when true.
+     */
+    public static boolean refreshFromStripe(PaymentTransaction tx) {
+        boolean changed = false;
+
+        String paymentIntentId = tx.getProviderPaymentId();
+        if (paymentIntentId != null) {
+            try {
+                PaymentIntent pi = PaymentIntent.retrieve(
+                        paymentIntentId,
+                        PaymentIntentRetrieveParams.builder().addExpand("latest_charge").build(),
+                        null);
+                Charge ch = pi.getLatestChargeObject();
+                if (ch != null && ch.getReceiptUrl() != null
+                        && !ch.getReceiptUrl().equals(tx.getReceiptUrl())) {
+                    tx.setReceiptUrl(ch.getReceiptUrl());
+                    changed = true;
+                }
+            } catch (Exception e) {
+                log.warn("refreshFromStripe: receipt lookup failed for PaymentIntent {}: {}",
+                        paymentIntentId, e.getMessage());
+            }
+        }
+
+        String sessionId = tx.getOrderId();
+        if (tx.getInvoiceUrl() == null && sessionId != null) {
+            try {
+                String invoiceId = Session.retrieve(sessionId).getInvoice();
+                if (invoiceId != null) {
+                    String url = Invoice.retrieve(invoiceId).getHostedInvoiceUrl();
+                    if (url != null) {
+                        tx.setInvoiceUrl(url);
+                        changed = true;
+                    }
+                }
+            } catch (Exception e) {
+                log.warn("refreshFromStripe: invoice lookup failed for session {}: {}",
+                        sessionId, e.getMessage());
+            }
+        }
+
+        return changed;
     }
 
     private static void enrichFromCharge(PaymentTransaction tx, String paymentIntentId) {
