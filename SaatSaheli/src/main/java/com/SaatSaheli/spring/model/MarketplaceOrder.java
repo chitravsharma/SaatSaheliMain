@@ -65,6 +65,38 @@ public class MarketplaceOrder {
     @Column(name = "paid_date")
     private LocalDateTime paidDate;
 
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    @Column(name = "cancelled_date")
+    private LocalDateTime cancelledDate;
+
+    @Column(name = "cancel_reason")
+    private String cancelReason;
+
+    @Column(name = "stripe_refund_id")
+    private String stripeRefundId;
+
+    // Shipping address snapshot captured from Stripe Checkout at fulfillment.
+    @Column(name = "ship_name")
+    private String shipName;
+    @Column(name = "ship_country")
+    private String shipCountry;
+    @Column(name = "ship_line1")
+    private String shipLine1;
+    @Column(name = "ship_line2")
+    private String shipLine2;
+    @Column(name = "ship_city")
+    private String shipCity;
+    @Column(name = "ship_state")
+    private String shipState;
+    @Column(name = "ship_postal_code")
+    private String shipPostalCode;
+
+    // Computed for API responses (not persisted): whether the buyer may cancel now.
+    @Transient
+    private Boolean cancellable;
+    @Transient
+    private String cancelBlockedReason;
+
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     @JoinColumn(name = "order_id")
     private List<OrderItem> items = new ArrayList<>();
@@ -113,4 +145,40 @@ public class MarketplaceOrder {
 
     public List<OrderItem> getItems() { return items; }
     public void setItems(List<OrderItem> items) { this.items = items; }
+
+    public LocalDateTime getCancelledDate() { return cancelledDate; }
+    public void setCancelledDate(LocalDateTime cancelledDate) { this.cancelledDate = cancelledDate; }
+
+    public String getCancelReason() { return cancelReason; }
+    public void setCancelReason(String cancelReason) { this.cancelReason = cancelReason; }
+
+    public String getStripeRefundId() { return stripeRefundId; }
+    public void setStripeRefundId(String stripeRefundId) { this.stripeRefundId = stripeRefundId; }
+
+    public String getShipName() { return shipName; }
+    public void setShipName(String shipName) { this.shipName = shipName; }
+
+    public String getShipCountry() { return shipCountry; }
+    public void setShipCountry(String shipCountry) { this.shipCountry = shipCountry; }
+
+    public String getShipLine1() { return shipLine1; }
+    public void setShipLine1(String shipLine1) { this.shipLine1 = shipLine1; }
+
+    public String getShipLine2() { return shipLine2; }
+    public void setShipLine2(String shipLine2) { this.shipLine2 = shipLine2; }
+
+    public String getShipCity() { return shipCity; }
+    public void setShipCity(String shipCity) { this.shipCity = shipCity; }
+
+    public String getShipState() { return shipState; }
+    public void setShipState(String shipState) { this.shipState = shipState; }
+
+    public String getShipPostalCode() { return shipPostalCode; }
+    public void setShipPostalCode(String shipPostalCode) { this.shipPostalCode = shipPostalCode; }
+
+    public Boolean getCancellable() { return cancellable; }
+    public void setCancellable(Boolean cancellable) { this.cancellable = cancellable; }
+
+    public String getCancelBlockedReason() { return cancelBlockedReason; }
+    public void setCancelBlockedReason(String cancelBlockedReason) { this.cancelBlockedReason = cancelBlockedReason; }
 }

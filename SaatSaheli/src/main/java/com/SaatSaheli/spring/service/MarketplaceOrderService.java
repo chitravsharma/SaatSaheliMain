@@ -8,13 +8,17 @@ import com.SaatSaheli.spring.repository.MarketplaceListingRepository;
 import com.SaatSaheli.spring.repository.MarketplaceOrderRepository;
 import com.SaatSaheli.spring.repository.PaymentTransactionRepository;
 import com.SaatSaheli.spring.util.StripePaymentMapper;
+import com.stripe.model.Refund;
 import com.stripe.model.checkout.Session;
+import com.stripe.param.RefundCreateParams;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Random;
@@ -26,6 +30,9 @@ public class MarketplaceOrderService {
     private static final DateTimeFormatter DAY = DateTimeFormatter.ofPattern("yyyyMMdd");
     private static final char[] HEX = "0123456789ABCDEF".toCharArray();
     private final Random random = new Random();
+
+    @Value("${marketplace.cancel-window-hours:24}")
+    private long cancelWindowHours;
 
     @Autowired
     private MarketplaceOrderRepository orderRepo;
@@ -85,6 +92,7 @@ public class MarketplaceOrderService {
         order.setStatus(MarketplaceOrder.STATUS_PAID);
         order.setPaidDate(LocalDateTime.now());
         order.setStripePaymentIntent(session.getPaymentIntent());
+        captureShipping(order, session);
         orderRepo.save(order);
 
         // Mark each purchased listing SOLD so it leaves the active browse grid.
@@ -126,5 +134,96 @@ public class MarketplaceOrderService {
 
         log.info("Fulfilled marketplace order {} (session {})", order.getOrderNumber(), session.getId());
         return order;
+    }
+
+    /** Result of a cancellation-eligibility check. */
+    public record CancelCheck(boolean cancellable, String reason) {}
+
+    /**
+     * A buyer may cancel only a PAID, not-yet-shipped order within the cancel window
+     * (default 24h from purchase). Shipped orders (tracking set) and older orders
+     * must go through support instead.
+     */
+    public CancelCheck canCancel(MarketplaceOrder order) {
+        if (order == null) return new CancelCheck(false, "Order not found");
+        if (MarketplaceOrder.STATUS_CANCELLED.equals(order.getStatus())) {
+            return new CancelCheck(false, "This order is already cancelled");
+        }
+        if (!MarketplaceOrder.STATUS_PAID.equals(order.getStatus())) {
+            return new CancelCheck(false, "Only paid orders that haven't shipped can be cancelled");
+        }
+        if (order.getTrackingNumber() != null && !order.getTrackingNumber().isBlank()) {
+            return new CancelCheck(false, "This order has already shipped and can't be cancelled");
+        }
+        LocalDateTime start = order.getPaidDate() != null ? order.getPaidDate() : order.getCreatedDate();
+        if (start != null && Duration.between(start, LocalDateTime.now()).toHours() >= cancelWindowHours) {
+            return new CancelCheck(false, "The " + cancelWindowHours + "-hour cancellation window has passed");
+        }
+        return new CancelCheck(true, null);
+    }
+
+    /**
+     * Cancel a paid order: refund via Stripe, mark CANCELLED, and relist the items.
+     * The charge.refunded webhook (PaymentController.handleRefund) reconciles the
+     * original payment ledger row; we also stamp the refund id on the order.
+     */
+    public synchronized MarketplaceOrder cancelOrder(MarketplaceOrder order, String reason) {
+        CancelCheck check = canCancel(order);
+        if (!check.cancellable()) {
+            throw new IllegalStateException(check.reason());
+        }
+
+        // Issue the Stripe refund against the order's PaymentIntent.
+        if (order.getStripePaymentIntent() != null && !order.getStripePaymentIntent().isBlank()) {
+            try {
+                Refund refund = Refund.create(RefundCreateParams.builder()
+                        .setPaymentIntent(order.getStripePaymentIntent())
+                        .build());
+                order.setStripeRefundId(refund.getId());
+            } catch (Exception e) {
+                log.error("Stripe refund failed for order {}", order.getOrderNumber(), e);
+                throw new RuntimeException("Refund could not be processed. Please contact support.");
+            }
+        }
+
+        order.setStatus(MarketplaceOrder.STATUS_CANCELLED);
+        order.setCancelledDate(LocalDateTime.now());
+        order.setCancelReason(reason);
+        orderRepo.save(order);
+
+        // Relist each purchased listing so it can be bought again.
+        for (OrderItem oi : order.getItems()) {
+            if (oi.getListingId() == null) continue;
+            listingRepo.findById(oi.getListingId()).ifPresent(listing -> {
+                if ("SOLD".equalsIgnoreCase(listing.getStatus())) {
+                    listing.setStatus("ACTIVE");
+                    listing.setModifiedDate(LocalDateTime.now());
+                    listingRepo.save(listing);
+                }
+            });
+        }
+
+        log.info("Cancelled marketplace order {} (refund {})", order.getOrderNumber(), order.getStripeRefundId());
+        return order;
+    }
+
+    /** Snapshot the Stripe shipping address (name + address) onto the order. */
+    private void captureShipping(MarketplaceOrder order, Session session) {
+        try {
+            com.stripe.model.ShippingDetails sd = session.getShippingDetails();
+            if (sd == null) return;
+            order.setShipName(sd.getName());
+            com.stripe.model.Address a = sd.getAddress();
+            if (a != null) {
+                order.setShipCountry(a.getCountry());
+                order.setShipLine1(a.getLine1());
+                order.setShipLine2(a.getLine2());
+                order.setShipCity(a.getCity());
+                order.setShipState(a.getState());
+                order.setShipPostalCode(a.getPostalCode());
+            }
+        } catch (Exception e) {
+            log.warn("Could not capture shipping address for order {}", order.getOrderNumber(), e);
+        }
     }
 }

@@ -371,3 +371,23 @@
   letter-spacing: 0.03em;
   text-transform: uppercase;
 }
+
+/* Favorite (heart) button overlaid on the card image */
+.mp-card-images { position: relative; }
+.mp-fav-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(0, 0, 0, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.1s ease, background 0.15s ease;
+}
+.mp-fav-btn:hover { background: rgba(0, 0, 0, 0.5); transform: scale(1.08); }
+.mp-fav-btn.active { background: rgba(255, 255, 255, 0.92); }

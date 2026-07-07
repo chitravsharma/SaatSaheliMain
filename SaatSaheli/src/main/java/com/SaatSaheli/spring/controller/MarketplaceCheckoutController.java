@@ -58,6 +58,10 @@ public class MarketplaceCheckoutController {
     @Value("${app.frontend-url:http://localhost:3000}")
     private String frontendUrl;
 
+    // ISO 3166-1 alpha-2 codes the shop ships to; buyers outside these can't check out.
+    @Value("${marketplace.allowed-countries:IN,US,GB,CA,AU,AE,SG}")
+    private String allowedCountriesCsv;
+
     @Autowired
     private CartService cartService;
 
@@ -119,7 +123,8 @@ public class MarketplaceCheckoutController {
                     .setMode(SessionCreateParams.Mode.PAYMENT)
                     .setCustomerEmail(user.getEmail())
                     .setSuccessUrl(frontendUrl + "/marketplace/order-confirmation?session_id={CHECKOUT_SESSION_ID}")
-                    .setCancelUrl(frontendUrl + "/cart")
+                    .setCancelUrl(frontendUrl + "/marketplace/cart")
+                    .setShippingAddressCollection(buildShippingCollection())
                     .putMetadata("purpose", PURPOSE)
                     .putMetadata("userId", String.valueOf(userId));
 
@@ -244,6 +249,35 @@ public class MarketplaceCheckoutController {
             log.error("Marketplace webhook processing failed for event {}", event.getId(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error("Webhook error."));
         }
+    }
+
+    /** GET /api/marketplace/checkout/countries — the ISO codes the shop ships to (public). */
+    @GetMapping("/countries")
+    public ResponseEntity<?> allowedCountries() {
+        return ResponseEntity.ok(Map.of("countries", parseAllowedCountries()));
+    }
+
+    private List<String> parseAllowedCountries() {
+        List<String> out = new ArrayList<>();
+        for (String c : allowedCountriesCsv.split(",")) {
+            String code = c.trim().toUpperCase();
+            if (!code.isEmpty()) out.add(code);
+        }
+        return out;
+    }
+
+    private SessionCreateParams.ShippingAddressCollection buildShippingCollection() {
+        SessionCreateParams.ShippingAddressCollection.Builder b =
+                SessionCreateParams.ShippingAddressCollection.builder();
+        for (String code : parseAllowedCountries()) {
+            try {
+                b.addAllowedCountry(
+                        SessionCreateParams.ShippingAddressCollection.AllowedCountry.valueOf(code));
+            } catch (IllegalArgumentException ignored) {
+                log.warn("Ignoring unknown allowed-country code: {}", code);
+            }
+        }
+        return b.build();
     }
 
     private Session resolveSession(Event event) {

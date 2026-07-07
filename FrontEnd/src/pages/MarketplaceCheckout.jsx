@@ -84,7 +84,7 @@ export default function MarketplaceCheckout() {
               <button className="bm-btn bm-btn-create cart-checkout-btn" onClick={handlePay} disabled={submitting}>
                 {submitting ? "Redirecting to secure payment…" : "Proceed to Payment"}
               </button>
-              <button className="cart-continue" onClick={() => navigate("/cart")} style={{ background: "none", border: "none", cursor: "pointer" }}>
+              <button className="cart-continue" onClick={() => navigate("/marketplace/cart")} style={{ background: "none", border: "none", cursor: "pointer" }}>
                 ← Back to cart
               </button>
               <p className="checkout-secure-note">🔒 Secure payment via Stripe. You'll be redirected to complete your purchase.</p>

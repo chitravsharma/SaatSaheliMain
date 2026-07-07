@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import api from "../utils/api";
-import { optimizeCloudinary } from "../utils/imageUrl";
 import { useAuth } from "../AuthContext";
-import { useCart } from "../contexts/CartContext";
+import ListingCard from "../components/ListingCard";
 import "./Marketplace.css";
 
 const API = process.env.REACT_APP_API_URL;
@@ -13,7 +12,7 @@ const CONDITION_OPTIONS = ["New", "Like New", "Good", "Fair"];
 
 export default function Marketplace() {
   const { user, isAdmin } = useAuth();
-  const { isInCart, addToCart, removeFromCart } = useCart();
+  const [searchParams] = useSearchParams();
   const userId = user?.userId;
   // Only Admin / SuperAdmin can create and manage listings ("My Listings").
   // Regular users get a browse-only Marketplace.
@@ -25,8 +24,7 @@ export default function Marketplace() {
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
   const [showForm, setShowForm] = useState(false);
-  const [filterCategory, setFilterCategory] = useState("");
-  const [shareCopiedId, setShareCopiedId] = useState(null);
+  const [filterCategory, setFilterCategory] = useState(searchParams.get("category") || "");
 
   // Form state
   const [editingId, setEditingId] = useState(null);
@@ -157,86 +155,22 @@ export default function Marketplace() {
     setTab("my");
   };
 
-  const handleShare = async (item) => {
-    const url = `${window.location.origin}/marketplace`;
-    const text = `Check out "${item.title}" for ${item.price} on Saat Saheli Marketplace!`;
-    if (navigator.share) {
-      try { await navigator.share({ title: item.title, text, url }); } catch { /* cancelled */ }
-    } else {
-      await navigator.clipboard.writeText(`${text}\n${url}`);
-      setShareCopiedId(item.id);
-      setTimeout(() => setShareCopiedId(null), 2000);
-    }
-  };
-
-  // A listing can go in the cart only when it's active, has a numeric price, and
-  // the viewer is logged in. Text-only "Contact seller" listings are not purchasable.
-  const isPurchasable = (item) =>
-    !!userId && item.status === "ACTIVE" && item.priceAmount != null;
-
-  const handleCartToggle = async (item) => {
-    if (!userId) { setMessage("Please log in to add items to your cart"); return; }
-    const res = isInCart(item.id)
-      ? await removeFromCart(item.id)
-      : await addToCart(item.id);
-    if (!res.ok && res.error) setMessage(res.error);
-  };
-
   const filteredListings = filterCategory
     ? listings.filter(l => l.category === filterCategory)
     : listings;
 
   const renderListingCard = (item, isOwner) => (
-    <div key={item.id} className="mp-card">
-      <div className="mp-card-images">
-        {item.image1Url ? (
-          <img src={optimizeCloudinary(item.image1Url)} alt={item.title} className="mp-card-img" />
-        ) : (
-          <div className="mp-card-img-placeholder">
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-          </div>
-        )}
-        {item.image2Url && (
-          <img src={optimizeCloudinary(item.image2Url)} alt={`${item.title} 2`} className="mp-card-img mp-card-img-2" />
-        )}
-      </div>
-      <div className="mp-card-info">
-        <div className="mp-card-header">
-          <h3 className="mp-card-title">{item.title}</h3>
-          <span className="mp-card-price">{item.price}</span>
-        </div>
-        {item.description && <p className="mp-card-desc">{item.description}</p>}
-        <div className="mp-card-meta">
-          <span className="mp-card-badge mp-badge-category">{item.category}</span>
-          <span className="mp-card-badge mp-badge-condition">{item.condition}</span>
-        </div>
-        {item.sellerName && <span className="mp-card-seller">by {item.sellerName}</span>}
-        <div className="mp-card-contact">
-          <strong>Contact:</strong> {item.contactInfo}
-        </div>
-        <div className="mp-card-actions">
-          {item.status === "SOLD" && <span className="mp-card-badge mp-badge-sold">Sold</span>}
-          {isPurchasable(item) && !isOwner && (
-            <button
-              className={isInCart(item.id) ? "bm-btn bm-btn-back bm-btn-sm" : "bm-btn bm-btn-create bm-btn-sm"}
-              onClick={() => handleCartToggle(item)}
-            >
-              {isInCart(item.id) ? "In Cart — Remove" : "Add to Cart"}
-            </button>
-          )}
-          <button className="mp-share-btn" onClick={() => handleShare(item)}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
-            {shareCopiedId === item.id ? "Copied!" : "Share"}
-          </button>
-          {isOwner && (
-            <>
-              <button className="bm-btn bm-btn-edit bm-btn-sm" onClick={() => handleEdit(item)}>Edit</button>
-              <button className="bm-btn bm-btn-delete bm-btn-sm" onClick={() => handleDelete(item.id)}>Remove</button>
-            </>
-          )}
-        </div>
-      </div>
-    </div>
+    <ListingCard
+      key={item.id}
+      item={item}
+      onMessage={setMessage}
+      ownerActions={isOwner ? (
+        <>
+          <button className="bm-btn bm-btn-edit bm-btn-sm" onClick={() => handleEdit(item)}>Edit</button>
+          <button className="bm-btn bm-btn-delete bm-btn-sm" onClick={() => handleDelete(item.id)}>Remove</button>
+        </>
+      ) : null}
+    />
   );
 
   return (
@@ -246,14 +180,13 @@ export default function Marketplace() {
           <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
           <path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6"/>
         </svg>
-        Buy / Sell Marketplace
+        Browse the Shop
       </h1>
 
       <p className="mp-disclaimer">
-        SaatSaheli is not responsible for any transactions, items, or outcomes of buying/selling.
-        Buyers and sellers are fully responsible for their actions.
-        <Link to="/policies" className="mp-policy-link"> Read full policies</Link>
-        <Link to="/refund-policy" className="mp-policy-link"> Refund Policy</Link>
+        Sold and shipped by SaatSaheli. Secure Stripe checkout with free cancellation within 24 hours (before shipping).
+        <Link to="/marketplace/terms" className="mp-policy-link"> Terms</Link>
+        <Link to="/marketplace/shipping" className="mp-policy-link"> Shipping &amp; Returns</Link>
       </p>
 
       {message && <div className="mp-message" onClick={() => setMessage("")} role="status">{message}</div>}

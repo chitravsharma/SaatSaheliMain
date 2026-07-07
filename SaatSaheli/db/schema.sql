@@ -864,7 +864,17 @@ CREATE TABLE public.marketplace_orders (
     tracking_number character varying(255),
     tracking_carrier character varying(255),
     created_date timestamp(6) without time zone,
-    paid_date timestamp(6) without time zone
+    paid_date timestamp(6) without time zone,
+    cancelled_date timestamp(6) without time zone,
+    cancel_reason character varying(255),
+    stripe_refund_id character varying(255),
+    ship_name character varying(255),
+    ship_country character varying(255),
+    ship_line1 character varying(255),
+    ship_line2 character varying(255),
+    ship_city character varying(255),
+    ship_state character varying(255),
+    ship_postal_code character varying(255)
 );
 
 CREATE TABLE public.marketplace_order_items (

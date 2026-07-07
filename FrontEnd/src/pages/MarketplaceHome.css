@@ -1,0 +1,81 @@
+.shop-home {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 24px 20px 40px;
+}
+
+.shop-hero {
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  border-radius: 18px;
+  padding: 40px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.shop-hero-text h1 {
+  margin: 0 0 8px;
+  font-size: 2.2rem;
+  color: #7c2d12;
+}
+.shop-hero-text p {
+  margin: 0 0 20px;
+  color: #92400e;
+  font-size: 1.05rem;
+  max-width: 540px;
+}
+.shop-hero-cta { display: flex; gap: 12px; flex-wrap: wrap; }
+.shop-hero-badge {
+  align-self: flex-start;
+  background: rgba(255, 255, 255, 0.6);
+  color: #78350f;
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.shop-section { margin-top: 40px; }
+.shop-section > h2 { margin: 0 0 18px; color: #7c2d12; }
+.shop-section-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 18px;
+}
+.shop-section-head h2 { margin: 0; color: #7c2d12; }
+.shop-see-all { color: #b45309; text-decoration: none; font-weight: 600; font-size: 0.9rem; }
+
+.shop-cat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 14px;
+}
+.shop-cat-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 22px 12px;
+  border: 1px solid #f1e7d5;
+  border-radius: 14px;
+  background: #fff;
+  cursor: pointer;
+  font-weight: 600;
+  color: #57534e;
+  transition: transform 0.1s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+}
+.shop-cat-tile:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.06);
+  border-color: #fbbf24;
+}
+.shop-cat-emoji { font-size: 1.9rem; }
+
+@media (prefers-color-scheme: dark) {
+  .shop-hero { background: linear-gradient(135deg, #422006 0%, #713f12 100%); }
+  .shop-hero-text h1, .shop-section > h2, .shop-section-head h2 { color: #fbbf24; }
+  .shop-hero-text p { color: #fcd34d; }
+  .shop-hero-badge { background: rgba(0,0,0,0.25); color: #fde68a; }
+  .shop-cat-tile { background: #1c1917; border-color: #292524; color: #d6d3d1; }
+  .shop-cat-tile:hover { border-color: #fbbf24; }
+}

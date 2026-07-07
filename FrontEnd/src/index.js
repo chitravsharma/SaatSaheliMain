@@ -8,6 +8,7 @@ import { AuthProvider } from './AuthContext';
 import { LanguageProvider } from './LanguageContext';
 import { LoginGateProvider } from './contexts/LoginGateContext';
 import { CartProvider } from './contexts/CartContext';
+import { FavoritesProvider } from './contexts/FavoritesContext';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
@@ -16,7 +17,9 @@ root.render(
       <AuthProvider>
         <LoginGateProvider>
           <CartProvider>
-            <App />
+            <FavoritesProvider>
+              <App />
+            </FavoritesProvider>
           </CartProvider>
         </LoginGateProvider>
       </AuthProvider>
