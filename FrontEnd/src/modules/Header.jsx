@@ -199,13 +199,10 @@ const Header = () => {
               My Account
             </Link>
           )}
-          {user && (
-            <Link to="/marketplace/cart" className="nav-link nav-link-cart" onClick={closeMobileNav} aria-label="Shopping cart">
-              <svg className="nav-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6"/></svg>
-              Cart
-              {cartCount > 0 && <span className="nav-cart-badge">{cartCount}</span>}
-            </Link>
-          )}
+          <Link to="/marketplace" className="nav-link" onClick={closeMobileNav} aria-label="Shop">
+            <svg className="nav-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l1.5-5h15L21 9"/><path d="M3 9h18v10a1 1 0 01-1 1H4a1 1 0 01-1-1V9z"/><path d="M9 13h6"/></svg>
+            Shop
+          </Link>
           {user && (user.role === "ADMIN" || user.role === "SUPER_ADMIN") && (
             <Link to="/admin" className="nav-link" onClick={closeMobileNav}>
               <svg className="nav-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
@@ -228,6 +225,9 @@ const Header = () => {
                 <div className="header-user-dropdown" role="menu">
                   <Link to="/account" className="header-user-item" role="menuitem" onClick={() => { setUserMenuOpen(false); closeMobileNav(); }}>
                     {strings.header.myAccount}
+                  </Link>
+                  <Link to="/marketplace/cart" className="header-user-item" role="menuitem" onClick={() => { setUserMenuOpen(false); closeMobileNav(); }}>
+                    Cart{cartCount > 0 ? ` (${cartCount})` : ""}
                   </Link>
                   <Link to="/help-support" className="header-user-item" role="menuitem" onClick={() => { setUserMenuOpen(false); closeMobileNav(); }}>
                     Need help and Support
