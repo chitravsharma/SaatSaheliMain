@@ -2,6 +2,7 @@ package com.SaatSaheli.spring.model;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
@@ -22,7 +23,14 @@ public class MarketplaceListing {
     private String description;
 
     @Column(nullable = false)
-    private String price;
+    private String price; // free-form display price ("$25", "Free", "Best Offer")
+
+    // Numeric price for cart/checkout. Null = not purchasable ("Contact seller").
+    @Column(name = "price_amount", precision = 12, scale = 2)
+    private BigDecimal priceAmount;
+
+    // ISO currency for priceAmount: "usd" or "inr".
+    private String currency;
 
     private String category;
 
@@ -65,6 +73,12 @@ public class MarketplaceListing {
 
     public String getPrice() { return price; }
     public void setPrice(String price) { this.price = price; }
+
+    public BigDecimal getPriceAmount() { return priceAmount; }
+    public void setPriceAmount(BigDecimal priceAmount) { this.priceAmount = priceAmount; }
+
+    public String getCurrency() { return currency; }
+    public void setCurrency(String currency) { this.currency = currency; }
 
     public String getCategory() { return category; }
     public void setCategory(String category) { this.category = category; }

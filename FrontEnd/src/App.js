@@ -44,6 +44,9 @@ import Checkout from './pages/Checkout';
 import SupportUs from './pages/SupportUs';
 import SupportThankYou from './pages/SupportThankYou';
 import Marketplace from './pages/Marketplace';
+import Cart from './pages/Cart';
+import MarketplaceCheckout from './pages/MarketplaceCheckout';
+import OrderConfirmation from './pages/OrderConfirmation';
 import NotFound from './pages/NotFound';
 import HelpSupport from './pages/HelpSupport';
 import MagazineSubmit from './pages/MagazineSubmit';
@@ -115,6 +118,9 @@ function App() {
           <Route path="/support" element={<SupportUs />} />
           <Route path="/support/thank-you" element={<SupportThankYou />} />
           <Route path="/marketplace" element={<Marketplace />} />
+          <Route path="/cart" element={<ProtectedRoute><Cart /></ProtectedRoute>} />
+          <Route path="/marketplace/checkout" element={<ProtectedRoute><MarketplaceCheckout /></ProtectedRoute>} />
+          <Route path="/marketplace/order-confirmation" element={<ProtectedRoute><OrderConfirmation /></ProtectedRoute>} />
           <Route path="/checkout" element={<ProtectedRoute><Checkout /></ProtectedRoute>} />
           <Route path="/manual" element={<UserManual />} />
           <Route path="/admin-manual" element={<ProtectedRoute requiredRole="ADMIN"><AdminManual /></ProtectedRoute>} />

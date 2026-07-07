@@ -71,6 +71,9 @@ public class AdminController {
     private MarketplaceListingRepository marketplaceRepo;
 
     @Autowired
+    private com.SaatSaheli.spring.repository.MarketplaceOrderRepository marketplaceOrderRepo;
+
+    @Autowired
     private DocumentExtractionService documentExtractionService;
 
     @Autowired
@@ -1071,6 +1074,49 @@ public class AdminController {
         if (text == null) return "\"\"";
         return "\"" + text.replace("\\", "\\\\").replace("\"", "\\\"")
                 .replace("\n", "\\n").replace("\r", "\\r").replace("\t", "\\t") + "\"";
+    }
+
+    /** GET /api/admin/marketplace/orders — list all marketplace orders (admin). */
+    @GetMapping("/marketplace/orders")
+    public ResponseEntity<?> listMarketplaceOrders(HttpServletRequest request) {
+        try {
+            User caller = verifyCaller(getAuthUserId(request), false);
+            if (caller == null) return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorMap("Admin access required"));
+            return ResponseEntity.ok(marketplaceOrderRepo.findAllByOrderByCreatedDateDesc());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(errorMap("Failed to list orders: " + e.getMessage()));
+        }
+    }
+
+    /** PUT /api/admin/marketplace/orders/{id}/tracking — set tracking number/carrier (admin). */
+    @PutMapping("/marketplace/orders/{id}/tracking")
+    public ResponseEntity<?> setOrderTracking(@PathVariable Long id, @RequestBody Map<String, String> body,
+                                              HttpServletRequest request) {
+        try {
+            User caller = verifyCaller(getAuthUserId(request), false);
+            if (caller == null) return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorMap("Admin access required"));
+
+            var opt = marketplaceOrderRepo.findById(id);
+            if (opt.isEmpty()) return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorMap("Order not found"));
+            var order = opt.get();
+
+            String trackingNumber = body.get("trackingNumber");
+            if (trackingNumber == null || trackingNumber.trim().isEmpty()) {
+                return ResponseEntity.badRequest().body(errorMap("trackingNumber is required"));
+            }
+            order.setTrackingNumber(trackingNumber.trim());
+            order.setTrackingCarrier(body.get("carrier") != null ? body.get("carrier").trim() : null);
+            // Adding tracking implies the order has shipped.
+            if (com.SaatSaheli.spring.model.MarketplaceOrder.STATUS_PAID.equals(order.getStatus())) {
+                order.setStatus(com.SaatSaheli.spring.model.MarketplaceOrder.STATUS_SHIPPED);
+            }
+            marketplaceOrderRepo.save(order);
+            return ResponseEntity.ok(order);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(errorMap("Failed to set tracking: " + e.getMessage()));
+        }
     }
 
     private User verifyCaller(Long callerUserId, boolean requireSuperAdmin) {

@@ -1,0 +1,146 @@
+.cart-empty {
+  text-align: center;
+  padding: 32px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  align-items: center;
+}
+
+.cart-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.cart-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px;
+  border: 1px solid var(--border, #e5e7eb);
+  border-radius: 10px;
+  background: var(--card-bg, #fff);
+}
+
+.cart-row-unavailable {
+  opacity: 0.6;
+}
+
+.cart-row-img,
+.cart-row-img-ph {
+  width: 64px;
+  height: 64px;
+  border-radius: 8px;
+  overflow: hidden;
+  flex-shrink: 0;
+  background: #f3f4f6;
+}
+
+.cart-row-img img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.cart-row-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.cart-row-title {
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+
+.cart-row-meta {
+  font-size: 0.85rem;
+  color: var(--text-muted, #6b7280);
+}
+
+.cart-row-warn {
+  font-size: 0.8rem;
+  color: #b45309;
+  margin-top: 4px;
+}
+
+.cart-row-price {
+  font-weight: 700;
+  white-space: nowrap;
+  min-width: 84px;
+  text-align: right;
+}
+
+.cart-note {
+  margin-top: 12px;
+  color: #b45309;
+  font-size: 0.88rem;
+}
+
+.cart-summary {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border, #e5e7eb);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: flex-end;
+}
+
+.cart-summary-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 24px;
+  width: 100%;
+  max-width: 360px;
+  font-size: 1.05rem;
+}
+
+.cart-summary-row strong {
+  font-size: 1.25rem;
+}
+
+.cart-checkout-btn {
+  width: 100%;
+  max-width: 360px;
+  justify-content: center;
+}
+
+.cart-continue {
+  color: var(--text-muted, #6b7280);
+  text-decoration: none;
+  font-size: 0.9rem;
+}
+
+@media (max-width: 560px) {
+  .cart-row {
+    flex-wrap: wrap;
+  }
+  .cart-row-price {
+    text-align: left;
+  }
+}
+
+.checkout-buyer-note {
+  color: var(--text-muted, #6b7280);
+  font-size: 0.9rem;
+  width: 100%;
+  max-width: 360px;
+  text-align: center;
+}
+
+.checkout-secure-note {
+  color: var(--text-muted, #9ca3af);
+  font-size: 0.82rem;
+  text-align: center;
+  max-width: 360px;
+}
+
+.order-tracking {
+  margin-top: 16px;
+  padding: 12px 14px;
+  border-radius: 8px;
+  background: var(--card-bg, #f9fafb);
+  border: 1px solid var(--border, #e5e7eb);
+}

@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import api from "../utils/api";
 import { optimizeCloudinary } from "../utils/imageUrl";
 import { useAuth } from "../AuthContext";
+import { useCart } from "../contexts/CartContext";
 import "./Marketplace.css";
 
 const API = process.env.REACT_APP_API_URL;
@@ -12,6 +13,7 @@ const CONDITION_OPTIONS = ["New", "Like New", "Good", "Fair"];
 
 export default function Marketplace() {
   const { user, isAdmin } = useAuth();
+  const { isInCart, addToCart, removeFromCart } = useCart();
   const userId = user?.userId;
   // Only Admin / SuperAdmin can create and manage listings ("My Listings").
   // Regular users get a browse-only Marketplace.
@@ -31,6 +33,8 @@ export default function Marketplace() {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [price, setPrice] = useState("");
+  const [priceAmount, setPriceAmount] = useState("");
+  const [currency, setCurrency] = useState("inr");
   const [category, setCategory] = useState("Other");
   const [condition, setCondition] = useState("Good");
   const [contactInfo, setContactInfo] = useState("");
@@ -82,6 +86,7 @@ export default function Marketplace() {
   const resetForm = () => {
     setEditingId(null);
     setTitle(""); setDescription(""); setPrice(""); setCategory("Other");
+    setPriceAmount(""); setCurrency("inr");
     setCondition("Good"); setContactInfo(""); setImage1(""); setImage2("");
     setShowForm(false);
   };
@@ -97,6 +102,8 @@ export default function Marketplace() {
       title: title.trim(),
       description: description.trim(),
       price: price.trim(),
+      priceAmount: priceAmount.trim() === "" ? null : priceAmount.trim(),
+      currency,
       category,
       condition,
       contactInfo: contactInfo.trim(),
@@ -139,6 +146,8 @@ export default function Marketplace() {
     setTitle(item.title || "");
     setDescription(item.description || "");
     setPrice(item.price || "");
+    setPriceAmount(item.priceAmount != null ? String(item.priceAmount) : "");
+    setCurrency(item.currency || "inr");
     setCategory(item.category || "Other");
     setCondition(item.condition || "Good");
     setContactInfo(item.contactInfo || "");
@@ -158,6 +167,19 @@ export default function Marketplace() {
       setShareCopiedId(item.id);
       setTimeout(() => setShareCopiedId(null), 2000);
     }
+  };
+
+  // A listing can go in the cart only when it's active, has a numeric price, and
+  // the viewer is logged in. Text-only "Contact seller" listings are not purchasable.
+  const isPurchasable = (item) =>
+    !!userId && item.status === "ACTIVE" && item.priceAmount != null;
+
+  const handleCartToggle = async (item) => {
+    if (!userId) { setMessage("Please log in to add items to your cart"); return; }
+    const res = isInCart(item.id)
+      ? await removeFromCart(item.id)
+      : await addToCart(item.id);
+    if (!res.ok && res.error) setMessage(res.error);
   };
 
   const filteredListings = filterCategory
@@ -193,6 +215,15 @@ export default function Marketplace() {
           <strong>Contact:</strong> {item.contactInfo}
         </div>
         <div className="mp-card-actions">
+          {item.status === "SOLD" && <span className="mp-card-badge mp-badge-sold">Sold</span>}
+          {isPurchasable(item) && !isOwner && (
+            <button
+              className={isInCart(item.id) ? "bm-btn bm-btn-back bm-btn-sm" : "bm-btn bm-btn-create bm-btn-sm"}
+              onClick={() => handleCartToggle(item)}
+            >
+              {isInCart(item.id) ? "In Cart — Remove" : "Add to Cart"}
+            </button>
+          )}
           <button className="mp-share-btn" onClick={() => handleShare(item)}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
             {shareCopiedId === item.id ? "Copied!" : "Share"}
@@ -293,6 +324,19 @@ export default function Marketplace() {
                     <label>Condition</label>
                     <select value={condition} onChange={e => setCondition(e.target.value)} className="bm-input">
                       {CONDITION_OPTIONS.map(c => <option key={c} value={c}>{c}</option>)}
+                    </select>
+                  </div>
+                </div>
+                <div className="mp-field-row">
+                  <div className="mp-field">
+                    <label>Purchase Price (number, enables Add to Cart)</label>
+                    <input type="number" min="0" step="0.01" value={priceAmount} onChange={e => setPriceAmount(e.target.value)} placeholder="e.g. 499  (leave blank for contact-only)" className="bm-input" />
+                  </div>
+                  <div className="mp-field">
+                    <label>Currency</label>
+                    <select value={currency} onChange={e => setCurrency(e.target.value)} className="bm-input">
+                      <option value="inr">INR (₹)</option>
+                      <option value="usd">USD ($)</option>
                     </select>
                   </div>
                 </div>

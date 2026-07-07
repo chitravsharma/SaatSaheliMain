@@ -739,3 +739,23 @@
     animation: none;
   }
 }
+
+/* Marketplace cart link + item-count badge */
+.nav-link-cart {
+  position: relative;
+}
+.nav-cart-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  margin-left: 4px;
+  border-radius: 9px;
+  background: #dc2626;
+  color: #fff;
+  font-size: 0.72rem;
+  font-weight: 700;
+  line-height: 1;
+}

@@ -25,6 +25,7 @@ public class PaymentTransaction {
     public static final String TYPE_REFUND = "refund";
     public static final String TYPE_BOOK_PURCHASE = "book_purchase";
     public static final String TYPE_MAGAZINE = "magazine";
+    public static final String TYPE_MARKETPLACE = "marketplace";
     public static final String TYPE_OTHER = "other";
 
     @Id

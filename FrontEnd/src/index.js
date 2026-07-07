@@ -7,6 +7,7 @@ import { BrowserRouter } from 'react-router-dom';
 import { AuthProvider } from './AuthContext';
 import { LanguageProvider } from './LanguageContext';
 import { LoginGateProvider } from './contexts/LoginGateContext';
+import { CartProvider } from './contexts/CartContext';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
@@ -14,7 +15,9 @@ root.render(
     <LanguageProvider>
       <AuthProvider>
         <LoginGateProvider>
-          <App />
+          <CartProvider>
+            <App />
+          </CartProvider>
         </LoginGateProvider>
       </AuthProvider>
     </LanguageProvider>
