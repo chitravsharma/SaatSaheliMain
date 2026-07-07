@@ -3,7 +3,6 @@ import { Link } from "react-router-dom";
 import api from "../utils/api";
 import { optimizeCloudinary } from "../utils/imageUrl";
 import { useAuth } from "../AuthContext";
-import useProfile from "../hooks/useProfile";
 import "./Marketplace.css";
 
 const API = process.env.REACT_APP_API_URL;
@@ -12,9 +11,11 @@ const CATEGORY_OPTIONS = ["Books", "Art", "Crafts", "Electronics", "Clothing", "
 const CONDITION_OPTIONS = ["New", "Like New", "Good", "Fair"];
 
 export default function Marketplace() {
-  const { user } = useAuth();
-  const { hasProfile } = useProfile();
+  const { user, isAdmin } = useAuth();
   const userId = user?.userId;
+  // Only Admin / SuperAdmin can create and manage listings ("My Listings").
+  // Regular users get a browse-only Marketplace.
+  const canManage = isAdmin;
 
   const [tab, setTab] = useState("browse");
   const [listings, setListings] = useState([]);
@@ -230,7 +231,7 @@ export default function Marketplace() {
         {/* Tabs */}
         <div className="mp-tabs">
           <button className={tab === "browse" ? "active" : ""} onClick={() => setTab("browse")}>Browse All</button>
-          {userId && hasProfile && <button className={tab === "my" ? "active" : ""} onClick={() => setTab("my")}>My Listings</button>}
+          {canManage && <button className={tab === "my" ? "active" : ""} onClick={() => setTab("my")}>My Listings</button>}
         </div>
 
         {/* Category filter */}
@@ -250,13 +251,13 @@ export default function Marketplace() {
           <div className="mp-grid">
             {loading ? <p>Loading...</p> :
               filteredListings.length === 0 ? <p className="mp-empty">No listings yet. Be the first to list an item!</p> :
-              filteredListings.map(item => renderListingCard(item, userId && item.userId === userId))
+              filteredListings.map(item => renderListingCard(item, canManage && item.userId === userId))
             }
           </div>
         )}
 
         {/* My Listings tab */}
-        {tab === "my" && userId && hasProfile && (
+        {tab === "my" && canManage && (
           <>
             <div className="mp-top-actions">
               <button className="bm-btn bm-btn-create" onClick={() => { resetForm(); setShowForm(true); }}>

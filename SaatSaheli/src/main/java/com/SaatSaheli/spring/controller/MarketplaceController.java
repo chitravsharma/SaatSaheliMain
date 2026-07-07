@@ -10,6 +10,9 @@ import org.springframework.web.bind.annotation.*;
 
 import com.SaatSaheli.spring.model.MarketplaceListing;
 import com.SaatSaheli.spring.service.MarketplaceService;
+import com.SaatSaheli.spring.util.RoleUtil;
+
+import jakarta.servlet.http.HttpServletRequest;
 
 @RestController
 @RequestMapping("/api/marketplace")
@@ -17,6 +20,13 @@ public class MarketplaceController {
 
     @Autowired
     private MarketplaceService marketplaceService;
+
+    // Only Admin / SuperAdmin may create and manage listings. The JwtInterceptor
+    // stamps the caller's role onto the request; browsing stays public.
+    private boolean isAdmin(HttpServletRequest request) {
+        Object role = request.getAttribute("jwtRole");
+        return role instanceof String && RoleUtil.isAdmin((String) role);
+    }
 
     // Public: get active listings
     @GetMapping("/active")
@@ -66,7 +76,10 @@ public class MarketplaceController {
 
     // Create listing
     @PostMapping
-    public ResponseEntity<?> createListing(@RequestBody Map<String, Object> body) {
+    public ResponseEntity<?> createListing(@RequestBody Map<String, Object> body, HttpServletRequest request) {
+        if (!isAdmin(request)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorMap("Only admins can create listings"));
+        }
         try {
             Long userId = body.get("userId") != null ? Long.parseLong(body.get("userId").toString()) : null;
             String title = (String) body.get("title");
@@ -95,7 +108,10 @@ public class MarketplaceController {
 
     // Update listing
     @PutMapping("/{id}")
-    public ResponseEntity<?> updateListing(@PathVariable Long id, @RequestBody Map<String, Object> body) {
+    public ResponseEntity<?> updateListing(@PathVariable Long id, @RequestBody Map<String, Object> body, HttpServletRequest request) {
+        if (!isAdmin(request)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorMap("Only admins can update listings"));
+        }
         try {
             Long userId = body.get("userId") != null ? Long.parseLong(body.get("userId").toString()) : null;
             String title = (String) body.get("title");
@@ -120,7 +136,10 @@ public class MarketplaceController {
 
     // Delete listing
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> deleteListing(@PathVariable Long id, @RequestParam(required = false) Long userId) {
+    public ResponseEntity<?> deleteListing(@PathVariable Long id, @RequestParam(required = false) Long userId, HttpServletRequest request) {
+        if (!isAdmin(request)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorMap("Only admins can delete listings"));
+        }
         try {
             marketplaceService.deleteListing(id, userId);
             return ResponseEntity.ok(Map.of("message", "Listing deleted successfully"));
