@@ -11,10 +11,18 @@ import org.springframework.stereotype.Service;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 
+import com.SaatSaheli.spring.model.MarketplaceOrder;
+import com.SaatSaheli.spring.model.OrderItem;
+
+import java.math.BigDecimal;
+import java.util.Map;
+
 @Service
 public class EmailService {
 
     private static final Logger log = LoggerFactory.getLogger(EmailService.class);
+
+    private static final Map<String, String> CURRENCY_SYMBOL = Map.of("inr", "₹", "usd", "$");
 
     @Autowired
     private JavaMailSender mailSender;
@@ -85,6 +93,70 @@ public class EmailService {
                 """.formatted(heading, senderName, senderEmail, senderEmail, msgSubject, message, senderEmail, senderEmail);
 
         sendHtmlEmail(fromAddress, subject, body);
+    }
+
+    /**
+     * Send the buyer an order/purchase confirmation with the confirmation number,
+     * itemised list, total, and tracking status.
+     */
+    public void sendOrderConfirmation(String toEmail, MarketplaceOrder order) {
+        String sym = symbolFor(order.getCurrency());
+        StringBuilder rows = new StringBuilder();
+        for (OrderItem item : order.getItems()) {
+            rows.append("""
+                    <tr>
+                      <td style="padding: 10px 0; border-bottom: 1px solid #f1f5f9;">%s</td>
+                      <td style="padding: 10px 0; border-bottom: 1px solid #f1f5f9; text-align: right; white-space: nowrap;">%s%s</td>
+                    </tr>
+                    """.formatted(
+                    escape(item.getTitle()),
+                    sym, money(item.getPriceAmount())));
+        }
+
+        String tracking = (order.getTrackingNumber() != null && !order.getTrackingNumber().isBlank())
+                ? escape(order.getTrackingNumber()) + (order.getTrackingCarrier() != null ? " (" + escape(order.getTrackingCarrier()) + ")" : "")
+                : "Pending — you'll get an update when your order ships.";
+
+        String subject = "SaatSaheli — Order Confirmation " + order.getOrderNumber();
+        String body = """
+                <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 560px; margin: 0 auto; padding: 32px;">
+                  <h2 style="color: #b45309;">Thank you for your order!</h2>
+                  <p>Your payment was successful and your order is confirmed.</p>
+                  <div style="background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; padding: 16px; margin: 20px 0; text-align: center;">
+                    <div style="color: #92400e; font-size: 0.85rem; letter-spacing: 0.04em;">CONFIRMATION NUMBER</div>
+                    <div style="font-size: 1.4rem; font-weight: 700; color: #78350f; letter-spacing: 1px;">%s</div>
+                  </div>
+                  <table style="width: 100%%; border-collapse: collapse; margin: 16px 0;">
+                    %s
+                    <tr>
+                      <td style="padding: 12px 0; font-weight: 700;">Total</td>
+                      <td style="padding: 12px 0; font-weight: 700; text-align: right;">%s%s</td>
+                    </tr>
+                  </table>
+                  <p style="margin: 16px 0;"><strong>Tracking:</strong> %s</p>
+                  <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 24px 0;" />
+                  <p style="color: #9ca3af; font-size: 0.85rem;">Keep your confirmation number for any questions about this order.<br/>— The SaatSaheli Team</p>
+                </div>
+                """.formatted(
+                escape(order.getOrderNumber()),
+                rows.toString(),
+                sym, money(order.getSubtotal()),
+                tracking);
+
+        sendHtmlEmail(toEmail, subject, body);
+    }
+
+    private static String symbolFor(String currency) {
+        return CURRENCY_SYMBOL.getOrDefault(currency == null ? "" : currency.toLowerCase(), "");
+    }
+
+    private static String money(BigDecimal amount) {
+        return (amount == null ? BigDecimal.ZERO : amount).setScale(2, java.math.RoundingMode.HALF_UP).toPlainString();
+    }
+
+    private static String escape(String s) {
+        if (s == null) return "";
+        return s.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;");
     }
 
     private void sendHtmlEmail(String to, String subject, String htmlBody) {

@@ -1,0 +1,111 @@
+.shop-header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: #fff;
+  border-bottom: 1px solid #f1e7d5;
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.04);
+}
+
+.shop-header-inner {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 0 20px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  height: 60px;
+}
+
+.shop-brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+  color: #7c2d12;
+  font-size: 1.15rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.shop-brand strong { color: #b45309; }
+
+.shop-nav {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+}
+
+.shop-nav-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  text-decoration: none;
+  color: #44403c;
+  font-weight: 500;
+  font-size: 0.95rem;
+}
+.shop-nav-link:hover { background: #fdf6ec; color: #b45309; }
+.shop-nav-link.active { color: #b45309; background: #fdf6ec; }
+
+.shop-cart-link { position: relative; }
+.shop-cart-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 9px;
+  background: #dc2626;
+  color: #fff;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.shop-login {
+  background: #b45309;
+  color: #fff;
+}
+.shop-login:hover { background: #92400e; color: #fff; }
+
+.shop-back-link {
+  margin-left: 8px;
+  padding: 6px 10px;
+  font-size: 0.85rem;
+  color: #78716c;
+  text-decoration: none;
+  border-left: 1px solid #eaddc7;
+}
+.shop-back-link:hover { color: #b45309; }
+
+.shop-hamburger {
+  display: none;
+  margin-left: auto;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #44403c;
+}
+
+@media (max-width: 800px) {
+  .shop-hamburger { display: inline-flex; }
+  .shop-nav {
+    display: none;
+    position: absolute;
+    top: 60px;
+    left: 0;
+    right: 0;
+    flex-direction: column;
+    align-items: stretch;
+    background: #fff;
+    border-bottom: 1px solid #f1e7d5;
+    padding: 8px 16px 16px;
+    gap: 2px;
+    box-shadow: 0 6px 12px rgba(0,0,0,0.06);
+  }
+  .shop-nav.open { display: flex; }
+  .shop-back-link { border-left: none; margin-left: 0; }
+}

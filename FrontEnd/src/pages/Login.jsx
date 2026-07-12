@@ -284,7 +284,12 @@ export default function Login() {
         }
       }
     } catch (err) {
-      const msg = err.response?.data?.error || strings.login.errorGoogleFailed;
+      // Surface the real reason: a backend error carries response.data.error;
+      // a network/CORS/decoding failure has no response. Logging both makes a
+      // "Google sign-in failed" regression diagnosable instead of a black box.
+      console.error("Google sign-in failed:", err?.response?.status, err?.response?.data || err?.message, err);
+      const msg = err.response?.data?.error
+        || (err.request && !err.response ? "Couldn't reach the server. Is the backend running?" : strings.login.errorGoogleFailed);
       setError(msg);
     } finally {
       setLoading(false);
@@ -314,11 +319,11 @@ export default function Login() {
               <div style={{ display: "flex", justifyContent: "center" }}>
                 <GoogleLogin
                   onSuccess={handleGoogleSuccess}
-                  onError={() => setError(strings.login.errorGoogleFailed)}
+                  onError={() => { console.error("Google GSI error — origin not authorized for this client ID, FedCM/third-party cookies blocked, or popup blocked"); setError(strings.login.errorGoogleFailed); }}
                   text="signin_with"
                   shape="rectangular"
                   size="large"
-                  width="100%"
+                  width="340"
                 />
               </div>
 
@@ -488,11 +493,11 @@ export default function Login() {
               <div style={{ display: "flex", justifyContent: "center" }}>
                 <GoogleLogin
                   onSuccess={handleGoogleSuccess}
-                  onError={() => setError(strings.login.errorGoogleFailed)}
+                  onError={() => { console.error("Google GSI error — origin not authorized for this client ID, FedCM/third-party cookies blocked, or popup blocked"); setError(strings.login.errorGoogleFailed); }}
                   text="signup_with"
                   shape="rectangular"
                   size="large"
-                  width="100%"
+                  width="340"
                 />
               </div>
 

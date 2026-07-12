@@ -2,6 +2,7 @@ package com.SaatSaheli.spring.model;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
@@ -22,7 +23,14 @@ public class MarketplaceListing {
     private String description;
 
     @Column(nullable = false)
-    private String price;
+    private String price; // free-form display price ("$25", "Free", "Best Offer")
+
+    // Numeric price for cart/checkout. Null = not purchasable ("Contact seller").
+    @Column(name = "price_amount", precision = 12, scale = 2)
+    private BigDecimal priceAmount;
+
+    // ISO currency for priceAmount: "usd" or "inr".
+    private String currency;
 
     private String category;
 
@@ -38,7 +46,19 @@ public class MarketplaceListing {
     @Column(name = "image2_url")
     private String image2Url;
 
-    private String status; // ACTIVE, SOLD, REMOVED
+    @Column(name = "image3_url")
+    private String image3Url;
+
+    @Column(name = "image4_url")
+    private String image4Url;
+
+    private String status; // ACTIVE (available), INACTIVE (hidden by admin), REMOVED
+
+    // How many units are in stock. Decremented on purchase, restored on
+    // cancel/refund. 0 = sold out (listing stays visible, just not buyable).
+    // Admin sets this; existing rows default to 1 via columnDefinition.
+    @Column(columnDefinition = "integer default 1")
+    private Integer quantity = 1;
 
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     @Column(name = "created_date")
@@ -66,6 +86,12 @@ public class MarketplaceListing {
     public String getPrice() { return price; }
     public void setPrice(String price) { this.price = price; }
 
+    public BigDecimal getPriceAmount() { return priceAmount; }
+    public void setPriceAmount(BigDecimal priceAmount) { this.priceAmount = priceAmount; }
+
+    public String getCurrency() { return currency; }
+    public void setCurrency(String currency) { this.currency = currency; }
+
     public String getCategory() { return category; }
     public void setCategory(String category) { this.category = category; }
 
@@ -81,8 +107,17 @@ public class MarketplaceListing {
     public String getImage2Url() { return image2Url; }
     public void setImage2Url(String image2Url) { this.image2Url = image2Url; }
 
+    public String getImage3Url() { return image3Url; }
+    public void setImage3Url(String image3Url) { this.image3Url = image3Url; }
+
+    public String getImage4Url() { return image4Url; }
+    public void setImage4Url(String image4Url) { this.image4Url = image4Url; }
+
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
+
+    public Integer getQuantity() { return quantity == null ? 0 : quantity; }
+    public void setQuantity(Integer quantity) { this.quantity = quantity; }
 
     public LocalDateTime getCreatedDate() { return createdDate; }
     public void setCreatedDate(LocalDateTime createdDate) { this.createdDate = createdDate; }

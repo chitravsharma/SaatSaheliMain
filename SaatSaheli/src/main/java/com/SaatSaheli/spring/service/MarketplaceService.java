@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
@@ -28,18 +29,25 @@ public class MarketplaceService {
 
     public MarketplaceListing createListing(Long userId, String title, String description,
                                              String price, String category, String condition,
-                                             String contactInfo, String image1Url, String image2Url) {
+                                             String contactInfo, String image1Url, String image2Url,
+                                             String image3Url, String image4Url,
+                                             BigDecimal priceAmount, String currency, Integer quantity) {
         LocalDateTime now = LocalDateTime.now();
         MarketplaceListing listing = new MarketplaceListing();
+        listing.setQuantity(quantity != null && quantity >= 0 ? quantity : 1);
         listing.setUserId(userId);
         listing.setTitle(title);
         listing.setDescription(description);
         listing.setPrice(price);
+        listing.setPriceAmount(priceAmount);
+        listing.setCurrency(normalizeCurrency(currency, priceAmount));
         listing.setCategory(category != null ? category : "Other");
         listing.setCondition(condition != null ? condition : "Good");
         listing.setContactInfo(contactInfo);
         listing.setImage1Url(image1Url);
         listing.setImage2Url(image2Url);
+        listing.setImage3Url(image3Url);
+        listing.setImage4Url(image4Url);
         listing.setStatus("ACTIVE");
         listing.setCreatedDate(now);
         listing.setModifiedDate(now);
@@ -48,7 +56,10 @@ public class MarketplaceService {
 
     public MarketplaceListing updateListing(Long listingId, Long userId, String title, String description,
                                              String price, String category, String condition,
-                                             String contactInfo, String image1Url, String image2Url) {
+                                             String contactInfo, String image1Url, String image2Url,
+                                             String image3Url, String image4Url,
+                                             BigDecimal priceAmount, String currency,
+                                             Integer quantity, String status) {
         Optional<MarketplaceListing> opt = listingRepo.findById(listingId);
         if (opt.isEmpty()) throw new RuntimeException("Listing not found");
         MarketplaceListing listing = opt.get();
@@ -58,11 +69,20 @@ public class MarketplaceService {
         if (title != null) listing.setTitle(title);
         if (description != null) listing.setDescription(description);
         if (price != null) listing.setPrice(price);
+        if (priceAmount != null) {
+            listing.setPriceAmount(priceAmount);
+            listing.setCurrency(normalizeCurrency(currency, priceAmount));
+        }
         if (category != null) listing.setCategory(category);
         if (condition != null) listing.setCondition(condition);
         if (contactInfo != null) listing.setContactInfo(contactInfo);
         if (image1Url != null) listing.setImage1Url(image1Url);
         if (image2Url != null) listing.setImage2Url(image2Url);
+        if (image3Url != null) listing.setImage3Url(image3Url);
+        if (image4Url != null) listing.setImage4Url(image4Url);
+        if (quantity != null) listing.setQuantity(Math.max(0, quantity));
+        // Admin availability toggle: ACTIVE (shown/buyable) or INACTIVE (hidden).
+        if (status != null && !status.isBlank()) listing.setStatus(status);
         listing.setModifiedDate(LocalDateTime.now());
         return listingRepo.save(listing);
     }
@@ -99,6 +119,14 @@ public class MarketplaceService {
         MarketplaceListing listing = opt.get();
         enrichWithSellerNames(List.of(listing));
         return listing;
+    }
+
+    // Default to INR when a numeric price is set without an explicit currency;
+    // fall back to null (not purchasable) when there is no numeric price at all.
+    private String normalizeCurrency(String currency, BigDecimal priceAmount) {
+        if (priceAmount == null) return currency;
+        String c = currency != null ? currency.trim().toLowerCase() : "";
+        return (c.equals("usd") || c.equals("inr")) ? c : "inr";
     }
 
     private void enrichWithSellerNames(List<MarketplaceListing> listings) {

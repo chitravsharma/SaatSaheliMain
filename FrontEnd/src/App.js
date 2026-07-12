@@ -8,7 +8,7 @@ import AdBanner from './modules/AdBanner';
 import ServerWakeUp from './components/ServerWakeUp';
 import ScrollToTop from './components/ScrollToTop';
 import UpgradeModal from './components/UpgradeModal';
-import { Routes, Route, useLocation } from 'react-router-dom';
+import { Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import Home from './pages/Home';
 import About from './pages/About';
 import Contacts from './pages/Contacts';
@@ -44,6 +44,16 @@ import Checkout from './pages/Checkout';
 import SupportUs from './pages/SupportUs';
 import SupportThankYou from './pages/SupportThankYou';
 import Marketplace from './pages/Marketplace';
+import Cart from './pages/Cart';
+import MarketplaceCheckout from './pages/MarketplaceCheckout';
+import OrderConfirmation from './pages/OrderConfirmation';
+import MarketplaceLayout from './modules/MarketplaceLayout';
+import MarketplaceHome from './pages/MarketplaceHome';
+import MarketplaceOrders from './pages/MarketplaceOrders';
+import MarketplaceOrderDetail from './pages/MarketplaceOrderDetail';
+import MarketplaceFavorites from './pages/MarketplaceFavorites';
+import MarketplaceItemDetail from './pages/MarketplaceItemDetail';
+import { MarketplaceTerms, MarketplaceBuying, MarketplaceSelling, MarketplaceShipping } from './pages/MarketplacePolicies';
 import NotFound from './pages/NotFound';
 import HelpSupport from './pages/HelpSupport';
 import MagazineSubmit from './pages/MagazineSubmit';
@@ -61,6 +71,10 @@ function BookManagerWrapper() {
 }
 
 function App() {
+  const location = useLocation();
+  // The /marketplace/* section renders its own storefront chrome (MarketplaceLayout),
+  // so we hide the main SaatSaheli header/footer/ad-banner there.
+  const inShop = location.pathname.startsWith('/marketplace');
   return (
     <ServerWakeUp>
     <div className="App">
@@ -68,7 +82,7 @@ function App() {
       <UpgradeModal />
       <VisitorTracker />
       <MaintenanceBanner />
-      <Header />
+      {!inShop && <Header />}
       <main id="main-content">
         <DownloadProtection>
         <Routes>
@@ -114,7 +128,24 @@ function App() {
           <Route path="/sponsor-us" element={<SponsorUs />} />
           <Route path="/support" element={<SupportUs />} />
           <Route path="/support/thank-you" element={<SupportThankYou />} />
-          <Route path="/marketplace" element={<Marketplace />} />
+          {/* Storefront: own shell (MarketplaceLayout) with shop header/footer */}
+          <Route path="/marketplace" element={<MarketplaceLayout />}>
+            <Route index element={<MarketplaceHome />} />
+            <Route path="browse" element={<Marketplace />} />
+            <Route path="item/:id" element={<MarketplaceItemDetail />} />
+            <Route path="cart" element={<ProtectedRoute><Cart /></ProtectedRoute>} />
+            <Route path="checkout" element={<ProtectedRoute><MarketplaceCheckout /></ProtectedRoute>} />
+            <Route path="order-confirmation" element={<ProtectedRoute><OrderConfirmation /></ProtectedRoute>} />
+            <Route path="orders" element={<ProtectedRoute><MarketplaceOrders /></ProtectedRoute>} />
+            <Route path="orders/:id" element={<ProtectedRoute><MarketplaceOrderDetail /></ProtectedRoute>} />
+            <Route path="favorites" element={<ProtectedRoute><MarketplaceFavorites /></ProtectedRoute>} />
+            <Route path="terms" element={<MarketplaceTerms />} />
+            <Route path="buying" element={<MarketplaceBuying />} />
+            <Route path="selling" element={<MarketplaceSelling />} />
+            <Route path="shipping" element={<MarketplaceShipping />} />
+          </Route>
+          {/* Legacy top-level /cart → shop cart */}
+          <Route path="/cart" element={<Navigate to="/marketplace/cart" replace />} />
           <Route path="/checkout" element={<ProtectedRoute><Checkout /></ProtectedRoute>} />
           <Route path="/manual" element={<UserManual />} />
           <Route path="/admin-manual" element={<ProtectedRoute requiredRole="ADMIN"><AdminManual /></ProtectedRoute>} />
@@ -123,8 +154,8 @@ function App() {
         </Routes>
         </DownloadProtection>
       </main>
-      <AdBanner placement="FOOTER_TOP" />
-      <Footer />
+      {!inShop && <AdBanner placement="FOOTER_TOP" />}
+      {!inShop && <Footer />}
     </div>
     </ServerWakeUp>
   );

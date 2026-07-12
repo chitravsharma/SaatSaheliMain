@@ -1,5 +1,6 @@
 package com.SaatSaheli.spring.controller;
 
+import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -93,12 +94,22 @@ public class MarketplaceController {
             String contactInfo = (String) body.get("contactInfo");
             String image1Url = (String) body.get("image1Url");
             String image2Url = (String) body.get("image2Url");
+            String image3Url = (String) body.get("image3Url");
+            String image4Url = (String) body.get("image4Url");
 
             if (price == null || price.trim().isEmpty()) return ResponseEntity.badRequest().body(errorMap("Price is required"));
             if (contactInfo == null || contactInfo.trim().isEmpty()) return ResponseEntity.badRequest().body(errorMap("Contact info is required"));
 
+            BigDecimal priceAmount = parseAmount(body.get("priceAmount"));
+            if (priceAmount != null && priceAmount.signum() <= 0) {
+                return ResponseEntity.badRequest().body(errorMap("Price amount must be greater than 0"));
+            }
+            String currency = (String) body.get("currency");
+            Integer quantity = parseQuantity(body.get("quantity"));
+
             MarketplaceListing listing = marketplaceService.createListing(userId, title.trim(), description,
-                    price.trim(), category, condition, contactInfo.trim(), image1Url, image2Url);
+                    price.trim(), category, condition, contactInfo.trim(), image1Url, image2Url,
+                    image3Url, image4Url, priceAmount, currency, quantity);
             return ResponseEntity.ok(listing);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -122,9 +133,20 @@ public class MarketplaceController {
             String contactInfo = (String) body.get("contactInfo");
             String image1Url = (String) body.get("image1Url");
             String image2Url = (String) body.get("image2Url");
+            String image3Url = (String) body.get("image3Url");
+            String image4Url = (String) body.get("image4Url");
+
+            BigDecimal priceAmount = parseAmount(body.get("priceAmount"));
+            if (priceAmount != null && priceAmount.signum() <= 0) {
+                return ResponseEntity.badRequest().body(errorMap("Price amount must be greater than 0"));
+            }
+            String currency = (String) body.get("currency");
+            Integer quantity = parseQuantity(body.get("quantity"));
+            String status = (String) body.get("status"); // ACTIVE | INACTIVE (admin availability)
 
             MarketplaceListing listing = marketplaceService.updateListing(id, userId, title, description,
-                    price, category, condition, contactInfo, image1Url, image2Url);
+                    price, category, condition, contactInfo, image1Url, image2Url,
+                    image3Url, image4Url, priceAmount, currency, quantity, status);
             return ResponseEntity.ok(listing);
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorMap(e.getMessage()));
@@ -148,6 +170,30 @@ public class MarketplaceController {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(errorMap("Failed to delete listing: " + e.getMessage()));
+        }
+    }
+
+    // Parse an optional numeric price from the request body. Returns null when
+    // absent/blank/unparseable so the listing is simply treated as not purchasable.
+    private BigDecimal parseAmount(Object raw) {
+        if (raw == null) return null;
+        String s = raw.toString().trim();
+        if (s.isEmpty()) return null;
+        try {
+            return new BigDecimal(s);
+        } catch (NumberFormatException e) {
+            return null;
+        }
+    }
+
+    private Integer parseQuantity(Object raw) {
+        if (raw == null) return null;
+        String s = raw.toString().trim();
+        if (s.isEmpty()) return null;
+        try {
+            return Math.max(0, Integer.parseInt(s));
+        } catch (NumberFormatException e) {
+            return null;
         }
     }
 

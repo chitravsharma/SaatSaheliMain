@@ -7,6 +7,8 @@ import { BrowserRouter } from 'react-router-dom';
 import { AuthProvider } from './AuthContext';
 import { LanguageProvider } from './LanguageContext';
 import { LoginGateProvider } from './contexts/LoginGateContext';
+import { CartProvider } from './contexts/CartContext';
+import { FavoritesProvider } from './contexts/FavoritesContext';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
@@ -14,7 +16,11 @@ root.render(
     <LanguageProvider>
       <AuthProvider>
         <LoginGateProvider>
-          <App />
+          <CartProvider>
+            <FavoritesProvider>
+              <App />
+            </FavoritesProvider>
+          </CartProvider>
         </LoginGateProvider>
       </AuthProvider>
     </LanguageProvider>

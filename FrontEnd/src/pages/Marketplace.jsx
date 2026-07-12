@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import api from "../utils/api";
-import { optimizeCloudinary } from "../utils/imageUrl";
 import { useAuth } from "../AuthContext";
+import ListingCard from "../components/ListingCard";
 import "./Marketplace.css";
 
 const API = process.env.REACT_APP_API_URL;
@@ -12,6 +12,7 @@ const CONDITION_OPTIONS = ["New", "Like New", "Good", "Fair"];
 
 export default function Marketplace() {
   const { user, isAdmin } = useAuth();
+  const [searchParams] = useSearchParams();
   const userId = user?.userId;
   // Only Admin / SuperAdmin can create and manage listings ("My Listings").
   // Regular users get a browse-only Marketplace.
@@ -23,19 +24,27 @@ export default function Marketplace() {
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
   const [showForm, setShowForm] = useState(false);
-  const [filterCategory, setFilterCategory] = useState("");
-  const [shareCopiedId, setShareCopiedId] = useState(null);
+  const [filterCategory, setFilterCategory] = useState(searchParams.get("category") || "");
 
   // Form state
   const [editingId, setEditingId] = useState(null);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [price, setPrice] = useState("");
+  const [priceAmount, setPriceAmount] = useState("");
+  const [currency, setCurrency] = useState("inr");
   const [category, setCategory] = useState("Other");
   const [condition, setCondition] = useState("Good");
   const [contactInfo, setContactInfo] = useState("");
-  const [image1, setImage1] = useState("");
-  const [image2, setImage2] = useState("");
+  const [quantity, setQuantity] = useState("1");
+  const [status, setStatus] = useState("ACTIVE"); // ACTIVE (available) | INACTIVE (hidden)
+  // Up to 4 photos per listing. images[0] is the primary/cover image.
+  const [images, setImages] = useState(["", "", "", ""]);
+  const setImageAt = (i) => (url) => setImages((prev) => {
+    const next = [...prev];
+    next[i] = url;
+    return next;
+  });
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
 
@@ -67,22 +76,34 @@ export default function Marketplace() {
   const handleImageUpload = async (e, setImage) => {
     const file = e.target.files[0];
     if (!file) return;
+    // Show an instant local preview so the user sees the image immediately,
+    // instead of waiting for the (potentially slow, multi-MB) upload to return
+    // the remote URL. We swap in the uploaded URL on success.
+    const localPreview = URL.createObjectURL(file);
+    setImage(localPreview);
     setUploading(true);
     try {
       const formData = new FormData();
       formData.append("file", file);
       const res = await api.post(`${API}/api/upload`, formData);
       setImage(res.data.url);
-    } catch {
-      setMessage("Failed to upload image");
+    } catch (err) {
+      console.error("Image upload failed:", err?.response?.status, err?.response?.data || err?.message);
+      setImage("");
+      setMessage(err.response?.data?.error
+        || (err.request && !err.response ? "Couldn't reach the server to upload the image." : "Failed to upload image"));
+    } finally {
+      URL.revokeObjectURL(localPreview);
+      setUploading(false);
     }
-    setUploading(false);
   };
 
   const resetForm = () => {
     setEditingId(null);
     setTitle(""); setDescription(""); setPrice(""); setCategory("Other");
-    setCondition("Good"); setContactInfo(""); setImage1(""); setImage2("");
+    setPriceAmount(""); setCurrency("inr");
+    setCondition("Good"); setContactInfo(""); setImages(["", "", "", ""]);
+    setQuantity("1"); setStatus("ACTIVE");
     setShowForm(false);
   };
 
@@ -97,11 +118,17 @@ export default function Marketplace() {
       title: title.trim(),
       description: description.trim(),
       price: price.trim(),
+      priceAmount: priceAmount.trim() === "" ? null : priceAmount.trim(),
+      currency,
       category,
       condition,
       contactInfo: contactInfo.trim(),
-      image1Url: image1,
-      image2Url: image2,
+      image1Url: images[0],
+      image2Url: images[1],
+      image3Url: images[2],
+      image4Url: images[3],
+      quantity: quantity.trim() === "" ? 1 : Math.max(0, parseInt(quantity, 10) || 0),
+      status,
     };
 
     try {
@@ -139,25 +166,21 @@ export default function Marketplace() {
     setTitle(item.title || "");
     setDescription(item.description || "");
     setPrice(item.price || "");
+    setPriceAmount(item.priceAmount != null ? String(item.priceAmount) : "");
+    setCurrency(item.currency || "inr");
     setCategory(item.category || "Other");
     setCondition(item.condition || "Good");
     setContactInfo(item.contactInfo || "");
-    setImage1(item.image1Url || "");
-    setImage2(item.image2Url || "");
+    setImages([
+      item.image1Url || "",
+      item.image2Url || "",
+      item.image3Url || "",
+      item.image4Url || "",
+    ]);
+    setQuantity(String(item.quantity ?? 1));
+    setStatus(item.status === "INACTIVE" ? "INACTIVE" : "ACTIVE");
     setShowForm(true);
     setTab("my");
-  };
-
-  const handleShare = async (item) => {
-    const url = `${window.location.origin}/marketplace`;
-    const text = `Check out "${item.title}" for ${item.price} on Saat Saheli Marketplace!`;
-    if (navigator.share) {
-      try { await navigator.share({ title: item.title, text, url }); } catch { /* cancelled */ }
-    } else {
-      await navigator.clipboard.writeText(`${text}\n${url}`);
-      setShareCopiedId(item.id);
-      setTimeout(() => setShareCopiedId(null), 2000);
-    }
   };
 
   const filteredListings = filterCategory
@@ -165,47 +188,17 @@ export default function Marketplace() {
     : listings;
 
   const renderListingCard = (item, isOwner) => (
-    <div key={item.id} className="mp-card">
-      <div className="mp-card-images">
-        {item.image1Url ? (
-          <img src={optimizeCloudinary(item.image1Url)} alt={item.title} className="mp-card-img" />
-        ) : (
-          <div className="mp-card-img-placeholder">
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-          </div>
-        )}
-        {item.image2Url && (
-          <img src={optimizeCloudinary(item.image2Url)} alt={`${item.title} 2`} className="mp-card-img mp-card-img-2" />
-        )}
-      </div>
-      <div className="mp-card-info">
-        <div className="mp-card-header">
-          <h3 className="mp-card-title">{item.title}</h3>
-          <span className="mp-card-price">{item.price}</span>
-        </div>
-        {item.description && <p className="mp-card-desc">{item.description}</p>}
-        <div className="mp-card-meta">
-          <span className="mp-card-badge mp-badge-category">{item.category}</span>
-          <span className="mp-card-badge mp-badge-condition">{item.condition}</span>
-        </div>
-        {item.sellerName && <span className="mp-card-seller">by {item.sellerName}</span>}
-        <div className="mp-card-contact">
-          <strong>Contact:</strong> {item.contactInfo}
-        </div>
-        <div className="mp-card-actions">
-          <button className="mp-share-btn" onClick={() => handleShare(item)}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
-            {shareCopiedId === item.id ? "Copied!" : "Share"}
-          </button>
-          {isOwner && (
-            <>
-              <button className="bm-btn bm-btn-edit bm-btn-sm" onClick={() => handleEdit(item)}>Edit</button>
-              <button className="bm-btn bm-btn-delete bm-btn-sm" onClick={() => handleDelete(item.id)}>Remove</button>
-            </>
-          )}
-        </div>
-      </div>
-    </div>
+    <ListingCard
+      key={item.id}
+      item={item}
+      onMessage={setMessage}
+      ownerActions={isOwner ? (
+        <>
+          <button className="bm-btn bm-btn-edit bm-btn-sm" onClick={() => handleEdit(item)}>Edit</button>
+          <button className="bm-btn bm-btn-delete bm-btn-sm" onClick={() => handleDelete(item.id)}>Remove</button>
+        </>
+      ) : null}
+    />
   );
 
   return (
@@ -215,14 +208,13 @@ export default function Marketplace() {
           <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
           <path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6"/>
         </svg>
-        Buy / Sell Marketplace
+        Browse the Shop
       </h1>
 
       <p className="mp-disclaimer">
-        SaatSaheli is not responsible for any transactions, items, or outcomes of buying/selling.
-        Buyers and sellers are fully responsible for their actions.
-        <Link to="/policies" className="mp-policy-link"> Read full policies</Link>
-        <Link to="/refund-policy" className="mp-policy-link"> Refund Policy</Link>
+        Sold and shipped by SaatSaheli. Secure Stripe checkout with free cancellation within 24 hours (before shipping).
+        <Link to="/marketplace/terms" className="mp-policy-link"> Terms</Link>
+        <Link to="/marketplace/shipping" className="mp-policy-link"> Shipping &amp; Returns</Link>
       </p>
 
       {message && <div className="mp-message" onClick={() => setMessage("")} role="status">{message}</div>}
@@ -296,21 +288,62 @@ export default function Marketplace() {
                     </select>
                   </div>
                 </div>
+                <div className="mp-field-row">
+                  <div className="mp-field">
+                    <label>Purchase Price (number, enables Add to Cart)</label>
+                    <input type="number" min="0" step="0.01" value={priceAmount} onChange={e => setPriceAmount(e.target.value)} placeholder="e.g. 499  (leave blank for contact-only)" className="bm-input" />
+                  </div>
+                  <div className="mp-field">
+                    <label>Currency</label>
+                    <select value={currency} onChange={e => setCurrency(e.target.value)} className="bm-input">
+                      <option value="inr">INR (₹)</option>
+                      <option value="usd">USD ($)</option>
+                    </select>
+                  </div>
+                </div>
                 <div className="mp-field">
                   <label>Contact Info * (email, phone, or message preference)</label>
                   <input type="text" value={contactInfo} onChange={e => setContactInfo(e.target.value)} placeholder="your@email.com or (555) 123-4567" className="bm-input" />
                 </div>
                 <div className="mp-field-row">
                   <div className="mp-field">
-                    <label>Photo 1 {uploading && "(Uploading...)"}</label>
-                    <input type="file" accept="image/*" onChange={e => handleImageUpload(e, setImage1)} className="bm-input" disabled={uploading} />
-                    {image1 && <img src={image1} alt="Preview 1" className="mp-preview-img" />}
+                    <label>Quantity in stock</label>
+                    <input type="number" min="0" step="1" value={quantity} onChange={e => setQuantity(e.target.value)} className="bm-input" />
+                    <small style={{ color: "var(--text-muted)" }}>Decreases as items sell. 0 = shown as “Sold out”.</small>
                   </div>
                   <div className="mp-field">
-                    <label>Photo 2 (optional) {uploading && "(Uploading...)"}</label>
-                    <input type="file" accept="image/*" onChange={e => handleImageUpload(e, setImage2)} className="bm-input" disabled={uploading} />
-                    {image2 && <img src={image2} alt="Preview 2" className="mp-preview-img" />}
+                    <label>Availability</label>
+                    <select value={status} onChange={e => setStatus(e.target.value)} className="bm-input">
+                      <option value="ACTIVE">Available (shown in shop)</option>
+                      <option value="INACTIVE">Not available (hidden)</option>
+                    </select>
                   </div>
+                </div>
+                <label className="mp-photos-label">Photos (up to 4 — the first is the cover){uploading && " · Uploading…"}</label>
+                <div className="mp-photo-grid">
+                  {images.map((img, i) => (
+                    <div className="mp-field mp-photo-slot" key={i}>
+                      <label>{i === 0 ? "Cover photo" : `Photo ${i + 1} (optional)`}</label>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={e => handleImageUpload(e, setImageAt(i))}
+                        className="bm-input"
+                        disabled={uploading}
+                      />
+                      {img && (
+                        <div className="mp-photo-preview-wrap">
+                          <img src={img} alt={`Preview ${i + 1}`} className="mp-preview-img" />
+                          <button
+                            type="button"
+                            className="mp-photo-remove"
+                            onClick={() => setImageAt(i)("")}
+                            aria-label={`Remove photo ${i + 1}`}
+                          >×</button>
+                        </div>
+                      )}
+                    </div>
+                  ))}
                 </div>
                 <div className="mp-form-actions">
                   <button className="bm-btn bm-btn-create" onClick={handleSave} disabled={saving || uploading}>

@@ -6,6 +6,11 @@ const INACTIVITY_TIMEOUT = 15 * 60 * 1000; // 15 minutes
 
 export function AuthProvider({ children }) {
     const [user, setUser] = useState(null);
+    // True until the mount-time session restore has run. ProtectedRoute must wait
+    // for this before deciding to redirect, otherwise a hard page load (e.g.
+    // returning from Stripe Checkout) renders with user=null and bounces to /Login
+    // before localStorage rehydration completes.
+    const [initializing, setInitializing] = useState(true);
     const [flashAccount, setFlashAccount] = useState(false);
     const timerRef = useRef(null);
     const flashTimerRef = useRef(null);
@@ -44,25 +49,33 @@ export function AuthProvider({ children }) {
     // Restore session on mount — but only if window session is still active
     // and user was not inactive for more than 15 minutes
     useEffect(() => {
-        const saved = localStorage.getItem("saatSaheliUser");
-        if (!saved) return;
+        try {
+            const saved = localStorage.getItem("saatSaheliUser");
+            if (!saved) return;
 
-        const sessionActive = sessionStorage.getItem("saatSaheliSession");
-        if (!sessionActive) {
-            clearAuth();
-            return;
-        }
-
-        const lastActivity = localStorage.getItem("saatSaheliLastActivity");
-        if (lastActivity) {
-            const elapsed = Date.now() - parseInt(lastActivity, 10);
-            if (elapsed > INACTIVITY_TIMEOUT) {
+            const sessionActive = sessionStorage.getItem("saatSaheliSession");
+            if (!sessionActive) {
                 clearAuth();
                 return;
             }
-        }
 
-        try { setUser(JSON.parse(saved)); } catch (e) { clearAuth(); }
+            const lastActivity = localStorage.getItem("saatSaheliLastActivity");
+            if (lastActivity) {
+                const elapsed = Date.now() - parseInt(lastActivity, 10);
+                if (elapsed > INACTIVITY_TIMEOUT) {
+                    clearAuth();
+                    return;
+                }
+            }
+
+            setUser(JSON.parse(saved));
+        } catch (e) {
+            clearAuth();
+        } finally {
+            // Always mark init complete so ProtectedRoute can stop waiting —
+            // on every path, including the early returns above.
+            setInitializing(false);
+        }
     }, [clearAuth]);
 
     // Set up inactivity listeners when user is logged in
@@ -130,7 +143,7 @@ export function AuthProvider({ children }) {
     const isPremiumOrAbove = ["Premium", "Gold", "Creator"].includes(userPlan);
 
     return (
-        <AuthContext.Provider value={{ user, login, logout, isAdmin, isSuperAdmin, userPlan, isPremiumOrAbove, flashAccount, triggerAccountFlash, dismissAccountFlash }}>
+        <AuthContext.Provider value={{ user, initializing, login, logout, isAdmin, isSuperAdmin, userPlan, isPremiumOrAbove, flashAccount, triggerAccountFlash, dismissAccountFlash }}>
             {children}
         </AuthContext.Provider>
     );
