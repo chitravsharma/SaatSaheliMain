@@ -68,7 +68,10 @@ function LoginGate({ returnTo, reason, onClose }) {
       onClose();
       navigate(safeReturn);
     } catch (err) {
-      setError(err.response?.data?.error || "Sign-in failed. Please try again.");
+      console.error("Google sign-in failed:", err?.response?.status, err?.response?.data || err?.message, err);
+      const msg = err.response?.data?.error
+        || (err.request && !err.response ? "Couldn't reach the server. Is the backend running?" : "Sign-in failed. Please try again.");
+      setError(msg);
     } finally {
       setLoading(false);
     }
@@ -112,11 +115,11 @@ function LoginGate({ returnTo, reason, onClose }) {
           <div className="login-gate-google">
             <GoogleLogin
               onSuccess={handleGoogleSuccess}
-              onError={() => setError("Google sign-in failed. Please try again.")}
+              onError={() => { console.error("Google GSI error — origin not authorized for this client ID, FedCM/third-party cookies blocked, or popup blocked"); setError("Google sign-in failed. Please try again."); }}
               text="signin_with"
               shape="rectangular"
               size="large"
-              width="100%"
+              width="340"
             />
           </div>
 
