@@ -43,6 +43,10 @@ public class R2StorageService implements MediaStorageService {
             "image/jpeg", "image/png", "image/gif", "image/webp", "image/bmp", "image/tiff");
 
     private static final String FOLDER = "saatsaheli";
+    // Longest-edge cap for uploaded photos — bounds per-upload memory (avoids
+    // OOM on the 512MB container) and keeps files web-sized. 2400px is plenty
+    // for full-screen viewing on any device.
+    private static final int MAX_UPLOAD_DIM = 2400;
 
     private final S3Client s3;
     private final String bucket;
@@ -93,6 +97,19 @@ public class R2StorageService implements MediaStorageService {
         }
         try {
             String fmt = ct.contains("png") ? "png" : "jpg";
+            // Cap the longest edge. A 24MP phone photo is ~96MB as a BufferedImage
+            // and applying orientation allocates a second buffer — two concurrent
+            // large uploads can OOM the 512MB container. Downscaling keeps peak
+            // memory low AND yields web-appropriate files. scale<=1.0 never
+            // upscales, so small images are untouched.
+            double scale = 1.0;
+            int[] dims = readDimensions(data);
+            if (dims != null) {
+                int longest = Math.max(dims[0], dims[1]);
+                if (longest > MAX_UPLOAD_DIM) {
+                    scale = (double) MAX_UPLOAD_DIM / longest;
+                }
+            }
             ByteArrayOutputStream out = new ByteArrayOutputStream();
             // Thumbnailator reads the EXIF Orientation tag and BAKES the rotation
             // into the pixels (useExifOrientation is on by default), then writes
@@ -101,7 +118,7 @@ public class R2StorageService implements MediaStorageService {
             // orientation flag without applying it, so portrait photos uploaded
             // rotated/flipped.
             Thumbnails.of(new ByteArrayInputStream(data))
-                    .scale(1.0)
+                    .scale(scale)
                     .useExifOrientation(true)
                     .outputFormat(fmt)
                     .toOutputStream(out);
@@ -110,6 +127,25 @@ public class R2StorageService implements MediaStorageService {
         } catch (Exception e) {
             return data; // upload original rather than blocking
         }
+    }
+
+    /** Read just the pixel dimensions from the image header — no full decode,
+     *  so it's cheap even for huge photos. Returns [width, height] or null. */
+    private int[] readDimensions(byte[] data) {
+        try (javax.imageio.stream.ImageInputStream iis =
+                     ImageIO.createImageInputStream(new ByteArrayInputStream(data))) {
+            java.util.Iterator<javax.imageio.ImageReader> it = ImageIO.getImageReaders(iis);
+            if (it.hasNext()) {
+                javax.imageio.ImageReader r = it.next();
+                try {
+                    r.setInput(iis);
+                    return new int[]{ r.getWidth(0), r.getHeight(0) };
+                } finally {
+                    r.dispose();
+                }
+            }
+        } catch (Exception ignored) { }
+        return null;
     }
 
     private String guessExtension(String mimeType, String filename) {
