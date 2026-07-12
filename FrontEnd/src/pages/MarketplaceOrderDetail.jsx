@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import api from "../utils/api";
+import { optimizeCloudinary } from "../utils/imageUrl";
 import "./Marketplace.css";
 import "./Cart.css";
 import "./MarketplaceOrders.css";
@@ -77,8 +78,22 @@ export default function MarketplaceOrderDetail() {
         <div className="cart-list" style={{ marginTop: 16 }}>
           {(order.items || []).map((it) => (
             <div key={it.id || it.listingId} className="cart-row">
+              <div className="cart-row-img">
+                {it.imageUrl ? (
+                  <img src={optimizeCloudinary(it.imageUrl)} alt={it.title} />
+                ) : (
+                  <div className="cart-row-img-ph" />
+                )}
+              </div>
               <div className="cart-row-main">
-                <div className="cart-row-title">{it.title}</div>
+                <div className="cart-row-title">
+                  {it.listingId
+                    ? <Link to={`/marketplace/item/${it.listingId}`} className="mp-card-title-link">{it.title}</Link>
+                    : it.title}
+                </div>
+                {it.listingId && (
+                  <Link to={`/marketplace/item/${it.listingId}`} className="ord-item-link">View listing →</Link>
+                )}
               </div>
               <div className="cart-row-price">{money(it.priceAmount, it.currency || order.currency)}</div>
             </div>

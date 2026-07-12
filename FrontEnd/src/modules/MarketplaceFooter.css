@@ -42,11 +42,3 @@
   color: #a8a29e;
   font-size: 0.82rem;
 }
-
-@media (prefers-color-scheme: dark) {
-  .shop-footer { background: #1c1917; border-top-color: #292524; }
-  .shop-footer-col h4 { color: #fbbf24; }
-  .shop-footer-col p, .shop-footer-col a { color: #d6d3d1; }
-  .shop-footer-col a:hover { color: #fbbf24; }
-  .shop-footer-bottom { border-top-color: #292524; color: #78716c; }
-}

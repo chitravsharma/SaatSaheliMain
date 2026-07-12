@@ -22,6 +22,7 @@ export default function Cart() {
   // Only ACTIVE, priced listings count toward the order.
   const buyable = items.filter(
     (it) => it.listing && it.listing.status === "ACTIVE" && it.listing.priceAmount != null
+      && (it.listing.quantity == null || it.listing.quantity > 0)
   );
   const unavailable = items.filter((it) => !buyable.includes(it));
   const currency = buyable[0]?.listing?.currency || "inr";

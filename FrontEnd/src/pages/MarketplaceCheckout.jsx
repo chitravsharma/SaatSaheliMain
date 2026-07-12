@@ -26,6 +26,7 @@ export default function MarketplaceCheckout() {
 
   const buyable = items.filter(
     (it) => it.listing && it.listing.status === "ACTIVE" && it.listing.priceAmount != null
+      && (it.listing.quantity == null || it.listing.quantity > 0)
   );
   const currency = buyable[0]?.listing?.currency || "inr";
   const subtotal = buyable.reduce((sum, it) => sum + Number(it.listing.priceAmount || 0), 0);

@@ -8,13 +8,13 @@ import "./MarketplaceHome.css";
 const API = process.env.REACT_APP_API_URL || "";
 
 const CATEGORIES = [
-  { name: "Books", emoji: "📚" },
-  { name: "Art", emoji: "🎨" },
-  { name: "Crafts", emoji: "🧶" },
-  { name: "Electronics", emoji: "🔌" },
-  { name: "Clothing", emoji: "👗" },
-  { name: "Services", emoji: "🛠️" },
-  { name: "Other", emoji: "✨" },
+  { name: "Books", emoji: "📚", color: "books" },
+  { name: "Art", emoji: "🎨", color: "art" },
+  { name: "Crafts", emoji: "🧶", color: "crafts" },
+  { name: "Electronics", emoji: "🔌", color: "electronics" },
+  { name: "Clothing", emoji: "👗", color: "clothing" },
+  { name: "Services", emoji: "🛠️", color: "services" },
+  { name: "Other", emoji: "✨", color: "other" },
 ];
 
 export default function MarketplaceHome() {
@@ -39,14 +39,19 @@ export default function MarketplaceHome() {
       {/* Hero */}
       <section className="shop-hero">
         <div className="shop-hero-text">
-          <h1>SaatSaheli Shop</h1>
-          <p>Handpicked books, art, crafts and more — sold and shipped by SaatSaheli.</p>
+          <h1>SaatSaheli <em>Marketplace</em></h1>
+          <p className="shop-hero-tagline">Little finds, big joy.</p>
+          <p>Handpicked books, art, crafts and more — thoughtfully curated, sold and shipped by SaatSaheli.</p>
           <div className="shop-hero-cta">
             <Link to="/marketplace/browse" className="bm-btn bm-btn-create">Shop all items</Link>
             <Link to="/marketplace/orders" className="bm-btn bm-btn-back">Track my orders</Link>
           </div>
+          <div className="shop-hero-badges">
+            <span className="shop-hero-badge">🚚 Secure checkout</span>
+            <span className="shop-hero-badge">↩️ Easy 24-hr cancellations</span>
+            <span className="shop-hero-badge">💛 Curated with care</span>
+          </div>
         </div>
-        <div className="shop-hero-badge">🚚 Secure checkout · Easy 24-hr cancellations</div>
       </section>
 
       {message && <div className="mp-message" onClick={() => setMessage("")} role="status">{message}</div>}
@@ -58,7 +63,7 @@ export default function MarketplaceHome() {
           {CATEGORIES.map((c) => (
             <button
               key={c.name}
-              className="shop-cat-tile"
+              className={`shop-cat-tile cat-${c.color}`}
               onClick={() => navigate(`/marketplace/browse?category=${encodeURIComponent(c.name)}`)}
             >
               <span className="shop-cat-emoji">{c.emoji}</span>

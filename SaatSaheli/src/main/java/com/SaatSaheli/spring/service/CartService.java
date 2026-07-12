@@ -54,6 +54,9 @@ public class CartService {
         if (!"ACTIVE".equalsIgnoreCase(listing.getStatus())) {
             throw new CartException("This item is no longer available");
         }
+        if (listing.getQuantity() <= 0) {
+            throw new CartException("This item is sold out");
+        }
         if (listing.getPriceAmount() == null || listing.getCurrency() == null) {
             throw new CartException("This item isn't available for online purchase");
         }

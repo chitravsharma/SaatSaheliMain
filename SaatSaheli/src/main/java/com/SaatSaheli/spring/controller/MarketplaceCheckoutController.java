@@ -104,7 +104,8 @@ public class MarketplaceCheckoutController {
             for (CartItem it : cart) {
                 MarketplaceListing l = it.getListing();
                 if (l != null && "ACTIVE".equalsIgnoreCase(l.getStatus())
-                        && l.getPriceAmount() != null && l.getCurrency() != null) {
+                        && l.getPriceAmount() != null && l.getCurrency() != null
+                        && l.getQuantity() > 0) {
                     buyable.add(l);
                 }
             }

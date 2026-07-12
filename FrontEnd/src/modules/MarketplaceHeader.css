@@ -109,14 +109,3 @@
   .shop-nav.open { display: flex; }
   .shop-back-link { border-left: none; margin-left: 0; }
 }
-
-/* dark mode friendly */
-@media (prefers-color-scheme: dark) {
-  .shop-header { background: #1c1917; border-bottom-color: #292524; }
-  .shop-nav-link { color: #d6d3d1; }
-  .shop-nav-link:hover, .shop-nav-link.active { background: #292524; color: #fbbf24; }
-  .shop-brand { color: #fbbf24; }
-  .shop-brand strong { color: #f59e0b; }
-  .shop-nav { background: #1c1917; }
-  @media (max-width: 800px) { .shop-nav { background: #1c1917; border-bottom-color: #292524; } }
-}

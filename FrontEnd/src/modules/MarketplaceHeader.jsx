@@ -29,7 +29,7 @@ export default function MarketplaceHeader() {
 
         <nav className={"shop-nav" + (menuOpen ? " open" : "")}>
           <NavLink to="/marketplace" end className={navClass} onClick={close}>Home</NavLink>
-          <NavLink to="/marketplace/browse" className={navClass} onClick={close}>Browse</NavLink>
+          <NavLink to="/marketplace/browse" className={navClass} onClick={close}>Shop</NavLink>
           {user && <NavLink to="/marketplace/orders" className={navClass} onClick={close}>Orders</NavLink>}
           {user && <NavLink to="/marketplace/favorites" className={navClass} onClick={close}>Favorites</NavLink>}
 

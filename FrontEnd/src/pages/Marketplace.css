@@ -1,3 +1,14 @@
+/* Shop accent system — shared across every /marketplace page so the storefront
+   reads as one product. Rose = interactive accent, terracotta = headings,
+   warm gold = warnings. Semantic status colors (badges) are intentionally
+   separate and defined per-status. */
+:root {
+  --shop-rose: #c04d6e;
+  --shop-rose-soft: #eaa4b8;
+  --shop-terracotta: #7c2d12;
+  --shop-gold: #b45309;
+}
+
 /* Marketplace page */
 .mp-page {
   max-width: 960px;
@@ -8,11 +19,11 @@
 }
 
 .mp-page h1 {
-  color: var(--accent-gold);
-  font-size: 1.75rem;
+  color: var(--shop-terracotta, #7c2d12);
+  font-size: 1.9rem;
   font-weight: 700;
   margin-bottom: 12px;
-  font-family: 'Georgia', 'Times New Roman', serif;
+  font-family: 'Playfair Display', 'Georgia', 'Times New Roman', serif;
 }
 
 .mp-disclaimer {
@@ -73,7 +84,7 @@
 }
 
 .mp-tabs button.active {
-  background: var(--accent-gold);
+  background: var(--shop-rose, #c04d6e);
   color: #fff;
 }
 
@@ -98,9 +109,9 @@
 }
 
 .mp-filter-bar button.active {
-  background: var(--accent-blue);
+  background: var(--shop-rose, #c04d6e);
   color: #fff;
-  border-color: var(--accent-blue);
+  border-color: var(--shop-rose, #c04d6e);
 }
 
 /* Grid */
@@ -149,12 +160,13 @@
 
 .mp-card-img-placeholder {
   width: 100%;
-  height: 120px;
+  height: 180px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--bg-card-alt);
+  background: linear-gradient(135deg, #fbeadd 0%, #fce7ec 50%, #f1e9f8 100%);
 }
+.mp-card-img-placeholder svg { stroke: #c98a6a; opacity: 0.8; }
 
 .mp-card-info {
   padding: 14px;
@@ -177,6 +189,12 @@
   margin: 0;
   line-height: 1.3;
 }
+.mp-card-img-link { display: block; }
+.mp-card-title-link {
+  color: inherit;
+  text-decoration: none;
+}
+.mp-card-title-link:hover { color: var(--accent-gold-hover); }
 
 .mp-card-price {
   font-size: 1.1rem;
@@ -213,8 +231,8 @@
 }
 
 .mp-badge-category {
-  background: #eff6ff;
-  color: var(--accent-blue);
+  background: #fbeadd;
+  color: #9a4a1e;
 }
 
 .mp-badge-condition {
@@ -222,9 +240,14 @@
   color: #059669;
 }
 
+.mp-badge-stock {
+  background: #fef3c7;
+  color: #92400e;
+}
+
 .mp-card-seller {
   font-size: 0.8rem;
-  color: var(--accent-blue-light);
+  color: var(--shop-rose, #c04d6e);
   font-style: italic;
 }
 
@@ -316,6 +339,57 @@
   border: 1px solid var(--border-default);
 }
 
+/* Multi-photo upload grid (up to 4) */
+.mp-photos-label {
+  display: block;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 8px;
+}
+.mp-photo-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 12px;
+  margin-bottom: 14px;
+}
+.mp-photo-slot { margin-bottom: 0; }
+.mp-photo-slot label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+}
+.mp-photo-preview-wrap {
+  position: relative;
+  display: inline-block;
+  margin-top: 8px;
+}
+.mp-photo-preview-wrap .mp-preview-img {
+  margin-top: 0;
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  height: 110px;
+  object-fit: cover;
+}
+.mp-photo-remove {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: none;
+  background: #c04d6e;
+  color: #fff;
+  font-size: 1rem;
+  line-height: 1;
+  cursor: pointer;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
+}
+.mp-photo-remove:hover { background: #a03c58; }
+
 .mp-form-actions {
   display: flex;
   gap: 8px;
@@ -382,12 +456,14 @@
   height: 34px;
   border-radius: 50%;
   border: none;
-  background: rgba(0, 0, 0, 0.35);
+  background: rgba(255, 255, 255, 0.85);
+  box-shadow: 0 2px 6px rgba(124, 45, 18, 0.18);
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   transition: transform 0.1s ease, background 0.15s ease;
 }
-.mp-fav-btn:hover { background: rgba(0, 0, 0, 0.5); transform: scale(1.08); }
-.mp-fav-btn.active { background: rgba(255, 255, 255, 0.92); }
+.mp-fav-btn svg { stroke: #c04d6e; }
+.mp-fav-btn:hover { background: #fff; transform: scale(1.08); }
+.mp-fav-btn.active { background: #fff; }

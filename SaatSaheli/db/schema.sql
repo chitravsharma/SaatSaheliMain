@@ -413,11 +413,14 @@ CREATE TABLE public.marketplace_listings (
     description text,
     image1_url character varying(255),
     image2_url character varying(255),
+    image3_url character varying(255),
+    image4_url character varying(255),
     modified_date timestamp(6) without time zone,
     price character varying(255) NOT NULL,
     price_amount numeric(12,2),
     currency character varying(255),
     status character varying(255),
+    quantity integer DEFAULT 1,
     title character varying(255) NOT NULL,
     user_id bigint NOT NULL
 );

@@ -1,0 +1,135 @@
+/* ── Marketplace item detail ── */
+.mp-detail { max-width: 1000px; }
+
+.mp-detail-back {
+  display: inline-block;
+  margin-bottom: 18px;
+  color: #c04d6e;
+  font-weight: 600;
+  text-decoration: none;
+  font-size: 0.92rem;
+}
+.mp-detail-back:hover { color: #a0532b; }
+
+.mp-detail-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 32px;
+  align-items: start;
+}
+
+/* Gallery */
+.mp-detail-main-img {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  border-radius: 16px;
+  overflow: hidden;
+  background: var(--bg-card-alt);
+  border: 1px solid var(--border-default);
+}
+.mp-detail-main-img img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.mp-detail-img-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #fbeadd 0%, #fce7ec 50%, #f1e9f8 100%);
+}
+.mp-detail-sold {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  background: #6b7280;
+  color: #fff;
+  padding: 5px 14px;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.mp-detail-thumbs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 12px;
+}
+.mp-detail-thumb {
+  width: 72px;
+  height: 72px;
+  padding: 0;
+  border: 2px solid transparent;
+  border-radius: 10px;
+  overflow: hidden;
+  cursor: pointer;
+  background: var(--bg-card-alt);
+  transition: border-color 0.15s ease;
+}
+.mp-detail-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.mp-detail-thumb.active { border-color: #c04d6e; }
+.mp-detail-thumb:hover { border-color: #eaa4b8; }
+
+/* Info */
+.mp-detail-title {
+  font-family: 'Playfair Display', 'Georgia', serif;
+  font-size: 2rem;
+  font-weight: 700;
+  color: #7c2d12;
+  margin: 0 0 8px;
+  line-height: 1.15;
+}
+.mp-detail-price {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #059669;
+  margin-bottom: 14px;
+}
+.mp-detail-seller {
+  margin: 12px 0 0;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.mp-detail-desc { margin-top: 22px; }
+.mp-detail-desc h2 {
+  font-size: 1.05rem;
+  color: #7c2d12;
+  margin: 0 0 8px;
+}
+.mp-detail-desc p {
+  color: var(--text-primary);
+  line-height: 1.65;
+  margin: 0;
+  white-space: pre-wrap;
+}
+
+.mp-detail-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  margin-top: 26px;
+}
+
+.mp-detail-login-hint {
+  margin-top: 14px;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+.mp-detail-login-hint a { color: #c04d6e; font-weight: 600; }
+
+.mp-detail-disclaimer { margin-top: 24px; }
+
+@media (max-width: 760px) {
+  .mp-detail-grid { grid-template-columns: 1fr; gap: 22px; }
+  .mp-detail-title { font-size: 1.6rem; }
+}

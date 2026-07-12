@@ -95,15 +95,15 @@ public class MarketplaceOrderService {
         captureShipping(order, session);
         orderRepo.save(order);
 
-        // Mark each purchased listing SOLD so it leaves the active browse grid.
+        // Decrement stock for each purchased unit. The listing STAYS visible in
+        // the shop (status unchanged) — quantity 0 just means "sold out". Only an
+        // admin ever removes a listing.
         for (OrderItem oi : order.getItems()) {
             if (oi.getListingId() == null) continue;
             listingRepo.findById(oi.getListingId()).ifPresent(listing -> {
-                if (!"SOLD".equalsIgnoreCase(listing.getStatus())) {
-                    listing.setStatus("SOLD");
-                    listing.setModifiedDate(LocalDateTime.now());
-                    listingRepo.save(listing);
-                }
+                listing.setQuantity(Math.max(0, listing.getQuantity() - 1));
+                listing.setModifiedDate(LocalDateTime.now());
+                listingRepo.save(listing);
             });
         }
 
@@ -191,15 +191,13 @@ public class MarketplaceOrderService {
         order.setCancelReason(reason);
         orderRepo.save(order);
 
-        // Relist each purchased listing so it can be bought again.
+        // Restore stock for each refunded unit so it can be bought again.
         for (OrderItem oi : order.getItems()) {
             if (oi.getListingId() == null) continue;
             listingRepo.findById(oi.getListingId()).ifPresent(listing -> {
-                if ("SOLD".equalsIgnoreCase(listing.getStatus())) {
-                    listing.setStatus("ACTIVE");
-                    listing.setModifiedDate(LocalDateTime.now());
-                    listingRepo.save(listing);
-                }
+                listing.setQuantity(listing.getQuantity() + 1);
+                listing.setModifiedDate(LocalDateTime.now());
+                listingRepo.save(listing);
             });
         }
 

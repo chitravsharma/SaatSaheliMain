@@ -30,9 +30,11 @@ public class MarketplaceService {
     public MarketplaceListing createListing(Long userId, String title, String description,
                                              String price, String category, String condition,
                                              String contactInfo, String image1Url, String image2Url,
-                                             BigDecimal priceAmount, String currency) {
+                                             String image3Url, String image4Url,
+                                             BigDecimal priceAmount, String currency, Integer quantity) {
         LocalDateTime now = LocalDateTime.now();
         MarketplaceListing listing = new MarketplaceListing();
+        listing.setQuantity(quantity != null && quantity >= 0 ? quantity : 1);
         listing.setUserId(userId);
         listing.setTitle(title);
         listing.setDescription(description);
@@ -44,6 +46,8 @@ public class MarketplaceService {
         listing.setContactInfo(contactInfo);
         listing.setImage1Url(image1Url);
         listing.setImage2Url(image2Url);
+        listing.setImage3Url(image3Url);
+        listing.setImage4Url(image4Url);
         listing.setStatus("ACTIVE");
         listing.setCreatedDate(now);
         listing.setModifiedDate(now);
@@ -53,7 +57,9 @@ public class MarketplaceService {
     public MarketplaceListing updateListing(Long listingId, Long userId, String title, String description,
                                              String price, String category, String condition,
                                              String contactInfo, String image1Url, String image2Url,
-                                             BigDecimal priceAmount, String currency) {
+                                             String image3Url, String image4Url,
+                                             BigDecimal priceAmount, String currency,
+                                             Integer quantity, String status) {
         Optional<MarketplaceListing> opt = listingRepo.findById(listingId);
         if (opt.isEmpty()) throw new RuntimeException("Listing not found");
         MarketplaceListing listing = opt.get();
@@ -72,6 +78,11 @@ public class MarketplaceService {
         if (contactInfo != null) listing.setContactInfo(contactInfo);
         if (image1Url != null) listing.setImage1Url(image1Url);
         if (image2Url != null) listing.setImage2Url(image2Url);
+        if (image3Url != null) listing.setImage3Url(image3Url);
+        if (image4Url != null) listing.setImage4Url(image4Url);
+        if (quantity != null) listing.setQuantity(Math.max(0, quantity));
+        // Admin availability toggle: ACTIVE (shown/buyable) or INACTIVE (hidden).
+        if (status != null && !status.isBlank()) listing.setStatus(status);
         listing.setModifiedDate(LocalDateTime.now());
         return listingRepo.save(listing);
     }

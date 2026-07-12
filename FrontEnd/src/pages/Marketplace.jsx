@@ -36,8 +36,15 @@ export default function Marketplace() {
   const [category, setCategory] = useState("Other");
   const [condition, setCondition] = useState("Good");
   const [contactInfo, setContactInfo] = useState("");
-  const [image1, setImage1] = useState("");
-  const [image2, setImage2] = useState("");
+  const [quantity, setQuantity] = useState("1");
+  const [status, setStatus] = useState("ACTIVE"); // ACTIVE (available) | INACTIVE (hidden)
+  // Up to 4 photos per listing. images[0] is the primary/cover image.
+  const [images, setImages] = useState(["", "", "", ""]);
+  const setImageAt = (i) => (url) => setImages((prev) => {
+    const next = [...prev];
+    next[i] = url;
+    return next;
+  });
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
 
@@ -69,23 +76,34 @@ export default function Marketplace() {
   const handleImageUpload = async (e, setImage) => {
     const file = e.target.files[0];
     if (!file) return;
+    // Show an instant local preview so the user sees the image immediately,
+    // instead of waiting for the (potentially slow, multi-MB) upload to return
+    // the remote URL. We swap in the uploaded URL on success.
+    const localPreview = URL.createObjectURL(file);
+    setImage(localPreview);
     setUploading(true);
     try {
       const formData = new FormData();
       formData.append("file", file);
       const res = await api.post(`${API}/api/upload`, formData);
       setImage(res.data.url);
-    } catch {
-      setMessage("Failed to upload image");
+    } catch (err) {
+      console.error("Image upload failed:", err?.response?.status, err?.response?.data || err?.message);
+      setImage("");
+      setMessage(err.response?.data?.error
+        || (err.request && !err.response ? "Couldn't reach the server to upload the image." : "Failed to upload image"));
+    } finally {
+      URL.revokeObjectURL(localPreview);
+      setUploading(false);
     }
-    setUploading(false);
   };
 
   const resetForm = () => {
     setEditingId(null);
     setTitle(""); setDescription(""); setPrice(""); setCategory("Other");
     setPriceAmount(""); setCurrency("inr");
-    setCondition("Good"); setContactInfo(""); setImage1(""); setImage2("");
+    setCondition("Good"); setContactInfo(""); setImages(["", "", "", ""]);
+    setQuantity("1"); setStatus("ACTIVE");
     setShowForm(false);
   };
 
@@ -105,8 +123,12 @@ export default function Marketplace() {
       category,
       condition,
       contactInfo: contactInfo.trim(),
-      image1Url: image1,
-      image2Url: image2,
+      image1Url: images[0],
+      image2Url: images[1],
+      image3Url: images[2],
+      image4Url: images[3],
+      quantity: quantity.trim() === "" ? 1 : Math.max(0, parseInt(quantity, 10) || 0),
+      status,
     };
 
     try {
@@ -149,8 +171,14 @@ export default function Marketplace() {
     setCategory(item.category || "Other");
     setCondition(item.condition || "Good");
     setContactInfo(item.contactInfo || "");
-    setImage1(item.image1Url || "");
-    setImage2(item.image2Url || "");
+    setImages([
+      item.image1Url || "",
+      item.image2Url || "",
+      item.image3Url || "",
+      item.image4Url || "",
+    ]);
+    setQuantity(String(item.quantity ?? 1));
+    setStatus(item.status === "INACTIVE" ? "INACTIVE" : "ACTIVE");
     setShowForm(true);
     setTab("my");
   };
@@ -279,15 +307,43 @@ export default function Marketplace() {
                 </div>
                 <div className="mp-field-row">
                   <div className="mp-field">
-                    <label>Photo 1 {uploading && "(Uploading...)"}</label>
-                    <input type="file" accept="image/*" onChange={e => handleImageUpload(e, setImage1)} className="bm-input" disabled={uploading} />
-                    {image1 && <img src={image1} alt="Preview 1" className="mp-preview-img" />}
+                    <label>Quantity in stock</label>
+                    <input type="number" min="0" step="1" value={quantity} onChange={e => setQuantity(e.target.value)} className="bm-input" />
+                    <small style={{ color: "var(--text-muted)" }}>Decreases as items sell. 0 = shown as “Sold out”.</small>
                   </div>
                   <div className="mp-field">
-                    <label>Photo 2 (optional) {uploading && "(Uploading...)"}</label>
-                    <input type="file" accept="image/*" onChange={e => handleImageUpload(e, setImage2)} className="bm-input" disabled={uploading} />
-                    {image2 && <img src={image2} alt="Preview 2" className="mp-preview-img" />}
+                    <label>Availability</label>
+                    <select value={status} onChange={e => setStatus(e.target.value)} className="bm-input">
+                      <option value="ACTIVE">Available (shown in shop)</option>
+                      <option value="INACTIVE">Not available (hidden)</option>
+                    </select>
                   </div>
+                </div>
+                <label className="mp-photos-label">Photos (up to 4 — the first is the cover){uploading && " · Uploading…"}</label>
+                <div className="mp-photo-grid">
+                  {images.map((img, i) => (
+                    <div className="mp-field mp-photo-slot" key={i}>
+                      <label>{i === 0 ? "Cover photo" : `Photo ${i + 1} (optional)`}</label>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={e => handleImageUpload(e, setImageAt(i))}
+                        className="bm-input"
+                        disabled={uploading}
+                      />
+                      {img && (
+                        <div className="mp-photo-preview-wrap">
+                          <img src={img} alt={`Preview ${i + 1}`} className="mp-preview-img" />
+                          <button
+                            type="button"
+                            className="mp-photo-remove"
+                            onClick={() => setImageAt(i)("")}
+                            aria-label={`Remove photo ${i + 1}`}
+                          >×</button>
+                        </div>
+                      )}
+                    </div>
+                  ))}
                 </div>
                 <div className="mp-form-actions">
                   <button className="bm-btn bm-btn-create" onClick={handleSave} disabled={saving || uploading}>

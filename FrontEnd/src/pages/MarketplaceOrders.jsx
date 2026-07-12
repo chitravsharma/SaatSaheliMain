@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import api from "../utils/api";
+import { optimizeCloudinary } from "../utils/imageUrl";
 import "./Marketplace.css";
 import "./MarketplaceOrders.css";
 
@@ -48,8 +49,18 @@ export default function MarketplaceOrders() {
           <div className="ord-list">
             {orders.map((o) => (
               <Link key={o.id} to={`/marketplace/orders/${o.id}`} className="ord-row">
+                <div className="ord-row-thumb">
+                  {o.items?.[0]?.imageUrl ? (
+                    <img src={optimizeCloudinary(o.items[0].imageUrl)} alt="" />
+                  ) : (
+                    <div className="ord-row-thumb-ph" />
+                  )}
+                </div>
                 <div className="ord-row-main">
                   <div className="ord-row-number">{o.orderNumber}</div>
+                  <div className="ord-row-items">
+                    {(o.items || []).map((it) => it.title).filter(Boolean).join(", ") || "Order"}
+                  </div>
                   <div className="ord-row-meta">
                     {o.createdDate?.slice(0, 10)} · {o.items?.length || 0} item{(o.items?.length || 0) === 1 ? "" : "s"}
                   </div>
