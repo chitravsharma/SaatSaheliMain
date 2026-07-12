@@ -3,7 +3,14 @@ import { Navigate } from "react-router-dom";
 import { useAuth } from "../AuthContext";
 
 const ProtectedRoute = ({ children, requiredRole }) => {
-    const { user } = useAuth();
+    const { user, initializing } = useAuth();
+
+    // Wait for the mount-time session restore before deciding. Without this, a
+    // hard page load of a protected route (e.g. returning from Stripe Checkout)
+    // redirects to /Login before localStorage rehydration runs.
+    if (initializing) {
+        return null;
+    }
 
     if (!user) {
         return <Navigate to="/Login" replace />;
