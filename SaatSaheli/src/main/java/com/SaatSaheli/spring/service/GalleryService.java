@@ -134,12 +134,15 @@ public class GalleryService {
         img.setCreatedDate(LocalDateTime.now());
         GalleryImage saved = imageRepo.save(img);
 
-        // Set cover image if first image
+        // Set cover image if this is the first image.
         if (gallery.getCoverImageUrl() == null) {
             gallery.setCoverImageUrl(imageUrl);
-            gallery.setModifiedDate(LocalDateTime.now());
-            galleryRepo.save(gallery);
         }
+        // Bump modifiedDate on EVERY image add (not just the first) so a gallery
+        // that gains a new item surfaces first on the home page, which sorts
+        // galleries by modifiedDate descending.
+        gallery.setModifiedDate(LocalDateTime.now());
+        galleryRepo.save(gallery);
         return saved;
     }
 
