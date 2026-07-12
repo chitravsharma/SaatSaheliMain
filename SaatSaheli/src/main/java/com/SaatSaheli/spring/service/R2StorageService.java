@@ -10,6 +10,7 @@ import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.S3Configuration;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
+import net.coobird.thumbnailator.Thumbnails;
 
 import javax.imageio.IIOImage;
 import javax.imageio.ImageIO;
@@ -84,14 +85,29 @@ public class R2StorageService implements MediaStorageService {
         if (contentType == null || !IMAGE_TYPES.contains(contentType.toLowerCase())) {
             return data;
         }
+        String ct = contentType.toLowerCase();
+        // GIF/WebP: leave untouched — they don't carry the EXIF orientation
+        // problem and re-encoding them here would lose animation/alpha.
+        if (ct.contains("gif") || ct.contains("webp")) {
+            return data;
+        }
         try {
-            BufferedImage img = ImageIO.read(new ByteArrayInputStream(data));
-            if (img == null) return data;
-            String fmt = contentType.contains("png") ? "png" : "jpg";
+            String fmt = ct.contains("png") ? "png" : "jpg";
             ByteArrayOutputStream out = new ByteArrayOutputStream();
-            ImageIO.write(img, fmt, out);
-            return out.toByteArray();
-        } catch (IOException e) {
+            // Thumbnailator reads the EXIF Orientation tag and BAKES the rotation
+            // into the pixels (useExifOrientation is on by default), then writes
+            // without EXIF. This both strips metadata (privacy) AND keeps phone
+            // photos upright — the previous ImageIO round-trip dropped the
+            // orientation flag without applying it, so portrait photos uploaded
+            // rotated/flipped.
+            Thumbnails.of(new ByteArrayInputStream(data))
+                    .scale(1.0)
+                    .useExifOrientation(true)
+                    .outputFormat(fmt)
+                    .toOutputStream(out);
+            byte[] result = out.toByteArray();
+            return result.length > 0 ? result : data;
+        } catch (Exception e) {
             return data; // upload original rather than blocking
         }
     }
