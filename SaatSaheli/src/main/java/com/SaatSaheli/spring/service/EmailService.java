@@ -38,6 +38,15 @@ public class EmailService {
     private boolean emailEnabled;
 
     /**
+     * Dev-only catch-all. When set (comma-separated), every outgoing email is
+     * redirected to these addresses instead of the real recipient, and the
+     * intended recipient is stamped into the subject. Overrides emailEnabled so
+     * you can test real delivery to safe inboxes. Empty in prod.
+     */
+    @Value("${app.email.redirect-to:}")
+    private String redirectTo;
+
+    /**
      * Send a password reset email with the temporary password.
      */
     public void sendPasswordResetEmail(String toEmail, String tempPassword) {
@@ -195,21 +204,34 @@ public class EmailService {
     }
 
     private void sendHtmlEmail(String to, String subject, String htmlBody) {
-        if (!emailEnabled) {
+        String[] recipients;
+        String finalSubject = subject;
+        String redirect = redirectTo != null ? redirectTo.trim() : "";
+
+        if (!redirect.isEmpty()) {
+            // Dev catch-all: send to the test inboxes, stamp the real recipient.
+            recipients = java.util.Arrays.stream(redirect.split(","))
+                    .map(String::trim).filter(s -> !s.isEmpty()).toArray(String[]::new);
+            finalSubject = "[DEV → " + to + "] " + subject;
+        } else if (!emailEnabled) {
             log.info("Email delivery disabled (app.email.enabled=false) — skipping send to {} — subject: {}", to, subject);
             return;
+        } else {
+            recipients = new String[]{ to };
         }
+        if (recipients.length == 0) return;
+
         try {
             MimeMessage mimeMessage = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, "utf-8");
             helper.setFrom(fromAddress);
-            helper.setTo(to);
-            helper.setSubject(subject);
+            helper.setTo(recipients);
+            helper.setSubject(finalSubject);
             helper.setText(htmlBody, true);
             mailSender.send(mimeMessage);
-            log.info("Email sent to {} — subject: {}", to, subject);
+            log.info("Email sent to {} — subject: {}", String.join(",", recipients), finalSubject);
         } catch (MessagingException e) {
-            log.error("Failed to send email to {} — {}", to, e.getMessage());
+            log.error("Failed to send email to {} — {}", String.join(",", recipients), e.getMessage());
             throw new RuntimeException("Email delivery failed", e);
         }
     }
