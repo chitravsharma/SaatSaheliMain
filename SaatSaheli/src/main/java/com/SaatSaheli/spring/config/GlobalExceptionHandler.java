@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.context.request.async.AsyncRequestNotUsableException;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
@@ -44,6 +45,16 @@ public class GlobalExceptionHandler {
         log.debug("No static resource: {}", e.getResourcePath());
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
                 .body(Map.of("error", "Not found"));
+    }
+
+    // A path/query value that can't be converted to the expected type — e.g. a
+    // bot hitting /api/articles/public (where {id} expects a number). Client error,
+    // not a server fault: return a clean 400 without an ERROR-level stack trace.
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<?> handleTypeMismatch(MethodArgumentTypeMismatchException e) {
+        log.debug("Bad request parameter '{}': could not convert '{}'", e.getName(), e.getValue());
+        return ResponseEntity.badRequest()
+                .body(Map.of("error", "Invalid value for '" + e.getName() + "'"));
     }
 
     @ExceptionHandler(Exception.class)
