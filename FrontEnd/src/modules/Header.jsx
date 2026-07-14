@@ -5,6 +5,7 @@ import { useAuth } from '../AuthContext';
 import { useCart } from '../contexts/CartContext';
 import { useStrings, useLanguage } from '../LanguageContext';
 import AdBanner from './AdBanner';
+import NotificationBell from './NotificationBell';
 import './Header.css';
 
 const welcomeMessage = process.env.REACT_APP_WELCOME_MESSAGE;
@@ -210,6 +211,8 @@ const Header = () => {
             </Link>
           )}
           {welcomeMessage && <span className="welcome-msg" aria-live="polite">{welcomeMessage}</span>}
+
+          {user && <NotificationBell />}
 
           {user ? (
             <div className="header-user-menu" ref={menuRef}>

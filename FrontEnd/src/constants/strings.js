@@ -38,6 +38,18 @@ export const en = {
     language: "Language",
   },
 
+  notifications: {
+    title: "Notifications",
+    markAllRead: "Mark all read",
+    empty: "No notifications yet",
+    loading: "Loading\u2026",
+    unread: "unread",
+    justNow: "just now",
+    minute: "m",
+    hour: "h",
+    day: "d",
+  },
+
   footer: {
     about: "About",
     contactUs: "Contact Us",
@@ -731,6 +743,18 @@ export const hi = {
     myAccount: "मेरा खाता",
     logout: "लॉगआउट",
     language: "भाषा",
+  },
+
+  notifications: {
+    title: "सूचनाएं",
+    markAllRead: "सभी पढ़ी हुई चिह्नित करें",
+    empty: "अभी तक कोई सूचना नहीं",
+    loading: "लोड हो रहा है…",
+    unread: "अपठित",
+    justNow: "अभी",
+    minute: "मि",
+    hour: "घं",
+    day: "दि",
   },
 
   footer: {

@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import api, { profileUrl } from "../utils/api";
 import { optimizeCloudinary } from "../utils/imageUrl";
 import { useAuth } from "../AuthContext";
@@ -11,6 +11,7 @@ const TARGET_TYPE = "RECIPE";
 
 export default function RecipeView() {
   const { recipeId } = useParams();
+  const [searchParams] = useSearchParams();
   const { user } = useAuth();
   const navigate = useNavigate();
 
@@ -39,6 +40,19 @@ export default function RecipeView() {
       .catch(() => setError("Recipe not found."))
       .finally(() => setLoading(false));
   }, [recipeId]);
+
+  // Arrived from a notification / "Comments" link (?focus=comments): open the
+  // comment section and scroll it into view.
+  useEffect(() => {
+    if (searchParams.get("focus") !== "comments") return;
+    setShowComments(true);
+    const t = setTimeout(() => {
+      const target = commentInputRef.current || loginPromptRef.current;
+      target?.scrollIntoView({ behavior: "smooth", block: "center" });
+      target?.focus?.();
+    }, 600);
+    return () => clearTimeout(t);
+  }, [recipeId, searchParams]);
 
   useEffect(() => {
     if (!recipeId) return;

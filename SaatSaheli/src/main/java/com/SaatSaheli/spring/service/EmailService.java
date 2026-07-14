@@ -31,6 +31,22 @@ public class EmailService {
     private String fromAddress;
 
     /**
+     * Master switch for real email delivery. Set false in dev/test so local
+     * runs never send mail to real users (comments, orders, password resets).
+     */
+    @Value("${app.email.enabled:true}")
+    private boolean emailEnabled;
+
+    /**
+     * Dev-only catch-all. When set (comma-separated), every outgoing email is
+     * redirected to these addresses instead of the real recipient, and the
+     * intended recipient is stamped into the subject. Overrides emailEnabled so
+     * you can test real delivery to safe inboxes. Empty in prod.
+     */
+    @Value("${app.email.redirect-to:}")
+    private String redirectTo;
+
+    /**
      * Send a password reset email with the temporary password.
      */
     public void sendPasswordResetEmail(String toEmail, String tempPassword) {
@@ -93,6 +109,34 @@ public class EmailService {
                 """.formatted(heading, senderName, senderEmail, senderEmail, msgSubject, message, senderEmail, senderEmail);
 
         sendHtmlEmail(fromAddress, subject, body);
+    }
+
+    /**
+     * Notify a content creator that someone commented on their item.
+     * itemLabel is a human word for the content type (e.g. "book", "article").
+     */
+    public void sendCommentNotification(String toEmail, String recipientName, String actorName,
+                                        String itemLabel, String itemTitle, String commentSnippet, String link) {
+        String safeActor = escape(actorName != null ? actorName : "Someone");
+        String safeTitle = escape(itemTitle != null ? itemTitle : "your " + itemLabel);
+        String greeting = (recipientName != null && !recipientName.isBlank())
+                ? "Hi " + escape(recipientName) + "," : "Hi,";
+        String subject = "SaatSaheli — " + safeActor + " commented on your " + itemLabel;
+        String body = """
+                <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 520px; margin: 0 auto; padding: 32px;">
+                  <h2 style="color: #b45309;">New comment on your %s</h2>
+                  <p>%s</p>
+                  <p><strong>%s</strong> commented on <strong>"%s"</strong>:</p>
+                  <div style="background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; padding: 16px; margin: 16px 0; white-space: pre-wrap; color: #78350f;">%s</div>
+                  <p style="margin: 24px 0;">
+                    <a href="%s" style="background: #b45309; color: #fff; text-decoration: none; padding: 10px 20px; border-radius: 6px; display: inline-block;">View comment</a>
+                  </p>
+                  <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 24px 0;" />
+                  <p style="color: #9ca3af; font-size: 0.85rem;">You're receiving this because someone commented on content you created on SaatSaheli.<br/>— The SaatSaheli Team</p>
+                </div>
+                """.formatted(itemLabel, greeting, safeActor, safeTitle, escape(commentSnippet), link);
+
+        sendHtmlEmail(toEmail, subject, body);
     }
 
     /**
@@ -160,17 +204,34 @@ public class EmailService {
     }
 
     private void sendHtmlEmail(String to, String subject, String htmlBody) {
+        String[] recipients;
+        String finalSubject = subject;
+        String redirect = redirectTo != null ? redirectTo.trim() : "";
+
+        if (!redirect.isEmpty()) {
+            // Dev catch-all: send to the test inboxes, stamp the real recipient.
+            recipients = java.util.Arrays.stream(redirect.split(","))
+                    .map(String::trim).filter(s -> !s.isEmpty()).toArray(String[]::new);
+            finalSubject = "[DEV → " + to + "] " + subject;
+        } else if (!emailEnabled) {
+            log.info("Email delivery disabled (app.email.enabled=false) — skipping send to {} — subject: {}", to, subject);
+            return;
+        } else {
+            recipients = new String[]{ to };
+        }
+        if (recipients.length == 0) return;
+
         try {
             MimeMessage mimeMessage = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, "utf-8");
             helper.setFrom(fromAddress);
-            helper.setTo(to);
-            helper.setSubject(subject);
+            helper.setTo(recipients);
+            helper.setSubject(finalSubject);
             helper.setText(htmlBody, true);
             mailSender.send(mimeMessage);
-            log.info("Email sent to {} — subject: {}", to, subject);
+            log.info("Email sent to {} — subject: {}", String.join(",", recipients), finalSubject);
         } catch (MessagingException e) {
-            log.error("Failed to send email to {} — {}", to, e.getMessage());
+            log.error("Failed to send email to {} — {}", String.join(",", recipients), e.getMessage());
             throw new RuntimeException("Email delivery failed", e);
         }
     }

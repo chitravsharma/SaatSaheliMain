@@ -62,6 +62,19 @@ function GalleryView() {
     }
   }, [gallery, searchParams]);
 
+  // Arrived from a notification / "Comments" link (?focus=comments): open the
+  // gallery comment section and scroll it into view.
+  useEffect(() => {
+    if (searchParams.get("focus") !== "comments") return;
+    setShowComments(true);
+    const t = setTimeout(() => {
+      const target = commentInputRef.current || loginPromptRef.current;
+      target?.scrollIntoView({ behavior: "smooth", block: "center" });
+      target?.focus?.();
+    }, 600);
+    return () => clearTimeout(t);
+  }, [galleryId, searchParams]);
+
   // Fetch per-image social state when gallery images load
   useEffect(() => {
     if (!gallery || !gallery.images || gallery.images.length === 0) return;
