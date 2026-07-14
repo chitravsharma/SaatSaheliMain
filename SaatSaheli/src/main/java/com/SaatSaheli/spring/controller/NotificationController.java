@@ -64,6 +64,28 @@ public class NotificationController {
         }
     }
 
+    /**
+     * One-time backfill of notifications from existing comments in the last N days.
+     * Super-admin only. Idempotent — safe to call more than once.
+     */
+    @PostMapping("/backfill")
+    public ResponseEntity<?> backfill(@RequestParam(defaultValue = "14") int days, HttpServletRequest request) {
+        Long userId = (Long) request.getAttribute("jwtUserId");
+        String role = (String) request.getAttribute("jwtRole");
+        if (userId == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorMap("Authentication required"));
+        }
+        if (!"SUPER_ADMIN".equalsIgnoreCase(role)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorMap("Super-admin only"));
+        }
+        try {
+            int processed = notificationService.backfillRecentComments(days);
+            return ResponseEntity.ok(Map.of("backfilled", processed, "days", days));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorMap(e.getMessage()));
+        }
+    }
+
     @PostMapping("/read-all")
     public ResponseEntity<?> markAllRead(HttpServletRequest request) {
         Long userId = (Long) request.getAttribute("jwtUserId");

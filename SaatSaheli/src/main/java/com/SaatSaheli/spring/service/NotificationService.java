@@ -30,6 +30,7 @@ public class NotificationService {
     private static final List<String> ADMIN_ROLES = List.of("ADMIN", "SUPER_ADMIN");
 
     @Autowired private NotificationRepository notificationRepo;
+    @Autowired private CommentRepository commentRepo;
     @Autowired private UserRepository userRepo;
     @Autowired private BookRepository bookRepo;
     @Autowired private ArticleRepository articleRepo;
@@ -70,43 +71,77 @@ public class NotificationService {
     public void notifyOnComment(Comment comment) {
         if (comment == null) return;
         try {
-            String targetType = comment.getTargetType();
-            Long targetId = comment.getTargetId();
-            Long actorId = comment.getUserId();
-            String actorName = comment.getUserName() != null ? comment.getUserName() : "Someone";
-
-            Target target = resolveTarget(targetType, targetId);
-            if (target == null) {
-                log.debug("No owner resolvable for comment on {}#{}; skipping notification", targetType, targetId);
-                return;
-            }
-            String title = (target.title != null && !target.title.isBlank()) ? target.title : "your content";
-            String message = actorName + " commented on \"" + title + "\"";
-
-            // Personal notification for the creator (skip self-comments and guest/anon owners).
-            Long creatorId = target.ownerId;
-            if (creatorId != null && creatorId > 0 && !creatorId.equals(actorId)) {
-                save(creatorId, comment, targetType, targetId, title, target.link, message, false);
-                emailCreator(creatorId, actorName, target, comment.getContent());
-            }
-
-            // Monitoring copy for each admin / super-admin (in-app only, no email flood).
-            List<User> admins = userRepo.findByRoleIn(ADMIN_ROLES);
-            for (User admin : admins) {
-                Long adminId = admin.getId();
-                if (adminId == null) continue;
-                if (adminId.equals(actorId)) continue;                      // don't notify the commenter
-                if (creatorId != null && adminId.equals(creatorId)) continue; // creator already has a personal row
-                save(adminId, comment, targetType, targetId, title, target.link, message, true);
-            }
+            fanOut(comment, true, LocalDateTime.now());
         } catch (Exception e) {
             log.error("Failed to create comment notifications for comment {}: {}",
                     comment.getId(), e.getMessage(), e);
         }
     }
 
+    /**
+     * Core fan-out shared by live notifications and the backfill.
+     * @param sendEmail   email the creator (live only; the backfill stays silent)
+     * @param whenCreated timestamp to stamp on the notifications (live = now,
+     *                    backfill = the comment's original date so ordering is natural)
+     */
+    private void fanOut(Comment comment, boolean sendEmail, LocalDateTime whenCreated) {
+        String targetType = comment.getTargetType();
+        Long targetId = comment.getTargetId();
+        Long actorId = comment.getUserId();
+        String actorName = comment.getUserName() != null ? comment.getUserName() : "Someone";
+
+        Target target = resolveTarget(targetType, targetId);
+        if (target == null) {
+            log.debug("No owner resolvable for comment on {}#{}; skipping notification", targetType, targetId);
+            return;
+        }
+        String title = (target.title != null && !target.title.isBlank()) ? target.title : "your content";
+        String message = actorName + " commented on \"" + title + "\"";
+
+        // Personal notification for the creator (skip self-comments and guest/anon owners).
+        Long creatorId = target.ownerId;
+        if (creatorId != null && creatorId > 0 && !creatorId.equals(actorId)) {
+            save(creatorId, comment, targetType, targetId, title, target.link, message, false, whenCreated);
+            if (sendEmail) emailCreator(creatorId, actorName, target, comment.getContent());
+        }
+
+        // Monitoring copy for each admin / super-admin (in-app only, no email flood).
+        List<User> admins = userRepo.findByRoleIn(ADMIN_ROLES);
+        for (User admin : admins) {
+            Long adminId = admin.getId();
+            if (adminId == null) continue;
+            if (adminId.equals(actorId)) continue;                      // don't notify the commenter
+            if (creatorId != null && adminId.equals(creatorId)) continue; // creator already has a personal row
+            save(adminId, comment, targetType, targetId, title, target.link, message, true, whenCreated);
+        }
+    }
+
+    /**
+     * One-time backfill: generate notifications for existing comments from the
+     * last N days that never produced any (e.g. comments made before the feature
+     * shipped). Silent (no emails), idempotent (skips comments already notified),
+     * and preserves the original comment date. Returns the count of comments processed.
+     */
+    public int backfillRecentComments(int days) {
+        LocalDateTime cutoff = LocalDateTime.now().minusDays(days);
+        List<Comment> recent = commentRepo.findByCreatedDateAfterAndIsDeletedFalseOrderByCreatedDateAsc(cutoff);
+        int processed = 0;
+        for (Comment c : recent) {
+            try {
+                if (notificationRepo.existsByCommentId(c.getId())) continue; // already notified
+                LocalDateTime when = c.getCreatedDate() != null ? c.getCreatedDate() : LocalDateTime.now();
+                fanOut(c, false, when);
+                processed++;
+            } catch (Exception e) {
+                log.error("Backfill failed for comment {}: {}", c.getId(), e.getMessage());
+            }
+        }
+        log.info("Notification backfill processed {} comment(s) from the last {} days", processed, days);
+        return processed;
+    }
+
     private void save(Long recipientUserId, Comment comment, String targetType, Long targetId,
-                      String title, String link, String message, boolean adminCopy) {
+                      String title, String link, String message, boolean adminCopy, LocalDateTime createdDate) {
         try {
             Notification n = new Notification();
             n.setRecipientUserId(recipientUserId);
@@ -121,7 +156,7 @@ public class NotificationService {
             n.setLink(link);
             n.setRead(false);
             n.setAdminCopy(adminCopy);
-            n.setCreatedDate(LocalDateTime.now());
+            n.setCreatedDate(createdDate);
             notificationRepo.save(n);
         } catch (Exception e) {
             log.error("Failed to save notification for recipient {}: {}", recipientUserId, e.getMessage());

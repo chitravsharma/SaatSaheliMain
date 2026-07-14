@@ -18,6 +18,9 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
 
     long countByRecipientUserIdAndReadFalseAndCreatedDateAfter(Long recipientUserId, LocalDateTime cutoff);
 
+    // Idempotency guard for the backfill — has this comment already produced notifications?
+    boolean existsByCommentId(Long commentId);
+
     @Modifying
     @Transactional
     @Query("UPDATE Notification n SET n.read = true WHERE n.recipientUserId = :userId AND n.read = false")
