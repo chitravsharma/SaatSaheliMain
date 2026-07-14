@@ -34,6 +34,9 @@ public class SocialService {
     @Autowired
     private UserRepository userRepo;
 
+    @Autowired
+    private NotificationService notificationService;
+
     // ── Likes ──
 
     @Transactional
@@ -94,7 +97,12 @@ public class SocialService {
         comment.setTargetId(targetId);
         comment.setContent(content);
         comment.setCreatedDate(LocalDateTime.now());
-        return commentRepo.save(comment);
+        Comment saved = commentRepo.save(comment);
+
+        // Notify the content creator + admins. Non-fatal: never block the comment.
+        notificationService.notifyOnComment(saved);
+
+        return saved;
     }
 
     public List<Comment> getComments(String targetType, Long targetId) {
