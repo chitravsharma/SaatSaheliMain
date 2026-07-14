@@ -9,6 +9,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -46,6 +48,27 @@ public class NotificationService {
     /** How many days a notification stays visible in the bell before it's purged. */
     @Value("${app.notifications.retention-days:14}")
     private int retentionDays;
+
+    /** Auto-run the backfill on startup so the bell is populated after a fresh deploy. */
+    @Value("${app.notifications.backfill-on-startup:true}")
+    private boolean backfillOnStartup;
+
+    /**
+     * After the app is ready, seed notifications from recent comments once.
+     * Runs in the background (won't delay startup) and is idempotent, so it's
+     * a no-op on every boot after the first.
+     */
+    @Async("notificationExecutor")
+    @EventListener(ApplicationReadyEvent.class)
+    public void backfillOnStartup() {
+        if (!backfillOnStartup) return;
+        try {
+            int processed = backfillRecentComments(retentionDays);
+            if (processed > 0) log.info("Startup notification backfill seeded {} comment(s)", processed);
+        } catch (Exception e) {
+            log.error("Startup notification backfill failed: {}", e.getMessage());
+        }
+    }
 
     private LocalDateTime retentionCutoff() {
         return LocalDateTime.now().minusDays(retentionDays);
