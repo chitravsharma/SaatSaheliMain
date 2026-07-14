@@ -221,6 +221,7 @@ CREATE TABLE public.notifications (
     target_title character varying(255),
     comment_id bigint,
     message text,
+    link character varying(255),
     is_read boolean,
     admin_copy boolean,
     created_date timestamp(6) without time zone

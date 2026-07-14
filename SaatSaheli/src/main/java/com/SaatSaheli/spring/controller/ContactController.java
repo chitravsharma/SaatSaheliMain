@@ -40,6 +40,9 @@ public class ContactController {
     private EmailService emailService;
 
     @Autowired
+    private com.SaatSaheli.spring.service.NotificationService notificationService;
+
+    @Autowired
     private RateLimiter rateLimiter;
 
     @Autowired
@@ -153,6 +156,9 @@ public class ContactController {
                 log.warn("Failed to send contact notification email (submission #{} still saved): {}",
                         contact.getId(), emailErr.getMessage());
             }
+
+            // In-app notification for admins/super-admins. Non-fatal — submission is saved.
+            notificationService.notifyOnFeedback(contact);
 
             Map<String, String> response = new HashMap<>();
             response.put("message", "Thank you for reaching out! We'll get back to you soon.");

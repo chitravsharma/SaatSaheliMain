@@ -53,6 +53,13 @@ public class Notification {
     @Column(columnDefinition = "TEXT")
     private String message;
 
+    /**
+     * Resolved relative link to the item (e.g. "/read/4", "/gallery/12").
+     * Stored because it can't always be derived from targetType+targetId alone
+     * (a GALLERY_IMAGE comment links to its parent gallery, not the image id).
+     */
+    private String link;
+
     @Column(name = "is_read")
     private boolean read;
 
@@ -96,6 +103,9 @@ public class Notification {
 
     public String getMessage() { return message; }
     public void setMessage(String message) { this.message = message; }
+
+    public String getLink() { return link; }
+    public void setLink(String link) { this.link = link; }
 
     public boolean isRead() { return read; }
     public void setRead(boolean read) { this.read = read; }
