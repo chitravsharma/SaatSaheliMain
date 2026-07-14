@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -40,6 +41,14 @@ public class NotificationService {
 
     @Value("${app.frontend-url:http://localhost:3000}")
     private String frontendUrl;
+
+    /** How many days a notification stays visible in the bell before it's purged. */
+    @Value("${app.notifications.retention-days:14}")
+    private int retentionDays;
+
+    private LocalDateTime retentionCutoff() {
+        return LocalDateTime.now().minusDays(retentionDays);
+    }
 
     /** Resolved content owner, display title, deep link and a human item label. */
     private static class Target {
@@ -222,11 +231,30 @@ public class NotificationService {
     // ── Read API (used by NotificationController) ──
 
     public List<Notification> getForUser(Long userId) {
-        return notificationRepo.findTop50ByRecipientUserIdOrderByCreatedDateDesc(userId);
+        return notificationRepo.findTop50ByRecipientUserIdAndCreatedDateAfterOrderByCreatedDateDesc(
+                userId, retentionCutoff());
     }
 
     public long getUnreadCount(Long userId) {
-        return notificationRepo.countByRecipientUserIdAndReadFalse(userId);
+        return notificationRepo.countByRecipientUserIdAndReadFalseAndCreatedDateAfter(
+                userId, retentionCutoff());
+    }
+
+    /**
+     * Purge notifications older than the retention window. Runs weekly, Sunday
+     * at 03:15. Notifications stay in every recipient's bell for the full window
+     * regardless of read state; only after it lapses are they removed for everyone.
+     */
+    @Scheduled(cron = "0 15 3 * * SUN")
+    public void purgeOldNotifications() {
+        try {
+            int deleted = notificationRepo.deleteByCreatedDateBefore(retentionCutoff());
+            if (deleted > 0) {
+                log.info("Purged {} notification(s) older than {} days", deleted, retentionDays);
+            }
+        } catch (Exception e) {
+            log.error("Notification retention purge failed: {}", e.getMessage());
+        }
     }
 
     /** Mark one notification read, only if it belongs to the given user. Returns true if updated. */
