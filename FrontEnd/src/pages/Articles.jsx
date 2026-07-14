@@ -150,6 +150,22 @@ function Articles() {
     }
   }, [sharedArticleId, publicArticles.length]);
 
+  // Arrived from a notification (?focus=comments): open that article's comment
+  // section and scroll to it.
+  useEffect(() => {
+    if (urlParams.get("focus") !== "comments") return;
+    if (!sharedArticleId || publicArticles.length === 0) return;
+    setOpenComments(Number(sharedArticleId));
+    const t = setTimeout(() => {
+      const target = commentInputRef.current || loginPromptRef.current
+        || document.getElementById(`art-detail-${sharedArticleId}`);
+      target?.scrollIntoView({ behavior: "smooth", block: "center" });
+      target?.focus?.();
+    }, 600);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sharedArticleId, publicArticles.length, location.search]);
+
   useEffect(() => {
     const list = tab === "my" ? articles : publicArticles;
     list.forEach((a) => fetchSocialForArticle(a.id));

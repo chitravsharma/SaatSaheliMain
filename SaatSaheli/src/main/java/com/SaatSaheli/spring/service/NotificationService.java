@@ -144,24 +144,36 @@ public class NotificationService {
     /** Resolve the content owner, title, deep link and label for a comment target. */
     private Target resolveTarget(String targetType, Long targetId) {
         if (targetType == null || targetId == null) return null;
+        // ?focus=comments tells each item view to auto-open + scroll to the comment section.
         switch (targetType.toUpperCase()) {
             case "BOOK":
                 return bookRepo.findById(targetId)
-                        .map(b -> new Target(b.getUserId(), b.getTitle(), "/read/" + targetId, "book")).orElse(null);
+                        .map(b -> new Target(b.getUserId(), b.getTitle(), "/read/" + targetId + "?focus=comments", "book")).orElse(null);
             case "ARTICLE":
+                // Blogs live at /blogs/:id and poems at /poems/:id; the Articles view
+                // filters by the route's content type, so use the right path or the
+                // item gets filtered out.
                 return articleRepo.findById(targetId)
-                        .map(a -> new Target(a.getUserId(), a.getHeadline(), "/articles/" + targetId, "article")).orElse(null);
+                        .map(a -> {
+                            String ct = a.getContentType() == null ? "" : a.getContentType();
+                            String path; String label;
+                            if ("Poetry".equalsIgnoreCase(ct)) { path = "/poems/"; label = "poem"; }
+                            else if ("Blog".equalsIgnoreCase(ct)) { path = "/blogs/"; label = "blog"; }
+                            else { path = "/articles/"; label = "article"; }
+                            return new Target(a.getUserId(), a.getHeadline(),
+                                    path + targetId + "?focus=comments", label);
+                        }).orElse(null);
             case "GALLERY":
                 return galleryRepo.findById(targetId)
-                        .map(g -> new Target(g.getUserId(), g.getTitle(), "/gallery/" + targetId, "gallery")).orElse(null);
+                        .map(g -> new Target(g.getUserId(), g.getTitle(), "/gallery/" + targetId + "?focus=comments", "gallery")).orElse(null);
             case "GALLERY_IMAGE":
                 // Comment target is the image; resolve up to its owning gallery for owner + link.
                 return galleryImageRepo.findById(targetId)
                         .flatMap(img -> galleryRepo.findById(img.getGalleryId()))
-                        .map(g -> new Target(g.getUserId(), g.getTitle(), "/gallery/" + g.getId(), "gallery")).orElse(null);
+                        .map(g -> new Target(g.getUserId(), g.getTitle(), "/gallery/" + g.getId() + "?focus=comments", "gallery")).orElse(null);
             case "RECIPE":
                 return recipeRepo.findById(targetId)
-                        .map(r -> new Target(r.getUserId(), r.getRecipeName(), "/recipes/" + targetId, "recipe")).orElse(null);
+                        .map(r -> new Target(r.getUserId(), r.getRecipeName(), "/recipes/" + targetId + "?focus=comments", "recipe")).orElse(null);
             case "PODCAST":
                 return podcastRepo.findById(targetId)
                         .map(p -> new Target(p.getUserId(), p.getTitle(), "/podcasts", "podcast")).orElse(null);
