@@ -594,7 +594,7 @@ function Home() {
             })();
             const thumb = ytId
               ? `https://img.youtube.com/vi/${ytId}/hqdefault.jpg`
-              : (pod?.coverImageUrl ? resolveImageUrl(pod.coverImageUrl) : "");
+              : "";
             return (
               <Link to="/podcasts" className="home-hero-magazine-card">
                 <div className="home-hero-magazine-fade" key={pod?.id || "placeholder"}>

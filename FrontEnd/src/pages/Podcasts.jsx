@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import api, { profileUrl } from "../utils/api";
-import { optimizeCloudinary } from "../utils/imageUrl";
 import { useAuth } from "../AuthContext";
 import AdBanner from "../modules/AdBanner";
 import "./Podcasts.css";
@@ -125,7 +124,6 @@ function Podcasts() {
   const [description, setDescription] = useState("");
   const [audioUrl, setAudioUrl] = useState("");
   const [youtubeUrl, setYoutubeUrl] = useState("");
-  const [coverImageUrl, setCoverImageUrl] = useState("");
   const [language, setLanguage] = useState("Hindi");
   const [category, setCategory] = useState("");
   const [publishOnSave, setPublishOnSave] = useState(true);
@@ -284,24 +282,6 @@ function Podcasts() {
     }
   };
 
-  const handleCoverUpload = async (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setUploading(true);
-    try {
-      const formData = new FormData();
-      formData.append("file", file);
-      const res = await api.post(`${API}/api/upload`, formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
-      setCoverImageUrl(res.data.url);
-    } catch {
-      showMsg("Image upload failed");
-    } finally {
-      setUploading(false);
-    }
-  };
-
   const handleSave = async () => {
     if (!title.trim()) { showMsg("Title is required"); return; }
     if (!audioUrl && !youtubeUrl.trim()) { showMsg("Please upload an audio file or provide a YouTube URL"); return; }
@@ -313,7 +293,7 @@ function Podcasts() {
         userId, title: title.trim(), description: description.trim(),
         audioUrl: audioUrl || null,
         youtubeUrl: youtubeUrl.trim() || null,
-        coverImageUrl, language, category: category || null, status,
+        language, category: category || null, status,
       };
       if (editingId) {
         await api.put(`${API}/api/podcasts/${editingId}`, body);
@@ -350,7 +330,6 @@ function Podcasts() {
     setDescription(podcast.description || "");
     setAudioUrl(podcast.audioUrl || "");
     setYoutubeUrl(podcast.youtubeUrl || "");
-    setCoverImageUrl(podcast.coverImageUrl || "");
     setLanguage(podcast.language || "Hindi");
     setCategory(podcast.category || "");
     setShowForm(true);
@@ -365,7 +344,6 @@ function Podcasts() {
     setDescription("");
     setAudioUrl("");
     setYoutubeUrl("");
-    setCoverImageUrl("");
     setLanguage("Hindi");
     setCategory("");
   };
@@ -399,15 +377,6 @@ function Podcasts() {
   const renderPodcastCard = (podcast, isOwner) => (
     <div key={podcast.id} className="podcast-card">
       <div className="podcast-card-top">
-        {podcast.coverImageUrl ? (
-          <img src={optimizeCloudinary(podcast.coverImageUrl)} alt={podcast.title} className="podcast-cover" />
-        ) : (
-          <div className="podcast-cover-placeholder">
-            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" strokeWidth="1.5">
-              <path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>
-            </svg>
-          </div>
-        )}
         <div className="podcast-info">
           <div className="podcast-badges">
             <span className={`podcast-lang-badge podcast-lang-${(podcast.language || "hindi").toLowerCase()}`}>
@@ -659,22 +628,6 @@ function Podcasts() {
                     <input type="file" accept="audio/*" id="podcast-audio-upload" className="bm-file-input" onChange={handleAudioUpload} />
                     <label htmlFor="podcast-audio-upload" className="bm-btn bm-btn-edit bm-btn-sm">
                       {uploading ? "Uploading..." : "Choose Audio File"}
-                    </label>
-                  </div>
-                )}
-              </div>
-              <div className="podcast-field">
-                <label>Cover Image / कवर छवि</label>
-                {coverImageUrl ? (
-                  <div className="podcast-cover-preview">
-                    <img src={coverImageUrl} alt="Cover" className="podcast-preview-img" />
-                    <button className="bm-btn bm-btn-delete bm-btn-sm" onClick={() => setCoverImageUrl("")}>Remove</button>
-                  </div>
-                ) : (
-                  <div className="podcast-upload-area">
-                    <input type="file" accept="image/*" id="podcast-cover-upload" className="bm-file-input" onChange={handleCoverUpload} />
-                    <label htmlFor="podcast-cover-upload" className="bm-btn bm-btn-edit bm-btn-sm">
-                      {uploading ? "Uploading..." : "Choose Cover Image"}
                     </label>
                   </div>
                 )}
