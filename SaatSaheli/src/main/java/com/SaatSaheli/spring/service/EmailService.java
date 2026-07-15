@@ -203,6 +203,23 @@ public class EmailService {
         return s.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;");
     }
 
+    /**
+     * Send a simple diagnostic email. Throws on failure so the caller can surface
+     * the exact SMTP error (used by the super-admin test-email endpoint).
+     */
+    public void sendTestEmail(String to) {
+        String subject = "SaatSaheli — Test email";
+        String body = """
+                <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 480px; margin: 0 auto; padding: 32px;">
+                  <h2 style="color: #b45309;">Test email &#9989;</h2>
+                  <p>If you're reading this, SaatSaheli's email delivery is working.</p>
+                  <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 24px 0;" />
+                  <p style="color: #9ca3af; font-size: 0.85rem;">&mdash; The SaatSaheli Team</p>
+                </div>
+                """;
+        sendHtmlEmail(to, subject, body);
+    }
+
     private void sendHtmlEmail(String to, String subject, String htmlBody) {
         String[] recipients;
         String finalSubject = subject;

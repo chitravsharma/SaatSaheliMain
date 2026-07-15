@@ -1,5 +1,6 @@
 package com.SaatSaheli.spring.controller;
 
+import com.SaatSaheli.spring.service.EmailService;
 import com.SaatSaheli.spring.service.NotificationService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,6 +17,9 @@ public class NotificationController {
 
     @Autowired
     private NotificationService notificationService;
+
+    @Autowired
+    private EmailService emailService;
 
     /** Recent notifications for the authenticated user (newest first). */
     @GetMapping
@@ -83,6 +87,41 @@ public class NotificationController {
             return ResponseEntity.ok(Map.of("backfilled", processed, "days", days));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorMap(e.getMessage()));
+        }
+    }
+
+    /**
+     * Super-admin diagnostic: send a test email to any address and return the
+     * result (or the exact SMTP error). Verifies prod mail config in one call.
+     */
+    @PostMapping("/test-email")
+    public ResponseEntity<?> testEmail(@RequestParam String to, HttpServletRequest request) {
+        Long userId = (Long) request.getAttribute("jwtUserId");
+        String role = (String) request.getAttribute("jwtRole");
+        if (userId == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorMap("Authentication required"));
+        }
+        if (!"SUPER_ADMIN".equalsIgnoreCase(role)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorMap("Super-admin only"));
+        }
+        try {
+            emailService.sendTestEmail(to);
+            return ResponseEntity.ok(Map.of("sent", true, "to", to));
+        } catch (Exception e) {
+            // Surface the full cause chain so the SMTP error (e.g. "535 Username and
+            // Password not accepted") is visible, not just "Email delivery failed".
+            StringBuilder err = new StringBuilder(String.valueOf(e.getMessage()));
+            Throwable c = e.getCause();
+            int depth = 0;
+            while (c != null && depth < 5) {
+                err.append(" | ").append(c.getClass().getSimpleName()).append(": ").append(c.getMessage());
+                c = c.getCause();
+                depth++;
+            }
+            Map<String, Object> body = new HashMap<>();
+            body.put("sent", false);
+            body.put("error", err.toString());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(body);
         }
     }
 
