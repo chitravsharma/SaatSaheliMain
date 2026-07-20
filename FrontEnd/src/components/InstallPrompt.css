@@ -1,0 +1,102 @@
+/* Smart PWA install prompt — bottom-docked, non-intrusive.
+   Amber/cream palette to match the site (theme #d97706, bg #ede4d3). */
+.install-prompt {
+  position: fixed;
+  left: 50%;
+  bottom: 16px;
+  transform: translateX(-50%);
+  z-index: 1200;
+  width: calc(100% - 24px);
+  max-width: 460px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  background: #fffdf8;
+  border: 1px solid #e7d9bf;
+  border-left: 4px solid #d97706;
+  border-radius: 12px;
+  box-shadow: 0 8px 28px rgba(120, 80, 10, 0.18);
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  animation: install-prompt-in 0.28s ease-out;
+}
+
+@keyframes install-prompt-in {
+  from { opacity: 0; transform: translate(-50%, 16px); }
+  to   { opacity: 1; transform: translate(-50%, 0); }
+}
+
+.install-prompt-icon {
+  flex-shrink: 0;
+  border-radius: 9px;
+}
+
+.install-prompt-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  line-height: 1.35;
+  flex: 1;
+  min-width: 0;
+}
+
+.install-prompt-text strong {
+  font-weight: 700;
+  color: #7c2d12;
+  font-size: 0.95rem;
+}
+
+.install-prompt-text span {
+  font-size: 0.82rem;
+  color: #6b5840;
+}
+
+.install-prompt-share {
+  vertical-align: -2px;
+  color: #d97706;
+}
+
+.install-prompt-cta {
+  flex-shrink: 0;
+  background: #d97706;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 9px 16px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.18s;
+}
+.install-prompt-cta:hover {
+  background: #b45309;
+}
+
+.install-prompt-dismiss {
+  flex-shrink: 0;
+  align-self: flex-start;
+  background: none;
+  border: none;
+  color: #9a865f;
+  font-size: 1.35rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 4px;
+  border-radius: 6px;
+  transition: background 0.18s, color 0.18s;
+}
+.install-prompt-dismiss:hover {
+  color: #7c2d12;
+  background: rgba(217, 119, 6, 0.1);
+}
+
+@media (max-width: 600px) {
+  .install-prompt {
+    bottom: 10px;
+    padding: 11px 12px;
+    gap: 10px;
+  }
+  .install-prompt-text strong { font-size: 0.9rem; }
+  .install-prompt-text span { font-size: 0.78rem; }
+  .install-prompt-cta { padding: 8px 13px; font-size: 0.84rem; }
+}

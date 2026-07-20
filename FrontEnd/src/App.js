@@ -40,6 +40,7 @@ import RequireProfile from './components/RequireProfile';
 import DownloadProtection from './components/DownloadProtection';
 import VisitorTracker from './components/VisitorTracker';
 import MaintenanceBanner from './components/MaintenanceBanner';
+import InstallPrompt from './components/InstallPrompt';
 import Checkout from './pages/Checkout';
 import SupportUs from './pages/SupportUs';
 import SupportThankYou from './pages/SupportThankYou';
@@ -156,6 +157,7 @@ function App() {
       </main>
       {!inShop && <AdBanner placement="FOOTER_TOP" />}
       {!inShop && <Footer />}
+      <InstallPrompt />
     </div>
     </ServerWakeUp>
   );
