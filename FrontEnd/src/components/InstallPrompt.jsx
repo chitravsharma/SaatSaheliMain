@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from "react";
+import usePwaInstall from "../hooks/usePwaInstall";
 import "./InstallPrompt.css";
 
 /**
  * Smart PWA install prompt. Two modes, one component:
  *
  *  1. Android / desktop Chrome/Edge — the browser fires `beforeinstallprompt`.
- *     We capture it, suppress the default mini-infobar, and show our own
- *     "Install app" button that replays the saved event on click.
+ *     The shared usePwaInstall hook captures it; we show our own "Install app"
+ *     button that replays the saved event on click.
  *
  *  2. iOS Safari — Apple never fires `beforeinstallprompt` and gives no
  *     programmatic install. The only path is Share → "Add to Home Screen",
@@ -14,26 +15,14 @@ import "./InstallPrompt.css";
  *
  * Hidden entirely when the app is already installed (running standalone), and
  * dismissible with a cooldown so we never nag on every visit.
+ *
+ * NOTE: the `beforeinstallprompt` event is captured ONCE in usePwaInstall and
+ * shared with the Home "Open in App" button — this component no longer listens
+ * for it directly, so the two never steal the one-shot event from each other.
  */
 
 const DISMISS_KEY = "ss_install_dismissed_at";
 const COOLDOWN_MS = 14 * 24 * 60 * 60 * 1000; // 14 days
-
-// Already running as an installed app? (Chrome/Android + iOS Safari flavours)
-function isStandalone() {
-  return (
-    window.matchMedia?.("(display-mode: standalone)").matches ||
-    window.navigator.standalone === true
-  );
-}
-
-function isIOS() {
-  const ua = window.navigator.userAgent || "";
-  const iOSDevice = /iphone|ipad|ipod/i.test(ua);
-  // iPadOS 13+ masquerades as desktop Safari — detect via touch points.
-  const iPadOS = navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1;
-  return iOSDevice || iPadOS;
-}
 
 function recentlyDismissed() {
   try {
@@ -45,45 +34,23 @@ function recentlyDismissed() {
 }
 
 function InstallPrompt() {
-  const [deferredPrompt, setDeferredPrompt] = useState(null); // Android/desktop event
+  const { canInstall, isIOS, isStandalone, installedThisSession, promptInstall } = usePwaInstall();
   const [showIOS, setShowIOS] = useState(false);
   const [dismissed, setDismissed] = useState(false);
 
   useEffect(() => {
-    if (isStandalone() || recentlyDismissed()) return;
+    if (isStandalone || recentlyDismissed()) return undefined;
 
-    // Mode 1: capture the Chromium install event.
-    const onBeforeInstall = (e) => {
-      e.preventDefault();
-      setDeferredPrompt(e);
-    };
-    window.addEventListener("beforeinstallprompt", onBeforeInstall);
-
-    // If the user installs (via our button or the browser UI), clear everything.
-    const onInstalled = () => {
-      setDeferredPrompt(null);
-      setShowIOS(false);
-      try {
-        localStorage.setItem(DISMISS_KEY, String(Date.now()));
-      } catch {
-        /* ignore */
-      }
-    };
-    window.addEventListener("appinstalled", onInstalled);
-
-    // Mode 2: iOS Safari gets the instructional banner instead. Small delay so
-    // it doesn't fight the initial paint / land before the page is readable.
+    // iOS Safari gets the instructional banner instead of a button. Small delay
+    // so it doesn't fight the initial paint / land before the page is readable.
     let iosTimer;
-    if (isIOS()) {
+    if (isIOS) {
       iosTimer = setTimeout(() => setShowIOS(true), 2500);
     }
-
     return () => {
-      window.removeEventListener("beforeinstallprompt", onBeforeInstall);
-      window.removeEventListener("appinstalled", onInstalled);
       if (iosTimer) clearTimeout(iosTimer);
     };
-  }, []);
+  }, [isIOS, isStandalone]);
 
   const dismiss = () => {
     setDismissed(true);
@@ -95,21 +62,13 @@ function InstallPrompt() {
   };
 
   const handleInstall = async () => {
-    if (!deferredPrompt) return;
-    deferredPrompt.prompt();
-    try {
-      await deferredPrompt.userChoice; // resolves whether accepted or dismissed
-    } catch {
-      /* ignore */
-    }
-    // A saved beforeinstallprompt event can only be used once.
-    setDeferredPrompt(null);
+    await promptInstall(); // resolves whether accepted or dismissed
   };
 
-  if (dismissed) return null;
+  if (dismissed || isStandalone || installedThisSession || recentlyDismissed()) return null;
 
   // ---- Mode 1: Android / desktop install button ----
-  if (deferredPrompt) {
+  if (canInstall) {
     return (
       <div className="install-prompt install-prompt-android" role="dialog" aria-label="Install SaatSaheli app">
         <img src="/icons/icon-96.png" alt="" className="install-prompt-icon" width="40" height="40" />

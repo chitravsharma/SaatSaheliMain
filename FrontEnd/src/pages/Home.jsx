@@ -6,6 +6,7 @@ import { useGatedClick } from "../contexts/LoginGateContext";
 import { useStrings } from "../LanguageContext";
 import AdBanner from "../modules/AdBanner";
 import ScrollRow from "../components/ScrollRow";
+import OpenInAppButton from "../components/OpenInAppButton";
 import { optimizeCloudinary } from "../utils/imageUrl";
 import "./Home.css";
 import "./Magazine.css";
@@ -340,6 +341,9 @@ function Home() {
 
   return (
     <div className="home-container">
+      {/* Install / open-in-app entry point, centered at the top of the page. */}
+      <OpenInAppButton />
+
       {actionError && (
         <div className="home-action-error" role="alert" style={{ background: "#fef2f2", color: "#b91c1c", padding: "8px 16px", borderRadius: 8, margin: "8px 0", textAlign: "center", fontSize: 14 }}>
           {actionError}

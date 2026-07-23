@@ -12,6 +12,10 @@
   "lang": "en",
   "dir": "ltr",
   "categories": ["lifestyle", "social", "books"],
+  "prefer_related_applications": false,
+  "related_applications": [
+    { "platform": "webapp", "url": "https://saatsaheli.com/manifest.json" }
+  ],
   "icons": [
     { "src": "favicon.ico", "sizes": "32x32", "type": "image/x-icon" },
     { "src": "icons/icon-96.png",  "sizes": "96x96",   "type": "image/png", "purpose": "any" },

@@ -1,0 +1,107 @@
+/* Centered "Open in App" button at the top of the Home page. */
+.open-in-app {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  margin: 10px auto 2px;
+}
+
+.open-in-app-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 20px;
+  border: none;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  color: #fff;
+  font-size: 14.5px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  box-shadow: 0 3px 10px rgba(217, 119, 6, 0.28);
+  transition: transform 0.12s ease, box-shadow 0.12s ease, filter 0.12s ease;
+}
+
+.open-in-app-btn:hover {
+  filter: brightness(1.04);
+  box-shadow: 0 5px 16px rgba(217, 119, 6, 0.36);
+  transform: translateY(-1px);
+}
+
+.open-in-app-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(217, 119, 6, 0.3);
+}
+
+.open-in-app-btn:focus-visible {
+  outline: 2px solid #92400e;
+  outline-offset: 2px;
+}
+
+.open-in-app-icon {
+  flex: none;
+}
+
+/* Instructional popover shown below the button. */
+.open-in-app-hint {
+  position: relative;
+  max-width: 340px;
+  padding: 12px 34px 12px 14px;
+  border: 1px solid #f3d9a4;
+  border-radius: 12px;
+  background: #fffdf7;
+  color: #5b4636;
+  font-size: 13.5px;
+  line-height: 1.5;
+  box-shadow: 0 6px 18px rgba(120, 80, 20, 0.14);
+}
+
+.open-in-app-hint p {
+  margin: 0;
+}
+
+.open-in-app-hint strong {
+  color: #b45309;
+}
+
+.open-in-app-share {
+  vertical-align: -2px;
+  color: #b45309;
+}
+
+.open-in-app-hint-close {
+  position: absolute;
+  top: 4px;
+  right: 6px;
+  border: none;
+  background: none;
+  color: #a1887f;
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 2px 6px;
+}
+
+.open-in-app-hint-close:hover {
+  color: #5b4636;
+}
+
+@media (prefers-color-scheme: dark) {
+  .open-in-app-hint {
+    background: #2a221a;
+    border-color: #5a4326;
+    color: #ecdfce;
+  }
+  .open-in-app-hint strong,
+  .open-in-app-share {
+    color: #fbbf24;
+  }
+  .open-in-app-hint-close {
+    color: #b9a68f;
+  }
+  .open-in-app-hint-close:hover {
+    color: #ecdfce;
+  }
+}
