@@ -1,25 +1,25 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../AuthContext";
+import api from "../utils/api";
 import "./Pricing.css";
 
 const plans = [
   {
     key: "Free",
-    name: "Free (Starter)",
-    tagline: "Best for trying out the platform",
+    name: "Free (Reader)",
+    tagline: "Best for reading & exploring",
     price: "Free",
     priceNote: null,
     monthlyPrice: 0,
     features: [
-      "Create up to 3 books",
-      "Up to 20 pages per book",
-      "Up to 30 uploaded images",
-      "Book creation & basic editing tools",
-      "Magazine preview access",
+      "Read & explore all published books",
+      "Full magazine preview access",
+      "Comment & interact with the community",
       "Community support",
     ],
     limitations: [
+      "Cannot create or upload books",
       "No PDF / DOCX export",
     ],
     bonus: null,
@@ -78,6 +78,7 @@ export default function Pricing() {
   const navigate = useNavigate();
   const [selectedPlan, setSelectedPlan] = useState(null);
   const [showContact, setShowContact] = useState(false);
+  const [loadingPlan, setLoadingPlan] = useState(null);
   const bannerRef = useRef(null);
 
   useEffect(() => {
@@ -86,22 +87,44 @@ export default function Pricing() {
     }
   }, [showContact, selectedPlan]);
 
-  const handleSelect = (plan) => {
+  const handleSelect = async (plan) => {
     if (plan.key === "Free") return;
     if (!user) {
       navigate("/Login");
       return;
     }
     if (plan.key === userPlan) return;
-    setSelectedPlan(plan.key);
-    setShowContact(true);
+
+    setShowContact(false);
+    setLoadingPlan(plan.key);
+    try {
+      const res = await api.post("/api/payments/create-checkout-session", {
+        planKey: plan.key,
+        userId: user.userId,
+      });
+      if (res.data?.url) {
+        // Hand off to Stripe's hosted Checkout.
+        window.location.href = res.data.url;
+        return;
+      }
+      // No URL came back — fall through to the manual contact path.
+      setSelectedPlan(plan.key);
+      setShowContact(true);
+    } catch (err) {
+      // Stripe not configured yet (503) or any transient failure: fall back to
+      // the "contact us to upgrade" flow so the user is never left stuck.
+      setSelectedPlan(plan.key);
+      setShowContact(true);
+    } finally {
+      setLoadingPlan(null);
+    }
   };
 
   const getCtaLabel = (plan) => {
-    if (!user) return plan.key === "Free" ? plan.cta : "Contact Us to Upgrade";
-    if (plan.key === userPlan) return "Current Plan";
+    if (loadingPlan === plan.key) return "Redirecting…";
+    if (user && plan.key === userPlan) return "Current Plan";
     if (plan.key === "Free") return plan.cta;
-    return "Contact Us to Upgrade";
+    return plan.cta;
   };
 
   return (
@@ -171,7 +194,7 @@ export default function Pricing() {
                 <button
                   className={`pricing-btn ${plan.highlight ? "pricing-btn-highlight" : ""} ${isCurrent ? "pricing-btn-current" : ""}`}
                   onClick={() => handleSelect(plan)}
-                  disabled={isCurrent}
+                  disabled={isCurrent || loadingPlan === plan.key}
                 >
                   {getCtaLabel(plan)}
                 </button>

@@ -97,6 +97,11 @@ public class BookService {
     private void assertCanCreateBook(Long userId) {
         if (userId == null || isPlanExempt(userId)) return;
         PlanLimits lim = limitsForUser(userId);
+        // Free tier cannot create or upload books at all — it's a paid-tier feature.
+        if (!lim.canCreateBooks) {
+            throw new PlanLimitException("Creating and uploading books is available on the "
+                    + "Premium and Creator plans. Upgrade your plan to create books.");
+        }
         // Count only live books — soft-deleted (DELETED) books no longer count
         // against the cap. countBooksByUser excludes DELETED.
         long count = countBooksByUser(userId);
@@ -121,6 +126,11 @@ public class BookService {
         if (book == null || book.getUserId() == null) return;
         if (isPlanExempt(book.getUserId())) return;
         PlanLimits lim = limitsForUser(book.getUserId());
+        // Free tier is read-only for authoring — cannot add pages to any book.
+        if (!lim.canCreateBooks) {
+            throw new PlanLimitException("Adding pages is available on the Premium and Creator plans. "
+                    + "Upgrade your plan to keep building your books.");
+        }
         long pages = pageRepo.countByBookId(bookId);
         if (pages >= lim.maxPagesPerBook) {
             throw new PlanLimitException("This book has reached the " + lim.plan

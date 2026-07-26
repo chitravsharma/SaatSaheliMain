@@ -50,18 +50,29 @@ public class PaymentController {
     @Value("${app.frontend-url:http://localhost:3000}")
     private String frontendUrl;
 
+    // Stripe recurring Price IDs per plan. Injected from properties/env so they
+    // resolve at runtime — a static Map of "${...}" literals would NOT be
+    // interpolated by Spring (placeholders only resolve in @Value binding), which
+    // previously made every checkout fail with "price not configured".
+    @Value("${stripe.price.premium:}")
+    private String pricePremium;
+
+    @Value("${stripe.price.creator:}")
+    private String priceCreator;
+
+    @Value("${stripe.price.gold:}")
+    private String priceGold;
+
     @Autowired
     private UserRepository userRepo;
 
     @Autowired
     private PaymentTransactionRepository txRepository;
 
-    // Plan key → Stripe Price ID mapping (set these after creating products in Stripe Dashboard)
-    private static final Map<String, String> PLAN_PRICE_IDS = Map.of(
-            "Premium", "${STRIPE_PRICE_PREMIUM:price_premium_placeholder}",
-            "Gold", "${STRIPE_PRICE_GOLD:price_gold_placeholder}",
-            "Creator", "${STRIPE_PRICE_CREATOR:price_creator_placeholder}"
-    );
+    // Plan key → Stripe Price ID, resolved from the injected @Value fields at
+    // startup. Only plans with a configured (non-blank) price are added, so an
+    // unconfigured plan cleanly returns "not configured" instead of 500-ing.
+    private final Map<String, String> planPriceIds = new HashMap<>();
 
     @PostConstruct
     public void init() {
@@ -70,6 +81,17 @@ public class PaymentController {
             log.info("Stripe API configured");
         } else {
             log.warn("Stripe secret key not configured — payment endpoints will not work");
+        }
+
+        putIfConfigured("Premium", pricePremium);
+        putIfConfigured("Creator", priceCreator);
+        putIfConfigured("Gold", priceGold); // legacy tier, only if still configured
+        log.info("Stripe subscription plans configured: {}", planPriceIds.keySet());
+    }
+
+    private void putIfConfigured(String plan, String priceId) {
+        if (priceId != null && !priceId.isBlank() && !priceId.contains("placeholder")) {
+            planPriceIds.put(plan, priceId.trim());
         }
     }
 
@@ -98,8 +120,8 @@ public class PaymentController {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorMap("User not found"));
             }
 
-            String priceId = PLAN_PRICE_IDS.get(planKey);
-            if (priceId == null || priceId.contains("placeholder")) {
+            String priceId = planPriceIds.get(planKey);
+            if (priceId == null) {
                 return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
                         .body(errorMap("Stripe price not configured for plan: " + planKey));
             }
@@ -109,8 +131,8 @@ public class PaymentController {
             SessionCreateParams params = SessionCreateParams.builder()
                     .setMode(SessionCreateParams.Mode.SUBSCRIPTION)
                     .setCustomerEmail(user.getEmail())
-                    .setSuccessUrl(frontendUrl + "/#/checkout-success?session_id={CHECKOUT_SESSION_ID}&plan=" + planKey)
-                    .setCancelUrl(frontendUrl + "/#/pricing")
+                    .setSuccessUrl(frontendUrl + "/checkout-success?session_id={CHECKOUT_SESSION_ID}&plan=" + planKey)
+                    .setCancelUrl(frontendUrl + "/pricing")
                     .addLineItem(
                             SessionCreateParams.LineItem.builder()
                                     .setPrice(priceId)

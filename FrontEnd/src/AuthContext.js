@@ -136,6 +136,19 @@ export function AuthProvider({ children }) {
         updateActivity();
     };
 
+    // Reflect a plan change (e.g. after a completed Stripe checkout) in the
+    // cached user without forcing a re-login. The backend webhook is the source
+    // of truth for the DB; this just keeps the client's copy in sync.
+    const applyPlan = useCallback((planKey) => {
+        if (!planKey) return;
+        setUser((prev) => {
+            if (!prev) return prev;
+            const next = { ...prev, plan: planKey };
+            localStorage.setItem("saatSaheliUser", JSON.stringify(next));
+            return next;
+        });
+    }, []);
+
     const role = (user?.role || "").toUpperCase();
     const isAdmin = role === "ADMIN" || role === "SUPER_ADMIN";
     const isSuperAdmin = role === "SUPER_ADMIN";
@@ -143,7 +156,7 @@ export function AuthProvider({ children }) {
     const isPremiumOrAbove = ["Premium", "Gold", "Creator"].includes(userPlan);
 
     return (
-        <AuthContext.Provider value={{ user, initializing, login, logout, isAdmin, isSuperAdmin, userPlan, isPremiumOrAbove, flashAccount, triggerAccountFlash, dismissAccountFlash }}>
+        <AuthContext.Provider value={{ user, initializing, login, logout, applyPlan, isAdmin, isSuperAdmin, userPlan, isPremiumOrAbove, flashAccount, triggerAccountFlash, dismissAccountFlash }}>
             {children}
         </AuthContext.Provider>
     );

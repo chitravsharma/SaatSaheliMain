@@ -142,9 +142,11 @@ const DEFAULT_FORMAT = {
 };
 
 function BookManager() {
-  const { user, isSuperAdmin, isPremiumOrAbove } = useAuth();
+  const { user, isAdmin, isSuperAdmin, isPremiumOrAbove } = useAuth();
   const { hasProfile, loading: profileLoading } = useProfile();
   const canCustomizeCover = isSuperAdmin || isPremiumOrAbove;
+  // Book creation & document upload is a paid-tier (or admin) feature — Free is read-only.
+  const canCreateBooks = isAdmin || isPremiumOrAbove;
   const strings = useStrings();
   const location = useLocation();
   const bmNavigate = useNavigate();
@@ -645,6 +647,8 @@ function BookManager() {
           {message && <div className="bm-message">{message}</div>}
           <div className="bm-section-card">
           <div className={`bm-button-row ${isReading ? "bm-button-col" : ""}`}>
+            {canCreateBooks ? (
+              <>
             <button className="bm-btn bm-btn-create" onClick={() => { setReadingBookId(null); setView("create"); }}>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14M5 12h14"/></svg>
               {strings.bookManager.createNewBook}
@@ -653,6 +657,13 @@ function BookManager() {
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><polyline points="9 15 12 12 15 15"/></svg>
               {strings.bookManager.createFromDocument}
             </button>
+              </>
+            ) : (
+            <button className="bm-btn bm-btn-create" onClick={() => bmNavigate("/pricing")}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2l2.4 7.4H22l-6 4.6 2.3 7.4-6.3-4.6L5.7 21.4 8 14 2 9.4h7.6z"/></svg>
+              Upgrade to create books
+            </button>
+            )}
             <button className="bm-btn bm-btn-draft" onClick={() => { setReadingBookId(null); fetchDrafts(); setView("drafts"); }}>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
               {strings.bookManager.myDrafts}
