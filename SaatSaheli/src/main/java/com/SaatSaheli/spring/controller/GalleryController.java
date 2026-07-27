@@ -125,9 +125,12 @@ public class GalleryController {
                     .body(errorMap("HEIC/HEIF images aren't supported in browsers. Please convert to JPEG or PNG before uploading."));
         }
         try {
+            com.SaatSaheli.spring.util.UploadValidator.requireSafeImage(file);
             String imageUrl = mediaStorage.uploadFile(file);
             GalleryImage img = galleryService.addImage(galleryId, imageUrl, caption, userId);
             return ResponseEntity.ok(img);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.UNSUPPORTED_MEDIA_TYPE).body(errorMap(e.getMessage()));
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorMap(e.getMessage()));
         } catch (Exception e) {

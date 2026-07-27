@@ -39,6 +39,8 @@ import java.util.UUID;
 @Service
 public class R2StorageService implements MediaStorageService {
 
+    private static final org.slf4j.Logger UPLOAD_LOG = org.slf4j.LoggerFactory.getLogger(R2StorageService.class);
+
     private static final Set<String> IMAGE_TYPES = Set.of(
             "image/jpeg", "image/png", "image/gif", "image/webp", "image/bmp", "image/tiff");
 
@@ -176,6 +178,10 @@ public class R2StorageService implements MediaStorageService {
 
     @Override
     public String uploadFile(MultipartFile file) throws IOException {
+        // Backstop: content-based type check on the shared store path.
+        com.SaatSaheli.spring.util.UploadValidator.requireKnownSafeType(file);
+        UPLOAD_LOG.info("Image upload: name={}, size={} KB, contentType={}",
+                file.getOriginalFilename(), file.getSize() / 1024, file.getContentType());
         byte[] clean = stripExifMetadata(file.getBytes(), file.getContentType());
         String ext = guessExtension(file.getContentType(), file.getOriginalFilename());
         String key = FOLDER + "/" + UUID.randomUUID() + "." + ext;

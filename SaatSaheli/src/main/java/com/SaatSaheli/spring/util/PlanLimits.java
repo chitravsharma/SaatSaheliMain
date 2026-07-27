@@ -31,10 +31,10 @@ public final class PlanLimits {
         String p = (plan == null || plan.isBlank()) ? "Free" : plan.trim();
         switch (p) {
             case "Premium":
-                return new PlanLimits("Premium", 25, 100, 200, true, true);
+                return new PlanLimits("Premium", 10, 50, 25, true, true);
             case "Gold":     // legacy tier (no longer sold) — treat as Creator-level
             case "Creator":
-                return new PlanLimits(p, 100, 250, 500, true, true);
+                return new PlanLimits(p, 25, 100, 50, true, true);
             case "Free":
             default:
                 // Free tier is read-only for authoring — cannot create/upload books.

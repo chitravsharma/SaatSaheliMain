@@ -1,9 +1,16 @@
 package com.SaatSaheli.spring.service;
 
+import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.io.MemoryUsageSetting;
 import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.PDPage;
+import org.apache.pdfbox.pdmodel.PDResources;
+import org.apache.pdfbox.pdmodel.graphics.PDXObject;
+import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 import org.apache.pdfbox.rendering.PDFRenderer;
 import org.apache.pdfbox.text.PDFTextStripper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.poi.xwpf.usermodel.XWPFDocument;
 import org.apache.poi.xwpf.usermodel.XWPFParagraph;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +27,8 @@ import java.util.List;
 @Service
 public class DocumentExtractionService {
 
+    private static final Logger log = LoggerFactory.getLogger(DocumentExtractionService.class);
+
     private static final int DOCX_PAGE_CHAR_LIMIT = 500;
 
     // OOM safety: rasterizing a PDF (renderImageWithDPI decodes embedded images
@@ -28,6 +37,14 @@ public class DocumentExtractionService {
     // upload can't take the app down. Tunable via env; raise after the RAM bump.
     @Value("${app.pdf.max-pages-per-upload:20}")
     private int maxPagesPerUpload;
+
+    // Per-page image budget in MEGAPIXELS. PDFBox decodes embedded images at
+    // source resolution (4 bytes/px) during render, so one 20 MP photo = ~80 MB
+    // RAM regardless of its compressed size — the single image-heavy page that
+    // OOMs the box. Read cheaply from image metadata (no decode) and reject
+    // before rendering. Default 16 MP (~64 MB) is 512MB-safe; raise after 2GB.
+    @Value("${app.pdf.max-megapixels-per-page:16}")
+    private int maxMegapixelsPerPage;
 
     // Spill PDFBox's parse/scratch state to a temp file instead of holding it
     // all in JVM heap. For image-heavy magazine PDFs the default in-memory
@@ -66,13 +83,33 @@ public class DocumentExtractionService {
         try (PDDocument doc = PDDocument.load(file.getInputStream(), tempFileOnly())) {
             PDFRenderer renderer = new PDFRenderer(doc);
             int totalPages = doc.getNumberOfPages();
+            String sizeMB = String.format("%.1f", file.getSize() / (1024.0 * 1024.0));
             // Fail fast BEFORE rasterizing — getNumberOfPages() is cheap, the
             // render loop is what OOMs. Forces users to split big PDFs (already
             // the documented magazine workflow: 12-page chunks).
             if (totalPages > maxPagesPerUpload) {
+                log.warn("PDF upload REJECTED (pages): name={}, size={} MB, pages={} > {}",
+                        file.getOriginalFilename(), sizeMB, totalPages, maxPagesPerUpload);
                 throw new IllegalArgumentException("This PDF has " + totalPages + " pages. Please split it into "
                         + "files of " + maxPagesPerUpload + " pages or fewer and upload them one at a time.");
             }
+            // Pre-pass (cheap, no decode): reject a single image-heavy page before
+            // it's rendered. This is the one-page OOM case that size/page caps miss.
+            long maxPixels = (long) maxMegapixelsPerPage * 1_000_000L;
+            long maxObservedPx = 0;
+            for (int i = 0; i < totalPages; i++) {
+                long px = embeddedImagePixels(doc.getPage(i));
+                maxObservedPx = Math.max(maxObservedPx, px);
+                if (px > maxPixels) {
+                    log.warn("PDF upload REJECTED (page MP): name={}, size={} MB, page={}, {} MP > {} MP",
+                            file.getOriginalFilename(), sizeMB, i + 1, px / 1_000_000, maxMegapixelsPerPage);
+                    throw new IllegalArgumentException("Page " + (i + 1) + " contains very high-resolution image(s) (~"
+                            + (px / 1_000_000) + " MP). Please downscale images to under " + maxMegapixelsPerPage
+                            + " MP per page (e.g. export at 150 DPI) before uploading.");
+                }
+            }
+            log.info("PDF upload accepted: name={}, size={} MB, pages={}, maxPageImages={} MP",
+                    file.getOriginalFilename(), sizeMB, totalPages, maxObservedPx / 1_000_000);
             for (int i = 0; i < totalPages; i++) {
                 // Render, upload, then release the page raster before the next
                 // iteration. The renderer decodes embedded images at their
@@ -87,6 +124,26 @@ public class DocumentExtractionService {
             }
         }
         return imageUrls;
+    }
+
+    /**
+     * Total pixels of images placed directly on a page, read from image metadata
+     * (getWidth/getHeight) WITHOUT decoding the raster. Covers the common case
+     * (photos placed on the page); images nested inside form XObjects aren't
+     * counted, so this is a strong heuristic, not a hard guarantee.
+     */
+    private long embeddedImagePixels(PDPage page) throws IOException {
+        PDResources res = page.getResources();
+        if (res == null) return 0;
+        long pixels = 0;
+        for (COSName name : res.getXObjectNames()) {
+            PDXObject xobj = res.getXObject(name);
+            if (xobj instanceof PDImageXObject) {
+                PDImageXObject img = (PDImageXObject) xobj;
+                pixels += (long) img.getWidth() * img.getHeight();
+            }
+        }
+        return pixels;
     }
 
     private List<String> extractFromPdf(MultipartFile file) throws IOException {

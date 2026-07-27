@@ -1137,6 +1137,12 @@ function BookManager() {
     return (
       <div className="book-manager">
         <h1>{strings.bookManager.allBooksHeading}</h1>
+        {!canCreateBooks && (
+          <div className="bm-upgrade-banner" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12, background: "#fff7ed", border: "1px solid #fed7aa", color: "#9a3412", padding: "12px 16px", borderRadius: 10, margin: "8px 0 16px" }}>
+            <span>Upgrade your plan to create and publish books.</span>
+            <button className="bm-btn bm-btn-create" onClick={() => bmNavigate("/pricing")}>View plans</button>
+          </div>
+        )}
         {message && <div className="bm-message">{message}</div>}
         {loading ? <p>{strings.common.loading}</p> : (
           <div className="bm-book-list">

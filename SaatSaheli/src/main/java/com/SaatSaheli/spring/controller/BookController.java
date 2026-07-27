@@ -29,6 +29,8 @@ import org.springframework.web.multipart.MultipartFile;
 @RequestMapping("/api/books")
 public class BookController {
 
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(BookController.class);
+
     @Autowired
     private BookService bookService;
 
@@ -111,6 +113,8 @@ public class BookController {
             }
             long maxBytes = (long) maxUploadMb * 1024 * 1024;
             if (file.getSize() > maxBytes) {
+                log.warn("Document upload REJECTED (size): name={}, size={} MB > {} MB",
+                        file.getOriginalFilename(), file.getSize() / (1024 * 1024), maxUploadMb);
                 return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE)
                         .body(errorMap("This file is " + (file.getSize() / (1024 * 1024)) + " MB, over the "
                                 + maxUploadMb + " MB limit. Please compress or split it before uploading."));
@@ -118,6 +122,7 @@ public class BookController {
             if (title == null || title.trim().isEmpty()) {
                 return ResponseEntity.badRequest().body(errorMap("Title is required"));
             }
+            com.SaatSaheli.spring.util.UploadValidator.requireDocument(file);
             String filename = file.getOriginalFilename();
             boolean isPdf = filename != null && filename.toLowerCase().endsWith(".pdf");
 

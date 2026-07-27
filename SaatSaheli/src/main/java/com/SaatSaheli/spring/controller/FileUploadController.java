@@ -23,8 +23,11 @@ public class FileUploadController {
             return ResponseEntity.badRequest().body(Map.of("error", "File is empty"));
         }
         try {
+            com.SaatSaheli.spring.util.UploadValidator.requireSafeImage(file);
             String url = mediaStorage.uploadFile(file);
             return ResponseEntity.ok(Map.of("url", url));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.UNSUPPORTED_MEDIA_TYPE).body(Map.of("error", e.getMessage()));
         } catch (IOException e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("error", "Upload failed: " + e.getMessage()));
