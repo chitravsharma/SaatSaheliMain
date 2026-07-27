@@ -2,6 +2,7 @@ import React, { useEffect, useState, useCallback } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import api from "../utils/api";
 import { optimizeCloudinary } from "../utils/imageUrl";
+import { getTrackingUrl } from "../utils/trackingUrl";
 import "./Marketplace.css";
 import "./Cart.css";
 import "./MarketplaceOrders.css";
@@ -125,7 +126,26 @@ export default function MarketplaceOrderDetail() {
           <h3>Tracking</h3>
           <p>
             {order.trackingNumber
-              ? <>{order.trackingNumber}{order.trackingCarrier ? ` (${order.trackingCarrier})` : ""}</>
+              ? <>
+                  <a
+                    href={getTrackingUrl(order.trackingCarrier, order.trackingNumber)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="ord-tracking-link"
+                  >
+                    {order.trackingNumber}
+                  </a>
+                  {order.trackingCarrier ? ` (${order.trackingCarrier})` : ""}
+                  {" — "}
+                  <a
+                    href={getTrackingUrl(order.trackingCarrier, order.trackingNumber)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="ord-tracking-link"
+                  >
+                    Track package →
+                  </a>
+                </>
               : order.status === "CANCELLED"
                 ? "Not applicable — this order was cancelled."
                 : "Pending — you'll get an update when your order ships."}

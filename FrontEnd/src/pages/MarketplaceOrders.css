@@ -1,3 +1,12 @@
+.ord-tracking-link {
+  color: #2563eb;
+  text-decoration: underline;
+  font-weight: 600;
+}
+.ord-tracking-link:hover {
+  color: #1d4ed8;
+}
+
 .ord-empty {
   text-align: center;
   padding: 32px 16px;
