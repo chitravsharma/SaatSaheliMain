@@ -16,6 +16,7 @@ import com.SaatSaheli.spring.util.PlanLimits;
 import com.SaatSaheli.spring.util.PlanLimitException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 
@@ -42,6 +43,10 @@ public class BookController {
 
     @Autowired
     private RateLimiter rateLimiter;
+
+    // OOM safety: reject an oversized upload before it's parsed/rasterized.
+    @Value("${app.pdf.max-upload-mb:25}")
+    private int maxUploadMb;
 
     @GetMapping("/search")
     public ResponseEntity<?> searchBooks(
@@ -103,6 +108,12 @@ public class BookController {
         try {
             if (file.isEmpty()) {
                 return ResponseEntity.badRequest().body(errorMap("File is required"));
+            }
+            long maxBytes = (long) maxUploadMb * 1024 * 1024;
+            if (file.getSize() > maxBytes) {
+                return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE)
+                        .body(errorMap("This file is " + (file.getSize() / (1024 * 1024)) + " MB, over the "
+                                + maxUploadMb + " MB limit. Please compress or split it before uploading."));
             }
             if (title == null || title.trim().isEmpty()) {
                 return ResponseEntity.badRequest().body(errorMap("Title is required"));

@@ -7,6 +7,7 @@ import org.apache.pdfbox.text.PDFTextStripper;
 import org.apache.poi.xwpf.usermodel.XWPFDocument;
 import org.apache.poi.xwpf.usermodel.XWPFParagraph;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -20,6 +21,13 @@ import java.util.List;
 public class DocumentExtractionService {
 
     private static final int DOCX_PAGE_CHAR_LIMIT = 500;
+
+    // OOM safety: rasterizing a PDF (renderImageWithDPI decodes embedded images
+    // at SOURCE resolution) is the dominant memory spike on Render's small box.
+    // Reject a too-large / too-many-page PDF BEFORE the render loop so a single
+    // upload can't take the app down. Tunable via env; raise after the RAM bump.
+    @Value("${app.pdf.max-pages-per-upload:20}")
+    private int maxPagesPerUpload;
 
     // Spill PDFBox's parse/scratch state to a temp file instead of holding it
     // all in JVM heap. For image-heavy magazine PDFs the default in-memory
@@ -58,6 +66,13 @@ public class DocumentExtractionService {
         try (PDDocument doc = PDDocument.load(file.getInputStream(), tempFileOnly())) {
             PDFRenderer renderer = new PDFRenderer(doc);
             int totalPages = doc.getNumberOfPages();
+            // Fail fast BEFORE rasterizing — getNumberOfPages() is cheap, the
+            // render loop is what OOMs. Forces users to split big PDFs (already
+            // the documented magazine workflow: 12-page chunks).
+            if (totalPages > maxPagesPerUpload) {
+                throw new IllegalArgumentException("This PDF has " + totalPages + " pages. Please split it into "
+                        + "files of " + maxPagesPerUpload + " pages or fewer and upload them one at a time.");
+            }
             for (int i = 0; i < totalPages; i++) {
                 // Render, upload, then release the page raster before the next
                 // iteration. The renderer decodes embedded images at their
