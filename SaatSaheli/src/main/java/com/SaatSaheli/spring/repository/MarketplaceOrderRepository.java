@@ -14,4 +14,5 @@ public interface MarketplaceOrderRepository extends JpaRepository<MarketplaceOrd
     boolean existsByOrderNumber(String orderNumber);
     List<MarketplaceOrder> findByUserIdOrderByCreatedDateDesc(Long userId);
     List<MarketplaceOrder> findAllByOrderByCreatedDateDesc();
+    List<MarketplaceOrder> findByUserIdAndStatus(Long userId, String status);
 }

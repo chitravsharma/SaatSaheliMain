@@ -20,6 +20,9 @@ public class MarketplaceOrder {
     public static final String STATUS_PAID = "PAID";
     public static final String STATUS_SHIPPED = "SHIPPED";
     public static final String STATUS_CANCELLED = "CANCELLED";
+    // Unpaid checkout that was superseded by a new attempt, or whose Stripe
+    // session expired. Never charged — distinct from CANCELLED (which is refunded).
+    public static final String STATUS_EXPIRED = "EXPIRED";
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

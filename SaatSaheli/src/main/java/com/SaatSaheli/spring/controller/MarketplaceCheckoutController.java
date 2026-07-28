@@ -72,6 +72,9 @@ public class MarketplaceCheckoutController {
     private MarketplaceOrderRepository orderRepo;
 
     @Autowired
+    private com.SaatSaheli.spring.repository.MarketplaceListingRepository listingRepo;
+
+    @Autowired
     private UserRepository userRepo;
 
     @PostConstruct
@@ -156,6 +159,10 @@ public class MarketplaceCheckoutController {
 
             Session session = Session.create(params.build());
 
+            // Supersede any earlier unpaid checkout this user left open, so we
+            // don't pile up duplicate PENDING orders (one per checkout click).
+            orderService.expirePendingOrders(userId, null);
+
             MarketplaceOrder order = new MarketplaceOrder();
             order.setOrderNumber(orderNumber);
             order.setUserId(userId);
@@ -179,6 +186,78 @@ public class MarketplaceCheckoutController {
             log.error("Failed to create marketplace checkout session", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(error("Could not start checkout. Please try again."));
+        }
+    }
+
+    /**
+     * POST /api/marketplace/checkout/resume/{orderId} → { url }
+     * "Proceed to payment" for a PENDING order: reuse the open Stripe session if
+     * it's still valid, otherwise rebuild a fresh one from the order's items
+     * (re-validating the listings are still available).
+     */
+    @PostMapping("/resume/{orderId}")
+    public ResponseEntity<?> resume(@PathVariable Long orderId, HttpServletRequest request) {
+        Long userId = authUserId(request);
+        if (userId == null) return unauthorized();
+        if (stripeSecretKey == null || stripeSecretKey.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(error("Payments not configured."));
+        }
+        MarketplaceOrder order = orderRepo.findById(orderId).orElse(null);
+        if (order == null) return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error("Order not found."));
+        if (!userId.equals(order.getUserId())) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error("This order isn't yours."));
+        }
+        if (!MarketplaceOrder.STATUS_PENDING.equals(order.getStatus())) {
+            return ResponseEntity.badRequest().body(error("This order can no longer be paid."));
+        }
+        try {
+            // Reuse the existing checkout session if Stripe still has it open.
+            try {
+                Session existing = Session.retrieve(order.getStripeSessionId());
+                if (existing != null && "open".equalsIgnoreCase(existing.getStatus()) && existing.getUrl() != null) {
+                    return ResponseEntity.ok(Map.of("url", existing.getUrl()));
+                }
+            } catch (Exception ignore) { /* expired/unknown — rebuild below */ }
+
+            if (order.getItems() == null || order.getItems().isEmpty()) {
+                return ResponseEntity.badRequest().body(error("This order has no items."));
+            }
+            SessionCreateParams.Builder params = SessionCreateParams.builder()
+                    .setMode(SessionCreateParams.Mode.PAYMENT)
+                    .setCustomerEmail(order.getBuyerEmail())
+                    .setSuccessUrl(frontendUrl + "/marketplace/order-confirmation?session_id={CHECKOUT_SESSION_ID}")
+                    .setCancelUrl(frontendUrl + "/marketplace/orders")
+                    .setShippingAddressCollection(buildShippingCollection())
+                    .putMetadata("purpose", PURPOSE)
+                    .putMetadata("userId", String.valueOf(userId))
+                    .putMetadata("orderNumber", order.getOrderNumber());
+            int added = 0;
+            for (OrderItem oi : order.getItems()) {
+                MarketplaceListing l = oi.getListingId() != null ? listingRepo.findById(oi.getListingId()).orElse(null) : null;
+                if (l == null || !"ACTIVE".equalsIgnoreCase(l.getStatus()) || l.getPriceAmount() == null
+                        || l.getCurrency() == null || l.getQuantity() <= 0) continue;
+                long unitAmount = l.getPriceAmount().movePointRight(2).setScale(0, RoundingMode.HALF_UP).longValueExact();
+                params.addLineItem(SessionCreateParams.LineItem.builder()
+                        .setQuantity(1L)
+                        .setPriceData(SessionCreateParams.LineItem.PriceData.builder()
+                                .setCurrency(l.getCurrency().toLowerCase())
+                                .setUnitAmount(unitAmount)
+                                .setProductData(SessionCreateParams.LineItem.PriceData.ProductData.builder()
+                                        .setName(l.getTitle()).build())
+                                .build())
+                        .build());
+                added++;
+            }
+            if (added == 0) {
+                return ResponseEntity.badRequest().body(error("The item(s) in this order are no longer available."));
+            }
+            Session session = Session.create(params.build());
+            order.setStripeSessionId(session.getId());
+            orderService.save(order);
+            return ResponseEntity.ok(Map.of("url", session.getUrl()));
+        } catch (Exception e) {
+            log.error("Failed to resume marketplace order {}", orderId, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error("Could not resume payment. Please try again."));
         }
     }
 
@@ -242,6 +321,15 @@ public class MarketplaceCheckoutController {
                     // (subscriptions/support are handled by their own controllers).
                     if (md != null && PURPOSE.equals(md.get("purpose"))) {
                         orderService.fulfillOrder(session, event.getId(), payload);
+                    }
+                }
+            } else if ("checkout.session.expired".equals(type)) {
+                // Stripe expired an abandoned session (~24h) — clean up its PENDING order.
+                Session session = resolveSession(event);
+                if (session != null) {
+                    Map<String, String> md = session.getMetadata();
+                    if (md != null && PURPOSE.equals(md.get("purpose"))) {
+                        orderService.expireBySession(session.getId());
                     }
                 }
             }

@@ -19,11 +19,23 @@ const STATUS_CLASS = {
   PAID: "ord-badge-paid",
   SHIPPED: "ord-badge-shipped",
   CANCELLED: "ord-badge-cancelled",
+  EXPIRED: "ord-badge-expired",
 };
 
 export default function MarketplaceOrders() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [copiedId, setCopiedId] = useState(null);
+
+  const copyId = async (e, o) => {
+    e.preventDefault();
+    e.stopPropagation();
+    try {
+      await navigator.clipboard.writeText(o.orderNumber);
+      setCopiedId(o.id);
+      setTimeout(() => setCopiedId((c) => (c === o.id ? null : c)), 1500);
+    } catch { /* clipboard unavailable */ }
+  };
 
   useEffect(() => {
     let cancelled = false;
@@ -57,7 +69,12 @@ export default function MarketplaceOrders() {
                   )}
                 </div>
                 <div className="ord-row-main">
-                  <div className="ord-row-number">{o.orderNumber}</div>
+                  <div className="ord-row-number">
+                    {o.orderNumber}
+                    <button type="button" className="ord-copy-btn" onClick={(e) => copyId(e, o)} title="Copy order ID" aria-label="Copy order ID">
+                      {copiedId === o.id ? "✓" : "⧉"}
+                    </button>
+                  </div>
                   <div className="ord-row-items">
                     {(o.items || []).map((it) => it.title).filter(Boolean).join(", ") || "Order"}
                   </div>

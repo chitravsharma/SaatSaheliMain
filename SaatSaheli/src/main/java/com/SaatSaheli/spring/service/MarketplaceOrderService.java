@@ -67,6 +67,37 @@ public class MarketplaceOrderService {
     }
 
     /**
+     * Mark the user's other PENDING (never-paid) orders as EXPIRED — used when a
+     * new checkout starts (supersede) and when one order is paid (clean up the
+     * sibling attempts each create-session made). No refund: these were never
+     * charged. Pass exceptOrderId to keep one order untouched.
+     */
+    public void expirePendingOrders(Long userId, Long exceptOrderId) {
+        if (userId == null) return;
+        for (MarketplaceOrder o : orderRepo.findByUserIdAndStatus(userId, MarketplaceOrder.STATUS_PENDING)) {
+            if (exceptOrderId != null && exceptOrderId.equals(o.getId())) continue;
+            o.setStatus(MarketplaceOrder.STATUS_EXPIRED);
+            o.setCancelledDate(LocalDateTime.now());
+            o.setCancelReason("Checkout not completed (superseded)");
+            orderRepo.save(o);
+            log.info("Expired stale pending order {} (user {})", o.getOrderNumber(), userId);
+        }
+    }
+
+    /** Mark a PENDING order EXPIRED when its Stripe checkout session expires. */
+    public void expireBySession(String sessionId) {
+        orderRepo.findByStripeSessionId(sessionId).ifPresent(o -> {
+            if (MarketplaceOrder.STATUS_PENDING.equals(o.getStatus())) {
+                o.setStatus(MarketplaceOrder.STATUS_EXPIRED);
+                o.setCancelledDate(LocalDateTime.now());
+                o.setCancelReason("Checkout session expired");
+                orderRepo.save(o);
+                log.info("Expired order {} — session {} expired", o.getOrderNumber(), sessionId);
+            }
+        });
+    }
+
+    /**
      * Fulfill a paid Checkout Session: flip the order to PAID, mark its listings SOLD,
      * clear the buyer's cart, record the payment ledger row, and email the receipt.
      *
@@ -109,6 +140,10 @@ public class MarketplaceOrderService {
 
         // Empty the buyer's cart now that it's been bought.
         try { cartService.clearCart(order.getUserId()); } catch (Exception e) { log.warn("Could not clear cart for user {}", order.getUserId(), e); }
+
+        // A paid order supersedes the sibling PENDING orders that the same
+        // checkout spree created — mark them EXPIRED so they don't linger.
+        try { expirePendingOrders(order.getUserId(), order.getId()); } catch (Exception e) { log.warn("Could not expire sibling pendings for user {}", order.getUserId(), e); }
 
         // Payment audit ledger row (best-effort; never block fulfillment on it).
         try {
