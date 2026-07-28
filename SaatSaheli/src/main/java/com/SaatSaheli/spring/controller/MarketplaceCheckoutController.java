@@ -55,6 +55,12 @@ public class MarketplaceCheckoutController {
     @Value("${stripe.webhook-secret:}")
     private String stripeWebhookSecret;
 
+    // Each Stripe webhook endpoint has its own signing secret. The marketplace
+    // endpoint is separate from the support endpoint, so it needs its own secret.
+    // Falls back to the shared secret when not configured (e.g. local/dev).
+    @Value("${stripe.marketplace-webhook-secret:}")
+    private String marketplaceWebhookSecret;
+
     @Value("${app.frontend-url:http://localhost:3000}")
     private String frontendUrl;
 
@@ -299,13 +305,15 @@ public class MarketplaceCheckoutController {
     @PostMapping("/webhook")
     public ResponseEntity<?> handleWebhook(@RequestBody String payload,
                                            @RequestHeader("Stripe-Signature") String sigHeader) {
-        if (stripeWebhookSecret == null || stripeWebhookSecret.isEmpty()) {
-            log.warn("Marketplace webhook called but stripe.webhook-secret is not configured");
+        String secret = (marketplaceWebhookSecret != null && !marketplaceWebhookSecret.isBlank())
+                ? marketplaceWebhookSecret : stripeWebhookSecret;
+        if (secret == null || secret.isEmpty()) {
+            log.warn("Marketplace webhook called but no signing secret is configured");
             return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(error("Webhook not configured."));
         }
         Event event;
         try {
-            event = Webhook.constructEvent(payload, sigHeader, stripeWebhookSecret);
+            event = Webhook.constructEvent(payload, sigHeader, secret);
         } catch (SignatureVerificationException e) {
             log.error("Marketplace webhook signature verification failed", e);
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error("Invalid signature."));
