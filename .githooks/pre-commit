@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+# gitleaks secret scan on staged changes — blocks a commit that contains a secret.
+# This hook is tracked in the repo (.githooks/) and activated per-clone via:
+#   git config core.hooksPath .githooks
+# Bypass in a genuine emergency with:  git commit --no-verify
+set -euo pipefail
+
+GITLEAKS="$(command -v gitleaks || true)"
+[ -z "$GITLEAKS" ] && [ -x "$HOME/.local/bin/gitleaks" ] && GITLEAKS="$HOME/.local/bin/gitleaks"
+
+if [ -z "$GITLEAKS" ] || [ ! -x "$GITLEAKS" ]; then
+  echo "gitleaks not found — skipping secret scan." >&2
+  echo "Install it (macOS): download the release binary to ~/.local/bin/gitleaks" >&2
+  exit 0
+fi
+
+if ! "$GITLEAKS" git --staged --redact --no-banner; then
+  echo "" >&2
+  echo "gitleaks blocked this commit — a secret was detected in your staged changes." >&2
+  echo "   - Remove the secret and re-commit, or" >&2
+  echo "   - If it's a false positive, allowlist it in .gitleaks.toml." >&2
+  echo "   - Emergency bypass (use with care): git commit --no-verify" >&2
+  exit 1
+fi
+exit 0
