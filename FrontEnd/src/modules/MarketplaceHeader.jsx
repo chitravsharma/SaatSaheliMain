@@ -9,9 +9,9 @@ import "./MarketplaceHeader.css";
 const navClass = ({ isActive }) => "shop-nav-link" + (isActive ? " active" : "");
 
 export default function MarketplaceHeader() {
-  const { user, isSuperAdmin } = useAuth();
+  const { user } = useAuth();
   const { cartCount } = useCart();
-  const { isIndia, setRegion } = useRegion();
+  const { isIndia, region, setRegion } = useRegion();
   const [menuOpen, setMenuOpen] = useState(false);
   const close = () => setMenuOpen(false);
 
@@ -52,16 +52,13 @@ export default function MarketplaceHeader() {
             <Link to="/Login" className="shop-nav-link shop-login" onClick={close}>Login</Link>
           )}
 
-          {isSuperAdmin && (
-            <button
-              type="button"
-              className="shop-nav-link shop-region-toggle"
-              onClick={() => setRegion(isIndia ? "INTL" : "IN")}
-              title="Superadmin: preview India vs International storefront"
-            >
-              🌐 {isIndia ? "India" : "Intl"} ⇄
-            </button>
-          )}
+          <label className="shop-region-select" title="India orders are contact-to-buy (online payment not available in India yet)">
+            <span className="shop-region-select-label">🌐 Shipping to</span>
+            <select value={region} onChange={(e) => setRegion(e.target.value)} aria-label="Shipping region">
+              <option value="INTL">International</option>
+              <option value="IN">India</option>
+            </select>
+          </label>
 
           <Link to="/" className="shop-back-link" onClick={close}>← SaatSaheli</Link>
         </nav>
