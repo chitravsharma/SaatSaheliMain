@@ -54,6 +54,7 @@ import MarketplaceHome from './pages/MarketplaceHome';
 import MarketplaceOrders from './pages/MarketplaceOrders';
 import MarketplaceOrderDetail from './pages/MarketplaceOrderDetail';
 import MarketplaceFavorites from './pages/MarketplaceFavorites';
+import MarketplaceAccount from './pages/MarketplaceAccount';
 import MarketplaceItemDetail from './pages/MarketplaceItemDetail';
 import { MarketplaceTerms, MarketplaceBuying, MarketplaceSelling, MarketplaceShipping } from './pages/MarketplacePolicies';
 import NotFound from './pages/NotFound';
@@ -142,6 +143,7 @@ function App() {
             <Route path="orders" element={<ProtectedRoute><MarketplaceOrders /></ProtectedRoute>} />
             <Route path="orders/:id" element={<ProtectedRoute><MarketplaceOrderDetail /></ProtectedRoute>} />
             <Route path="favorites" element={<ProtectedRoute><MarketplaceFavorites /></ProtectedRoute>} />
+            <Route path="account" element={<ProtectedRoute><MarketplaceAccount /></ProtectedRoute>} />
             <Route path="terms" element={<MarketplaceTerms />} />
             <Route path="buying" element={<MarketplaceBuying />} />
             <Route path="selling" element={<MarketplaceSelling />} />

@@ -24,6 +24,7 @@ export default function MarketplaceHeader() {
           <span>SaatSaheli <strong>Shop</strong></span>
         </Link>
 
+        {!menuOpen && <span className="shop-menu-hint" aria-hidden="true">Menu</span>}
         <button className="shop-hamburger" aria-label="Menu" onClick={() => setMenuOpen(o => !o)}>
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
         </button>
@@ -42,7 +43,7 @@ export default function MarketplaceHeader() {
           {user && <NotificationBell />}
 
           {user ? (
-            <Link to="/account" className="shop-nav-link" onClick={close}>Account</Link>
+            <Link to="/marketplace/account" className="shop-nav-link" onClick={close}>Account</Link>
           ) : (
             <Link to="/Login" className="shop-nav-link shop-login" onClick={close}>Login</Link>
           )}

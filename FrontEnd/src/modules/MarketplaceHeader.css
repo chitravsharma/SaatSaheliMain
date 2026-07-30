@@ -75,7 +75,8 @@
   margin-left: 8px;
   padding: 6px 10px;
   font-size: 0.85rem;
-  color: #78716c;
+  font-weight: 600;
+  color: #92400e;
   text-decoration: none;
   border-left: 1px solid #eaddc7;
 }
@@ -90,8 +91,27 @@
   color: #44403c;
 }
 
+/* "Menu" nudge — points the eye at the hamburger on phone view. Hidden on desktop. */
+.shop-menu-hint { display: none; }
+
+@keyframes shop-menu-nudge {
+  0%, 100% { transform: translateX(0); opacity: 0.8; }
+  50% { transform: translateX(4px); opacity: 1; }
+}
+
 @media (max-width: 800px) {
-  .shop-hamburger { display: inline-flex; }
+  .shop-hamburger { display: inline-flex; margin-left: 6px; }
+  .shop-menu-hint {
+    display: inline-flex;
+    align-items: center;
+    margin-left: auto;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #b45309;
+    white-space: nowrap;
+    animation: shop-menu-nudge 1.3s ease-in-out infinite;
+  }
+  .shop-menu-hint::after { content: "→"; margin-left: 3px; font-size: 1rem; }
   .shop-nav {
     display: none;
     position: absolute;
@@ -108,4 +128,8 @@
   }
   .shop-nav.open { display: flex; }
   .shop-back-link { border-left: none; margin-left: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .shop-menu-hint { animation: none; }
 }
