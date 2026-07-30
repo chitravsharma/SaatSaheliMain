@@ -7,6 +7,7 @@ import { useStrings } from "../LanguageContext";
 import AdBanner from "../modules/AdBanner";
 import ScrollRow from "../components/ScrollRow";
 import OpenInAppButton from "../components/OpenInAppButton";
+import MagazineAmazonCta from "../components/MagazineAmazonCta";
 import { optimizeCloudinary } from "../utils/imageUrl";
 import "./Home.css";
 import "./Magazine.css";
@@ -544,6 +545,7 @@ function Home() {
               </Link>
             );
           })()}
+          <MagazineAmazonCta />
         </aside>
 
         <aside className="home-hero-magazine home-feature-podcast" aria-label="Podcast">

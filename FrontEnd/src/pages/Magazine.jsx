@@ -5,6 +5,7 @@ import { useAuth } from "../AuthContext";
 import { useGatedClick } from "../contexts/LoginGateContext";
 import { useStrings } from "../LanguageContext";
 import { optimizeCloudinary } from "../utils/imageUrl";
+import MagazineAmazonCta from "../components/MagazineAmazonCta";
 import "./Home.css";
 import "./Magazine.css";
 
@@ -152,6 +153,7 @@ const Magazine = () => {
       <div className="magazine-container">
         <h2 className="magazine-heading">{strings.magazine.heading}</h2>
         <p className="magazine-not-found">{strings.magazine.notFound}</p>
+        <MagazineAmazonCta />
       </div>
     );
   }
@@ -167,6 +169,8 @@ const Magazine = () => {
     <div className="magazine-container">
       <h2 className="magazine-heading">{strings.magazine.heading}</h2>
       <p className="magazine-subtitle">{strings.magazine.pickEdition}</p>
+
+      <MagazineAmazonCta />
 
       <div style={{ textAlign: 'center', margin: '18px 0 24px' }}>
         <Link to="/magazine/submit" className="magazine-submit-cta">

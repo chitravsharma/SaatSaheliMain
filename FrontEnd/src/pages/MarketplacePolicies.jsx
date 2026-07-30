@@ -31,7 +31,7 @@ export function MarketplaceTerms() {
     <PolicyShell title="Marketplace Terms & Conditions">
       <div className="policies-section">
         <h2>1. Who sells on SaatSaheli Shop</h2>
-        <p>SaatSaheli Shop is a single-seller storefront: <strong>SaatSaheli is the seller</strong> of every item
+        <p>SaatSaheli Shop is a single-seller storefront: <strong>Avika Ventures is the seller</strong> of every item
           listed. Any registered, logged-in user may purchase. By placing an order you agree to these terms.</p>
       </div>
       <div className="policies-section">
@@ -83,8 +83,8 @@ export function MarketplaceSelling() {
     <PolicyShell title="Selling Policy">
       <div className="policies-section">
         <h2>Single-seller store</h2>
-        <p>SaatSaheli is the only seller on this store. Individual users cannot list items for sale here; listings are
-          curated and fulfilled by the SaatSaheli team.</p>
+        <p>Avika Ventures is the only seller on this store. Individual users cannot list items for sale here; listings are
+          curated and fulfilled by Avika Ventures.</p>
       </div>
       <div className="policies-section">
         <h2>Listing standards</h2>

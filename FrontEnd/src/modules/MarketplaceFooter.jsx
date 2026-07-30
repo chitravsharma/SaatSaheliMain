@@ -10,7 +10,7 @@ export default function MarketplaceFooter() {
       <div className="shop-footer-inner">
         <div className="shop-footer-col">
           <h4>SaatSaheli Shop</h4>
-          <p>Handpicked goods sold by SaatSaheli. Secure checkout, buyer protection, and easy cancellations.</p>
+          <p>Handpicked goods sold by Avika Ventures. Secure checkout, buyer protection, and easy cancellations.</p>
         </div>
         <div className="shop-footer-col">
           <h4>Policies</h4>

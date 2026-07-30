@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import api from '../utils/api';
 import { useAuth } from '../AuthContext';
 import { useLoginGate } from '../contexts/LoginGateContext';
+import MagazineAmazonCta from '../components/MagazineAmazonCta';
 import './HelpSupport.css';
 
 const API_BASE = process.env.REACT_APP_API_URL;
@@ -310,6 +311,8 @@ const MagazineSubmit = () => {
         <h1>Saat Saheli Magazine — Creative Submission Form</h1>
         <hr className="hs-divider" />
       </div>
+
+      <MagazineAmazonCta />
 
       <div className="hs-intro">
         <h2>Share Your Voice</h2>

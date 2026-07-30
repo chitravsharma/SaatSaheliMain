@@ -41,7 +41,7 @@ export default function MarketplaceHome() {
         <div className="shop-hero-text">
           <h1>SaatSaheli <em>Marketplace</em></h1>
           <p className="shop-hero-tagline">Little finds, big joy.</p>
-          <p>Handpicked books, art, crafts and more — thoughtfully curated, sold and shipped by SaatSaheli.</p>
+          <p>Handpicked books, art, crafts and more — thoughtfully curated, sold and shipped by Avika Ventures.</p>
           <div className="shop-hero-cta">
             <Link to="/marketplace/browse" className="bm-btn bm-btn-create">Shop all items</Link>
             <Link to="/marketplace/orders" className="bm-btn bm-btn-back">Track my orders</Link>

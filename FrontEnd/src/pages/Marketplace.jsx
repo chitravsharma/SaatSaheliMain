@@ -212,7 +212,7 @@ export default function Marketplace() {
       </h1>
 
       <p className="mp-disclaimer">
-        Sold and shipped by SaatSaheli. Secure Stripe checkout with free cancellation within 24 hours (before shipping).
+        Sold and shipped by Avika Ventures. Secure Stripe checkout with free cancellation within 24 hours (before shipping).
         <Link to="/marketplace/terms" className="mp-policy-link"> Terms</Link>
         <Link to="/marketplace/shipping" className="mp-policy-link"> Shipping &amp; Returns</Link>
       </p>
