@@ -55,7 +55,7 @@ export default function MarketplaceHeader() {
           <label className="shop-region-select" title="India orders are contact-to-buy (online payment not available in India yet)">
             <span className="shop-region-select-label">🌐 Shipping to</span>
             <select value={region} onChange={(e) => setRegion(e.target.value)} aria-label="Shipping region">
-              <option value="INTL">International</option>
+              <option value="INTL">USA</option>
               <option value="IN">India</option>
             </select>
           </label>
