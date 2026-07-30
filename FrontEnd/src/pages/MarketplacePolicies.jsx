@@ -14,7 +14,7 @@ function PolicyShell({ title, children }) {
       {children}
       <div className="policies-section" style={{ marginTop: 24 }}>
         <p>
-          <Link to="/marketplace">← Back to SaatSaheli Shop</Link>{"  ·  "}
+          <Link to="/marketplace">← Back to Sarayu Shop</Link>{"  ·  "}
           <Link to="/marketplace/terms">Terms</Link>{"  ·  "}
           <Link to="/marketplace/buying">Buying</Link>{"  ·  "}
           <Link to="/marketplace/selling">Selling</Link>{"  ·  "}
@@ -30,8 +30,8 @@ export function MarketplaceTerms() {
   return (
     <PolicyShell title="Marketplace Terms & Conditions">
       <div className="policies-section">
-        <h2>1. Who sells on SaatSaheli Shop</h2>
-        <p>SaatSaheli Shop is a single-seller storefront: <strong>Avika Ventures is the seller</strong> of every item
+        <h2>1. Who sells on Sarayu Shop</h2>
+        <p>Sarayu Shop is a single-seller storefront: <strong>Avika Ventures is the seller</strong> of every item
           listed. Any registered, logged-in user may purchase. By placing an order you agree to these terms.</p>
       </div>
       <div className="policies-section">

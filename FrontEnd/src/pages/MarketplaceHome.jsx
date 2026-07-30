@@ -39,7 +39,7 @@ export default function MarketplaceHome() {
       {/* Hero */}
       <section className="shop-hero">
         <div className="shop-hero-text">
-          <h1>SaatSaheli <em>Marketplace</em></h1>
+          <h1>Sarayu <em>Shop</em></h1>
           <p className="shop-hero-tagline">Little finds, big joy.</p>
           <p>Handpicked books, art, crafts and more — thoughtfully curated, sold and shipped by Avika Ventures.</p>
           <div className="shop-hero-cta">

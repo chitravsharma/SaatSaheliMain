@@ -5,38 +5,43 @@
   align-items: center;
   gap: 8px;
   margin: 10px auto 2px;
+  /* Sit above the hero's decorative fog/backdrops so the button is clickable. */
+  position: relative;
+  z-index: 30;
 }
 
 .open-in-app-btn {
+  position: relative;
+  z-index: 1;
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 9px 20px;
+  padding: 11px 24px;
   border: none;
   border-radius: 999px;
-  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  background: linear-gradient(135deg, #16a34a 0%, #047857 100%);
   color: #fff;
-  font-size: 14.5px;
-  font-weight: 600;
+  font-size: 15px;
+  font-weight: 700;
   letter-spacing: 0.01em;
   cursor: pointer;
-  box-shadow: 0 3px 10px rgba(217, 119, 6, 0.28);
+  box-shadow: 0 4px 14px rgba(4, 120, 87, 0.32);
   transition: transform 0.12s ease, box-shadow 0.12s ease, filter 0.12s ease;
 }
 
 .open-in-app-btn:hover {
-  filter: brightness(1.04);
-  box-shadow: 0 5px 16px rgba(217, 119, 6, 0.36);
+  filter: brightness(1.05);
+  box-shadow: 0 6px 18px rgba(4, 120, 87, 0.4);
   transform: translateY(-1px);
 }
 
 .open-in-app-btn:active {
   transform: translateY(0);
-  box-shadow: 0 2px 8px rgba(217, 119, 6, 0.3);
+  box-shadow: 0 2px 8px rgba(4, 120, 87, 0.34);
 }
 
 .open-in-app-btn:focus-visible {
-  outline: 2px solid #92400e;
+  outline: 2px solid #065f46;
   outline-offset: 2px;
 }
 

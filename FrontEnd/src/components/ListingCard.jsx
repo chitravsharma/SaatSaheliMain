@@ -44,7 +44,7 @@ export default function ListingCard({ item, ownerActions = null, onMessage }) {
 
   const handleShare = async () => {
     const url = `${window.location.origin}/marketplace/browse`;
-    const text = `Check out "${item.title}" for ${item.price} on SaatSaheli Shop!`;
+    const text = `Check out "${item.title}" for ${item.price} on Sarayu Shop!`;
     if (navigator.share) {
       try { await navigator.share({ title: item.title, text, url }); } catch { /* cancelled */ }
     } else {
