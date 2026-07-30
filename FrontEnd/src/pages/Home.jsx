@@ -61,8 +61,6 @@ function Home() {
   const [heroBackdropIdx, setHeroBackdropIdx] = useState(0);
   // Mobile-only carousel that swaps the hero photo through:
   // girl image → slide 1 → ... → slide N → girl image → ...
-  const [isMobileHero, setIsMobileHero] = useState(false);
-  const [mobileHeroIdx, setMobileHeroIdx] = useState(0);
 
   // Fetch testimonials (recent feedback with ratings)
   useEffect(() => {
@@ -298,46 +296,6 @@ function Home() {
     return () => clearInterval(t);
   }, [heroBackdrops]);
 
-  // Track mobile viewport so the hero photo can rotate on phones (and only there).
-  useEffect(() => {
-    if (typeof window === "undefined" || !window.matchMedia) return;
-    const mq = window.matchMedia("(max-width: 760px)");
-    const update = () => setIsMobileHero(mq.matches);
-    update();
-    if (mq.addEventListener) mq.addEventListener("change", update);
-    else mq.addListener(update);
-    return () => {
-      if (mq.removeEventListener) mq.removeEventListener("change", update);
-      else mq.removeListener(update);
-    };
-  }, []);
-
-  // Mobile-only carousel: cycle the hero photo through the girl image first,
-  // then each active hero backdrop, then back to the girl image. Effectively
-  // the girl image is just slide 0 in a 1+N rotation.
-  const mobileHeroSequence = useMemo(
-    () => ["/images/SSheroimg.jpg", ...heroBackdrops],
-    [heroBackdrops]
-  );
-
-  useEffect(() => {
-    if (!isMobileHero) return;
-    if (mobileHeroSequence.length < 2) return;
-    if (typeof window !== "undefined" && window.matchMedia &&
-        window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      return;
-    }
-    const t = setInterval(() => {
-      setMobileHeroIdx(i => (i + 1) % mobileHeroSequence.length);
-    }, 5500);
-    return () => clearInterval(t);
-  }, [isMobileHero, mobileHeroSequence]);
-
-  // On mobile, swap the photo src through the rotation; on desktop the photo
-  // stays static (the .home-hero-creator-backdrop on the right rotates instead).
-  const heroPhotoSrc = isMobileHero && mobileHeroSequence.length > 1
-    ? mobileHeroSequence[mobileHeroIdx % mobileHeroSequence.length]
-    : "/images/SSheroimg.jpg";
 
   return (
     <div className="home-container">
@@ -457,15 +415,32 @@ function Home() {
       {!user && (
         <section className="home-hero" aria-labelledby="home-hero-title">
           <div className="home-hero-grid">
-            <div className="home-hero-visual" aria-hidden="true">
-              <img
-                key={heroPhotoSrc}
-                src={heroPhotoSrc}
-                alt=""
-                className="home-hero-visual-img"
-                loading="eager"
-                fetchPriority="high"
-              />
+            <div className="home-hero-visual home-hero-visual--promo">
+              <div className="home-hero-amazon">
+                <span className="home-hero-amazon-badge">✦ Now on Amazon</span>
+                <div className="home-hero-amazon-top">
+                  <img
+                    src="/images/amazoncover.png"
+                    alt="Saat Saheli – Launch Issue magazine cover"
+                    className="home-hero-amazon-cover"
+                    loading="lazy"
+                  />
+                  <div className="home-hero-amazon-toptext">
+                    <h2 className="home-hero-amazon-title">📖 Get Your Printed Copy</h2>
+                    <p className="home-hero-amazon-sub"><strong>Saat Saheli – Launch Issue</strong> is now on Amazon.</p>
+                  </div>
+                </div>
+                <p>Enjoy poetry, creative writing, recipes, crafts, lifestyle &amp; cultural stories — in one beautifully printed magazine.</p>
+                <p className="home-hero-amazon-hard"><strong>👉 Get your hard copy today</strong></p>
+                <a
+                  className="home-hero-amazon-btn"
+                  href="https://www.amazon.com/dp/B0H3LW82QK"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  🛒 Order now on Amazon
+                </a>
+              </div>
             </div>
 
             <div className="home-hero-left">

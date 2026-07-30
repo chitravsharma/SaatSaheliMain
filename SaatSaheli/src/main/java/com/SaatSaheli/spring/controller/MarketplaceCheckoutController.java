@@ -61,6 +61,12 @@ public class MarketplaceCheckoutController {
     @Value("${stripe.marketplace-webhook-secret:}")
     private String marketplaceWebhookSecret;
 
+    // Flat delivery fee per currency (prices are tax-inclusive, so no tax line).
+    @Value("${marketplace.shipping.inr:60}")
+    private BigDecimal shippingInr;
+    @Value("${marketplace.shipping.usd:8}")
+    private BigDecimal shippingUsd;
+
     @Value("${app.frontend-url:http://localhost:3000}")
     private String frontendUrl;
 
@@ -160,6 +166,14 @@ public class MarketplaceCheckoutController {
                         currency, l.getUserId(), l.getImage1Url()));
             }
 
+            // Delivery: FREE for magazine-only orders (promo); flat fee otherwise.
+            boolean allMagazines = !buyable.isEmpty()
+                    && buyable.stream().allMatch(l -> "Magazine".equalsIgnoreCase(l.getCategory()));
+            BigDecimal shipping = allMagazines ? BigDecimal.ZERO : shippingFeeFor(currency);
+            if (shipping.signum() > 0) {
+                params.addLineItem(deliveryLineItem(currency, shipping));
+            }
+
             String orderNumber = orderService.generateOrderNumber();
             params.putMetadata("orderNumber", orderNumber);
 
@@ -175,6 +189,8 @@ public class MarketplaceCheckoutController {
             order.setBuyerEmail(user.getEmail());
             order.setBuyerName(buyerName(user));
             order.setSubtotal(subtotal);
+            order.setShipping(shipping);
+            order.setTotal(subtotal.add(shipping));
             order.setCurrency(currency);
             order.setStatus(MarketplaceOrder.STATUS_PENDING);
             order.setStripeSessionId(session.getId());
@@ -238,10 +254,12 @@ public class MarketplaceCheckoutController {
                     .putMetadata("userId", String.valueOf(userId))
                     .putMetadata("orderNumber", order.getOrderNumber());
             int added = 0;
+            boolean allMagazines = true;
             for (OrderItem oi : order.getItems()) {
                 MarketplaceListing l = oi.getListingId() != null ? listingRepo.findById(oi.getListingId()).orElse(null) : null;
                 if (l == null || !"ACTIVE".equalsIgnoreCase(l.getStatus()) || l.getPriceAmount() == null
                         || l.getCurrency() == null || l.getQuantity() <= 0) continue;
+                if (!"Magazine".equalsIgnoreCase(l.getCategory())) allMagazines = false;
                 long unitAmount = l.getPriceAmount().movePointRight(2).setScale(0, RoundingMode.HALF_UP).longValueExact();
                 params.addLineItem(SessionCreateParams.LineItem.builder()
                         .setQuantity(1L)
@@ -257,6 +275,12 @@ public class MarketplaceCheckoutController {
             if (added == 0) {
                 return ResponseEntity.badRequest().body(error("The item(s) in this order are no longer available."));
             }
+            BigDecimal shipping = allMagazines ? BigDecimal.ZERO : shippingFeeFor(order.getCurrency());
+            if (shipping.signum() > 0) {
+                params.addLineItem(deliveryLineItem(order.getCurrency(), shipping));
+            }
+            order.setShipping(shipping);
+            order.setTotal((order.getSubtotal() != null ? order.getSubtotal() : BigDecimal.ZERO).add(shipping));
             Session session = Session.create(params.build());
             order.setStripeSessionId(session.getId());
             orderService.save(order);
@@ -352,6 +376,34 @@ public class MarketplaceCheckoutController {
     @GetMapping("/countries")
     public ResponseEntity<?> allowedCountries() {
         return ResponseEntity.ok(Map.of("countries", parseAllowedCountries()));
+    }
+
+    /** GET /api/marketplace/checkout/fees — flat delivery fee per currency + tax note (public). */
+    @GetMapping("/fees")
+    public ResponseEntity<?> fees() {
+        Map<String, Object> m = new HashMap<>();
+        m.put("shipping", Map.of("inr", shippingInr, "usd", shippingUsd));
+        m.put("taxIncluded", true);
+        return ResponseEntity.ok(m);
+    }
+
+    private BigDecimal shippingFeeFor(String currency) {
+        if ("inr".equalsIgnoreCase(currency)) return shippingInr != null ? shippingInr : BigDecimal.ZERO;
+        if ("usd".equalsIgnoreCase(currency)) return shippingUsd != null ? shippingUsd : BigDecimal.ZERO;
+        return BigDecimal.ZERO;
+    }
+
+    private SessionCreateParams.LineItem deliveryLineItem(String currency, BigDecimal shipping) {
+        long minor = shipping.movePointRight(2).setScale(0, RoundingMode.HALF_UP).longValueExact();
+        return SessionCreateParams.LineItem.builder()
+                .setQuantity(1L)
+                .setPriceData(SessionCreateParams.LineItem.PriceData.builder()
+                        .setCurrency(currency.toLowerCase())
+                        .setUnitAmount(minor)
+                        .setProductData(SessionCreateParams.LineItem.PriceData.ProductData.builder()
+                                .setName("Delivery").build())
+                        .build())
+                .build();
     }
 
     private List<String> parseAllowedCountries() {

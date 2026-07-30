@@ -3,6 +3,9 @@ import { Link, useNavigate } from "react-router-dom";
 import api from "../utils/api";
 import { useCart } from "../contexts/CartContext";
 import { useAuth } from "../AuthContext";
+import useShippingFee from "../utils/useShippingFee";
+import { useRegion } from "../contexts/RegionContext";
+import ContactToBuy from "../components/ContactToBuy";
 import "./Marketplace.css";
 import "./Cart.css";
 
@@ -30,6 +33,12 @@ export default function MarketplaceCheckout() {
   );
   const currency = buyable[0]?.listing?.currency || "inr";
   const subtotal = buyable.reduce((sum, it) => sum + Number(it.listing.priceAmount || 0), 0);
+  const { shipping } = useShippingFee(currency);
+  const { isIndia } = useRegion();
+  // Delivery is free for magazine-only orders (promo).
+  const allMagazines = buyable.length > 0 && buyable.every((it) => (it.listing.category || "").toLowerCase() === "magazine");
+  const delivery = allMagazines ? 0 : (buyable.length > 0 && shipping != null ? shipping : 0);
+  const total = subtotal + delivery;
 
   const handlePay = async () => {
     setError("");
@@ -47,6 +56,18 @@ export default function MarketplaceCheckout() {
       setSubmitting(false);
     }
   };
+
+  if (isIndia) {
+    return (
+      <div className="mp-page">
+        <h1>Checkout</h1>
+        <div className="mp-section-card ord-empty">
+          <p>Online checkout isn’t available in your region yet.</p>
+          <ContactToBuy />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="mp-page">
@@ -75,9 +96,18 @@ export default function MarketplaceCheckout() {
 
             <div className="cart-summary">
               <div className="cart-summary-row">
-                <span>Total ({buyable.length} item{buyable.length === 1 ? "" : "s"})</span>
+                <span>Subtotal ({buyable.length} item{buyable.length === 1 ? "" : "s"})</span>
                 <strong>{money(subtotal, currency)}</strong>
               </div>
+              <div className="cart-summary-row">
+                <span>Delivery</span>
+                <strong>{delivery > 0 ? money(delivery, currency) : "Free"}</strong>
+              </div>
+              <div className="cart-summary-row cart-summary-total">
+                <span>Total</span>
+                <strong>{money(total, currency)}</strong>
+              </div>
+              <p className="cart-tax-note">Prices include all applicable taxes.</p>
               <p className="checkout-buyer-note">
                 Receipt & confirmation will be sent to <strong>{user?.email}</strong>.
               </p>

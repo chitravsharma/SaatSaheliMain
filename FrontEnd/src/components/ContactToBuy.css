@@ -1,0 +1,33 @@
+.contact-to-buy {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: flex-start;
+}
+.contact-to-buy--compact {
+  gap: 0;
+}
+.contact-to-buy-btn {
+  display: inline-block;
+  background: #b45309;
+  color: #fff;
+  font-weight: 700;
+  text-decoration: none;
+  padding: 10px 18px;
+  border-radius: 10px;
+  box-shadow: 0 6px 16px rgba(180, 83, 9, 0.25);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.contact-to-buy--compact .contact-to-buy-btn {
+  padding: 7px 12px;
+  font-size: 0.85rem;
+}
+.contact-to-buy-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 20px rgba(180, 83, 9, 0.35);
+}
+.contact-to-buy-note {
+  font-size: 0.8rem;
+  color: #6b7280;
+  margin: 0;
+}

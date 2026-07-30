@@ -2,6 +2,7 @@ import React from "react";
 import { Outlet } from "react-router-dom";
 import MarketplaceHeader from "./MarketplaceHeader";
 import MarketplaceFooter from "./MarketplaceFooter";
+import { RegionProvider } from "../contexts/RegionContext";
 
 /**
  * Shopping-site shell for all /marketplace/* routes. Renders its own storefront
@@ -10,12 +11,14 @@ import MarketplaceFooter from "./MarketplaceFooter";
  */
 export default function MarketplaceLayout() {
   return (
-    <div className="shop-shell">
-      <MarketplaceHeader />
-      <div className="shop-content">
-        <Outlet />
+    <RegionProvider>
+      <div className="shop-shell">
+        <MarketplaceHeader />
+        <div className="shop-content">
+          <Outlet />
+        </div>
+        <MarketplaceFooter />
       </div>
-      <MarketplaceFooter />
-    </div>
+    </RegionProvider>
   );
 }

@@ -71,6 +71,7 @@ const Header = () => {
               <span className="header-eyebrow">Create &nbsp;•&nbsp; Share &nbsp;•&nbsp; Inspire</span>
             </div>
           </Link>
+          {!mobileNavOpen && <span className="header-menu-hint" aria-hidden="true">Menu</span>}
           <button
             className="hamburger-btn"
             onClick={() => setMobileNavOpen(!mobileNavOpen)}

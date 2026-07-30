@@ -4,6 +4,8 @@ import { optimizeCloudinary } from "../utils/imageUrl";
 import { useAuth } from "../AuthContext";
 import { useCart } from "../contexts/CartContext";
 import { useFavorites } from "../contexts/FavoritesContext";
+import { useRegion } from "../contexts/RegionContext";
+import ContactToBuy from "./ContactToBuy";
 
 /**
  * Canonical storefront listing card: image, title, price, badges, favorite heart,
@@ -15,14 +17,16 @@ export default function ListingCard({ item, ownerActions = null, onMessage }) {
   const userId = user?.userId;
   const { isInCart, addToCart, removeFromCart } = useCart();
   const { isFavorite, toggleFavorite } = useFavorites();
+  const { isIndia } = useRegion();
   const [shareCopied, setShareCopied] = useState(false);
   const [imgBroken, setImgBroken] = useState(false);
 
   const detailUrl = `/marketplace/item/${item.id}`;
   const isOwner = !!userId && item.userId === userId;
   const qty = item.quantity == null ? 0 : item.quantity;
-  const soldOut = item.status === "ACTIVE" && item.priceAmount != null && qty <= 0;
-  const purchasable = !!userId && item.status === "ACTIVE" && item.priceAmount != null && qty > 0;
+  const contactToBuy = isIndia || item.priceAmount == null;
+  const soldOut = !contactToBuy && item.status === "ACTIVE" && item.priceAmount != null && qty <= 0;
+  const purchasable = !contactToBuy && !!userId && item.status === "ACTIVE" && item.priceAmount != null && qty > 0;
   const faved = isFavorite(item.id);
 
   const say = (m) => onMessage && m && onMessage(m);
@@ -82,7 +86,7 @@ export default function ListingCard({ item, ownerActions = null, onMessage }) {
       <div className="mp-card-info">
         <div className="mp-card-header">
           <h3 className="mp-card-title"><Link to={detailUrl} className="mp-card-title-link">{item.title}</Link></h3>
-          <span className="mp-card-price">{item.price}</span>
+          {!contactToBuy && <span className="mp-card-price">{item.price}</span>}
         </div>
         {item.description && <p className="mp-card-desc">{item.description}</p>}
         <div className="mp-card-meta">
@@ -93,6 +97,7 @@ export default function ListingCard({ item, ownerActions = null, onMessage }) {
         </div>
         {item.sellerName && <span className="mp-card-seller">by {item.sellerName}</span>}
         <div className="mp-card-actions">
+          {contactToBuy && !isOwner && <ContactToBuy compact />}
           {purchasable && !isOwner && (
             <button
               className={isInCart(item.id) ? "bm-btn bm-btn-back bm-btn-sm" : "bm-btn bm-btn-create bm-btn-sm"}

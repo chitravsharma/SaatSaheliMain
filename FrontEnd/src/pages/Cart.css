@@ -101,6 +101,20 @@
   font-size: 1.25rem;
 }
 
+.cart-summary-total {
+  border-top: 1px solid #eaddc7;
+  padding-top: 8px;
+  margin-top: 2px;
+}
+
+.cart-tax-note {
+  font-size: 0.78rem;
+  color: #6b7280;
+  margin: 6px 0 0;
+  width: 100%;
+  max-width: 360px;
+}
+
 .cart-checkout-btn {
   width: 100%;
   max-width: 360px;

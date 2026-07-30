@@ -5,6 +5,8 @@ import { optimizeCloudinary } from "../utils/imageUrl";
 import { useAuth } from "../AuthContext";
 import { useCart } from "../contexts/CartContext";
 import { useFavorites } from "../contexts/FavoritesContext";
+import { useRegion } from "../contexts/RegionContext";
+import ContactToBuy from "../components/ContactToBuy";
 import "./Marketplace.css";
 import "./MarketplaceItemDetail.css";
 
@@ -17,6 +19,7 @@ export default function MarketplaceItemDetail() {
   const userId = user?.userId;
   const { isInCart, addToCart, removeFromCart } = useCart();
   const { isFavorite, toggleFavorite } = useFavorites();
+  const { isIndia } = useRegion();
 
   const [item, setItem] = useState(null);
   const [state, setState] = useState("loading"); // loading | ready | error
@@ -24,6 +27,8 @@ export default function MarketplaceItemDetail() {
   const [activeImg, setActiveImg] = useState(0);
   const [brokenImgs, setBrokenImgs] = useState({});
   const [shareCopied, setShareCopied] = useState(false);
+  const [zoomOpen, setZoomOpen] = useState(false);
+  const [zoom, setZoom] = useState(1);
 
   const load = useCallback(() => {
     setState("loading");
@@ -47,8 +52,11 @@ export default function MarketplaceItemDetail() {
   const images = [item.image1Url, item.image2Url, item.image3Url, item.image4Url].filter(Boolean);
   const isOwner = !!userId && item.userId === userId;
   const qty = item.quantity == null ? 0 : item.quantity;
-  const soldOut = item.status === "ACTIVE" && item.priceAmount != null && qty <= 0;
-  const purchasable = !!userId && item.status === "ACTIVE" && item.priceAmount != null && qty > 0;
+  // India can't check out online yet → show "Contact us to buy" instead of
+  // price/cart (also covers any deliberately price-less "contact-only" listing).
+  const contactToBuy = isIndia || item.priceAmount == null;
+  const soldOut = !contactToBuy && item.status === "ACTIVE" && item.priceAmount != null && qty <= 0;
+  const purchasable = !contactToBuy && !!userId && item.status === "ACTIVE" && item.priceAmount != null && qty > 0;
   const faved = isFavorite(item.id);
   const say = (m) => m && setMessage(m);
 
@@ -92,6 +100,7 @@ export default function MarketplaceItemDetail() {
               <img
                 src={optimizeCloudinary(images[activeImg])}
                 alt={item.title}
+                onClick={() => { setZoom(1); setZoomOpen(true); }}
                 onError={() => setBrokenImgs((b) => ({ ...b, [activeImg]: true }))}
               />
             ) : (
@@ -120,7 +129,7 @@ export default function MarketplaceItemDetail() {
         {/* Info */}
         <div className="mp-detail-info">
           <h1 className="mp-detail-title">{item.title}</h1>
-          <div className="mp-detail-price">{item.price}</div>
+          {!contactToBuy && <div className="mp-detail-price">{item.price}</div>}
 
           <div className="mp-card-meta">
             {item.category && <span className="mp-card-badge mp-badge-category">{item.category}</span>}
@@ -139,6 +148,7 @@ export default function MarketplaceItemDetail() {
           )}
 
           <div className="mp-detail-actions">
+            {contactToBuy && !isOwner && <ContactToBuy />}
             {purchasable && !isOwner && (
               <button
                 className={isInCart(item.id) ? "bm-btn bm-btn-back" : "bm-btn bm-btn-create"}
@@ -165,7 +175,7 @@ export default function MarketplaceItemDetail() {
             </button>
           </div>
 
-          {!userId && (
+          {!contactToBuy && !userId && (
             <p className="mp-detail-login-hint">
               <Link to={`/Login?redirect=/marketplace/item/${item.id}`}>Log in</Link> to buy or save this item.
             </p>
@@ -178,6 +188,26 @@ export default function MarketplaceItemDetail() {
           </div>
         </div>
       </div>
+
+      {zoomOpen && showImg && (
+        <div className="mp-lightbox" onClick={() => setZoomOpen(false)} role="dialog" aria-modal="true" aria-label="Image zoom">
+          <div className="mp-lightbox-controls" onClick={(e) => e.stopPropagation()}>
+            <button onClick={() => setZoom((z) => Math.max(1, +(z - 0.5).toFixed(2)))} aria-label="Zoom out">−</button>
+            <span className="mp-lightbox-level">{Math.round(zoom * 100)}%</span>
+            <button onClick={() => setZoom((z) => Math.min(5, +(z + 0.5).toFixed(2)))} aria-label="Zoom in">+</button>
+            <button onClick={() => setZoom(1)} aria-label="Reset zoom">Reset</button>
+            <button className="mp-lightbox-close" onClick={() => setZoomOpen(false)} aria-label="Close">✕</button>
+          </div>
+          <div className="mp-lightbox-imgwrap" onClick={(e) => e.stopPropagation()}>
+            <img
+              src={optimizeCloudinary(images[activeImg])}
+              alt={item.title}
+              className="mp-lightbox-img"
+              style={zoom > 1 ? { width: `${zoom * 100}%`, maxWidth: "none", maxHeight: "none" } : undefined}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

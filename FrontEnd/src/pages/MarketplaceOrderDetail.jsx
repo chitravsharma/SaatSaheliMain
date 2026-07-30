@@ -132,9 +132,20 @@ export default function MarketplaceOrderDetail() {
 
         <div className="cart-summary" style={{ alignItems: "stretch" }}>
           <div className="cart-summary-row" style={{ maxWidth: "none" }}>
-            <span>Total {order.status === "CANCELLED" ? "(refunded)" : (order.status === "PAID" || order.status === "SHIPPED") ? "paid" : ""}</span>
+            <span>Subtotal</span>
             <strong>{money(order.subtotal, order.currency)}</strong>
           </div>
+          {order.shipping != null && Number(order.shipping) > 0 && (
+            <div className="cart-summary-row" style={{ maxWidth: "none" }}>
+              <span>Delivery</span>
+              <strong>{money(order.shipping, order.currency)}</strong>
+            </div>
+          )}
+          <div className="cart-summary-row cart-summary-total" style={{ maxWidth: "none" }}>
+            <span>Total {order.status === "CANCELLED" ? "(refunded)" : (order.status === "PAID" || order.status === "SHIPPED") ? "paid" : ""}</span>
+            <strong>{money(order.total != null ? order.total : order.subtotal, order.currency)}</strong>
+          </div>
+          <p className="cart-tax-note">Prices include all applicable taxes.</p>
         </div>
 
         {/* Shipping */}

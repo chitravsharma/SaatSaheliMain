@@ -1041,6 +1041,105 @@ a.home-gallery-author:hover { text-decoration: underline; color: var(--accent-bl
   );
   pointer-events: none;
 }
+/* Amazon "Get your printed copy" promo that replaces the hero photo. */
+.home-hero-visual--promo {
+  aspect-ratio: auto;
+  max-width: 400px;
+  align-self: center;
+}
+.home-hero-visual--promo::after { display: none; }
+
+.home-hero-amazon {
+  position: relative;
+  z-index: 1;
+  overflow: hidden;
+  border: 1px solid #f0c896;
+  border-radius: 18px;
+  padding: 22px 20px 22px;
+  background:
+    radial-gradient(ellipse 280px 200px at 100% 0%, rgba(217, 119, 6, 0.16) 0%, transparent 62%),
+    radial-gradient(ellipse 300px 220px at 0% 100%, rgba(198, 107, 61, 0.18) 0%, transparent 62%),
+    radial-gradient(ellipse 240px 200px at 90% 100%, rgba(135, 169, 107, 0.14) 0%, transparent 60%),
+    linear-gradient(140deg, #fde9d2 0%, #fdf3e6 48%, #fbe7d4 100%);
+  box-shadow: 0 14px 36px rgba(180, 83, 9, 0.18);
+}
+/* Colorful magazine-spine ribbon along the top. */
+.home-hero-amazon::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 6px;
+  background: linear-gradient(90deg, #d97706 0%, #c66b3d 34%, #e8a47a 62%, #87a96b 100%);
+}
+.home-hero-amazon-badge {
+  display: inline-block;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #fff;
+  background: linear-gradient(90deg, #d97706, #c66b3d);
+  border-radius: 999px;
+  padding: 4px 12px;
+  margin-bottom: 12px;
+  box-shadow: 0 3px 8px rgba(198, 107, 61, 0.35);
+}
+.home-hero-amazon-top {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+.home-hero-amazon-cover {
+  width: 92px;
+  flex: 0 0 92px;
+  height: auto;
+  border-radius: 8px;
+  box-shadow: 0 8px 18px rgba(120, 60, 20, 0.28);
+  transform: rotate(-3deg);
+  border: 2px solid #fff;
+}
+.home-hero-amazon-toptext { min-width: 0; }
+.home-hero-amazon-title {
+  font-family: Georgia, "Playfair Display", "Times New Roman", serif;
+  font-size: 1.42rem;
+  line-height: 1.15;
+  margin: 2px 0 6px;
+  color: #7c2d12;
+}
+.home-hero-amazon-sub {
+  margin: 0 !important;
+  color: #9a3412 !important;
+}
+.home-hero-amazon p {
+  font-size: 0.92rem;
+  line-height: 1.55;
+  color: #5b4636;
+  margin: 0 0 10px;
+}
+.home-hero-amazon-hard {
+  font-weight: 700;
+  color: #7c2d12 !important;
+}
+.home-hero-amazon-btn {
+  display: inline-block;
+  margin-top: 4px;
+  background: linear-gradient(90deg, #ff9900, #ff8000);
+  color: #1a1a2e;
+  font-weight: 800;
+  text-decoration: none;
+  padding: 12px 22px;
+  border-radius: 999px;
+  box-shadow: 0 8px 20px rgba(255, 137, 0, 0.4);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.home-hero-amazon-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 26px rgba(255, 137, 0, 0.5);
+}
+
 .home-hero-visual-img {
   width: 100%;
   height: 100%;
@@ -1520,12 +1619,20 @@ a.home-gallery-author:hover { text-decoration: underline; color: var(--accent-bl
     max-width: 200px;
     margin: 0 auto;
   }
+  /* The Amazon promo needs the full width on phones (unlike the old photo). */
+  .home-hero-visual--promo {
+    max-width: 100%;
+    margin: 0;
+  }
+  .home-hero-amazon {
+    padding: 18px 16px 20px;
+  }
+  .home-hero-amazon-title {
+    font-size: 1.2rem;
+  }
   .home-hero-left {
     gap: 16px;
-    /* Pull the H1 up so "Give your creativity" sits over the image's
-       faded bottom — the existing bottom-fog mask makes the title
-       readable on the cream wash. */
-    margin-top: -52px;
+    margin-top: 20px;
     z-index: 2;
     align-items: center;
     text-align: center;

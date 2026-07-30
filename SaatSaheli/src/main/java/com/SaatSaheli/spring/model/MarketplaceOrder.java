@@ -44,6 +44,14 @@ public class MarketplaceOrder {
     @Column(precision = 12, scale = 2)
     private BigDecimal subtotal;
 
+    // Flat delivery fee and grand total (subtotal + shipping). Prices are
+    // tax-inclusive, so there is no separate tax field.
+    @Column(precision = 12, scale = 2)
+    private BigDecimal shipping;
+
+    @Column(precision = 12, scale = 2)
+    private BigDecimal total;
+
     private String currency;
 
     private String status;
@@ -121,6 +129,12 @@ public class MarketplaceOrder {
 
     public BigDecimal getSubtotal() { return subtotal; }
     public void setSubtotal(BigDecimal subtotal) { this.subtotal = subtotal; }
+
+    public BigDecimal getShipping() { return shipping; }
+    public void setShipping(BigDecimal shipping) { this.shipping = shipping; }
+
+    public BigDecimal getTotal() { return total; }
+    public void setTotal(BigDecimal total) { this.total = total; }
 
     public String getCurrency() { return currency; }
     public void setCurrency(String currency) { this.currency = currency; }

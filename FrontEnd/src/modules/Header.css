@@ -138,6 +138,16 @@
 }
 
 /* Hamburger - hidden on desktop */
+/* "Menu" nudge that points at the hamburger on mobile (hidden on desktop). */
+.header-menu-hint { display: none; }
+@keyframes header-menu-nudge {
+  0%, 100% { transform: translateX(0); opacity: 0.85; }
+  50% { transform: translateX(4px); opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .header-menu-hint { animation: none; }
+}
+
 .hamburger-btn {
   display: none;
   background: none;
@@ -640,6 +650,20 @@
   .hamburger-btn {
     display: flex;
   }
+
+  /* Point the eye at the hamburger */
+  .header-menu-hint {
+    display: inline-flex;
+    align-items: center;
+    margin-left: auto;
+    margin-right: 8px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #c9a84c;
+    white-space: nowrap;
+    animation: header-menu-nudge 1.3s ease-in-out infinite;
+  }
+  .header-menu-hint::after { content: "→"; margin-left: 3px; font-size: 1rem; }
 
   /* Nav hidden by default on mobile */
   .header-nav {

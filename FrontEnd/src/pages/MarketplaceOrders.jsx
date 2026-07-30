@@ -83,7 +83,7 @@ export default function MarketplaceOrders() {
                   </div>
                 </div>
                 <span className={`ord-badge ${STATUS_CLASS[o.status] || ""}`}>{o.status}</span>
-                <div className="ord-row-total">{money(o.subtotal, o.currency)}</div>
+                <div className="ord-row-total">{money(o.total != null ? o.total : o.subtotal, o.currency)}</div>
                 <span className="ord-row-arrow">→</span>
               </Link>
             ))}
