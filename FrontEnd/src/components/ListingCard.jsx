@@ -97,7 +97,7 @@ export default function ListingCard({ item, ownerActions = null, onMessage }) {
         </div>
         {item.sellerName && <span className="mp-card-seller">by {item.sellerName}</span>}
         <div className="mp-card-actions">
-          {contactToBuy && !isOwner && <ContactToBuy compact />}
+          {contactToBuy && <ContactToBuy compact />}
           {purchasable && !isOwner && (
             <button
               className={isInCart(item.id) ? "bm-btn bm-btn-back bm-btn-sm" : "bm-btn bm-btn-create bm-btn-sm"}

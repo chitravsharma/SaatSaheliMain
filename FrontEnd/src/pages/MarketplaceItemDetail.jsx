@@ -148,7 +148,7 @@ export default function MarketplaceItemDetail() {
           )}
 
           <div className="mp-detail-actions">
-            {contactToBuy && !isOwner && <ContactToBuy />}
+            {contactToBuy && <ContactToBuy />}
             {purchasable && !isOwner && (
               <button
                 className={isInCart(item.id) ? "bm-btn bm-btn-back" : "bm-btn bm-btn-create"}
