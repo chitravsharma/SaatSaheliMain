@@ -14,13 +14,19 @@ import "./SponsorUs.css";
 const API_BASE = process.env.REACT_APP_API_URL || "";
 const RECAPTCHA_SITE_KEY = process.env.REACT_APP_RECAPTCHA_SITE_KEY;
 const INQUIRY_EMAIL = "avikaventures.info@gmail.com";
+// Stripe-hosted Customer Portal login page (Dashboard → Settings → Billing →
+// Customer portal → "login page" link). Sponsors enter their email, get a magic
+// link, and can cancel or update their monthly sponsorship themselves — works
+// even for sponsors who paid without an account. The "Manage sponsorship" link
+// only renders when this is configured, so it never shows a broken URL.
+const STRIPE_PORTAL_URL = process.env.REACT_APP_STRIPE_PORTAL_URL || "";
 
 const SITE_PACKAGES = [
   {
     key: "Friend",
     name: "Friend of SaatSaheli",
-    price: "$250",
-    cadence: "/ year",
+    price: "$15",
+    cadence: "/ month",
     blurb: "For individual supporters and small patrons who believe in the community.",
     features: [
       "Your name on our /sponsors page",
@@ -32,8 +38,8 @@ const SITE_PACKAGES = [
   {
     key: "Community",
     name: "Community Sponsor",
-    price: "$750",
-    cadence: "/ year",
+    price: "$50",
+    cadence: "/ month",
     blurb: "For local businesses, classes, or small brands aligning with a creative community.",
     features: [
       "Your logo in the SaatSaheli footer (every page)",
@@ -46,8 +52,8 @@ const SITE_PACKAGES = [
   {
     key: "Founding",
     name: "Founding Sponsor",
-    price: "$1,500",
-    cadence: "/ year",
+    price: "$100",
+    cadence: "/ month",
     blurb: "For brands that want to anchor SaatSaheli's growth and sit at the front of the room.",
     features: [
       "Prominent footer logo placement (top of strip)",
@@ -154,8 +160,14 @@ const SponsorUs = () => {
       setPayError("This package isn't available for online payment — please use the inquiry form below.");
       return;
     }
-    // Annual site packages renew yearly; per-issue / per-episode are one-time.
-    const frequency = /year/i.test(pkg.cadence || "") ? "annual" : "one_time";
+    // Site packages bill monthly; annual cadence renews yearly; per-issue /
+    // per-episode are one-time.
+    const cadence = pkg.cadence || "";
+    const frequency = /month/i.test(cadence)
+      ? "monthly"
+      : /year/i.test(cadence)
+        ? "annual"
+        : "one_time";
     setPayingKey(pkg.key);
     try {
       const res = await api.post(`/api/support/create-checkout-session`, {
@@ -260,9 +272,9 @@ const SponsorUs = () => {
       <section aria-label="Site sponsorship packages">
         <header className="sponsor-section-head">
           <p className="advertise-eyebrow">Site sponsorship</p>
-          <h2 className="advertise-placements-h2">Annual partnerships</h2>
+          <h2 className="advertise-placements-h2">Monthly partnerships</h2>
           <p className="advertise-placements-lede">
-            Your brand alongside the platform — every page, every reader, every issue.
+            Your brand alongside the platform — every page, every reader, every issue. Billed monthly, cancel anytime.
           </p>
         </header>
         <div className="advertise-grid">
@@ -290,7 +302,7 @@ const SponsorUs = () => {
                   onClick={() => handlePaySponsor(pkg)}
                   disabled={payingKey === pkg.key}
                 >
-                  {payingKey === pkg.key ? "Redirecting…" : `Sponsor now — ${pkg.price}/yr`}
+                  {payingKey === pkg.key ? "Redirecting…" : `Sponsor now — ${pkg.price}/mo`}
                 </button>
                 <button
                   type="button"
@@ -374,10 +386,26 @@ const SponsorUs = () => {
         </button>
       </section>
 
-      <p style={{ textAlign: "center", color: "#6b7280", fontSize: "0.9rem", margin: "0 auto 1.5rem", maxWidth: 640 }}>
-        Sponsorship payments are processed securely by Stripe and are non-refundable except for charges made in error. See our{" "}
+      <p style={{ textAlign: "center", color: "#6b7280", fontSize: "0.9rem", margin: "0 auto 0.75rem", maxWidth: 640 }}>
+        Monthly sponsorships are billed automatically each month and you can cancel anytime — no long-term commitment.
+        Payments are processed securely by Stripe and are non-refundable except for charges made in error. See our{" "}
         <Link to="/refund-policy" style={{ color: "#f59e0b", fontWeight: 600 }}>Refund Policy</Link>.
       </p>
+
+      {STRIPE_PORTAL_URL && (
+        <p style={{ textAlign: "center", color: "#6b7280", fontSize: "0.9rem", margin: "0 auto 1.5rem", maxWidth: 640 }}>
+          Already sponsoring?{" "}
+          <a
+            href={STRIPE_PORTAL_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{ color: "#f59e0b", fontWeight: 600 }}
+          >
+            Manage or cancel your sponsorship
+          </a>
+          {" "}— enter your email and Stripe will send you a secure link.
+        </p>
+      )}
 
       <section className="advertise-form-wrap" id="sponsor-form" aria-label="Sponsorship inquiry">
         <h2 className="advertise-form-title">Ready to support SaatSaheli?</h2>
@@ -463,10 +491,10 @@ const SponsorUs = () => {
                 value={packageInterest}
                 onChange={(e) => setPackageInterest(e.target.value)}
               >
-                <optgroup label="Site sponsorship (annual)">
-                  <option value="Friend">Friend of SaatSaheli — $250 / year</option>
-                  <option value="Community">Community Sponsor — $750 / year</option>
-                  <option value="Founding">Founding Sponsor — $1,500 / year</option>
+                <optgroup label="Site sponsorship (monthly)">
+                  <option value="Friend">Friend of SaatSaheli — $15 / month</option>
+                  <option value="Community">Community Sponsor — $50 / month</option>
+                  <option value="Founding">Founding Sponsor — $100 / month</option>
                 </optgroup>
                 <optgroup label="Magazine + podcast">
                   <option value="Issue">Magazine Issue — $300 / issue</option>
