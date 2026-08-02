@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import api, { profileUrl } from "../utils/api";
 import { useAuth } from "../AuthContext";
 import AdBanner from "../modules/AdBanner";
@@ -98,6 +98,10 @@ function PodcastAudio({ src }) {
 function Podcasts() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  // Deep link: /podcasts/:podcastId (from a shared episode link) scrolls to and
+  // highlights that episode in the list.
+  const { podcastId } = useParams();
+  const [highlightId, setHighlightId] = useState(null);
   const userId = user?.userId;
   const isAdmin = !!user && (user.role === "ADMIN" || user.role === "SUPER_ADMIN");
 
@@ -186,6 +190,21 @@ function Podcasts() {
       }
     })();
   }, [podcasts, myPodcasts, userId]);
+
+  // When arriving via a shared /podcasts/:podcastId link, scroll the episode
+  // into view and briefly highlight it once the list has loaded. Falls back
+  // silently to the plain list if that episode isn't present (e.g. unpublished).
+  useEffect(() => {
+    if (!podcastId || loading) return;
+    setTab("browse");
+    setFilterLang("");
+    const el = document.getElementById(`podcast-${podcastId}`);
+    if (!el) return;
+    el.scrollIntoView({ behavior: "smooth", block: "center" });
+    setHighlightId(Number(podcastId));
+    const t = setTimeout(() => setHighlightId(null), 2600);
+    return () => clearTimeout(t);
+  }, [podcastId, loading, podcasts]);
 
   const handleLike = async (podcastId) => {
     if (!userId) {
@@ -349,7 +368,9 @@ function Podcasts() {
   };
 
   const handleShare = async (podcast) => {
-    const url = `${window.location.origin}/podcasts`;
+    // Share the episode's own URL so the link deep-links to it and its
+    // server-rendered Open Graph preview shows this episode's cover image.
+    const url = `${window.location.origin}/podcasts/${podcast.id}`;
     const text = `Listen to "${podcast.title}" on Saat Saheli!`;
     if (navigator.share) {
       try { await navigator.share({ title: podcast.title, text, url }); } catch { /* cancelled */ }
@@ -375,7 +396,11 @@ function Podcasts() {
     : podcasts;
 
   const renderPodcastCard = (podcast, isOwner) => (
-    <div key={podcast.id} className="podcast-card">
+    <div
+      key={podcast.id}
+      id={`podcast-${podcast.id}`}
+      className={`podcast-card${highlightId === podcast.id ? " podcast-card-highlight" : ""}`}
+    >
       <div className="podcast-card-top">
         <div className="podcast-info">
           <div className="podcast-badges">

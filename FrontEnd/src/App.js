@@ -118,6 +118,7 @@ function App() {
           <Route path="/poems/:articleId" element={<Articles />} />
           <Route path="/writers" element={<Writers />} />
           <Route path="/podcasts" element={<Podcasts />} />
+          <Route path="/podcasts/:podcastId" element={<Podcasts />} />
           <Route path="/magazine" element={<Magazine />} />
           <Route path="/magazine/submit" element={<MagazineSubmit />} />
           <Route path="/galleries" element={<Galleries />} />

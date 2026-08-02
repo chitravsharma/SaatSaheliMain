@@ -76,6 +76,7 @@ public class OpenGraphController {
     private final RecipeImageRepository recipeImageRepo;
     private final GalleryRepository galleryRepo;
     private final GalleryImageRepository galleryImageRepo;
+    private final PodcastRepository podcastRepo;
 
     /** Lazily-loaded, cached copy of the built index.html. */
     private volatile String template;
@@ -86,7 +87,8 @@ public class OpenGraphController {
                                RecipeRepository recipeRepo,
                                RecipeImageRepository recipeImageRepo,
                                GalleryRepository galleryRepo,
-                               GalleryImageRepository galleryImageRepo) {
+                               GalleryImageRepository galleryImageRepo,
+                               PodcastRepository podcastRepo) {
         this.articleRepo = articleRepo;
         this.bookRepo = bookRepo;
         this.listingRepo = listingRepo;
@@ -94,6 +96,7 @@ public class OpenGraphController {
         this.recipeImageRepo = recipeImageRepo;
         this.galleryRepo = galleryRepo;
         this.galleryImageRepo = galleryImageRepo;
+        this.podcastRepo = podcastRepo;
     }
 
     // ── Routes (mirror FrontEnd/src/App.js detail routes) ──────────────────
@@ -154,6 +157,22 @@ public class OpenGraphController {
             }
         }
         return html(render(g.getTitle(), g.getDescription(), image, "article", req), req);
+    }
+
+    @GetMapping("/podcasts/{id}")
+    public ResponseEntity<String> podcast(@PathVariable String id, HttpServletRequest req) {
+        Long lid = parseId(id);
+        Podcast p = lid == null ? null : podcastRepo.findById(lid).orElse(null);
+        if (p == null) return html(defaultDoc(), req);
+        String desc = blank(p.getDescription())
+                ? "Listen to this podcast on " + SITE_NAME + "."
+                : p.getDescription();
+        // Most episodes are YouTube-based with no uploaded cover — fall back to
+        // the video thumbnail (same image the card shows) so the share still
+        // previews the episode rather than the generic card.
+        String image = p.getCoverImageUrl();
+        if (blank(image)) image = youtubeThumb(p.getYoutubeUrl());
+        return html(render(p.getTitle(), desc, image, "article", req), req);
     }
 
     // ── Rendering ──────────────────────────────────────────────────────────
@@ -219,6 +238,49 @@ public class OpenGraphController {
             }
             return template;
         }
+    }
+
+    /** YouTube thumbnail URL for a video URL/id, or null. hqdefault always exists. */
+    private static String youtubeThumb(String input) {
+        String id = extractYoutubeId(input);
+        return id == null ? null : "https://i.ytimg.com/vi/" + id + "/hqdefault.jpg";
+    }
+
+    /** Extract an 11-char YouTube id from a URL or bare id (mirrors the frontend). */
+    private static String extractYoutubeId(String input) {
+        if (blank(input)) return null;
+        String s = input.trim();
+        String id = null;
+        if (s.matches("[A-Za-z0-9_-]{11}")) {
+            id = s;
+        } else {
+            try {
+                java.net.URI u = java.net.URI.create(s);
+                String host = u.getHost() == null ? "" : u.getHost();
+                String path = u.getPath() == null ? "" : u.getPath();
+                if (host.contains("youtu.be")) {
+                    String seg = path.startsWith("/") ? path.substring(1) : path;
+                    int slash = seg.indexOf('/');
+                    id = slash >= 0 ? seg.substring(0, slash) : seg;
+                } else if (host.contains("youtube.com")) {
+                    if (path.startsWith("/embed/") || path.startsWith("/shorts/")) {
+                        String[] parts = path.split("/");
+                        id = parts.length > 2 ? parts[2] : null;
+                    } else if (u.getQuery() != null) {
+                        for (String kv : u.getQuery().split("&")) {
+                            int eq = kv.indexOf('=');
+                            if (eq > 0 && "v".equals(kv.substring(0, eq))) {
+                                id = kv.substring(eq + 1);
+                                break;
+                            }
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                return null;
+            }
+        }
+        return id != null && id.matches("[A-Za-z0-9_-]{11}") ? id : null;
     }
 
     private static Long parseId(String s) {
