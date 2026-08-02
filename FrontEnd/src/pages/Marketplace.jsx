@@ -46,6 +46,7 @@ export default function Marketplace() {
     return next;
   });
   const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState("");
   const [saving, setSaving] = useState(false);
 
   const fetchListings = async () => {
@@ -73,9 +74,24 @@ export default function Marketplace() {
     if (tab === "my" && userId) fetchMyListings();
   }, [tab, userId]);
 
+  // Reject oversized images on the client before we even start the upload, so
+  // the user gets an instant, in-place message instead of a slow round-trip (or
+  // — with the 100MB server cap — a silent, memory-heavy upload). The backend
+  // enforces the same limit as a backstop.
+  const MAX_IMAGE_MB = 10;
+
   const handleImageUpload = async (e, setImage) => {
     const file = e.target.files[0];
     if (!file) return;
+    setUploadError("");
+    if (file.size > MAX_IMAGE_MB * 1024 * 1024) {
+      setUploadError(
+        `"${file.name}" is ${(file.size / 1024 / 1024).toFixed(1)} MB — too large. `
+        + `Please use an image under ${MAX_IMAGE_MB} MB (compress it or export at a smaller size).`
+      );
+      e.target.value = ""; // let the user re-pick the same slot
+      return;
+    }
     // Show an instant local preview so the user sees the image immediately,
     // instead of waiting for the (potentially slow, multi-MB) upload to return
     // the remote URL. We swap in the uploaded URL on success.
@@ -90,8 +106,8 @@ export default function Marketplace() {
     } catch (err) {
       console.error("Image upload failed:", err?.response?.status, err?.response?.data || err?.message);
       setImage("");
-      setMessage(err.response?.data?.error
-        || (err.request && !err.response ? "Couldn't reach the server to upload the image." : "Failed to upload image"));
+      setUploadError(err.response?.data?.error
+        || (err.request && !err.response ? "Couldn't reach the server to upload the image." : "Failed to upload image."));
     } finally {
       URL.revokeObjectURL(localPreview);
       setUploading(false);
@@ -104,6 +120,7 @@ export default function Marketplace() {
     setPriceAmount(""); setCurrency("inr");
     setCondition("Good"); setContactInfo(""); setImages(["", "", "", ""]);
     setQuantity("1"); setStatus("ACTIVE");
+    setUploadError("");
     setShowForm(false);
   };
 
@@ -320,6 +337,10 @@ export default function Marketplace() {
                   </div>
                 </div>
                 <label className="mp-photos-label">Photos (up to 4 — the first is the cover){uploading && " · Uploading…"}</label>
+                <p className="mp-photos-hint">JPG, PNG, GIF or WEBP · up to {MAX_IMAGE_MB} MB each. iPhone HEIC photos must be converted to JPEG first.</p>
+                {uploadError && (
+                  <div className="mp-upload-error" role="alert" onClick={() => setUploadError("")}>{uploadError}</div>
+                )}
                 <div className="mp-photo-grid">
                   {images.map((img, i) => (
                     <div className="mp-field mp-photo-slot" key={i}>

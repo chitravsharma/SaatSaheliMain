@@ -347,6 +347,22 @@
   color: var(--text-primary);
   margin-bottom: 8px;
 }
+.mp-photos-hint {
+  margin: 0 0 8px;
+  font-size: 0.76rem;
+  color: var(--text-secondary, #6b7280);
+}
+.mp-upload-error {
+  margin: 0 0 10px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #b91c1c;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+}
 .mp-photo-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));

@@ -29,6 +29,10 @@ public final class UploadValidator {
 
     private static final int HEADER_LEN = 16;
 
+    /** Max size for a raster image upload. Guards the small Render box against
+     *  memory-heavy rasterization and mirrors the client-side check. */
+    private static final long MAX_IMAGE_BYTES = 10L * 1024 * 1024; // 10 MB
+
     /** Sniff the file header and classify by signature. Never throws. */
     public static FileType detect(MultipartFile file) {
         if (file == null) return FileType.UNKNOWN;
@@ -69,6 +73,11 @@ public final class UploadValidator {
 
     /** Throw if the file is not a browser-safe raster image. */
     public static void requireSafeImage(MultipartFile file) {
+        if (file != null && file.getSize() > MAX_IMAGE_BYTES) {
+            throw new IllegalArgumentException(
+                    "Image is too large. Please upload an image under "
+                            + (MAX_IMAGE_BYTES / (1024 * 1024)) + " MB.");
+        }
         FileType t = detect(file);
         if (t == FileType.HEIC) {
             throw new IllegalArgumentException(
