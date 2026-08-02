@@ -43,7 +43,9 @@ export default function ListingCard({ item, ownerActions = null, onMessage }) {
   };
 
   const handleShare = async () => {
-    const url = `${window.location.origin}/marketplace/browse`;
+    // Share the item's own canonical URL so the link (and its server-rendered
+    // Open Graph preview image) is specific to this product, not the storefront.
+    const url = `${window.location.origin}${detailUrl}`;
     const text = `Check out "${item.title}" for ${item.price} on Sarayu Shop!`;
     if (navigator.share) {
       try { await navigator.share({ title: item.title, text, url }); } catch { /* cancelled */ }
