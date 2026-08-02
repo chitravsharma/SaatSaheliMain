@@ -32,7 +32,33 @@ export default function MarketplaceHome() {
     return () => { cancelled = true; };
   }, []);
 
-  const featured = listings.slice(0, 8);
+  // `active` is returned newest-first (createdDate desc), so the first slice is
+  // literally the most-recently-added items.
+  const recentlyAdded = listings.slice(0, 8);
+  const recentIds = new Set(recentlyAdded.map((i) => i.id));
+
+  // Top picks: no "featured" flag exists yet, so we surface the items most
+  // likely to convert — in stock and with a photo. Prefer ones not already in
+  // "Recently added" so the two bands differ when the catalog is large enough;
+  // fall back to overlap on a small catalog rather than showing an empty band.
+  const inStock = (i) => i.quantity == null || Number(i.quantity) > 0;
+  const picksPool = listings.filter((i) => i.image1Url && inStock(i));
+  const topPicks = [
+    ...picksPool.filter((i) => !recentIds.has(i.id)),
+    ...picksPool.filter((i) => recentIds.has(i.id)),
+  ].slice(0, 8);
+
+  // Anything not already surfaced above rounds out a "Fresh finds" band below.
+  const shownIds = new Set([...recentIds, ...topPicks.map((i) => i.id)]);
+  const freshFinds = listings.filter((i) => !shownIds.has(i.id)).slice(0, 8);
+
+  const renderGrid = (items) => (
+    <div className="mp-grid">
+      {items.map((item) => (
+        <ListingCard key={item.id} item={item} onMessage={setMessage} />
+      ))}
+    </div>
+  );
 
   return (
     <div className="shop-home">
@@ -56,6 +82,32 @@ export default function MarketplaceHome() {
 
       {message && <div className="mp-message" onClick={() => setMessage("")} role="status">{message}</div>}
 
+      {/* Recently added — right after the hero */}
+      <section className="shop-section">
+        <div className="shop-section-head">
+          <h2>Recently added</h2>
+          <Link to="/marketplace/browse" className="shop-see-all">See all →</Link>
+        </div>
+        {loading ? (
+          <p>Loading…</p>
+        ) : recentlyAdded.length === 0 ? (
+          <p className="mp-empty">No items yet. Check back soon!</p>
+        ) : (
+          renderGrid(recentlyAdded)
+        )}
+      </section>
+
+      {/* Top picks */}
+      {!loading && topPicks.length > 0 && (
+        <section className="shop-section">
+          <div className="shop-section-head">
+            <h2>Top picks</h2>
+            <Link to="/marketplace/browse" className="shop-see-all">See all →</Link>
+          </div>
+          {renderGrid(topPicks)}
+        </section>
+      )}
+
       {/* Categories */}
       <section className="shop-section">
         <h2>Shop by category</h2>
@@ -73,24 +125,16 @@ export default function MarketplaceHome() {
         </div>
       </section>
 
-      {/* Featured / fresh finds */}
-      <section className="shop-section">
-        <div className="shop-section-head">
-          <h2>Fresh finds</h2>
-          <Link to="/marketplace/browse" className="shop-see-all">See all →</Link>
-        </div>
-        {loading ? (
-          <p>Loading…</p>
-        ) : featured.length === 0 ? (
-          <p className="mp-empty">No items yet. Check back soon!</p>
-        ) : (
-          <div className="mp-grid">
-            {featured.map((item) => (
-              <ListingCard key={item.id} item={item} onMessage={setMessage} />
-            ))}
+      {/* Fresh finds — the remainder */}
+      {!loading && freshFinds.length > 0 && (
+        <section className="shop-section">
+          <div className="shop-section-head">
+            <h2>Fresh finds</h2>
+            <Link to="/marketplace/browse" className="shop-see-all">See all →</Link>
           </div>
-        )}
-      </section>
+          {renderGrid(freshFinds)}
+        </section>
+      )}
     </div>
   );
 }
