@@ -130,6 +130,16 @@ export default function MarketplaceItemDetail() {
         <div className="mp-detail-info">
           <h1 className="mp-detail-title">{item.title}</h1>
           {!contactToBuy && <div className="mp-detail-price">{item.price}</div>}
+          {!contactToBuy && (() => {
+            const isMag = (item.category || "").toLowerCase() === "magazine";
+            const fee = isMag ? 0 : Number(item.deliveryFee || 0);
+            const sym = (item.currency || "").toLowerCase() === "usd" ? "$" : "₹";
+            return (
+              <div className="mp-detail-delivery" style={{ color: "#6b7280", fontSize: "0.9rem", marginTop: 4 }}>
+                {fee > 0 ? `+ ${sym}${fee.toFixed(2)} delivery` : "Free delivery"}
+              </div>
+            );
+          })()}
 
           <div className="mp-card-meta">
             {item.category && <span className="mp-card-badge mp-badge-category">{item.category}</span>}

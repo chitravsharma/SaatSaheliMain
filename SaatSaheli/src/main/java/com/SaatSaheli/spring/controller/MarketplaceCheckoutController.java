@@ -166,10 +166,10 @@ public class MarketplaceCheckoutController {
                         currency, l.getUserId(), l.getImage1Url()));
             }
 
-            // Delivery: FREE for magazine-only orders (promo); flat fee otherwise.
-            boolean allMagazines = !buyable.isEmpty()
-                    && buyable.stream().allMatch(l -> "Magazine".equalsIgnoreCase(l.getCategory()));
-            BigDecimal shipping = allMagazines ? BigDecimal.ZERO : shippingFeeFor(currency);
+            // Delivery: sum each item's per-listing tier (magazines ship free).
+            BigDecimal shipping = buyable.stream()
+                    .map(this::perItemDelivery)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
             if (shipping.signum() > 0) {
                 params.addLineItem(deliveryLineItem(currency, shipping));
             }
@@ -254,12 +254,12 @@ public class MarketplaceCheckoutController {
                     .putMetadata("userId", String.valueOf(userId))
                     .putMetadata("orderNumber", order.getOrderNumber());
             int added = 0;
-            boolean allMagazines = true;
+            BigDecimal shipping = BigDecimal.ZERO;
             for (OrderItem oi : order.getItems()) {
                 MarketplaceListing l = oi.getListingId() != null ? listingRepo.findById(oi.getListingId()).orElse(null) : null;
                 if (l == null || !"ACTIVE".equalsIgnoreCase(l.getStatus()) || l.getPriceAmount() == null
                         || l.getCurrency() == null || l.getQuantity() <= 0) continue;
-                if (!"Magazine".equalsIgnoreCase(l.getCategory())) allMagazines = false;
+                shipping = shipping.add(perItemDelivery(l));
                 long unitAmount = l.getPriceAmount().movePointRight(2).setScale(0, RoundingMode.HALF_UP).longValueExact();
                 params.addLineItem(SessionCreateParams.LineItem.builder()
                         .setQuantity(1L)
@@ -275,7 +275,6 @@ public class MarketplaceCheckoutController {
             if (added == 0) {
                 return ResponseEntity.badRequest().body(error("The item(s) in this order are no longer available."));
             }
-            BigDecimal shipping = allMagazines ? BigDecimal.ZERO : shippingFeeFor(order.getCurrency());
             if (shipping.signum() > 0) {
                 params.addLineItem(deliveryLineItem(order.getCurrency(), shipping));
             }
@@ -391,6 +390,13 @@ public class MarketplaceCheckoutController {
         if ("inr".equalsIgnoreCase(currency)) return shippingInr != null ? shippingInr : BigDecimal.ZERO;
         if ("usd".equalsIgnoreCase(currency)) return shippingUsd != null ? shippingUsd : BigDecimal.ZERO;
         return BigDecimal.ZERO;
+    }
+
+    /** Per-listing delivery fee, in the listing's currency. Magazines ship free;
+     *  a listing with no tier set yet counts as Free ($0). */
+    private BigDecimal perItemDelivery(MarketplaceListing l) {
+        if (l == null || "Magazine".equalsIgnoreCase(l.getCategory())) return BigDecimal.ZERO;
+        return l.getDeliveryFee() != null ? l.getDeliveryFee() : BigDecimal.ZERO;
     }
 
     private SessionCreateParams.LineItem deliveryLineItem(String currency, BigDecimal shipping) {

@@ -471,6 +471,7 @@ CREATE TABLE public.marketplace_listings (
     currency character varying(255),
     status character varying(255),
     quantity integer DEFAULT 1,
+    delivery_fee numeric(12,2),
     title character varying(255) NOT NULL,
     user_id bigint NOT NULL
 );

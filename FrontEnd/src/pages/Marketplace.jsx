@@ -37,6 +37,7 @@ export default function Marketplace() {
   const [condition, setCondition] = useState("Good");
   const [contactInfo, setContactInfo] = useState("");
   const [quantity, setQuantity] = useState("1");
+  const [deliveryFee, setDeliveryFee] = useState("0"); // per-listing delivery tier (USD): 0/4.99/7.99/12.99
   const [status, setStatus] = useState("ACTIVE"); // ACTIVE (available) | INACTIVE (hidden)
   // Up to 4 photos per listing. images[0] is the primary/cover image.
   const [images, setImages] = useState(["", "", "", ""]);
@@ -120,6 +121,7 @@ export default function Marketplace() {
     setPriceAmount(""); setCurrency("inr");
     setCondition("Good"); setContactInfo(""); setImages(["", "", "", ""]);
     setQuantity("1"); setStatus("ACTIVE");
+    setDeliveryFee("0");
     setUploadError("");
     setShowForm(false);
   };
@@ -146,6 +148,7 @@ export default function Marketplace() {
       image4Url: images[3],
       quantity: quantity.trim() === "" ? 1 : Math.max(0, parseInt(quantity, 10) || 0),
       status,
+      deliveryFee: deliveryFee === "" ? 0 : Number(deliveryFee),
     };
 
     try {
@@ -195,6 +198,7 @@ export default function Marketplace() {
       item.image4Url || "",
     ]);
     setQuantity(String(item.quantity ?? 1));
+    setDeliveryFee(item.deliveryFee != null ? String(item.deliveryFee) : "0");
     setStatus(item.status === "INACTIVE" ? "INACTIVE" : "ACTIVE");
     setShowForm(true);
     setTab("my");
@@ -336,6 +340,18 @@ export default function Marketplace() {
                       <option value="ACTIVE">Available (shown in shop)</option>
                       <option value="INACTIVE">Not available (hidden)</option>
                     </select>
+                  </div>
+                </div>
+                <div className="mp-field-row">
+                  <div className="mp-field">
+                    <label>Delivery fee</label>
+                    <select value={deliveryFee} onChange={e => setDeliveryFee(e.target.value)} className="bm-input">
+                      <option value="0">Free delivery ($0)</option>
+                      <option value="4.99">Small items — $4.99</option>
+                      <option value="7.99">Medium items — $7.99</option>
+                      <option value="12.99">Large items — $12.99</option>
+                    </select>
+                    <small style={{ color: "var(--text-muted)" }}>Charged once per item at checkout. Magazines always ship free.</small>
                   </div>
                 </div>
                 <label className="mp-photos-label">Photos (up to 4 — the first is the cover){uploading && " · Uploading…"}</label>

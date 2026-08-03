@@ -31,10 +31,12 @@ public class MarketplaceService {
                                              String price, String category, String condition,
                                              String contactInfo, String image1Url, String image2Url,
                                              String image3Url, String image4Url,
-                                             BigDecimal priceAmount, String currency, Integer quantity) {
+                                             BigDecimal priceAmount, String currency, Integer quantity,
+                                             BigDecimal deliveryFee) {
         LocalDateTime now = LocalDateTime.now();
         MarketplaceListing listing = new MarketplaceListing();
         listing.setQuantity(quantity != null && quantity >= 0 ? quantity : 1);
+        listing.setDeliveryFee(deliveryFee);
         listing.setUserId(userId);
         listing.setTitle(title);
         listing.setDescription(description);
@@ -59,7 +61,8 @@ public class MarketplaceService {
                                              String contactInfo, String image1Url, String image2Url,
                                              String image3Url, String image4Url,
                                              BigDecimal priceAmount, String currency,
-                                             Integer quantity, String status, boolean admin) {
+                                             Integer quantity, String status,
+                                             BigDecimal deliveryFee, boolean admin) {
         Optional<MarketplaceListing> opt = listingRepo.findById(listingId);
         if (opt.isEmpty()) throw new RuntimeException("Listing not found");
         MarketplaceListing listing = opt.get();
@@ -84,6 +87,7 @@ public class MarketplaceService {
         if (image3Url != null) listing.setImage3Url(image3Url);
         if (image4Url != null) listing.setImage4Url(image4Url);
         if (quantity != null) listing.setQuantity(Math.max(0, quantity));
+        if (deliveryFee != null) listing.setDeliveryFee(deliveryFee);
         // Admin availability toggle: ACTIVE (shown/buyable) or INACTIVE (hidden).
         if (status != null && !status.isBlank()) listing.setStatus(status);
         listing.setModifiedDate(LocalDateTime.now());

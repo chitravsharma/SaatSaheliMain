@@ -60,6 +60,12 @@ public class MarketplaceListing {
     @Column(columnDefinition = "integer default 1")
     private Integer quantity = 1;
 
+    // Per-listing delivery fee, in the listing's currency. Admin picks a tier in
+    // the form (0=Free, 4.99, 7.99, 12.99). Null on legacy rows is treated as
+    // Free until an admin sets a tier. Summed per item at checkout.
+    @Column(name = "delivery_fee", precision = 12, scale = 2)
+    private BigDecimal deliveryFee;
+
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     @Column(name = "created_date")
     private LocalDateTime createdDate;
@@ -118,6 +124,9 @@ public class MarketplaceListing {
 
     public Integer getQuantity() { return quantity == null ? 0 : quantity; }
     public void setQuantity(Integer quantity) { this.quantity = quantity; }
+
+    public BigDecimal getDeliveryFee() { return deliveryFee; }
+    public void setDeliveryFee(BigDecimal deliveryFee) { this.deliveryFee = deliveryFee; }
 
     public LocalDateTime getCreatedDate() { return createdDate; }
     public void setCreatedDate(LocalDateTime createdDate) { this.createdDate = createdDate; }

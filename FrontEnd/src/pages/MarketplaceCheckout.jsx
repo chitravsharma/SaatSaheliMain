@@ -3,7 +3,6 @@ import { Link, useNavigate } from "react-router-dom";
 import api from "../utils/api";
 import { useCart } from "../contexts/CartContext";
 import { useAuth } from "../AuthContext";
-import useShippingFee from "../utils/useShippingFee";
 import { useRegion } from "../contexts/RegionContext";
 import ContactToBuy from "../components/ContactToBuy";
 import "./Marketplace.css";
@@ -33,11 +32,13 @@ export default function MarketplaceCheckout() {
   );
   const currency = buyable[0]?.listing?.currency || "inr";
   const subtotal = buyable.reduce((sum, it) => sum + Number(it.listing.priceAmount || 0), 0);
-  const { shipping } = useShippingFee(currency);
   const { isIndia } = useRegion();
-  // Delivery is free for magazine-only orders (promo).
-  const allMagazines = buyable.length > 0 && buyable.every((it) => (it.listing.category || "").toLowerCase() === "magazine");
-  const delivery = allMagazines ? 0 : (buyable.length > 0 && shipping != null ? shipping : 0);
+  // Delivery = sum of each item's per-listing fee; magazines ship free. Mirrors
+  // the server calc in MarketplaceCheckoutController.perItemDelivery.
+  const delivery = buyable.reduce(
+    (sum, it) => sum + ((it.listing.category || "").toLowerCase() === "magazine" ? 0 : Number(it.listing.deliveryFee || 0)),
+    0
+  );
   const total = subtotal + delivery;
 
   const handlePay = async () => {

@@ -106,10 +106,11 @@ public class MarketplaceController {
             }
             String currency = (String) body.get("currency");
             Integer quantity = parseQuantity(body.get("quantity"));
+            BigDecimal deliveryFee = parseAmount(body.get("deliveryFee")); // null = Free (legacy default)
 
             MarketplaceListing listing = marketplaceService.createListing(userId, title.trim(), description,
                     price.trim(), category, condition, contactInfo.trim(), image1Url, image2Url,
-                    image3Url, image4Url, priceAmount, currency, quantity);
+                    image3Url, image4Url, priceAmount, currency, quantity, deliveryFee);
             return ResponseEntity.ok(listing);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -143,10 +144,11 @@ public class MarketplaceController {
             String currency = (String) body.get("currency");
             Integer quantity = parseQuantity(body.get("quantity"));
             String status = (String) body.get("status"); // ACTIVE | INACTIVE (admin availability)
+            BigDecimal deliveryFee = body.containsKey("deliveryFee") ? parseAmount(body.get("deliveryFee")) : null;
 
             MarketplaceListing listing = marketplaceService.updateListing(id, userId, title, description,
                     price, category, condition, contactInfo, image1Url, image2Url,
-                    image3Url, image4Url, priceAmount, currency, quantity, status, isAdmin(request));
+                    image3Url, image4Url, priceAmount, currency, quantity, status, deliveryFee, isAdmin(request));
             return ResponseEntity.ok(listing);
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorMap(e.getMessage()));
