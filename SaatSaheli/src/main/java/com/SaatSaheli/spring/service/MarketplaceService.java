@@ -59,11 +59,14 @@ public class MarketplaceService {
                                              String contactInfo, String image1Url, String image2Url,
                                              String image3Url, String image4Url,
                                              BigDecimal priceAmount, String currency,
-                                             Integer quantity, String status) {
+                                             Integer quantity, String status, boolean admin) {
         Optional<MarketplaceListing> opt = listingRepo.findById(listingId);
         if (opt.isEmpty()) throw new RuntimeException("Listing not found");
         MarketplaceListing listing = opt.get();
-        if (userId != null && !userId.equals(listing.getUserId())) {
+        // Admins/superadmins manage the whole (single-seller) store, so they may
+        // edit any listing; otherwise only the owner can. The listing's owner is
+        // never reassigned here.
+        if (!admin && userId != null && !userId.equals(listing.getUserId())) {
             throw new RuntimeException("Only the owner can edit this listing");
         }
         if (title != null) listing.setTitle(title);
@@ -87,11 +90,11 @@ public class MarketplaceService {
         return listingRepo.save(listing);
     }
 
-    public void deleteListing(Long listingId, Long userId) {
+    public void deleteListing(Long listingId, Long userId, boolean admin) {
         Optional<MarketplaceListing> opt = listingRepo.findById(listingId);
         if (opt.isEmpty()) throw new RuntimeException("Listing not found");
         MarketplaceListing listing = opt.get();
-        if (userId != null && !userId.equals(listing.getUserId())) {
+        if (!admin && userId != null && !userId.equals(listing.getUserId())) {
             throw new RuntimeException("Only the owner can remove this listing");
         }
         listingRepo.deleteById(listingId);

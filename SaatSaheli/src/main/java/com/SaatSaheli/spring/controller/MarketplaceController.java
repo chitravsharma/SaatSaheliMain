@@ -146,7 +146,7 @@ public class MarketplaceController {
 
             MarketplaceListing listing = marketplaceService.updateListing(id, userId, title, description,
                     price, category, condition, contactInfo, image1Url, image2Url,
-                    image3Url, image4Url, priceAmount, currency, quantity, status);
+                    image3Url, image4Url, priceAmount, currency, quantity, status, isAdmin(request));
             return ResponseEntity.ok(listing);
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorMap(e.getMessage()));
@@ -163,7 +163,7 @@ public class MarketplaceController {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorMap("Only admins can delete listings"));
         }
         try {
-            marketplaceService.deleteListing(id, userId);
+            marketplaceService.deleteListing(id, userId, isAdmin(request));
             return ResponseEntity.ok(Map.of("message", "Listing deleted successfully"));
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorMap(e.getMessage()));

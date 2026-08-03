@@ -260,7 +260,9 @@ export default function Marketplace() {
           <div className="mp-grid">
             {loading ? <p>Loading...</p> :
               filteredListings.length === 0 ? <p className="mp-empty">No listings yet. Be the first to list an item!</p> :
-              filteredListings.map(item => renderListingCard(item, canManage && item.userId === userId))
+              // Admins manage the whole store, so they get edit/remove on every
+              // listing, not just ones they created.
+              filteredListings.map(item => renderListingCard(item, canManage))
             }
           </div>
         )}
