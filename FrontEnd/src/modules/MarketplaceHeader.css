@@ -48,6 +48,14 @@
   font-size: 0.95rem;
 }
 .shop-nav-link:hover { background: #fdf6ec; color: #b45309; }
+/* Logout is a <button> but should read as a nav link. */
+.shop-logout-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  line-height: inherit;
+}
 .shop-nav-link.active { color: #b45309; background: #fdf6ec; }
 
 .shop-cart-link { position: relative; }

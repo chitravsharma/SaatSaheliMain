@@ -9,11 +9,15 @@ import "./MarketplaceHeader.css";
 const navClass = ({ isActive }) => "shop-nav-link" + (isActive ? " active" : "");
 
 export default function MarketplaceHeader() {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const { cartCount } = useCart();
   const { isIndia, region, setRegion } = useRegion();
   const [menuOpen, setMenuOpen] = useState(false);
   const close = () => setMenuOpen(false);
+  const handleLogout = () => {
+    close();
+    logout(); // clears auth in place; header re-renders to show Login (stays in shop)
+  };
 
   return (
     <header className="shop-header">
@@ -47,7 +51,13 @@ export default function MarketplaceHeader() {
           {user && <NotificationBell />}
 
           {user ? (
-            <Link to="/marketplace/account" className="shop-nav-link" onClick={close}>Account</Link>
+            <>
+              <Link to="/marketplace/account" className="shop-nav-link" onClick={close}>Account</Link>
+              <button type="button" className="shop-nav-link shop-logout-btn" onClick={handleLogout}>
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                Logout
+              </button>
+            </>
           ) : (
             <Link to="/Login" className="shop-nav-link shop-login" onClick={close}>Login</Link>
           )}
