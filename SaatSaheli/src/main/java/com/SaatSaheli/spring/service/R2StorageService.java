@@ -131,6 +131,70 @@ public class R2StorageService implements MediaStorageService {
         }
     }
 
+    /** Bytes plus the content type they should be stored/served as. */
+    private record Processed(byte[] data, String contentType) {}
+
+    /**
+     * Prepare a user-uploaded image for the storefront: bake EXIF orientation,
+     * cap the longest edge, and RE-ENCODE PHOTOS AS JPEG (alpha flattened onto
+     * white). A multi-MB PNG photo becomes a few hundred KB — small enough for
+     * social-share scrapers (WhatsApp ≲300KB, Facebook ≲8MB reject big images)
+     * and faster to load. GIF/WebP (animation/alpha) and non-images pass through
+     * unchanged. Only the user-facing upload path uses this; internal callers
+     * (PDF page rendering) keep {@link #stripExifMetadata}.
+     */
+    private Processed normalizeForUpload(byte[] data, String contentType) {
+        if (contentType == null || !IMAGE_TYPES.contains(contentType.toLowerCase())) {
+            return new Processed(data, contentType);
+        }
+        String ct = contentType.toLowerCase();
+        if (ct.contains("gif") || ct.contains("webp")) {
+            return new Processed(data, contentType);
+        }
+        try {
+            double scale = 1.0;
+            int[] dims = readDimensions(data);
+            if (dims != null) {
+                int longest = Math.max(dims[0], dims[1]);
+                if (longest > MAX_UPLOAD_DIM) {
+                    scale = (double) MAX_UPLOAD_DIM / longest;
+                }
+            }
+            BufferedImage src = Thumbnails.of(new ByteArrayInputStream(data))
+                    .scale(scale)
+                    .useExifOrientation(true)
+                    .asBufferedImage();
+            byte[] jpeg = encodeJpeg(src, 0.82f);
+            src.flush();
+            return jpeg.length > 0 ? new Processed(jpeg, "image/jpeg") : new Processed(data, contentType);
+        } catch (Exception e) {
+            return new Processed(data, contentType); // store original rather than block
+        }
+    }
+
+    /** Encode to JPEG at the given quality, flattening any alpha onto white. */
+    private byte[] encodeJpeg(BufferedImage image, float quality) throws IOException {
+        BufferedImage rgb = new BufferedImage(image.getWidth(), image.getHeight(), BufferedImage.TYPE_INT_RGB);
+        Graphics2D g = rgb.createGraphics();
+        g.setColor(java.awt.Color.WHITE);
+        g.fillRect(0, 0, rgb.getWidth(), rgb.getHeight());
+        g.drawImage(image, 0, 0, null);
+        g.dispose();
+        ImageWriter writer = ImageIO.getImageWritersByFormatName("jpeg").next();
+        ImageWriteParam param = writer.getDefaultWriteParam();
+        param.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);
+        param.setCompressionQuality(quality);
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        try (MemoryCacheImageOutputStream out = new MemoryCacheImageOutputStream(baos)) {
+            writer.setOutput(out);
+            writer.write(null, new IIOImage(rgb, null, null), param);
+        } finally {
+            writer.dispose();
+            rgb.flush();
+        }
+        return baos.toByteArray();
+    }
+
     /** Read just the pixel dimensions from the image header — no full decode,
      *  so it's cheap even for huge photos. Returns [width, height] or null. */
     private int[] readDimensions(byte[] data) {
@@ -182,10 +246,10 @@ public class R2StorageService implements MediaStorageService {
         com.SaatSaheli.spring.util.UploadValidator.requireKnownSafeType(file);
         UPLOAD_LOG.info("Image upload: name={}, size={} KB, contentType={}",
                 file.getOriginalFilename(), file.getSize() / 1024, file.getContentType());
-        byte[] clean = stripExifMetadata(file.getBytes(), file.getContentType());
-        String ext = guessExtension(file.getContentType(), file.getOriginalFilename());
+        Processed p = normalizeForUpload(file.getBytes(), file.getContentType());
+        String ext = guessExtension(p.contentType(), file.getOriginalFilename());
         String key = FOLDER + "/" + UUID.randomUUID() + "." + ext;
-        return putObject(clean, key, file.getContentType());
+        return putObject(p.data(), key, p.contentType());
     }
 
     @Override
