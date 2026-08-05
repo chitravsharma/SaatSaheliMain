@@ -41,7 +41,6 @@ import RequireProfile from './components/RequireProfile';
 import DownloadProtection from './components/DownloadProtection';
 import VisitorTracker from './components/VisitorTracker';
 import MaintenanceBanner from './components/MaintenanceBanner';
-import PromoBanner from './modules/PromoBanner';
 import InstallPrompt from './components/InstallPrompt';
 import Checkout from './pages/Checkout';
 import SupportUs from './pages/SupportUs';
@@ -86,7 +85,6 @@ function App() {
       <UpgradeModal />
       <VisitorTracker />
       <MaintenanceBanner />
-      <PromoBanner />
       {!inShop && <Header />}
       <main id="main-content">
         <DownloadProtection>
