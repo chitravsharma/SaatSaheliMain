@@ -949,6 +949,27 @@ public class AdminController {
         }
     }
 
+    /** PUT /api/admin/magazine/{magazineId}/language — Label an edition as Hindi or English (no translation) */
+    @PutMapping("/magazine/{magazineId}/language")
+    public ResponseEntity<?> setMagazineLanguage(
+            @PathVariable Long magazineId,
+            @RequestBody Map<String, String> body,
+            HttpServletRequest request) {
+        User caller = verifyCaller(getAuthUserId(request), false);
+        if (caller == null) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorMap("Admin access required"));
+        }
+        try {
+            Book updated = bookService.setMagazineLanguage(magazineId, body == null ? null : body.get("language"));
+            return ResponseEntity.ok(updated);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(errorMap(e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(errorMap("Failed to set magazine language: " + e.getMessage()));
+        }
+    }
+
     /** POST /api/admin/magazine/{magazineId}/create-hindi-edition — Clone magazine and translate to Hindi */
     @PostMapping("/magazine/{magazineId}/create-hindi-edition")
     public ResponseEntity<?> createHindiEdition(

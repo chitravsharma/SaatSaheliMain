@@ -158,12 +158,10 @@ const Magazine = () => {
     );
   }
 
-  // Sort: English first, then Hindi
-  const sorted = [...magazines].sort((a, b) => {
-    const aH = a.language === "hi" ? 1 : 0;
-    const bH = b.language === "hi" ? 1 : 0;
-    return aH - bH;
-  });
+  // Sort: newest edition first, regardless of language label
+  const sorted = [...magazines].sort((a, b) =>
+    new Date(b.modifiedDate || b.createdDate) - new Date(a.modifiedDate || a.createdDate)
+  );
 
   return (
     <div className="magazine-container">

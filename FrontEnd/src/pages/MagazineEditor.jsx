@@ -379,20 +379,16 @@ const MagazineEditor = () => {
     }
   };
 
-  /* ── Create Hindi edition ── */
-  const handleCreateHindiEdition = async () => {
-    if (!magazine) return;
-    if (!window.confirm("Create a Hindi edition from the current magazine? All text will be auto-translated to Hindi.")) return;
-    showMsg("Creating Hindi edition — this may take a minute...");
+  /* ── Set edition language (label only — nothing is translated) ── */
+  const handleLanguageChange = async (language) => {
+    if (!magazine || !language) return;
     try {
-      const res = await api.post(`${API}/api/admin/magazine/${magazine.id}/create-hindi-edition`, {});
+      const res = await api.put(`${API}/api/admin/magazine/${magazine.id}/language`, { language });
+      setMagazine((m) => ({ ...m, language: res.data?.language || language }));
       await fetchAllEditions();
-      setMagazine(res.data);
-      setPages(res.data.pages || []);
-      setSelectedPageNum(null);
-      showMsg("Hindi edition created! You can review and edit the translated pages.");
+      showMsg(language === "hi" ? "Marked as हिंदी edition" : "Marked as English edition");
     } catch (e) {
-      showMsg("Failed: " + (e.response?.data?.error || e.message));
+      showMsg("Failed to set language: " + (e.response?.data?.error || e.message));
     }
   };
 
@@ -574,7 +570,19 @@ const MagazineEditor = () => {
           <button className="mag-btn mag-btn-sm" onClick={handleNewEdition}>{s.newEdition}</button>
           {magazine && (
             <>
-              <button className="mag-btn mag-btn-sm" onClick={handleCreateHindiEdition} title="Create Hindi Edition">हिंदी Edition</button>
+              <label className="mag-lang-select-wrap" title="Label this edition's language">
+                <span className="mag-lang-select-label">Language</span>
+                <select
+                  className="mag-lang-select"
+                  value={magazine.language === "hi" || magazine.language === "en" ? magazine.language : ""}
+                  onChange={(e) => handleLanguageChange(e.target.value)}
+                >
+                  {/* Shown only until a language has been set — an unset edition gets no badge on the site */}
+                  <option value="" disabled>— not set —</option>
+                  <option value="en">English</option>
+                  <option value="hi">हिंदी</option>
+                </select>
+              </label>
               <button className="mag-btn mag-btn-sm" onClick={() => handleMagExport("pdf")} title="Export PDF">PDF</button>
               <button className="mag-btn mag-btn-sm" onClick={() => handleMagExport("docx")} title="Export DOCX">DOCX</button>
             </>

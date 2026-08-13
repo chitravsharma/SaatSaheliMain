@@ -334,6 +334,26 @@ public class BookService {
         return mag;
     }
 
+    /**
+     * Set the language label on a magazine edition ("en" or "hi").
+     * Only labels the edition — no content is translated or cloned.
+     * Deliberately leaves modifiedDate untouched so relabelling an old edition
+     * does not push it to the top of the "newest first" listings.
+     */
+    @Transactional
+    public Book setMagazineLanguage(Long magazineId, String language) {
+        if (language == null || !("en".equalsIgnoreCase(language.trim()) || "hi".equalsIgnoreCase(language.trim()))) {
+            throw new IllegalArgumentException("Language must be 'en' or 'hi'");
+        }
+        Book mag = bookRepo.findById(magazineId)
+                .orElseThrow(() -> new RuntimeException("Magazine not found"));
+        if (!"MAGAZINE".equalsIgnoreCase(mag.getCategory())) {
+            throw new IllegalArgumentException("Book is not a magazine");
+        }
+        mag.setLanguage(language.trim().toLowerCase());
+        return bookRepo.save(mag);
+    }
+
     /** Get all magazine editions ordered by most recent first (excludes deleted) */
     public List<Book> getAllMagazines() {
         List<Book> mags = bookRepo.findByCategoryIgnoreCaseOrderByModifiedDateDesc("MAGAZINE").stream()

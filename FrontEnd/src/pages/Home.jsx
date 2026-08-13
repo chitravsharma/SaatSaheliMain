@@ -116,13 +116,10 @@ function Home() {
 
         const mags = (Array.isArray(magazineRes.data) ? magazineRes.data : [])
           .filter(m => m && m.id && (m.status === "PUBLISHED" || !m.status));
-        // Sort: prefer Hindi first so the rotation starts on the Hindi cover, then English.
-        mags.sort((a, b) => {
-          const aHi = a.language === "hi" ? 0 : 1;
-          const bHi = b.language === "hi" ? 0 : 1;
-          if (aHi !== bHi) return aHi - bHi;
-          return new Date(b.modifiedDate || b.createdDate) - new Date(a.modifiedDate || a.createdDate);
-        });
+        // Sort: newest edition first, regardless of language.
+        mags.sort((a, b) =>
+          new Date(b.modifiedDate || b.createdDate) - new Date(a.modifiedDate || a.createdDate)
+        );
         setMagazines(mags);
 
         setBookCounts(bookCountsRes.data || { likes: {}, comments: {} });
@@ -250,13 +247,11 @@ function Home() {
     if (!grouped[cat]) grouped[cat] = [];
     grouped[cat].push(book);
   });
-  // Sort magazines: English first, then Hindi
+  // Sort magazines: newest edition first, regardless of language label
   if (grouped[magLabel]) {
-    grouped[magLabel].sort((a, b) => {
-      const aIsHindi = a.language === "hi" ? 1 : 0;
-      const bIsHindi = b.language === "hi" ? 1 : 0;
-      return aIsHindi - bIsHindi;
-    });
+    grouped[magLabel].sort((a, b) =>
+      new Date(b.modifiedDate || b.createdDate) - new Date(a.modifiedDate || a.createdDate)
+    );
   }
 
   // Auto-dismiss action error after 4 seconds
