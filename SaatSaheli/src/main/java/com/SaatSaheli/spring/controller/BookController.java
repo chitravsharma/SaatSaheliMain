@@ -337,7 +337,7 @@ public class BookController {
     @GetMapping("/magazines")
     public ResponseEntity<?> getPublishedMagazines() {
         try {
-            List<Book> all = bookService.getAllMagazines();
+            List<Book> all = bookService.getMagazineSummaries();
             List<Book> published = all.stream()
                     .filter(m -> "PUBLISHED".equalsIgnoreCase(m.getStatus()))
                     .collect(Collectors.toList());

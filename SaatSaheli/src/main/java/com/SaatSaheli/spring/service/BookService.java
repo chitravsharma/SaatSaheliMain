@@ -19,6 +19,7 @@ import jakarta.annotation.PostConstruct;
 
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -352,6 +353,31 @@ public class BookService {
         }
         mag.setLanguage(language.trim().toLowerCase());
         return bookRepo.save(mag);
+    }
+
+    /**
+     * Magazine editions for cover cards (Home + /magazine listings).
+     * Same ordering and filtering as getAllMagazines, but reads only each
+     * magazine's first page to derive the cover and returns no page payload —
+     * the listings render title/cover/language only. Loading every page of
+     * every edition made this response grow with the whole back catalogue.
+     */
+    public List<Book> getMagazineSummaries() {
+        List<Book> mags = bookRepo.findByCategoryIgnoreCaseOrderByModifiedDateDesc("MAGAZINE").stream()
+                .filter(m -> !"DELETED".equalsIgnoreCase(m.getStatus()))
+                .collect(Collectors.toList());
+        for (Book mag : mags) {
+            pageRepo.findFirstByBookIdOrderByPageNumberAsc(mag.getId()).ifPresent(first -> {
+                if (first.getImageUrl() != null && !first.getImageUrl().isEmpty()) {
+                    mag.setCoverImageUrl(first.getImageUrl());
+                } else {
+                    String coverUrl = extractFirstImageFromFormat(first.getFormat());
+                    if (coverUrl != null) mag.setCoverImageUrl(coverUrl);
+                }
+            });
+            mag.setPages(Collections.emptyList());
+        }
+        return mags;
     }
 
     /** Get all magazine editions ordered by most recent first (excludes deleted) */
