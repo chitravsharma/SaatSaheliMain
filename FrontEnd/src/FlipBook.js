@@ -136,20 +136,49 @@ function FlipBook({ bookId }) {
   const flipBookRef = useRef(null);
   const pinchRef = useRef({ startDist: 0, startZoom: 1 });
   const fullscreenRef = useRef(null);
+  const zoomWrapperRef = useRef(null);
+  const pinchingRef = useRef(false);
+  const pinchEndTimer = useRef(null);
+  // Entering fullscreen wraps the whole tree in a new parent, so React tears down
+  // and rebuilds the scroll container. Holding the node in state (not just a ref)
+  // makes the touch listeners re-attach to the new node instead of clinging to the
+  // discarded one — otherwise pinch-to-zoom silently dies in fullscreen.
+  const [scrollEl, setScrollEl] = useState(null);
+  const scrollContainerRef = useRef(null);
+  // useCallback keeps this ref callback's identity stable, so React doesn't detach
+  // and re-run it (null, then the node) on every single render.
+  const setScrollRef = useCallback((el) => {
+    scrollContainerRef.current = el;
+    fullscreenRef.current = el;
+    setScrollEl((prev) => (prev === el ? prev : el));
+  }, []);
+  // Mirror state the touch listeners read, so they never see a stale value.
+  const pinchZoomRef = useRef(1);
+  pinchZoomRef.current = pinchZoom;
+  const currentPageRef = useRef(0);
+  currentPageRef.current = currentPage;
   const audioCtxRef = useRef(null);
   const pageSize = usePageSize(isFullscreen);
 
   const zoomLevel = ZOOM_LEVELS[zoomIndex] * pinchZoom;
 
-  // Calculate if the zoomed page exceeds the available viewport
-  const availHeight = (typeof window !== "undefined" ? window.innerHeight : 800) - 120;
-  const availWidth = (typeof window !== "undefined" ? window.innerWidth : 1200) - 40;
-  const scaledPageH = pageSize.h * zoomLevel;
-  const scaledPageW = pageSize.w * zoomLevel;
-  // Determine if zoomed and whether enough of the page is visible to allow flipping
-  const isZoomed = zoomLevel > 1.05;
-  const visibleFraction = Math.min(1, availWidth / scaledPageW) * Math.min(1, availHeight / scaledPageH);
-  const canFlip = !isZoomed || visibleFraction >= 0.75;
+  // CSS scale() paints the page larger but leaves its layout box unchanged, so a
+  // scrolling ancestor never gains room to pan into. Measure the wrapper's real
+  // (unscaled) box and give the scroll container a sizer of the scaled dimensions,
+  // so panning works in both axes and no part of the page is unreachable.
+  const measuredRef = useRef({ w: 0, h: 0 });
+  const [natural, setNatural] = useState({ w: 0, h: 0 });
+  const [viewport, setViewport] = useState({ w: 0, h: 0 });
+
+  const scaledW = natural.w * zoomLevel;
+  const scaledH = natural.h * zoomLevel;
+  // Pan mode requires BOTH an actual zoom-in and real overflow. Testing overflow
+  // alone was too fragile: at rest the page sits within ~16px of the viewport, and
+  // mobile browser chrome hiding/showing changes innerHeight, so the mode flickered
+  // and flipping became unreliable. At normal zoom the reader always flips.
+  const needsPan = zoomLevel > 1.05 && natural.w > 0 && viewport.w > 0 &&
+    (scaledW > viewport.w + 1 || scaledH > viewport.h + 1);
+  const canFlip = !needsPan;
 
   // Scale factor for positioning elements relative to desktop size
   const scale = pageSize.w / DESKTOP_W;
@@ -202,37 +231,88 @@ function FlipBook({ bookId }) {
     };
   }, [isFullscreen]);
 
-  // Pinch-to-zoom for touch devices
+  // Pinch-to-zoom for touch devices.
+  //
+  // Listeners are attached in the CAPTURE phase on the scroll container, which is
+  // an ancestor of the flipbook. That ordering is the whole point: a pinch usually
+  // lands fingers on the page itself, and react-pageflip reads those touches as a
+  // swipe and turns the page mid-zoom. Capturing first lets us stopPropagation()
+  // so the flip library never sees the gesture at all.
+  //
+  // Suppression persists until every finger is up plus a short cooldown, because
+  // lifting one finger of a pinch leaves the other one down — and that lone
+  // finger, still moving, is exactly what a swipe looks like.
   useEffect(() => {
-    const el = fullscreenRef.current;
+    const el = scrollEl;
     if (!el) return;
     const getTouchDist = (touches) => {
       const dx = touches[0].clientX - touches[1].clientX;
       const dy = touches[0].clientY - touches[1].clientY;
       return Math.sqrt(dx * dx + dy * dy);
     };
+    const beginPinch = (touches) => {
+      pinchRef.current.startDist = getTouchDist(touches);
+      pinchRef.current.startZoom = pinchZoomRef.current;
+      if (!pinchingRef.current) {
+        // The first finger may already have started a drag before the second one
+        // landed, leaving a half-turned page floating under the pinch. Suppressing
+        // further events cannot undo a drag that is already running, so tell the
+        // library to settle back on the current page explicitly.
+        try { flipBookRef.current?.pageFlip()?.turnToPage(currentPageRef.current); } catch { /* not ready yet */ }
+      }
+      pinchingRef.current = true;
+    };
     const onTouchStart = (e) => {
-      if (e.touches.length === 2) {
-        pinchRef.current.startDist = getTouchDist(e.touches);
-        pinchRef.current.startZoom = pinchZoom;
+      if (e.touches.length >= 2) {
+        if (pinchEndTimer.current) {
+          window.clearTimeout(pinchEndTimer.current);
+          pinchEndTimer.current = null;
+        }
+        beginPinch(e.touches);
+        e.stopPropagation();
       }
     };
     const onTouchMove = (e) => {
-      if (e.touches.length === 2) {
+      if (e.touches.length >= 2) {
+        if (!pinchingRef.current || !pinchRef.current.startDist) beginPinch(e.touches);
+        e.stopPropagation();
         e.preventDefault();
         const dist = getTouchDist(e.touches);
         const ratio = dist / pinchRef.current.startDist;
-        const newZoom = Math.max(0.5, Math.min(3, pinchRef.current.startZoom * ratio));
-        setPinchZoom(newZoom);
+        setPinchZoom(Math.max(0.5, Math.min(3, pinchRef.current.startZoom * ratio)));
+      } else if (pinchingRef.current) {
+        // One finger left over from the pinch — don't let it become a page flip.
+        e.stopPropagation();
       }
     };
-    el.addEventListener("touchstart", onTouchStart, { passive: true });
-    el.addEventListener("touchmove", onTouchMove, { passive: false });
-    return () => {
-      el.removeEventListener("touchstart", onTouchStart);
-      el.removeEventListener("touchmove", onTouchMove);
+    const onTouchEnd = (e) => {
+      if (!pinchingRef.current) return;
+      // Deliberately NOT stopping propagation. If the flip library saw the first
+      // finger's touchstart before the pinch began, swallowing touchend leaves it
+      // mid-drag and the page floats under the finger forever. Its touchmoves were
+      // suppressed, so it settles with no movement and snaps back instead.
+      if (e.touches.length === 0) {
+        if (pinchEndTimer.current) window.clearTimeout(pinchEndTimer.current);
+        pinchEndTimer.current = window.setTimeout(() => {
+          pinchingRef.current = false;
+          pinchRef.current.startDist = 0;
+          pinchEndTimer.current = null;
+        }, 250);
+      }
     };
-  });
+    const opts = { capture: true, passive: false };
+    el.addEventListener("touchstart", onTouchStart, opts);
+    el.addEventListener("touchmove", onTouchMove, opts);
+    el.addEventListener("touchend", onTouchEnd, opts);
+    el.addEventListener("touchcancel", onTouchEnd, opts);
+    return () => {
+      el.removeEventListener("touchstart", onTouchStart, opts);
+      el.removeEventListener("touchmove", onTouchMove, opts);
+      el.removeEventListener("touchend", onTouchEnd, opts);
+      el.removeEventListener("touchcancel", onTouchEnd, opts);
+      if (pinchEndTimer.current) window.clearTimeout(pinchEndTimer.current);
+    };
+  }, [scrollEl]);
 
 
   // Soft page-flip "swoosh" — brown noise with a sweeping bandpass filter
@@ -307,7 +387,44 @@ function FlipBook({ bookId }) {
   }, []);
 
   const totalPages = pages.length;
-  const scrollContainerRef = useRef(null);
+
+  // Measure the unscaled wrapper and the visible viewport. offsetWidth/Height are
+  // unaffected by transform, so these stay stable as the zoom changes and cannot
+  // feed back into themselves.
+  useEffect(() => {
+    const measure = () => {
+      const wrap = zoomWrapperRef.current;
+      const cont = scrollContainerRef.current;
+      if (wrap) {
+        const w = wrap.offsetWidth;
+        const h = wrap.offsetHeight;
+        const prev = measuredRef.current;
+        if (w > 0 && (Math.abs(prev.w - w) > 1 || Math.abs(prev.h - h) > 1)) {
+          measuredRef.current = { w, h };
+          setNatural({ w, h });
+        }
+      }
+      // Height comes from the CSS cap on the scroll container, not its current
+      // content height — the container grows with the sizer once panning starts.
+      const vh = typeof window !== "undefined" ? window.innerHeight : 800;
+      setViewport({
+        w: cont ? cont.clientWidth : (typeof window !== "undefined" ? window.innerWidth : 1200),
+        h: vh - (isFullscreen ? 50 : 100),
+      });
+    };
+    measure();
+    // The flipbook lays out asynchronously; re-measure once it has settled.
+    const raf = window.requestAnimationFrame(measure);
+    const timer = window.setTimeout(measure, 350);
+    window.addEventListener("resize", measure);
+    window.addEventListener("orientationchange", measure);
+    return () => {
+      window.cancelAnimationFrame(raf);
+      window.clearTimeout(timer);
+      window.removeEventListener("resize", measure);
+      window.removeEventListener("orientationchange", measure);
+    };
+  }, [totalPages, pageSize.w, pageSize.h, isFullscreen]);
 
   // Render a single page element (shared between flipbook and scroll reader)
   const renderPageContent = (page, index) => {
@@ -548,15 +665,53 @@ function FlipBook({ bookId }) {
         )}
 
         {/* Always flipbook — scrollable container when zoomed, pointer-events control for flip vs scroll */}
+        <div className="flipbook-stage">
+        {/* While zoomed the whole page area is given over to panning, so swiping can
+            no longer turn pages. These edge strips restore flipping: tap the far
+            left or right band to move a page. Hidden at normal zoom, where a plain
+            swipe already works and a permanent strip would only get in the way. */}
+        {needsPan && (
+          <>
+            <button
+              type="button"
+              className="flipbook-edge-flip flipbook-edge-left"
+              onClick={handlePrevPage}
+              disabled={currentPage === 0}
+              aria-label={strings.flipBook.prevPage}
+            >
+              <span aria-hidden="true">&#8249;</span>
+            </button>
+            <button
+              type="button"
+              className="flipbook-edge-flip flipbook-edge-right"
+              onClick={handleNextPage}
+              disabled={currentPage >= totalPages - 1}
+              aria-label={strings.flipBook.nextPage}
+            >
+              <span aria-hidden="true">&#8250;</span>
+            </button>
+          </>
+        )}
         <div
-          className="flipbook-zoom-scroll"
-          ref={(el) => { scrollContainerRef.current = el; fullscreenRef.current = el; }}
-          style={{ touchAction: isZoomed && !canFlip ? "pan-x pan-y" : "auto" }}
+          className={`flipbook-zoom-scroll${needsPan ? " flipbook-pan-active" : ""}`}
+          ref={setScrollRef}
+          style={{ touchAction: needsPan ? "pan-x pan-y" : "auto" }}
         >
           <div
+            className="flipbook-zoom-sizer"
+            style={needsPan ? { width: Math.ceil(scaledW), height: Math.ceil(scaledH) } : undefined}
+          >
+          <div
             className="flipbook-zoom-wrapper"
+            ref={zoomWrapperRef}
             style={{
               transform: `scale(${zoomLevel})`,
+              // Anchor top-left while panning: with a centred origin the overflow
+              // above and to the left of the page cannot be scrolled to at all.
+              transformOrigin: needsPan ? "top left" : undefined,
+              // Only pan mode detaches the flip library. Pinches are handled by the
+              // capture-phase listeners; toggling pointer-events mid-gesture as well
+              // just added churn without adding protection.
               pointerEvents: canFlip ? "auto" : "none",
             }}
           >
@@ -578,6 +733,8 @@ function FlipBook({ bookId }) {
               {pages.map((page, index) => renderPageContent(page, index))}
             </HTMLFlipBook>
           </div>
+          </div>
+        </div>
         </div>
 
         <div className="flipbook-copyright">

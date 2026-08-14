@@ -277,6 +277,68 @@
   padding: 8px;
 }
 
+/* Positioning context for the zoomed-mode edge flip strips, which must stay
+   pinned to the viewport edges rather than scroll away with the page. */
+.flipbook-stage {
+  position: relative;
+}
+
+/* Edge flip strips — only rendered while zoomed. Narrow enough to leave the page
+   itself free for panning, wide enough to hit with a thumb. */
+.flipbook-edge-flip {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 44px;
+  z-index: 5;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  font-size: 1.8rem;
+  line-height: 1;
+  color: #fff;
+  background: rgba(30, 30, 40, 0.32);
+  backdrop-filter: blur(2px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s ease, opacity 0.15s ease;
+  /* Never let a tap on the strip scroll the page underneath. */
+  touch-action: manipulation;
+}
+
+.flipbook-edge-flip:active { background: rgba(30, 30, 40, 0.55); }
+.flipbook-edge-flip:disabled { opacity: 0.25; cursor: default; }
+.flipbook-edge-left { left: 0; border-radius: 0 6px 6px 0; }
+.flipbook-edge-right { right: 0; border-radius: 6px 0 0 6px; }
+
+@media (max-width: 480px) {
+  .flipbook-edge-flip { width: 38px; font-size: 1.6rem; }
+}
+
+/* Sizer that reserves the *scaled* footprint of the page. scale() does not
+   affect layout, so without this the scroll container has nothing to scroll
+   into and only the overflow to the right stays reachable. */
+.flipbook-zoom-sizer {
+  display: inline-block;
+}
+
+/* While panning, anchor content to the top-left. Centring (the default, and
+   flex centring in fullscreen) pushes the overflow off the top-left edge where
+   no scrollbar can reach it — that is what trapped readers on the right side. */
+.flipbook-pan-active {
+  text-align: left;
+}
+
+.flipbook-pan-active .flipbook-zoom-sizer {
+  display: block;
+}
+
+/* Follow the finger during a pinch instead of easing behind it. */
+.flipbook-pan-active .flipbook-zoom-wrapper {
+  transition: none;
+}
+
 /* Center single pages (cover / last) in two-page spread mode */
 .flipbook-zoom-wrapper .stf__parent {
   display: flex;
@@ -429,6 +491,13 @@
   transform-origin: center center;
   min-width: unset;
   padding: 0;
+}
+
+/* Fullscreen centres its child via flex; that must give way while panning,
+   otherwise the top-left of the zoomed page sits outside the scrollable area. */
+.flipbook-fullscreen-overlay .flipbook-pan-active {
+  align-items: flex-start;
+  justify-content: flex-start;
 }
 .flipbook-fullscreen-overlay .flipbook-copyright {
   display: none;
