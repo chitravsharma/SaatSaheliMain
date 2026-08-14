@@ -2,6 +2,7 @@ package com.SaatSaheli.spring.controller;
 
 import com.SaatSaheli.spring.model.*;
 import com.SaatSaheli.spring.repository.*;
+import com.SaatSaheli.spring.service.BookService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -77,6 +78,7 @@ public class OpenGraphController {
     private final GalleryRepository galleryRepo;
     private final GalleryImageRepository galleryImageRepo;
     private final PodcastRepository podcastRepo;
+    private final BookService bookService;
 
     /** Lazily-loaded, cached copy of the built index.html. */
     private volatile String template;
@@ -88,7 +90,9 @@ public class OpenGraphController {
                                RecipeImageRepository recipeImageRepo,
                                GalleryRepository galleryRepo,
                                GalleryImageRepository galleryImageRepo,
-                               PodcastRepository podcastRepo) {
+                               PodcastRepository podcastRepo,
+                               BookService bookService) {
+        this.bookService = bookService;
         this.articleRepo = articleRepo;
         this.bookRepo = bookRepo;
         this.listingRepo = listingRepo;
@@ -125,7 +129,11 @@ public class OpenGraphController {
         String desc = b.getAuthorName() != null && !b.getAuthorName().isBlank()
                 ? "A book by " + b.getAuthorName() + " on " + SITE_NAME + "."
                 : "Read this book on " + SITE_NAME + ".";
-        return html(render(b.getTitle(), desc, b.getCoverImageUrl(), "article", req), req);
+        // Book.coverImageUrl is @Transient and is never populated on an entity loaded
+        // straight from the repository, so it was always null here and every shared
+        // book fell back to the generic site card. Derive the cover from page 1.
+        String cover = bookService.resolveCoverImageUrl(b.getId());
+        return html(render(b.getTitle(), desc, cover, "article", req), req);
     }
 
     @GetMapping("/recipes/{id}")

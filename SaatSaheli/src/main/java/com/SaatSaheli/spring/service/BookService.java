@@ -367,17 +367,31 @@ public class BookService {
                 .filter(m -> !"DELETED".equalsIgnoreCase(m.getStatus()))
                 .collect(Collectors.toList());
         for (Book mag : mags) {
-            pageRepo.findFirstByBookIdOrderByPageNumberAsc(mag.getId()).ifPresent(first -> {
-                if (first.getImageUrl() != null && !first.getImageUrl().isEmpty()) {
-                    mag.setCoverImageUrl(first.getImageUrl());
-                } else {
-                    String coverUrl = extractFirstImageFromFormat(first.getFormat());
-                    if (coverUrl != null) mag.setCoverImageUrl(coverUrl);
-                }
-            });
+            String cover = resolveCoverImageUrl(mag.getId());
+            if (cover != null) mag.setCoverImageUrl(cover);
             mag.setPages(Collections.emptyList());
         }
         return mags;
+    }
+
+    /**
+     * Resolve a book's cover image from its first page — the image URL if the page
+     * has one, otherwise the first image in the page's format JSON.
+     *
+     * Book.coverImageUrl is @Transient, so a plain bookRepo.findById() never has it
+     * populated. Anything outside this service that needs a cover (e.g. Open Graph
+     * share tags) must call this rather than reading the getter off a raw entity.
+     */
+    public String resolveCoverImageUrl(Long bookId) {
+        if (bookId == null) return null;
+        return pageRepo.findFirstByBookIdOrderByPageNumberAsc(bookId)
+                .map(first -> {
+                    if (first.getImageUrl() != null && !first.getImageUrl().isEmpty()) {
+                        return first.getImageUrl();
+                    }
+                    return extractFirstImageFromFormat(first.getFormat());
+                })
+                .orElse(null);
     }
 
     /** Get all magazine editions ordered by most recent first (excludes deleted) */
