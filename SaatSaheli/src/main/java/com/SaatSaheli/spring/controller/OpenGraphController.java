@@ -105,7 +105,7 @@ public class OpenGraphController {
 
     // ── Routes (mirror FrontEnd/src/App.js detail routes) ──────────────────
 
-    @GetMapping("/marketplace/item/{id}")
+    @GetMapping({"/marketplace/item/{id}", "/marketplace/item/{id}/"})
     public ResponseEntity<String> marketplaceItem(@PathVariable String id, HttpServletRequest req) {
         Long lid = parseId(id);
         MarketplaceListing l = lid == null ? null : listingRepo.findById(lid).orElse(null);
@@ -113,7 +113,7 @@ public class OpenGraphController {
         return html(render(l.getTitle(), l.getDescription(), l.getImage1Url(), "product", req), req);
     }
 
-    @GetMapping({"/articles/{id}", "/blogs/{id}", "/poems/{id}"})
+    @GetMapping({"/articles/{id}", "/articles/{id}/", "/blogs/{id}", "/blogs/{id}/", "/poems/{id}", "/poems/{id}/"})
     public ResponseEntity<String> article(@PathVariable String id, HttpServletRequest req) {
         Long lid = parseId(id);
         Article a = lid == null ? null : articleRepo.findById(lid).orElse(null);
@@ -121,7 +121,7 @@ public class OpenGraphController {
         return html(render(a.getHeadline(), a.getContent(), a.getImageUrl(), "article", req), req);
     }
 
-    @GetMapping("/read/{id}")
+    @GetMapping({"/read/{id}", "/read/{id}/"})
     public ResponseEntity<String> book(@PathVariable String id, HttpServletRequest req) {
         Long lid = parseId(id);
         Book b = lid == null ? null : bookRepo.findById(lid).orElse(null);
@@ -136,7 +136,7 @@ public class OpenGraphController {
         return html(render(b.getTitle(), desc, cover, "article", req), req);
     }
 
-    @GetMapping("/recipes/{id}")
+    @GetMapping({"/recipes/{id}", "/recipes/{id}/"})
     public ResponseEntity<String> recipe(@PathVariable String id, HttpServletRequest req) {
         Long lid = parseId(id);
         Recipe r = lid == null ? null : recipeRepo.findById(lid).orElse(null);
@@ -149,7 +149,7 @@ public class OpenGraphController {
         return html(render(r.getRecipeName(), desc, image, "article", req), req);
     }
 
-    @GetMapping("/gallery/{id}")
+    @GetMapping({"/gallery/{id}", "/gallery/{id}/"})
     public ResponseEntity<String> gallery(@PathVariable String id,
                                           @RequestParam(value = "img", required = false) String img,
                                           HttpServletRequest req) {
@@ -167,7 +167,7 @@ public class OpenGraphController {
         return html(render(g.getTitle(), g.getDescription(), image, "article", req), req);
     }
 
-    @GetMapping("/podcasts/{id}")
+    @GetMapping({"/podcasts/{id}", "/podcasts/{id}/"})
     public ResponseEntity<String> podcast(@PathVariable String id, HttpServletRequest req) {
         Long lid = parseId(id);
         Podcast p = lid == null ? null : podcastRepo.findById(lid).orElse(null);
