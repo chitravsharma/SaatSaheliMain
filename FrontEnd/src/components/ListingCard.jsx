@@ -6,6 +6,7 @@ import { useCart } from "../contexts/CartContext";
 import { useFavorites } from "../contexts/FavoritesContext";
 import { useRegion } from "../contexts/RegionContext";
 import ContactToBuy from "./ContactToBuy";
+import SellerLink from "./SellerLink";
 
 /**
  * Canonical storefront listing card: image, title, price, badges, favorite heart,
@@ -97,7 +98,7 @@ export default function ListingCard({ item, ownerActions = null, onMessage }) {
           {soldOut && <span className="mp-card-badge mp-badge-sold">Sold out</span>}
           {purchasable && qty <= 5 && <span className="mp-card-badge mp-badge-stock">Only {qty} left</span>}
         </div>
-        {item.sellerName && <span className="mp-card-seller">by {item.sellerName}</span>}
+        <span className="mp-card-seller">by <SellerLink /></span>
         <div className="mp-card-actions">
           {contactToBuy && <ContactToBuy compact />}
           {purchasable && !isOwner && (

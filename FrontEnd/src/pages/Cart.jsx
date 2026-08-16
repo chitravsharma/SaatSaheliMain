@@ -4,6 +4,7 @@ import { useCart } from "../contexts/CartContext";
 import { optimizeCloudinary } from "../utils/imageUrl";
 import { useRegion } from "../contexts/RegionContext";
 import ContactToBuy from "../components/ContactToBuy";
+import SellerLink from "../components/SellerLink";
 import "./Marketplace.css";
 import "./Cart.css";
 
@@ -86,8 +87,7 @@ export default function Cart() {
                     <div className="cart-row-main">
                       <div className="cart-row-title">{l.title || "Listing"}</div>
                       <div className="cart-row-meta">
-                        {l.category} · {l.condition}
-                        {l.sellerName ? ` · by ${l.sellerName}` : ""}
+                        {l.category} · {l.condition} · by <SellerLink />
                       </div>
                       {!avail && (
                         <div className="cart-row-warn">No longer available — will be removed at checkout.</div>

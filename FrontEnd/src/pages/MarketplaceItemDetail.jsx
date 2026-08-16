@@ -7,6 +7,7 @@ import { useCart } from "../contexts/CartContext";
 import { useFavorites } from "../contexts/FavoritesContext";
 import { useRegion } from "../contexts/RegionContext";
 import ContactToBuy from "../components/ContactToBuy";
+import SellerLink from "../components/SellerLink";
 import "./Marketplace.css";
 import "./MarketplaceItemDetail.css";
 
@@ -148,7 +149,7 @@ export default function MarketplaceItemDetail() {
             {purchasable && qty <= 5 && <span className="mp-card-badge mp-badge-stock">Only {qty} left</span>}
           </div>
 
-          {item.sellerName && <p className="mp-detail-seller">Sold by {item.sellerName}</p>}
+          <p className="mp-detail-seller">Sold by <SellerLink /></p>
 
           {item.description && (
             <div className="mp-detail-desc">

@@ -1,3 +1,10 @@
+// The shop is a single-seller storefront: every listing is sold by the parent
+// business, whichever admin account happened to create it. Shown to buyers in
+// place of the per-listing sellerName (which stays visible in the admin table).
+// A brand name, so it is deliberately not translated.
+export const SHOP_SELLER_NAME = "Avika Ventures";
+export const SHOP_SELLER_URL = "https://avikaventures.com/";
+
 export const en = {
   common: {
     back: "Back",
