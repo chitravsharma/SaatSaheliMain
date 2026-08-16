@@ -1,8 +1,9 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { GoogleLogin, GoogleOAuthProvider } from "@react-oauth/google";
+import { GoogleOAuthProvider } from "@react-oauth/google";
 import axios from "axios";
 import { useAuth } from "../AuthContext";
+import GoogleSignInButton from "./GoogleSignInButton";
 import "./LoginGate.css";
 
 const API_BASE = `${process.env.REACT_APP_API_URL}/api/auth`;
@@ -113,17 +114,16 @@ function LoginGate({ returnTo, reason, onClose }) {
           {error && <div className="login-gate-error" role="alert">{error}</div>}
 
           <div className="login-gate-google">
-            <GoogleLogin
+            <GoogleSignInButton
               onSuccess={handleGoogleSuccess}
               onError={() => { console.error("Google GSI error — origin not authorized for this client ID, FedCM/third-party cookies blocked, or popup blocked"); setError("Google sign-in failed. Please try again."); }}
               text="signin_with"
               shape="rectangular"
               size="large"
               width="340"
+              divider={<div className="login-gate-divider"><span>or</span></div>}
             />
           </div>
-
-          <div className="login-gate-divider"><span>or</span></div>
 
           <div className="login-gate-actions">
             <button

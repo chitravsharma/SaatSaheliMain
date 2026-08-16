@@ -1,10 +1,11 @@
 import React, { useRef, useState } from "react";
 import { useNavigate, useSearchParams, useLocation, Link } from "react-router-dom";
-import { GoogleLogin, GoogleOAuthProvider } from "@react-oauth/google";
+import { GoogleOAuthProvider } from "@react-oauth/google";
 import ReCAPTCHA from "react-google-recaptcha";
 import axios from "axios";
 import { useAuth } from "../AuthContext";
 import { useStrings } from "../LanguageContext";
+import GoogleSignInButton from "../components/GoogleSignInButton";
 import './Login.css';
 
 const API_BASE = `${process.env.REACT_APP_API_URL}/api/auth`;
@@ -316,18 +317,15 @@ export default function Login() {
               {error && <div className="auth-error" role="alert">{error}</div>}
               {success && <div className="auth-success" role="status">{success}</div>}
 
-              <div style={{ display: "flex", justifyContent: "center" }}>
-                <GoogleLogin
-                  onSuccess={handleGoogleSuccess}
-                  onError={() => { console.error("Google GSI error — origin not authorized for this client ID, FedCM/third-party cookies blocked, or popup blocked"); setError(strings.login.errorGoogleFailed); }}
-                  text="signin_with"
-                  shape="rectangular"
-                  size="large"
-                  width="340"
-                />
-              </div>
-
-              <div className="auth-divider"><span>{strings.common.or}</span></div>
+              <GoogleSignInButton
+                onSuccess={handleGoogleSuccess}
+                onError={() => { console.error("Google GSI error — origin not authorized for this client ID, FedCM/third-party cookies blocked, or popup blocked"); setError(strings.login.errorGoogleFailed); }}
+                text="signin_with"
+                shape="rectangular"
+                size="large"
+                width="340"
+                divider={<div className="auth-divider"><span>{strings.common.or}</span></div>}
+              />
 
               <form className="auth-form" onSubmit={handleLogin}>
                 <div className="auth-field">
@@ -490,18 +488,15 @@ export default function Login() {
               {error && <div className="auth-error" role="alert">{error}</div>}
               {success && <div className="auth-success" role="status">{success}</div>}
 
-              <div style={{ display: "flex", justifyContent: "center" }}>
-                <GoogleLogin
-                  onSuccess={handleGoogleSuccess}
-                  onError={() => { console.error("Google GSI error — origin not authorized for this client ID, FedCM/third-party cookies blocked, or popup blocked"); setError(strings.login.errorGoogleFailed); }}
-                  text="signup_with"
-                  shape="rectangular"
-                  size="large"
-                  width="340"
-                />
-              </div>
-
-              <div className="auth-divider"><span>{strings.common.or}</span></div>
+              <GoogleSignInButton
+                onSuccess={handleGoogleSuccess}
+                onError={() => { console.error("Google GSI error — origin not authorized for this client ID, FedCM/third-party cookies blocked, or popup blocked"); setError(strings.login.errorGoogleFailed); }}
+                text="signup_with"
+                shape="rectangular"
+                size="large"
+                width="340"
+                divider={<div className="auth-divider"><span>{strings.common.or}</span></div>}
+              />
 
               <form className="auth-form" onSubmit={handleSignup}>
                 <div className="auth-field-row">
