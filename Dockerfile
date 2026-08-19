@@ -30,4 +30,4 @@ FROM eclipse-temurin:17-jre-alpine
 WORKDIR /app
 COPY --from=backend-build /app/backend/target/*.jar app.jar
 EXPOSE 8081
-ENTRYPOINT ["java", "-Xmx400m", "-Xms200m", "-XX:+UseSerialGC", "-jar", "app.jar"]
+ENTRYPOINT ["java", "-Xmx1024m", "-Xms256m", "-XX:+UseSerialGC", "-XX:+ExitOnOutOfMemoryError", "-jar", "app.jar"]
