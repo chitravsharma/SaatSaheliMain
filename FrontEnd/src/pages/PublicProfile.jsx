@@ -53,8 +53,11 @@ function PublicProfile() {
         setBooks(published);
         const allArticles = Array.isArray(articlesRes.data) ? articlesRes.data : [];
         setArticles(allArticles.filter(a => String(a.userId) === String(userId) && a.status === "PUBLISHED"));
+        // Match the other content types: show published work only. This used to
+        // exclude just DELETED, which let a creator's DRAFT galleries show on their
+        // public profile while staying hidden everywhere else.
         const gals = (Array.isArray(galleriesRes.data) ? galleriesRes.data : [])
-          .filter(g => g.status !== "DELETED");
+          .filter(g => g.status === "PUBLISHED");
         setGalleries(gals);
         const recs = (Array.isArray(recipesRes.data) ? recipesRes.data : [])
           .filter(r => r.status === "PUBLISHED");
