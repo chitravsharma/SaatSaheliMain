@@ -1696,3 +1696,131 @@ a.home-gallery-author:hover { text-decoration: underline; color: var(--accent-bl
     transform: none;
   }
 }
+
+/* ── Fresh on Saat Saheli ────────────────────────────────────────────────
+   One strip merging the newest item from every content type, so a returning
+   reader sees what changed without scrolling each section. Sits directly
+   under the hero. Terracotta accent to match the magazine system. */
+.home-section-fresh {
+  background:
+    radial-gradient(ellipse at 0% 0%, rgba(198, 107, 61, 0.16) 0%, transparent 55%),
+    linear-gradient(135deg, #fdfbf9 0%, #f3e7dc 60%, #eef0f1 100%);
+  border-left: 4px solid #a0532b;
+}
+
+.home-fresh-spark {
+  margin-right: 6px;
+  font-size: 1.15rem;
+}
+
+.home-fresh-row {
+  display: flex;
+  gap: 14px;
+  overflow-x: auto;              /* ScrollRow scrolls THIS element — without it the arrows do nothing */
+  padding-bottom: 8px;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+}
+.home-fresh-row::-webkit-scrollbar {
+  height: 4px;
+}
+.home-fresh-row::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+  border-radius: 2px;
+}
+
+.home-fresh-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-default);
+  border-radius: 10px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  text-decoration: none;
+  color: inherit;
+  min-width: 168px;
+  max-width: 168px;
+  flex-shrink: 0;
+  scroll-snap-align: start;
+  transition: box-shadow 0.2s, transform 0.15s;
+}
+.home-fresh-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 22px rgba(160, 83, 43, 0.26);
+}
+
+.home-fresh-thumb {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  background: var(--bg-card-alt);
+  overflow: hidden;
+}
+.home-fresh-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.home-fresh-thumb-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Georgia', 'Times New Roman', serif;
+  font-size: 2rem;
+  font-weight: 700;
+  color: #a0532b;
+  opacity: 0.35;
+}
+
+.home-fresh-badge {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  background: #a0532b;
+  color: #fff;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.7px;
+  padding: 3px 7px;
+  border-radius: 4px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
+}
+
+.home-fresh-info {
+  padding: 9px 10px 11px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+.home-fresh-kind {
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: #a0532b;
+}
+.home-fresh-title {
+  font-size: 0.87rem;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--text-strong, #1f2937);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.home-fresh-meta {
+  font-size: 0.72rem;
+  color: var(--text-subtle, #6b7280);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@media (max-width: 640px) {
+  .home-fresh-card { min-width: 146px; max-width: 146px; }
+}
