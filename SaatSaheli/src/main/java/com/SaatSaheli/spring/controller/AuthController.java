@@ -320,7 +320,7 @@ public class AuthController {
                 mergeLatest(latestByUser, r.getUserId(), r.getCreatedDate());
                 contentTypesByUser.computeIfAbsent(r.getUserId(), k -> new HashSet<>()).add("recipe");
             }
-            for (Gallery g : galleryRepo.findByStatusIgnoreCase("PUBLISHED")) {
+            for (Gallery g : galleryRepo.findByStatusIgnoreCaseOrderByModifiedDateDesc("PUBLISHED")) {
                 if (g.getUserId() == null) continue;
                 creatorIds.add(g.getUserId());
                 LocalDateTime t = g.getModifiedDate() != null ? g.getModifiedDate() : g.getCreatedDate();

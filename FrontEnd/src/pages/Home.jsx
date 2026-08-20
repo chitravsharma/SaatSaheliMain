@@ -37,6 +37,20 @@ function resolveImageUrl(url) {
   return optimizeCloudinary(url);
 }
 
+// Anything added or updated within this many days is badged NEW.
+const FRESH_DAYS = 7;
+
+/** Compact relative age for the Fresh strip: "today", "3d ago", "2w ago", "4mo ago". */
+function timeAgo(ts) {
+  const days = Math.floor((Date.now() - ts) / 86400000);
+  if (days <= 0) return "today";
+  if (days === 1) return "yesterday";
+  if (days < 7) return `${days}d ago`;
+  if (days < 30) return `${Math.floor(days / 7)}w ago`;
+  if (days < 365) return `${Math.floor(days / 30)}mo ago`;
+  return `${Math.floor(days / 365)}y ago`;
+}
+
 function Home() {
   const strings = useStrings();
   const { user, flashAccount, dismissAccountFlash } = useAuth();
@@ -253,6 +267,52 @@ function Home() {
       new Date(b.modifiedDate || b.createdDate) - new Date(a.modifiedDate || a.createdDate)
     );
   }
+
+  // "Fresh on Saat Saheli": newest additions across every content type, merged into
+  // one strip so a reader can see what has changed without scrolling each section.
+  // Built entirely from data the page already fetched -- no extra API calls.
+  const freshItems = useMemo(() => {
+    const items = [];
+    const add = (arr, map) => (Array.isArray(arr) ? arr : []).forEach((x) => {
+      const it = map(x);
+      const t = it && it.date ? new Date(it.date).getTime() : NaN;
+      if (it && it.title && !Number.isNaN(t)) items.push({ ...it, ts: t });
+    });
+
+    add(recentBooks, (b) => ({
+      key: `book-${b.id}`, kind: "Book", to: `/read/${b.id}`,
+      title: b.title, subtitle: b.authorName,
+      image: b.coverImageUrl ? resolveImageUrl(b.coverImageUrl) : null,
+      date: b.modifiedDate || b.createdDate,
+    }));
+    add(galleries, (g) => ({
+      key: `gallery-${g.id}`, kind: "Gallery", to: `/gallery/${g.id}`,
+      title: g.title, subtitle: g.authorName,
+      image: g.coverImageUrl || (g.images && g.images[0]?.imageUrl) || null,
+      date: g.modifiedDate || g.createdDate,
+    }));
+    add(recentArticles, (a) => ({
+      key: `article-${a.id}`, kind: a.contentType || "Article",
+      to: `/${a.contentType === "Poetry" ? "poems" : a.contentType === "Blog" ? "blogs" : "articles"}/${a.id}`,
+      title: a.headline, subtitle: a.authorName,
+      image: a.imageUrl ? resolveImageUrl(a.imageUrl) : null,
+      date: a.createdDate,
+    }));
+    add(recentRecipes, (r) => ({
+      key: `recipe-${r.id}`, kind: "Recipe", to: `/recipes/${r.id}`,
+      title: r.recipeName, subtitle: r.authorName,
+      image: (r.images && r.images[0]?.imageUrl) || null,
+      date: r.createdDate,
+    }));
+    add(recentPodcasts, (p) => ({
+      key: `podcast-${p.id}`, kind: "Podcast", to: `/podcasts/${p.id}`,
+      title: p.title, subtitle: p.authorName,
+      image: p.coverImageUrl ? resolveImageUrl(p.coverImageUrl) : null,
+      date: p.createdDate,
+    }));
+
+    return items.sort((a, b) => b.ts - a.ts).slice(0, 12);
+  }, [recentBooks, galleries, recentArticles, recentRecipes, recentPodcasts]);
 
   // Auto-dismiss action error after 4 seconds
   useEffect(() => {
@@ -600,6 +660,47 @@ function Home() {
       </section>
 
       {loading && <div className="loading-spinner" />}
+
+      {/* 0. Fresh on Saat Saheli — newest additions across every category, so a
+          returning reader can see what changed without scrolling each section. */}
+      {!loading && freshItems.length > 0 && (
+        <div className="home-section home-section-fresh">
+          <div className="home-section-header">
+            <h2 className="home-section-heading">
+              <span className="home-fresh-spark" aria-hidden="true">✨</span> Fresh on Saat Saheli
+            </h2>
+            <div className="home-section-actions">
+              <a href="#explore-latest" className="ss-btn ss-btn-outline">See all</a>
+            </div>
+          </div>
+          <ScrollRow className="home-fresh-row">
+            {freshItems.map((item) => {
+              const isNew = Date.now() - item.ts < FRESH_DAYS * 86400000;
+              return (
+                <Link to={item.to} key={item.key} className="home-fresh-card">
+                  <div className="home-fresh-thumb">
+                    {item.image ? (
+                      <img src={item.image} alt="" className="home-fresh-img" loading="lazy" />
+                    ) : (
+                      <div className="home-fresh-thumb-placeholder" aria-hidden="true">
+                        {item.kind.charAt(0)}
+                      </div>
+                    )}
+                    {isNew && <span className="home-fresh-badge">NEW</span>}
+                  </div>
+                  <div className="home-fresh-info">
+                    <span className="home-fresh-kind">{item.kind}</span>
+                    <span className="home-fresh-title">{item.title}</span>
+                    <span className="home-fresh-meta">
+                      {item.subtitle ? `${item.subtitle} · ` : ""}{timeAgo(item.ts)}
+                    </span>
+                  </div>
+                </Link>
+              );
+            })}
+          </ScrollRow>
+        </div>
+      )}
 
       {/* 1. Recently Added Books (top) — also the anchor target for the hero "see what creators are sharing" link */}
       <div id="explore-latest" />

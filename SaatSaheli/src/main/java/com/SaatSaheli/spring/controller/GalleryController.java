@@ -42,10 +42,19 @@ public class GalleryController {
         }
     }
 
+    /**
+     * A user's galleries. Public by design (profile pages are open to anyone), but
+     * drafts belong to their owner: the service returns them only to that owner or an
+     * admin. The JwtInterceptor stamps jwtUserId/jwtRole when a token is present;
+     * both stay null for anonymous callers, who therefore see published work only.
+     */
     @GetMapping("/user/{userId}")
-    public ResponseEntity<?> getUserGalleries(@PathVariable Long userId) {
+    public ResponseEntity<?> getUserGalleries(@PathVariable Long userId, HttpServletRequest request) {
         try {
-            return ResponseEntity.ok(galleryService.getGalleriesByUser(userId));
+            Long callerId = (Long) request.getAttribute("jwtUserId");
+            Object role = request.getAttribute("jwtRole");
+            String callerRole = (role instanceof String) ? (String) role : null;
+            return ResponseEntity.ok(galleryService.getGalleriesByUser(userId, callerId, callerRole));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorMap(e.getMessage()));
         }

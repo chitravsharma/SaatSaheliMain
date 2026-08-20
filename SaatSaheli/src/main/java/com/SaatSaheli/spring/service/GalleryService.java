@@ -8,6 +8,7 @@ import com.SaatSaheli.spring.repository.ContentLikeRepository;
 import com.SaatSaheli.spring.repository.GalleryImageRepository;
 import com.SaatSaheli.spring.repository.GalleryRepository;
 import com.SaatSaheli.spring.repository.UserRepository;
+import com.SaatSaheli.spring.util.RoleUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -67,7 +68,7 @@ public class GalleryService {
     }
 
     public List<Gallery> getPublishedGalleries() {
-        List<Gallery> galleries = galleryRepo.findByStatusIgnoreCase("PUBLISHED");
+        List<Gallery> galleries = galleryRepo.findByStatusIgnoreCaseOrderByModifiedDateDesc("PUBLISHED");
         Map<Long, User> userMap = getUserMap();
         for (Gallery g : galleries) {
             g.setImages(imageRepo.findByGalleryIdOrderByOrderIndexAsc(g.getId()));
@@ -80,8 +81,27 @@ public class GalleryService {
         return galleries;
     }
 
-    public List<Gallery> getGalleriesByUser(Long userId) {
-        List<Gallery> galleries = galleryRepo.findByUserId(userId);
+    /**
+     * Galleries belonging to {@code userId}.
+     *
+     * <p>Drafts are private. They are returned only when the caller is the owner or an
+     * admin; every other caller -- including anonymous visitors -- sees published
+     * galleries only. Before this gate existed, /api/galleries/user/{id} handed a
+     * creator's unpublished work to anyone who asked.
+     *
+     * @param requestUserId the authenticated caller, or {@code null} when anonymous
+     * @param requestUserRole the caller's role, or {@code null} when anonymous
+     */
+    public List<Gallery> getGalleriesByUser(Long userId, Long requestUserId, String requestUserRole) {
+        List<Gallery> galleries = galleryRepo.findByUserIdOrderByModifiedDateDesc(userId);
+
+        boolean isOwner = requestUserId != null && requestUserId.equals(userId);
+        if (!isOwner && !RoleUtil.isAdmin(requestUserRole)) {
+            galleries = galleries.stream()
+                    .filter(g -> "PUBLISHED".equalsIgnoreCase(g.getStatus()))
+                    .collect(Collectors.toList());
+        }
+
         for (Gallery g : galleries) {
             g.setImages(imageRepo.findByGalleryIdOrderByOrderIndexAsc(g.getId()));
             enrichWithCounts(g);
