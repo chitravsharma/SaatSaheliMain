@@ -138,6 +138,33 @@
   display: block;
 }
 
+/* Trim-size picker above the import button. Locked (and showing the stored size)
+   once the magazine has pages, since later parts must share the first part's frame. */
+.mag-doc-size {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 8px;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.mag-doc-size select {
+  width: 100%;
+  padding: 6px 8px;
+  font-size: 0.78rem;
+  font-weight: 400;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  background: #fff;
+}
+
+.mag-doc-size select:disabled {
+  background: #f2f2f2;
+  color: #666;
+  cursor: not-allowed;
+}
+
 /* ── Page list ── */
 .mag-page-list {
   flex-shrink: 0;
