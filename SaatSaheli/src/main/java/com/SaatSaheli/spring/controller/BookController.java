@@ -10,6 +10,7 @@ import com.SaatSaheli.spring.model.Page;
 import com.SaatSaheli.spring.model.User;
 import com.SaatSaheli.spring.repository.UserRepository;
 import com.SaatSaheli.spring.service.ExportService;
+import com.SaatSaheli.spring.util.PageSizes;
 import com.SaatSaheli.spring.util.RateLimiter;
 import com.SaatSaheli.spring.util.RoleUtil;
 import com.SaatSaheli.spring.util.PlanLimits;
@@ -92,7 +93,10 @@ public class BookController {
             if (title == null || title.isEmpty()) {
                 return ResponseEntity.badRequest().body(errorMap("Title is required"));
             }
-            Book book = bookService.createBook(title, jwtUserId, category);
+            // No file to measure here, so AUTO/blank just leaves the default frame.
+            String pageSize = PageSizes.normalize(
+                    body.get("pageSize") != null ? body.get("pageSize").toString() : null, 0, 0);
+            Book book = bookService.createBook(title, jwtUserId, category, pageSize);
             return ResponseEntity.ok(book);
         } catch (PlanLimitException e) {
             return upgradeRequired(e.getMessage());
@@ -102,11 +106,20 @@ public class BookController {
         }
     }
 
+    /**
+     * Create a book from an uploaded PDF or Word document.
+     *
+     * @param pageSize page shape for the book: a {@link PageSizes} shape key, or
+     *                 {@code AUTO}/absent to pick the shape closest to the uploaded
+     *                 PDF's own proportions. The book's reader frame is built from
+     *                 this, and pages are fitted inside it rather than cropped to it.
+     */
     @PostMapping("/upload-document")
     public ResponseEntity<?> uploadDocument(
             @RequestParam("file") MultipartFile file,
             @RequestParam("title") String title,
-            @RequestParam(value = "userId", required = false) Long userId) {
+            @RequestParam(value = "userId", required = false) Long userId,
+            @RequestParam(value = "pageSize", required = false) String pageSize) {
         try {
             if (file.isEmpty()) {
                 return ResponseEntity.badRequest().body(errorMap("File is required"));
@@ -128,17 +141,24 @@ public class BookController {
 
             Book book;
             if (isPdf) {
-                List<String> imageUrls = documentExtractionService.extractPdfAsImages(file);
-                if (imageUrls.isEmpty()) {
+                DocumentExtractionService.PdfImport imported = documentExtractionService.importPdfAsImages(file);
+                if (imported.imageUrls().isEmpty()) {
                     return ResponseEntity.badRequest().body(errorMap("No pages could be rendered from the PDF"));
                 }
-                book = bookService.createBookFromPdfImages(title.trim(), userId, imageUrls);
+                // The PDF's own proportions are the fallback, so AUTO shapes the frame
+                // like the file.
+                String resolvedSize = PageSizes.normalize(pageSize,
+                        imported.widthInches(), imported.heightInches());
+                book = bookService.createBookFromPdfImages(title.trim(), userId,
+                        imported.imageUrls(), resolvedSize);
             } else {
                 List<String> pageTexts = documentExtractionService.extractText(file);
                 if (pageTexts.isEmpty()) {
                     return ResponseEntity.badRequest().body(errorMap("No text could be extracted from the document"));
                 }
-                book = bookService.createBookFromDocument(title.trim(), userId, pageTexts);
+                // A Word document has no page shape to measure, so AUTO stays default.
+                book = bookService.createBookFromDocument(title.trim(), userId, pageTexts,
+                        PageSizes.normalize(pageSize, 0, 0));
             }
             return ResponseEntity.ok(book);
         } catch (PlanLimitException e) {
@@ -148,6 +168,76 @@ public class BookController {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(errorMap("Failed to process document: " + e.getMessage()));
+        }
+    }
+
+    /**
+     * GET /api/books/page-sizes — the page shapes the upload UI offers.
+     *
+     * <p>Served from the backend catalogue so the picker cannot drift from the frames
+     * the reader actually builds.
+     */
+    @GetMapping("/page-sizes")
+    public ResponseEntity<?> pageSizes() {
+        List<Map<String, Object>> out = new java.util.ArrayList<>();
+        for (PageSizes.Spec spec : PageSizes.selectable()) {
+            out.add(pageSizeMap(spec));
+        }
+        return ResponseEntity.ok(out);
+    }
+
+    private Map<String, Object> pageSizeMap(PageSizes.Spec spec) {
+        Map<String, Object> row = new HashMap<>();
+        row.put("key", spec.key());
+        row.put("label", spec.label());
+        row.put("description", spec.description());
+        row.put("widthUnits", spec.widthUnits());
+        row.put("heightUnits", spec.heightUnits());
+        row.put("frameWidth", spec.frameWidth());
+        row.put("frameHeight", spec.frameHeight());
+        return row;
+    }
+
+    /**
+     * GET /api/books/{bookId}/page-size — the page shape one book is published in.
+     *
+     * <p>Deliberately separate from GET /api/books/{id}: the reader needs only the
+     * frame, and that endpoint carries every page of the book with it.
+     */
+    @GetMapping("/{bookId}/page-size")
+    public ResponseEntity<?> getPageSize(@PathVariable Long bookId) {
+        try {
+            Book book = bookService.getBookSummary(bookId);
+            Map<String, Object> out = pageSizeMap(PageSizes.resolve(book.getPageSize()));
+            out.put("pageSize", book.getPageSize());
+            return ResponseEntity.ok(out);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorMap(e.getMessage()));
+        }
+    }
+
+    /**
+     * PUT /api/books/{bookId}/page-size — change a published book's page shape.
+     *
+     * <p>Re-fits imported pages to the new frame, so an author who picked the wrong
+     * shape on upload does not have to re-upload the PDF.
+     */
+    @PutMapping("/{bookId}/page-size")
+    public ResponseEntity<?> updatePageSize(@PathVariable Long bookId,
+                                            @RequestBody Map<String, String> body,
+                                            HttpServletRequest request) {
+        try {
+            Long jwtUserId = (Long) request.getAttribute("jwtUserId");
+            if (jwtUserId == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorMap("Authentication required"));
+            }
+            Book book = bookService.updatePageSize(bookId, body.get("pageSize"), jwtUserId);
+            return ResponseEntity.ok(book);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorMap(e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(errorMap("Failed to update page size: " + e.getMessage()));
         }
     }
 

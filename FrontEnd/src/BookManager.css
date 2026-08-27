@@ -1184,6 +1184,89 @@
   margin: 0;
 }
 
+/* Page shape picker on the document-upload form. Swatches rather than a dropdown:
+   the choice is a shape, so showing the shapes answers it faster than naming them. */
+.bm-pagesize {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  width: 100%;
+  max-width: 420px;
+}
+.bm-pagesize-label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.bm-shape-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(112px, 1fr));
+  gap: 8px;
+  width: 100%;
+}
+.bm-shape-card {
+  /* A fixed-height swatch row bottom-aligns every shape, so the names below line up
+     across cards instead of stepping with each swatch's height. */
+  display: grid;
+  grid-template-rows: 54px auto auto;
+  align-items: end;
+  justify-items: center;
+  gap: 6px;
+  padding: 12px 8px;
+  border: 2px solid var(--accent-blue-pale);
+  border-radius: 10px;
+  background: var(--bg-card-alt);
+  cursor: pointer;
+  text-align: center;
+  font: inherit;
+  color: var(--text-primary);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.bm-shape-card:hover {
+  border-color: var(--accent-blue);
+}
+.bm-shape-card:focus-visible {
+  outline: 3px solid var(--accent-gold-hover);
+  outline-offset: 2px;
+}
+.bm-shape-card-selected {
+  border-color: var(--accent-blue);
+  box-shadow: 0 0 0 3px var(--accent-blue-pale);
+}
+/* Fixed-height row so swatches of different shapes sit on a common baseline and the
+   cards do not jump in height between a square and a tall rectangle. */
+.bm-shape-swatch {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  align-self: end;
+  border: 2px solid var(--accent-blue);
+  border-radius: 3px;
+  background: var(--bg-card);
+  color: var(--text-muted);
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+.bm-shape-swatch-auto {
+  border-style: dashed;
+  border-color: var(--text-muted);
+}
+.bm-shape-name {
+  font-size: 0.82rem;
+  font-weight: 600;
+  align-self: start;
+}
+.bm-shape-desc {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  line-height: 1.3;
+  align-self: start;
+}
+.bm-pagesize-hint {
+  text-align: left;
+}
+
 /* Button spinner for loading states */
 .btn-spinner {
   display: inline-block;

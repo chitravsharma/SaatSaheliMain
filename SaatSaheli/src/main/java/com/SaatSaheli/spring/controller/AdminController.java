@@ -2,6 +2,7 @@ package com.SaatSaheli.spring.controller;
 
 import com.SaatSaheli.spring.model.Article;
 import com.SaatSaheli.spring.model.Book;
+import com.SaatSaheli.spring.util.PageSizes;
 import com.SaatSaheli.spring.model.Gallery;
 import com.SaatSaheli.spring.model.Login;
 import com.SaatSaheli.spring.model.MarketplaceListing;
@@ -995,6 +996,7 @@ public class AdminController {
             @RequestParam(value = "magazineId", required = false) Long magazineId,
             @RequestParam(value = "title", required = false) String title,
             @RequestParam(value = "mode", required = false, defaultValue = "append") String mode,
+            @RequestParam(value = "pageSize", required = false) String pageSize,
             HttpServletRequest request) {
         User caller = verifyCaller(getAuthUserId(request), false);
         if (caller == null) {
@@ -1036,10 +1038,24 @@ public class AdminController {
 
             // Extract pages from document and add them to the magazine
             if (isPdf) {
-                List<String> imageUrls = documentExtractionService.extractPdfAsImages(file);
+                com.SaatSaheli.spring.service.DocumentExtractionService.PdfImport imported =
+                        documentExtractionService.importPdfAsImages(file);
+                List<String> imageUrls = imported.imageUrls();
                 if (imageUrls.isEmpty()) {
                     return ResponseEntity.badRequest().body(errorMap("No pages could be rendered from the PDF"));
                 }
+                // A magazine is built up over several uploads (12 pages at a time), so only
+                // the first upload sets the shape — later parts inherit it rather than
+                // re-shaping a magazine readers are already partway through.
+                String existingSize = magazine.getPageSize();
+                boolean sizeAlreadySet = existingSize != null && !existingSize.isBlank();
+                String resolvedSize = sizeAlreadySet
+                        ? existingSize
+                        : PageSizes.normalize(pageSize, imported.widthInches(), imported.heightInches());
+                if (!sizeAlreadySet && resolvedSize != null) {
+                    magazine = bookService.updatePageSize(magazine.getId(), resolvedSize, null);
+                }
+                PageSizes.Spec frame = PageSizes.resolve(resolvedSize);
                 for (int i = 0; i < imageUrls.size(); i++) {
                     int pageNum = startPage + i;
                     Page page = new Page();
@@ -1052,9 +1068,13 @@ public class AdminController {
                         page.setContent(magazineTitle);
                     }
                     // Write as imageBlocks so the MagazineEditor canvas renders it; FlipBook still reads imageUrl.
+                    // Full-bleed in the magazine's own frame, and "contain" so a page whose
+                    // proportions differ slightly from the chosen shape is letterboxed, not cropped.
                     page.setFormat("{\"imageBlocks\":[{\"id\":\"imported-" + pageNum
                             + "\",\"url\":" + escapeJson(imageUrls.get(i))
-                            + ",\"x\":0,\"y\":0,\"width\":550,\"height\":700}]}");
+                            + ",\"x\":0,\"y\":0,\"width\":" + frame.frameWidth()
+                            + ",\"height\":" + frame.frameHeight()
+                            + ",\"objectFit\":\"contain\"}]}");
                     page.setCreatedDate(java.time.LocalDateTime.now());
                     page.setModifiedDate(java.time.LocalDateTime.now());
                     bookService.addPage(magazine.getId(), page, null);

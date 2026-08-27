@@ -4,6 +4,7 @@ import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.io.MemoryUsageSetting;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
+import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.PDResources;
 import org.apache.pdfbox.pdmodel.graphics.PDXObject;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
@@ -73,13 +74,42 @@ public class DocumentExtractionService {
         }
     }
 
+    /**
+     * Result of a PDF import: the rendered page images plus the document's own trim
+     * size, so the caller can fit the book's reader frame to the real page shape
+     * without re-opening (and re-parsing) the PDF.
+     */
+    public record PdfImport(List<String> imageUrls, double widthInches, double heightInches) {}
+
+    /**
+     * Trim size of a PDF page in inches. PDF user-space units are 1/72 in, so the
+     * CropBox converts directly. A /Rotate of 90 or 270 swaps the visual edges, so
+     * the rotation is applied before reporting.
+     */
+    private static double[] trimInches(PDPage page) {
+        PDRectangle box = page.getCropBox() != null ? page.getCropBox() : page.getMediaBox();
+        if (box == null) return new double[] { 0, 0 };
+        double w = box.getWidth() / 72.0;
+        double h = box.getHeight() / 72.0;
+        int rotation = ((page.getRotation() % 360) + 360) % 360;
+        if (rotation == 90 || rotation == 270) {
+            double swap = w; w = h; h = swap;
+        }
+        return new double[] { w, h };
+    }
+
     // PDF page rendering: 100 DPI JPEG @ 0.85 quality keeps text legible while
     // cutting per-page heap allocation ~2× (vs 150 DPI) and stored size ~10×
     // (vs PNG). At 150 DPI PNG one page is ~5 MP / ~20 MB BufferedImage —
     // a 20-page PDF rendered concurrently was the suspect in the 2026-05-09
     // and 2026-05-14 Render OOMs.
     public List<String> extractPdfAsImages(MultipartFile file) throws IOException {
+        return importPdfAsImages(file).imageUrls();
+    }
+
+    public PdfImport importPdfAsImages(MultipartFile file) throws IOException {
         List<String> imageUrls = new ArrayList<>();
+        double[] trim = { 0, 0 };
         try (PDDocument doc = PDDocument.load(file.getInputStream(), tempFileOnly())) {
             PDFRenderer renderer = new PDFRenderer(doc);
             int totalPages = doc.getNumberOfPages();
@@ -108,8 +138,12 @@ public class DocumentExtractionService {
                             + " MP per page (e.g. export at 150 DPI) before uploading.");
                 }
             }
-            log.info("PDF upload accepted: name={}, size={} MB, pages={}, maxPageImages={} MP",
-                    file.getOriginalFilename(), sizeMB, totalPages, maxObservedPx / 1_000_000);
+            // Measure page 1 — the whole document is assumed to share one trim, which is
+            // true of anything exported for print.
+            trim = trimInches(doc.getPage(0));
+            log.info("PDF upload accepted: name={}, size={} MB, pages={}, maxPageImages={} MP, trim={}x{} in",
+                    file.getOriginalFilename(), sizeMB, totalPages, maxObservedPx / 1_000_000,
+                    String.format("%.3f", trim[0]), String.format("%.3f", trim[1]));
             for (int i = 0; i < totalPages; i++) {
                 // Render, upload, then release the page raster before the next
                 // iteration. The renderer decodes embedded images at their
@@ -123,7 +157,7 @@ public class DocumentExtractionService {
                 page = null;
             }
         }
-        return imageUrls;
+        return new PdfImport(imageUrls, trim[0], trim[1]);
     }
 
     /**

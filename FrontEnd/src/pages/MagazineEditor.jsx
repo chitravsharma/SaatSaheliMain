@@ -5,12 +5,14 @@ import { useStrings } from "../LanguageContext";
 import FlipBook from "../FlipBook";
 import ImageEditor from "../components/ImageEditor";
 import { optimizeCloudinary } from "../utils/imageUrl";
+import { PAGE_SHAPES, AUTO_PAGE_SIZE_KEY, resolvePageSize } from "../constants/pageSizes";
 import "./MagazineEditor.css";
 
 const API = process.env.REACT_APP_API_URL;
 const TOTAL_PAGES = 50;
-const PAGE_W = 550;
-const PAGE_H = 700;
+// Fallback frame for a magazine with no page size stored — the historical canvas.
+// The live canvas dimensions come from the magazine's own trim size instead.
+const DEFAULT_FRAME = resolvePageSize(null);
 
 const FONT_FAMILIES = [
   { label: "Sans-serif", value: "sans-serif" },
@@ -32,7 +34,8 @@ function getClientXY(e) {
 }
 
 /* ───── DraggableBlock ───── */
-function DraggableBlock({ block, type, isSelected, onSelect, onChange, scale, children }) {
+function DraggableBlock({ block, type, isSelected, onSelect, onChange, scale, children,
+                         pageW = DEFAULT_FRAME.frameWidth, pageH = DEFAULT_FRAME.frameHeight }) {
   const [dragging, setDragging] = useState(false);
   const [resizing, setResizing] = useState(false);
   const startRef = useRef({ mx: 0, my: 0, x: 0, y: 0, w: 0, h: 0 });
@@ -66,8 +69,8 @@ function DraggableBlock({ block, type, isSelected, onSelect, onChange, scale, ch
         const dy = (pos.y - s.my) / scale;
         let nx = Math.round(s.x + dx);
         let ny = Math.round(s.y + dy);
-        nx = Math.max(0, Math.min(PAGE_W - block.width, nx));
-        ny = Math.max(0, Math.min(PAGE_H - block.height, ny));
+        nx = Math.max(0, Math.min(pageW - block.width, nx));
+        ny = Math.max(0, Math.min(pageH - block.height, ny));
         onChange({ ...block, x: nx, y: ny });
       }
       if (resizing) {
@@ -75,8 +78,8 @@ function DraggableBlock({ block, type, isSelected, onSelect, onChange, scale, ch
         const dy = (pos.y - s.my) / scale;
         let nw = Math.round(Math.max(40, s.w + dx));
         let nh = Math.round(Math.max(30, s.h + dy));
-        nw = Math.min(PAGE_W - block.x, nw);
-        nh = Math.min(PAGE_H - block.y, nh);
+        nw = Math.min(pageW - block.x, nw);
+        nh = Math.min(pageH - block.y, nh);
         onChange({ ...block, width: nw, height: nh });
       }
     };
@@ -93,7 +96,7 @@ function DraggableBlock({ block, type, isSelected, onSelect, onChange, scale, ch
       window.removeEventListener("touchend", onEnd);
       window.removeEventListener("touchcancel", onEnd);
     };
-  }, [dragging, resizing, block, onChange, scale]);
+  }, [dragging, resizing, block, onChange, scale, pageW, pageH]);
 
   const isActive = dragging || resizing;
   return (
@@ -147,6 +150,18 @@ const MagazineEditor = () => {
   const [editorCallback, setEditorCallback] = useState(null);
   const [moveTarget, setMoveTarget] = useState("");
 
+  // Trim size chosen for the FIRST import. The backend locks a magazine's size once
+  // it has one, because a magazine is built up over several 12-page uploads and
+  // re-shaping it midway would leave earlier parts in a different frame.
+  const [uploadPageSize, setUploadPageSize] = useState(AUTO_PAGE_SIZE_KEY);
+  const pageSizeLocked = !!(magazine && magazine.pageSize);
+
+  // Canvas matches the magazine's real trim, so blocks are laid out in the same
+  // coordinates the reader will render them in.
+  const frame = resolvePageSize(magazine?.pageSize);
+  const PAGE_W = frame.frameWidth;
+  const PAGE_H = frame.frameHeight;
+
   const canvasWrapRef = useRef(null);
   const [canvasScale, setCanvasScale] = useState(1);
 
@@ -160,7 +175,7 @@ const MagazineEditor = () => {
     measure();
     window.addEventListener("resize", measure);
     return () => window.removeEventListener("resize", measure);
-  }, [selectedPageNum]);
+  }, [selectedPageNum, PAGE_W]);
 
   const fetchMagazine = useCallback(async () => {
     try {
@@ -204,7 +219,8 @@ const MagazineEditor = () => {
         // the canvas only knows how to render imageBlocks, so synthesize one from page.imageUrl.
         let blocks = fmt.imageBlocks || [];
         if (blocks.length === 0 && page.imageUrl) {
-          blocks = [{ id: `imported-${num}`, url: page.imageUrl, x: 0, y: 0, width: 550, height: 700 }];
+          blocks = [{ id: `imported-${num}`, url: page.imageUrl, x: 0, y: 0,
+                      width: PAGE_W, height: PAGE_H, objectFit: "contain" }];
         }
         setImageBlocks(blocks);
       } catch {
@@ -460,6 +476,7 @@ const MagazineEditor = () => {
       formData.append("file", file);
       formData.append("magazineId", magazine.id);
       formData.append("mode", mode);
+      formData.append("pageSize", uploadPageSize);
       const res = await api.post(`${API}/api/admin/magazine/upload-document`, formData);
       setMagazine(res.data);
       setPages(res.data.pages || []);
@@ -621,6 +638,31 @@ const MagazineEditor = () => {
 
           {/* Document upload */}
           <div className="mag-doc-upload">
+            <label className="mag-doc-size">
+              <span>{strings.bookManager.pageSizeLabel}</span>
+              <select
+                value={pageSizeLocked ? magazine.pageSize : uploadPageSize}
+                disabled={pageSizeLocked || docUploading}
+                onChange={(e) => setUploadPageSize(e.target.value)}
+              >
+                {pageSizeLocked ? (
+                  <option value={magazine.pageSize}>
+                    {strings.bookManager.pageShapeNames[frame.key] || frame.label}
+                  </option>
+                ) : (
+                  <>
+                    <option value={AUTO_PAGE_SIZE_KEY}>{strings.bookManager.pageSizeAuto}</option>
+                    {PAGE_SHAPES.map((sh) => (
+                      <option key={sh.key} value={sh.key}>
+                        {strings.bookManager.pageShapeNames[sh.key] || sh.label}
+                        {" \u2014 "}
+                        {sh.widthUnits}:{sh.heightUnits}
+                      </option>
+                    ))}
+                  </>
+                )}
+              </select>
+            </label>
             <label className="mag-btn mag-btn-sm mag-upload-btn mag-doc-btn">
               {docUploading ? s.importing : s.uploadDoc}
               <input type="file" accept=".pdf,.docx,.doc" hidden disabled={docUploading}
@@ -889,7 +931,7 @@ const MagazineEditor = () => {
                     isSelected={selectedBlockId === tb.id}
                     onSelect={() => setSelectedBlockId(tb.id)}
                     onChange={(updated) => setTextBlocks(textBlocks.map((t) => t.id === tb.id ? updated : t))}
-                    scale={canvasScale}
+                    scale={canvasScale} pageW={PAGE_W} pageH={PAGE_H}
                   >
                     <div style={{
                       width: "100%", height: "100%",
@@ -915,7 +957,7 @@ const MagazineEditor = () => {
                     isSelected={selectedBlockId === ib.id}
                     onSelect={() => setSelectedBlockId(ib.id)}
                     onChange={(updated) => setImageBlocks(imageBlocks.map((i) => i.id === ib.id ? updated : i))}
-                    scale={canvasScale}
+                    scale={canvasScale} pageW={PAGE_W} pageH={PAGE_H}
                   >
                     <img src={resolveUrl(ib.url)} alt="" draggable={false}
                       style={{

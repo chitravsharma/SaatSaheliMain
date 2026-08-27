@@ -40,6 +40,12 @@ public class Book {
 
     private String language; // "en", "hi", etc. — defaults to "en"
 
+    // Page shape the book is published in — a PageSizes key ("SQUARE", "PORTRAIT",
+    // "TALL", "LANDSCAPE"). Null on every book created before page shapes existed, and
+    // PageSizes.resolve maps that to CLASSIC, the original 550x700 frame.
+    @Column(name = "page_size", length = 40)
+    private String pageSize;
+
     @CreatedBy
     @Column(name = "created_by", updatable = false)
     private Long createdBy;
@@ -101,6 +107,9 @@ public class Book {
 
     public String getLanguage() { return language; }
     public void setLanguage(String language) { this.language = language; }
+
+    public String getPageSize() { return pageSize; }
+    public void setPageSize(String pageSize) { this.pageSize = pageSize; }
 
     public Long getCreatedBy() { return createdBy; }
     public void setCreatedBy(Long createdBy) { this.createdBy = createdBy; }

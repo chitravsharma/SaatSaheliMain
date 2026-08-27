@@ -1,6 +1,7 @@
 package com.SaatSaheli.spring.service;
 
 import com.SaatSaheli.spring.model.Book;
+import com.SaatSaheli.spring.util.PageSizes;
 import com.SaatSaheli.spring.model.Page;
 import com.SaatSaheli.spring.model.User;
 import com.SaatSaheli.spring.repository.BookRepository;
@@ -20,6 +21,7 @@ import jakarta.annotation.PostConstruct;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -140,18 +142,25 @@ public class BookService {
         }
     }
 
+    @Transactional
     public Book createBook(String title, Long userId) {
         return createBook(title, userId, null);
     }
 
     @Transactional
     public Book createBook(String title, Long userId, String category) {
+        return createBook(title, userId, category, null);
+    }
+
+    @Transactional
+    public Book createBook(String title, Long userId, String category, String pageSizeValue) {
         assertCanCreateBook(userId);
         LocalDateTime now = LocalDateTime.now(ZoneOffset.UTC);
         Book book = new Book();
         book.setTitle(title);
         book.setUserId(userId);
         book.setCategory(category);
+        book.setPageSize(pageSizeValue);
         book.setStatus("DRAFT");
         book.setCreatedDate(now);
         book.setModifiedDate(now);
@@ -178,6 +187,12 @@ public class BookService {
 
         book.setPages(pageRepo.findByBookIdOrderByPageNumberAsc(book.getId()));
         return book;
+    }
+
+    /** Book row only — no pages loaded. For callers that just need its metadata. */
+    public Book getBookSummary(Long id) {
+        return bookRepo.findById(id)
+                .orElseThrow(() -> new RuntimeException("Book not found"));
     }
 
     public Book getBook(Long id) {
@@ -550,6 +565,17 @@ public class BookService {
         return bookRepo.findByUserIdAndStatusIgnoreCase(userId, "DRAFT");
     }
 
+    /**
+     * Newest first. modifiedDate leads because publishing a book goes through
+     * updateBook, which bumps it — so a freshly published book sorts to the top of the
+     * Published Books shelf, which is what "recently added" means there. createdDate
+     * and id break ties and keep the order stable for rows with no timestamps.
+     */
+    private static final Comparator<Book> NEWEST_FIRST =
+            Comparator.comparing(Book::getModifiedDate, Comparator.nullsLast(Comparator.reverseOrder()))
+                    .thenComparing(Book::getCreatedDate, Comparator.nullsLast(Comparator.reverseOrder()))
+                    .thenComparing(Book::getId, Comparator.nullsLast(Comparator.reverseOrder()));
+
     public List<Book> searchBooks(Long id, String title, String author, String status, Long requestUserId, String category) {
         List<Book> books = bookRepo.findAll();
 
@@ -594,6 +620,9 @@ public class BookService {
                         || (b.getUserId() != null && finalAuthorMatchIds.contains(b.getUserId())))
                 .filter(b -> category == null || category.trim().isEmpty()
                         || category.trim().equalsIgnoreCase(b.getCategory()))
+                // findAll() returns insertion order, so without this the newest book
+                // lands at the BOTTOM of every list built on this endpoint.
+                .sorted(NEWEST_FIRST)
                 .collect(Collectors.toList());
 
         // Enrich with author name and pages
@@ -615,12 +644,18 @@ public class BookService {
 
     @Transactional
     public Book createBookFromDocument(String title, Long userId, List<String> pageTexts) {
+        return createBookFromDocument(title, userId, pageTexts, null);
+    }
+
+    @Transactional
+    public Book createBookFromDocument(String title, Long userId, List<String> pageTexts, String pageSizeValue) {
         assertCanCreateBook(userId);
         assertImportPageCount(userId, pageTexts == null ? 0 : pageTexts.size());
         LocalDateTime now = LocalDateTime.now(ZoneOffset.UTC);
         Book book = new Book();
         book.setTitle(title);
         book.setUserId(userId);
+        book.setPageSize(pageSizeValue);
         book.setStatus("DRAFT");
         book.setCreatedDate(now);
         book.setModifiedDate(now);
@@ -684,12 +719,19 @@ public class BookService {
 
     @Transactional
     public Book createBookFromPdfImages(String title, Long userId, List<String> imageUrls) {
+        return createBookFromPdfImages(title, userId, imageUrls, null);
+    }
+
+    @Transactional
+    public Book createBookFromPdfImages(String title, Long userId, List<String> imageUrls, String pageSizeValue) {
         assertCanCreateBook(userId);
         assertImportPageCount(userId, imageUrls == null ? 0 : imageUrls.size());
+        PageSizes.Spec size = PageSizes.resolve(pageSizeValue);
         LocalDateTime now = LocalDateTime.now(ZoneOffset.UTC);
         Book book = new Book();
         book.setTitle(title);
         book.setUserId(userId);
+        book.setPageSize(pageSizeValue);
         book.setStatus("DRAFT");
         book.setCreatedDate(now);
         book.setModifiedDate(now);
@@ -702,7 +744,7 @@ public class BookService {
             cover.setPageNumber(1);
             cover.setContent(title);
             cover.setImageUrl(imageUrls.get(0));
-            cover.setFormat(pdfPageFormat(1, imageUrls.get(0)));
+            cover.setFormat(pdfPageFormat(1, imageUrls.get(0), size));
             cover.setCreatedDate(now);
             cover.setModifiedDate(now);
             pageRepo.save(cover);
@@ -713,7 +755,7 @@ public class BookService {
                 page.setBookId(book.getId());
                 page.setPageNumber(i + 1);
                 page.setImageUrl(imageUrls.get(i));
-                page.setFormat(pdfPageFormat(i + 1, imageUrls.get(i)));
+                page.setFormat(pdfPageFormat(i + 1, imageUrls.get(i), size));
                 page.setCreatedDate(now);
                 page.setModifiedDate(now);
                 pageRepo.save(page);
@@ -724,7 +766,7 @@ public class BookService {
             back.setBookId(book.getId());
             back.setPageNumber(imageUrls.size());
             back.setImageUrl(imageUrls.get(imageUrls.size() - 1));
-            back.setFormat(pdfPageFormat(imageUrls.size(), imageUrls.get(imageUrls.size() - 1)));
+            back.setFormat(pdfPageFormat(imageUrls.size(), imageUrls.get(imageUrls.size() - 1), size));
             back.setCreatedDate(now);
             back.setModifiedDate(now);
             pageRepo.save(back);
@@ -735,7 +777,7 @@ public class BookService {
             cover.setPageNumber(1);
             cover.setContent(title);
             cover.setImageUrl(imageUrls.get(0));
-            cover.setFormat(pdfPageFormat(1, imageUrls.get(0)));
+            cover.setFormat(pdfPageFormat(1, imageUrls.get(0), size));
             cover.setCreatedDate(now);
             cover.setModifiedDate(now);
             pageRepo.save(cover);
@@ -873,11 +915,55 @@ public class BookService {
 
     // Page format for PDF-imported pages: a single image block at full-page bounds.
     // The MagazineEditor canvas renders imageBlocks; the older layout.image1 shape was a no-op there.
-    private String pdfPageFormat(int pageNumber, String imageUrl) {
+    /**
+     * Layout for an imported PDF page: the rendered page image, full-bleed in the
+     * book's own frame.
+     *
+     * <p>Two things here stop imported artwork being cropped. The block fills the
+     * frame exactly (0,0 to frame width/height) instead of the old 530x700 inset,
+     * and objectFit is "contain" rather than the renderer's "cover" default — so if
+     * the PDF's real proportions do not quite match the chosen shape the page is
+     * letterboxed instead of having its edges cut off.
+     */
+    private String pdfPageFormat(int pageNumber, String imageUrl, PageSizes.Spec size) {
         String safeUrl = imageUrl == null ? "" :
                 imageUrl.replace("\\", "\\\\").replace("\"", "\\\"");
         return "{\"imageBlocks\":[{\"id\":\"imported-" + pageNumber
                 + "\",\"url\":\"" + safeUrl
-                + "\",\"x\":10,\"y\":0,\"width\":530,\"height\":700}]}";
+                + "\",\"x\":0,\"y\":0,\"width\":" + size.frameWidth()
+                + ",\"height\":" + size.frameHeight()
+                + ",\"objectFit\":\"contain\"}]}";
+    }
+
+    /**
+     * Change a book's page shape and re-fit every imported page to the new frame.
+     *
+     * <p>Imported pages store their image block in frame coordinates, so a size
+     * change has to rewrite them or the artwork keeps the old frame's proportions.
+     * Hand-laid pages (text blocks, manually placed images) are left alone — their
+     * positions are the author's, not ours to rescale.
+     */
+    @Transactional
+    public Book updatePageSize(Long bookId, String pageSizeValue, Long requestUserId) {
+        Book book = bookRepo.findById(bookId)
+                .orElseThrow(() -> new RuntimeException("Book not found"));
+        if (requestUserId != null && !requestUserId.equals(book.getUserId())) {
+            throw new RuntimeException("Only the author can edit this book");
+        }
+        String stored = PageSizes.normalize(pageSizeValue, 0, 0);
+        PageSizes.Spec size = PageSizes.resolve(stored);
+        book.setPageSize(stored);
+        book.setModifiedDate(LocalDateTime.now(ZoneOffset.UTC));
+        book = bookRepo.save(book);
+
+        List<Page> pages = pageRepo.findByBookIdOrderByPageNumberAsc(bookId);
+        for (Page page : pages) {
+            String format = page.getFormat();
+            if (format == null || !format.contains("\"imported-")) continue;
+            page.setFormat(pdfPageFormat(page.getPageNumber(), page.getImageUrl(), size));
+            pageRepo.save(page);
+        }
+        book.setPages(pageRepo.findByBookIdOrderByPageNumberAsc(bookId));
+        return book;
     }
 }

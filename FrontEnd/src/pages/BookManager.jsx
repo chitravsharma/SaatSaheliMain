@@ -12,10 +12,71 @@ import ImageEditor from "../components/ImageEditor";
 import "../BookManager.css";
 import "./Home.css";
 import ScrollRow from "../components/ScrollRow";
+import { PAGE_SHAPES, AUTO_PAGE_SIZE_KEY } from "../constants/pageSizes";
 
 const API = `${process.env.REACT_APP_API_URL}/api/books`;
 const UPLOAD_API = `${process.env.REACT_APP_API_URL}/api/upload`;
 const GENERATE_API = `${process.env.REACT_APP_API_URL}/api/generate-image`;
+
+// Longest edge of a shape swatch, in px.
+const SHAPE_SWATCH_PX = 54;
+
+/**
+ * The page shape picker on the document-upload form.
+ *
+ * <p>Drawn as swatches rather than listed in a dropdown because the choice IS a shape —
+ * seeing a square next to a tall rectangle answers the question faster than reading
+ * "1:1" and "2:3" does. "Match my file" leads, since it is right for most uploads.
+ */
+function PageShapePicker({ value, onChange, strings }) {
+  const names = strings.bookManager.pageShapeNames || {};
+  const descriptions = strings.bookManager.pageShapeDescriptions || {};
+  const options = [
+    { key: AUTO_PAGE_SIZE_KEY, auto: true },
+    ...PAGE_SHAPES.map((shape) => ({ key: shape.key, shape })),
+  ];
+
+  return (
+    <div className="bm-shape-grid" role="radiogroup" aria-label={strings.bookManager.pageSizeLabel}>
+      {options.map(({ key, shape, auto }) => {
+        const selected = value === key;
+        const longEdge = shape ? Math.max(shape.frameWidth, shape.frameHeight) : 1;
+        const swatch = auto
+          ? { width: Math.round(SHAPE_SWATCH_PX * 0.78), height: SHAPE_SWATCH_PX }
+          : {
+              width: Math.round((shape.frameWidth / longEdge) * SHAPE_SWATCH_PX),
+              height: Math.round((shape.frameHeight / longEdge) * SHAPE_SWATCH_PX),
+            };
+        return (
+          <button
+            key={key}
+            type="button"
+            role="radio"
+            aria-checked={selected}
+            className={`bm-shape-card${selected ? " bm-shape-card-selected" : ""}`}
+            onClick={() => onChange(key)}
+          >
+            <span
+              className={`bm-shape-swatch${auto ? " bm-shape-swatch-auto" : ""}`}
+              style={swatch}
+              aria-hidden="true"
+            >
+              {auto ? "?" : null}
+            </span>
+            <span className="bm-shape-name">
+              {auto ? strings.bookManager.pageSizeAuto : (names[key] || shape.label)}
+            </span>
+            <span className="bm-shape-desc">
+              {auto
+                ? strings.bookManager.pageSizeAutoCaption
+                : (descriptions[key] || shape.description)}
+            </span>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
 
 // Public books browser shown when no user is logged in, or when a logged-in
 // user has not yet created a profile (tri-state create flow — #28).
@@ -163,6 +224,10 @@ function BookManager() {
   const [readingBookId, setReadingBookId] = useState(null);
   const [docFile, setDocFile] = useState(null);
   const [docUploading, setDocUploading] = useState(false);
+  // Trim size for the book being uploaded. AUTO asks the server to measure the PDF,
+  // which is right for most uploads; the presets are for a document whose page size
+  // is not what it should be published at (or for a Word file, which has none).
+  const [docPageSize, setDocPageSize] = useState(AUTO_PAGE_SIZE_KEY);
 
   // Fetch published books for the menu view
   useEffect(() => {
@@ -653,7 +718,7 @@ function BookManager() {
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14M5 12h14"/></svg>
               {strings.bookManager.createNewBook}
             </button>
-            <button className="bm-btn bm-btn-upload" onClick={() => { setReadingBookId(null); setNewTitle(""); setDocFile(null); setView("upload-doc"); }}>
+            <button className="bm-btn bm-btn-upload" onClick={() => { setReadingBookId(null); setNewTitle(""); setDocFile(null); setDocPageSize(AUTO_PAGE_SIZE_KEY); setView("upload-doc"); }}>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><polyline points="9 15 12 12 15 15"/></svg>
               {strings.bookManager.createFromDocument}
             </button>
@@ -1024,6 +1089,7 @@ function BookManager() {
         formData.append("file", docFile);
         formData.append("title", newTitle.trim());
         formData.append("userId", userId);
+        formData.append("pageSize", docPageSize);
         const res = await api.post(`${API}/upload-document`, formData, {
           headers: { "Content-Type": "multipart/form-data" },
         });
@@ -1034,6 +1100,7 @@ function BookManager() {
         showMessage(strings.bookManager.msgBookFromDoc(pageCount));
         setNewTitle("");
         setDocFile(null);
+        setDocPageSize(AUTO_PAGE_SIZE_KEY);
         setView("edit");
       } catch (err) {
         if (!isUpgradeRequiredError(err)) showMessage(strings.bookManager.msgDocUploadFailed(err.response?.data?.error || err.message));
@@ -1068,6 +1135,11 @@ function BookManager() {
               {strings.bookManager.chooseFile}
             </label>
             {docFile && <span className="bm-doc-filename">{docFile.name}</span>}
+          </div>
+          <div className="bm-pagesize">
+            <span className="bm-pagesize-label">{strings.bookManager.pageSizeLabel}</span>
+            <PageShapePicker value={docPageSize} onChange={setDocPageSize} strings={strings} />
+            <p className="bm-doc-hint bm-pagesize-hint">{strings.bookManager.pageSizeHint}</p>
           </div>
           <p className="bm-doc-hint">{strings.bookManager.uploadDocHint}</p>
           <button

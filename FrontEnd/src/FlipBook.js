@@ -3,6 +3,7 @@ import HTMLFlipBook from "react-pageflip";
 import axios from "axios";
 import { useStrings } from "./LanguageContext";
 import { optimizeCloudinary } from "./utils/imageUrl";
+import { resolvePageSize, DEFAULT_PAGE_SIZE_KEY } from "./constants/pageSizes";
 
 // Resolve image URL (supports local uploads and Drive URLs)
 function resolveImageUrl(url) {
@@ -42,14 +43,44 @@ function parseFormat(formatStr) {
   }
 }
 
-const DESKTOP_W = 550;
-const DESKTOP_H = 700;
-const ASPECT_RATIO = DESKTOP_H / DESKTOP_W;
+// The frame a book is rendered in comes from its page size, so a 6x9 novel, a
+// square children's book and an A4 magazine each get a reader shaped like the real
+// thing. Books with no page size resolve to CLASSIC, the original 550x700 frame,
+// which is why everything published before this feature looks unchanged.
+const CLASSIC_FRAME = resolvePageSize(DEFAULT_PAGE_SIZE_KEY);
 
 const ZOOM_LEVELS = [0.75, 1, 1.25, 1.5, 2, 2.5];
 const DEFAULT_ZOOM_INDEX = 1;
 
-function usePageSize(isFullscreen) {
+/**
+ * The book's own frame, fetched separately from its pages: /page-size is a single
+ * row, where GET /api/books/{id} would re-send every page the reader already has.
+ */
+function useBookFrame(bookId) {
+  const [frame, setFrame] = useState(CLASSIC_FRAME);
+
+  useEffect(() => {
+    let cancelled = false;
+    setFrame(CLASSIC_FRAME);
+    if (!bookId) return undefined;
+    axios.get(`${process.env.REACT_APP_API_URL}/api/books/${bookId}/page-size`)
+      .then((res) => {
+        if (!cancelled) setFrame(resolvePageSize(res.data?.pageSize));
+      })
+      // A book whose size can't be read still reads fine in the classic frame.
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, [bookId]);
+
+  return frame;
+}
+
+function usePageSize(isFullscreen, frame) {
+  const frameW = frame.frameWidth;
+  const frameH = frame.frameHeight;
+  const ASPECT_RATIO = frameH / frameW;
+  const DESKTOP_W = frameW;
+  const DESKTOP_H = frameH;
   const [size, setSize] = useState({ w: DESKTOP_W, h: DESKTOP_H, isMobile: false });
 
   useEffect(() => {
@@ -97,24 +128,31 @@ function usePageSize(isFullscreen) {
         // Fit page to available viewport: reserve ~120px for toolbar/nav
         const availH = vh - 120;
         const availW = vw - 80;
+        // Desktop renders a two-page spread, so a page gets half the width (less the
+        // 8px gutter) — not all of it. Wide frames (square and landscape books) would
+        // otherwise lay out a spread far wider than the window.
+        const halfW = Math.floor((availW - 8) / 2);
         // Calculate size that fits within available space while maintaining aspect ratio
         let h = Math.min(availH, DESKTOP_H);
         let w = Math.round(h / ASPECT_RATIO);
         // If too wide, constrain by width instead
-        if (w > availW) {
-          w = availW;
+        if (w > halfW) {
+          w = halfW;
           h = Math.round(w * ASPECT_RATIO);
         }
-        // Ensure minimum size
-        w = Math.max(w, 400);
-        h = Math.max(h, Math.round(400 * ASPECT_RATIO));
+        // Ensure minimum size — but never past the half-width, or the spread overflows
+        // again on a narrow desktop window.
+        const minW = Math.min(400, halfW);
+        w = Math.max(w, minW);
+        h = Math.max(h, Math.round(minW * ASPECT_RATIO));
         setSize({ w, h, isMobile: false });
       }
     };
     update();
     window.addEventListener("resize", update);
     return () => window.removeEventListener("resize", update);
-  }, [isFullscreen]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isFullscreen, frameW, frameH]);
 
   return size;
 }
@@ -158,7 +196,10 @@ function FlipBook({ bookId }) {
   const currentPageRef = useRef(0);
   currentPageRef.current = currentPage;
   const audioCtxRef = useRef(null);
-  const pageSize = usePageSize(isFullscreen);
+  const frame = useBookFrame(bookId);
+  const pageSize = usePageSize(isFullscreen, frame);
+  const DESKTOP_W = frame.frameWidth;
+  const DESKTOP_H = frame.frameHeight;
 
   const zoomLevel = ZOOM_LEVELS[zoomIndex] * pinchZoom;
 

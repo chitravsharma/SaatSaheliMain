@@ -101,7 +101,8 @@ CREATE TABLE public.books (
     status character varying(255),
     title character varying(255),
     user_id bigint,
-    language character varying(255)
+    language character varying(255),
+    page_size character varying(40)
 );
 
 
