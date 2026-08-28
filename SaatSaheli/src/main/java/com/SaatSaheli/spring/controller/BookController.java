@@ -172,6 +172,77 @@ public class BookController {
     }
 
     /**
+     * POST /api/books/{bookId}/append-document — add a document's pages to the END of
+     * an existing book.
+     *
+     * <p>Exists because /upload-document always creates a NEW book, so a book split
+     * across several files (or one too large for the per-upload page cap) could not be
+     * assembled — each part became its own one-part book.
+     *
+     * <p>The book keeps its existing page shape: a book is read as one object, so a
+     * later part must not re-shape the frame the earlier parts were laid out in.
+     */
+    @PostMapping("/{bookId}/append-document")
+    public ResponseEntity<?> appendDocument(
+            @PathVariable Long bookId,
+            @RequestParam("file") MultipartFile file,
+            HttpServletRequest request) {
+        try {
+            Long jwtUserId = (Long) request.getAttribute("jwtUserId");
+            if (jwtUserId == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorMap("Authentication required"));
+            }
+            if (file.isEmpty()) {
+                return ResponseEntity.badRequest().body(errorMap("File is required"));
+            }
+            // Same per-upload guards as creating a book — these exist to keep a single
+            // rasterization from exhausting the container, and appending rasterizes
+            // exactly the same way.
+            long maxBytes = (long) maxUploadMb * 1024 * 1024;
+            if (file.getSize() > maxBytes) {
+                log.warn("Append upload REJECTED (size): book={}, name={}, size={} MB > {} MB",
+                        bookId, file.getOriginalFilename(), file.getSize() / (1024 * 1024), maxUploadMb);
+                return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE)
+                        .body(errorMap("This file is " + (file.getSize() / (1024 * 1024)) + " MB, over the "
+                                + maxUploadMb + " MB limit. Please compress or split it before uploading."));
+            }
+            com.SaatSaheli.spring.util.UploadValidator.requireDocument(file);
+
+            String filename = file.getOriginalFilename();
+            boolean isPdf = filename != null && filename.toLowerCase().endsWith(".pdf");
+
+            Book book;
+            if (isPdf) {
+                List<String> imageUrls = documentExtractionService.extractPdfAsImages(file);
+                if (imageUrls.isEmpty()) {
+                    return ResponseEntity.badRequest().body(errorMap("No pages could be rendered from the PDF"));
+                }
+                book = bookService.appendPdfImages(bookId, imageUrls, jwtUserId);
+            } else {
+                List<String> pageTexts = documentExtractionService.extractText(file);
+                if (pageTexts.isEmpty()) {
+                    return ResponseEntity.badRequest().body(errorMap("No text could be extracted from the document"));
+                }
+                book = bookService.appendTextPages(bookId, pageTexts, jwtUserId);
+            }
+            return ResponseEntity.ok(book);
+        } catch (PlanLimitException e) {
+            return upgradeRequired(e.getMessage());
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(errorMap(e.getMessage()));
+        } catch (RuntimeException e) {
+            // The service signals both "no such book" and "not your book" as plain
+            // RuntimeExceptions; a missing book is a 404, not a permission failure.
+            String msg = e.getMessage() == null ? "" : e.getMessage();
+            HttpStatus code = msg.contains("not found") ? HttpStatus.NOT_FOUND : HttpStatus.FORBIDDEN;
+            return ResponseEntity.status(code).body(errorMap(msg));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(errorMap("Failed to append document: " + e.getMessage()));
+        }
+    }
+
+    /**
      * GET /api/books/page-sizes — the page shapes the upload UI offers.
      *
      * <p>Served from the backend catalogue so the picker cannot drift from the frames

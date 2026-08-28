@@ -1267,6 +1267,35 @@
   text-align: left;
 }
 
+/* Append-a-document panel in the book editor. Sits above the manual add-page form
+   because importing a whole file is the faster route when you have one. */
+.bm-append-doc {
+  margin: 20px 0;
+  padding: 16px;
+  border: 2px dashed var(--accent-blue-pale);
+  border-radius: 10px;
+  background: var(--bg-card-alt);
+}
+.bm-append-doc h3 {
+  margin: 0 0 6px;
+  font-size: 1rem;
+}
+.bm-append-hint {
+  max-width: none;
+  text-align: left;
+  margin-bottom: 12px;
+}
+.bm-append-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.bm-btn-disabled {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
 /* Button spinner for loading states */
 .btn-spinner {
   display: inline-block;
