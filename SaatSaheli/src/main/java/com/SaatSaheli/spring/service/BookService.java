@@ -936,6 +936,107 @@ public class BookService {
     }
 
     /**
+     * Plan check for appending a whole batch of pages at once.
+     *
+     * <p>assertCanAddPage checks one page at a time, so a bulk append would write
+     * pages until it hit the cap and then throw, leaving the book half-extended.
+     * This checks the whole batch up front so the import either lands completely or
+     * not at all.
+     */
+    private void assertCanAppendPages(Book book, int incoming) {
+        if (book.getUserId() == null || isPlanExempt(book.getUserId())) return;
+        PlanLimits lim = limitsForUser(book.getUserId());
+        if (!lim.canCreateBooks) {
+            throw new PlanLimitException("Adding pages is available on the Premium and Creator plans. "
+                    + "Upgrade your plan to keep building your books.");
+        }
+        long existing = pageRepo.countByBookId(book.getId());
+        if (existing + incoming > lim.maxPagesPerBook) {
+            throw new PlanLimitException("This book has " + existing + " pages and the document adds "
+                    + incoming + ", which would exceed your " + lim.plan + " plan limit of "
+                    + lim.maxPagesPerBook + " pages per book. Upgrade your plan or split the document.");
+        }
+    }
+
+    /** Page number to continue from: past the highest existing one, not the count. */
+    private int nextPageNumber(List<Page> existing) {
+        int highest = 0;
+        for (Page p : existing) {
+            if (p.getPageNumber() > highest) highest = p.getPageNumber();
+        }
+        return highest + 1;
+    }
+
+    /**
+     * Append rendered PDF pages to the end of an existing book.
+     *
+     * <p>The book keeps the page shape it already has — a book is read as one object,
+     * so a later part cannot re-shape the frame the earlier parts were laid out in.
+     * Pages whose proportions differ from that shape are letterboxed by the
+     * objectFit:"contain" that pdfPageFormat writes, never cropped.
+     */
+    @Transactional
+    public Book appendPdfImages(Long bookId, List<String> imageUrls, Long requestUserId) {
+        Book book = bookRepo.findById(bookId)
+                .orElseThrow(() -> new RuntimeException("Book not found"));
+        if (requestUserId != null && !requestUserId.equals(book.getUserId())) {
+            throw new RuntimeException("Only the author can add pages to this book");
+        }
+        assertCanAppendPages(book, imageUrls == null ? 0 : imageUrls.size());
+
+        PageSizes.Spec size = PageSizes.resolve(book.getPageSize());
+        LocalDateTime now = LocalDateTime.now(ZoneOffset.UTC);
+        int pageNumber = nextPageNumber(pageRepo.findByBookIdOrderByPageNumberAsc(bookId));
+
+        for (String url : imageUrls) {
+            Page page = new Page();
+            page.setBookId(bookId);
+            page.setPageNumber(pageNumber);
+            page.setImageUrl(url);
+            page.setFormat(pdfPageFormat(pageNumber, url, size));
+            page.setCreatedDate(now);
+            page.setModifiedDate(now);
+            pageRepo.save(page);
+            pageNumber++;
+        }
+
+        book.setModifiedDate(now);
+        book = bookRepo.save(book);
+        book.setPages(pageRepo.findByBookIdOrderByPageNumberAsc(bookId));
+        return book;
+    }
+
+    /** Append extracted text pages to the end of an existing book. */
+    @Transactional
+    public Book appendTextPages(Long bookId, List<String> pageTexts, Long requestUserId) {
+        Book book = bookRepo.findById(bookId)
+                .orElseThrow(() -> new RuntimeException("Book not found"));
+        if (requestUserId != null && !requestUserId.equals(book.getUserId())) {
+            throw new RuntimeException("Only the author can add pages to this book");
+        }
+        assertCanAppendPages(book, pageTexts == null ? 0 : pageTexts.size());
+
+        LocalDateTime now = LocalDateTime.now(ZoneOffset.UTC);
+        int pageNumber = nextPageNumber(pageRepo.findByBookIdOrderByPageNumberAsc(bookId));
+
+        for (String text : pageTexts) {
+            Page page = new Page();
+            page.setBookId(bookId);
+            page.setPageNumber(pageNumber);
+            page.setContent(text);
+            page.setCreatedDate(now);
+            page.setModifiedDate(now);
+            pageRepo.save(page);
+            pageNumber++;
+        }
+
+        book.setModifiedDate(now);
+        book = bookRepo.save(book);
+        book.setPages(pageRepo.findByBookIdOrderByPageNumberAsc(bookId));
+        return book;
+    }
+
+    /**
      * Change a book's page shape and re-fit every imported page to the new frame.
      *
      * <p>Imported pages store their image block in frame coordinates, so a size

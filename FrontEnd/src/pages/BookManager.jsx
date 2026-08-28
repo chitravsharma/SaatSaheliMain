@@ -228,6 +228,8 @@ function BookManager() {
   // which is right for most uploads; the presets are for a document whose page size
   // is not what it should be published at (or for a Word file, which has none).
   const [docPageSize, setDocPageSize] = useState(AUTO_PAGE_SIZE_KEY);
+  // Appending a further document to the book currently open in the editor.
+  const [appendUploading, setAppendUploading] = useState(false);
 
   // Fetch published books for the menu view
   useEffect(() => {
@@ -1295,6 +1297,48 @@ function BookManager() {
                 <p className="bm-help-contact">Questions? Contact <strong>avikaventures.info@gmail.com</strong></p>
               </div>
             )}
+
+            {/* Append a further document to the end of this book */}
+            <div className="bm-append-doc">
+              <h3>{strings.bookManager.appendDocHeading}</h3>
+              <p className="bm-doc-hint bm-append-hint">{strings.bookManager.appendDocHint}</p>
+              <div className="bm-append-row">
+                <input
+                  type="file"
+                  accept=".pdf,.docx,.doc"
+                  id="append-doc-input"
+                  className="bm-file-input"
+                  disabled={appendUploading}
+                  onChange={async (e) => {
+                    const file = e.target.files[0];
+                    // Clear immediately so picking the same file twice still fires onChange.
+                    e.target.value = "";
+                    if (!file) return;
+                    setAppendUploading(true);
+                    try {
+                      const formData = new FormData();
+                      formData.append("file", file);
+                      const res = await api.post(`${API}/${selectedBook.id}/append-document`, formData, {
+                        headers: { "Content-Type": "multipart/form-data" },
+                      });
+                      const added = (res.data.pages || []).length - pages.length;
+                      setSelectedBook(res.data);
+                      setPages(res.data.pages || []);
+                      showMessage(strings.bookManager.msgPagesAppended(added));
+                    } catch (err) {
+                      if (!isUpgradeRequiredError(err)) {
+                        showMessage(strings.bookManager.msgAppendFailed(err.response?.data?.error || err.message));
+                      }
+                    } finally {
+                      setAppendUploading(false);
+                    }
+                  }}
+                />
+                <label htmlFor="append-doc-input" className={`bm-btn bm-btn-edit${appendUploading ? " bm-btn-disabled" : ""}`}>
+                  {appendUploading ? strings.bookManager.appendingDoc : strings.bookManager.appendDocButton}
+                </label>
+              </div>
+            </div>
 
             {/* Add page form */}
             <div className="bm-add-page">
