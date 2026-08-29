@@ -57,22 +57,32 @@ const DEFAULT_ZOOM_INDEX = 1;
  * row, where GET /api/books/{id} would re-send every page the reader already has.
  */
 function useBookFrame(bookId) {
-  const [frame, setFrame] = useState(CLASSIC_FRAME);
+  // `ready` matters as much as the frame itself: react-pageflip is given size="fixed"
+  // and locks its geometry when it mounts, ignoring later width/height changes. If the
+  // flipbook mounted before this fetch resolved it would keep the CLASSIC placeholder
+  // shape permanently — which is exactly how a square book ended up rendering as a
+  // vertical rectangle once published, while the preview happened to win the race.
+  const [state, setState] = useState({ frame: CLASSIC_FRAME, ready: false });
 
   useEffect(() => {
     let cancelled = false;
-    setFrame(CLASSIC_FRAME);
-    if (!bookId) return undefined;
+    setState({ frame: CLASSIC_FRAME, ready: false });
+    if (!bookId) {
+      setState({ frame: CLASSIC_FRAME, ready: true });
+      return undefined;
+    }
     axios.get(`${process.env.REACT_APP_API_URL}/api/books/${bookId}/page-size`)
       .then((res) => {
-        if (!cancelled) setFrame(resolvePageSize(res.data?.pageSize));
+        if (!cancelled) setState({ frame: resolvePageSize(res.data?.pageSize), ready: true });
       })
       // A book whose size can't be read still reads fine in the classic frame.
-      .catch(() => {});
+      .catch(() => {
+        if (!cancelled) setState({ frame: CLASSIC_FRAME, ready: true });
+      });
     return () => { cancelled = true; };
   }, [bookId]);
 
-  return frame;
+  return state;
 }
 
 function usePageSize(isFullscreen, frame) {
@@ -196,7 +206,7 @@ function FlipBook({ bookId }) {
   const currentPageRef = useRef(0);
   currentPageRef.current = currentPage;
   const audioCtxRef = useRef(null);
-  const frame = useBookFrame(bookId);
+  const { frame, ready: frameReady } = useBookFrame(bookId);
   const pageSize = usePageSize(isFullscreen, frame);
   const DESKTOP_W = frame.frameWidth;
   const DESKTOP_H = frame.frameHeight;
@@ -756,23 +766,32 @@ function FlipBook({ bookId }) {
               pointerEvents: canFlip ? "auto" : "none",
             }}
           >
-            <HTMLFlipBook
-              width={pageSize.w}
-              height={pageSize.h}
-              maxWidth={pageSize.w}
-              maxHeight={pageSize.h}
-              showCover={true}
-              usePortrait={pageSize.isMobile}
-              autoSize={false}
-              size="fixed"
-              showPageCorners={true}
-              swipeDistance={30}
-              mobileScrollSupport={false}
-              ref={flipBookRef}
-              onFlip={onFlip}
-            >
-              {pages.map((page, index) => renderPageContent(page, index))}
-            </HTMLFlipBook>
+            {/* Mount only once the book's real frame is known — see useBookFrame. The key
+                is a second guard: it is the frame identity (not pageSize, which changes on
+                every window resize), so a frame arriving late forces one clean remount
+                rather than leaving stale locked-in geometry. */}
+            {frameReady ? (
+              <HTMLFlipBook
+                key={frame.key}
+                width={pageSize.w}
+                height={pageSize.h}
+                maxWidth={pageSize.w}
+                maxHeight={pageSize.h}
+                showCover={true}
+                usePortrait={pageSize.isMobile}
+                autoSize={false}
+                size="fixed"
+                showPageCorners={true}
+                swipeDistance={30}
+                mobileScrollSupport={false}
+                ref={flipBookRef}
+                onFlip={onFlip}
+              >
+                {pages.map((page, index) => renderPageContent(page, index))}
+              </HTMLFlipBook>
+            ) : (
+              <div style={{ width: pageSize.w, height: pageSize.h }} aria-hidden="true" />
+            )}
           </div>
           </div>
         </div>
