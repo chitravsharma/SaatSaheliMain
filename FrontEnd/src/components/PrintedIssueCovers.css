@@ -1,0 +1,40 @@
+/* Both printed issues, fanned out like a small magazine stack. Each cover is
+   its own link: the launch issue to its product page, issue 2 to the series. */
+.printed-issues {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 18px;
+  margin-bottom: 14px;
+}
+.printed-issues-link {
+  display: block;
+  text-decoration: none;
+  transition: transform 0.15s ease;
+}
+.printed-issues-link:hover {
+  transform: translateY(-3px);
+}
+.printed-issues-cover {
+  display: block;
+  width: 116px;
+  height: auto;
+  border-radius: 8px;
+  box-shadow: 0 8px 18px rgba(120, 60, 20, 0.28);
+  border: 2px solid #fff;
+}
+.printed-issues-cover--left {
+  transform: rotate(-3deg);
+}
+.printed-issues-cover--right {
+  transform: rotate(3deg);
+}
+.printed-issues-cap {
+  display: block;
+  margin-top: 10px;
+  text-align: center;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: #9a3412;
+}

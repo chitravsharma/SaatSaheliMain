@@ -8,6 +8,7 @@ import AdBanner from "../modules/AdBanner";
 import ScrollRow from "../components/ScrollRow";
 import OpenInAppButton from "../components/OpenInAppButton";
 import MagazineAmazonCta from "../components/MagazineAmazonCta";
+import PrintedIssueCovers, { AMAZON_SERIES_URL } from "../components/PrintedIssueCovers";
 import { optimizeCloudinary } from "../utils/imageUrl";
 import "./Home.css";
 import "./Magazine.css";
@@ -474,23 +475,16 @@ function Home() {
             <div className="home-hero-visual home-hero-visual--promo">
               <div className="home-hero-amazon">
                 <span className="home-hero-amazon-badge">✦ Now on Amazon</span>
-                <div className="home-hero-amazon-top">
-                  <img
-                    src="/images/amazoncover.png"
-                    alt="Saat Saheli – Launch Issue magazine cover"
-                    className="home-hero-amazon-cover"
-                    loading="lazy"
-                  />
-                  <div className="home-hero-amazon-toptext">
-                    <h2 className="home-hero-amazon-title">📖 Get Your Printed Copy</h2>
-                    <p className="home-hero-amazon-sub"><strong>Saat Saheli – Launch Issue</strong> is now on Amazon.</p>
-                  </div>
+                <PrintedIssueCovers />
+                <div className="home-hero-amazon-toptext">
+                  <h2 className="home-hero-amazon-title">📖 Get Your Printed Copy</h2>
+                  <p className="home-hero-amazon-sub"><strong>Both issues</strong> are now on Amazon.</p>
                 </div>
                 <p>Enjoy poetry, creative writing, recipes, crafts, lifestyle &amp; cultural stories — in one beautifully printed magazine.</p>
                 <p className="home-hero-amazon-hard"><strong>👉 Get your hard copy today</strong></p>
                 <a
                   className="home-hero-amazon-btn"
-                  href="https://www.amazon.com/dp/B0H3LW82QK"
+                  href={AMAZON_SERIES_URL}
                   target="_blank"
                   rel="noopener noreferrer"
                 >
@@ -600,6 +594,7 @@ function Home() {
               </Link>
             );
           })()}
+          <PrintedIssueCovers />
           <MagazineAmazonCta />
         </aside>
 

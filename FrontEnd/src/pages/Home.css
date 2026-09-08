@@ -1086,22 +1086,10 @@ a.home-gallery-author:hover { text-decoration: underline; color: var(--accent-bl
   margin-bottom: 12px;
   box-shadow: 0 3px 8px rgba(198, 107, 61, 0.35);
 }
-.home-hero-amazon-top {
-  display: flex;
-  gap: 14px;
-  align-items: flex-start;
+.home-hero-amazon-toptext {
+  min-width: 0;
   margin-bottom: 12px;
 }
-.home-hero-amazon-cover {
-  width: 92px;
-  flex: 0 0 92px;
-  height: auto;
-  border-radius: 8px;
-  box-shadow: 0 8px 18px rgba(120, 60, 20, 0.28);
-  transform: rotate(-3deg);
-  border: 2px solid #fff;
-}
-.home-hero-amazon-toptext { min-width: 0; }
 .home-hero-amazon-title {
   font-family: Georgia, "Playfair Display", "Times New Roman", serif;
   font-size: 1.42rem;
