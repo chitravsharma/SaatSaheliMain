@@ -7,7 +7,9 @@ import java.io.IOException;
 
 /**
  * Storage backend for uploaded media (images, audio, PDFs).
- * Implemented by {@link R2StorageService} (Cloudflare R2, S3-compatible).
+ * Implemented by {@link R2StorageService} (Cloudflare R2, S3-compatible) in production,
+ * and by {@link LocalMediaStorageService} (filesystem) when app.media.storage=local so
+ * local development does not write test uploads into the live bucket.
  */
 public interface MediaStorageService {
 

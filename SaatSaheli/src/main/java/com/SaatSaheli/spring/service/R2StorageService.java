@@ -1,6 +1,7 @@
 package com.SaatSaheli.spring.service;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
@@ -37,6 +38,9 @@ import java.util.UUID;
  * configured in {@code R2_PUBLIC_BASE_URL} (e.g. media.saatsaheli.com).
  */
 @Service
+// Default backend. Local development sets app.media.storage=local so it does not
+// write test uploads into the live bucket using the credentials .env supplies.
+@ConditionalOnProperty(name = "app.media.storage", havingValue = "r2", matchIfMissing = true)
 public class R2StorageService implements MediaStorageService {
 
     private static final org.slf4j.Logger UPLOAD_LOG = org.slf4j.LoggerFactory.getLogger(R2StorageService.class);
