@@ -312,8 +312,6 @@ const MagazineSubmit = () => {
         <hr className="hs-divider" />
       </div>
 
-      <MagazineAmazonCta />
-
       <div className="hs-intro">
         <h2>Share Your Voice</h2>
         <p>
@@ -349,6 +347,7 @@ const MagazineSubmit = () => {
                 Submit Another
               </button>
             </div>
+            <MagazineAmazonCta />
           </div>
         ) : (
           <form className="hs-form" onSubmit={handleSubmit}>
@@ -535,6 +534,8 @@ const MagazineSubmit = () => {
             <button type="submit" className="hs-submit" disabled={sending || !isFormValid}>
               {sending ? (<><span className="hs-spinner" aria-hidden="true" />Submitting...</>) : 'Submit Details'}
             </button>
+
+            <MagazineAmazonCta />
           </form>
         )}
       </div>

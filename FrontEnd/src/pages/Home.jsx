@@ -14,6 +14,13 @@ import "./Magazine.css";
 
 const API = process.env.REACT_APP_API_URL;
 
+// Amazon listings for the printed magazine. The series page lists every issue,
+// so it is what the main call-to-action points at; the launch issue keeps its
+// own product link because that listing predates the series.
+const AMAZON_SERIES_URL =
+  "https://www.amazon.com/dp/B0H2V6756N?binding=paperback&ref=dbs_dp_rwt_sb_pc_tpbk";
+const AMAZON_LAUNCH_ISSUE_URL = "https://www.amazon.com/dp/B0H3LW82QK";
+
 // Hero backdrop carousel — self-hosted JPGs in FrontEnd/public/images/heroes/.
 // Bundled with the React build, served by Render's static handler with browser
 // caching, so $0 of Cloudinary bandwidth per home pageview. To swap a hero
@@ -474,23 +481,45 @@ function Home() {
             <div className="home-hero-visual home-hero-visual--promo">
               <div className="home-hero-amazon">
                 <span className="home-hero-amazon-badge">✦ Now on Amazon</span>
-                <div className="home-hero-amazon-top">
-                  <img
-                    src="/images/amazoncover.png"
-                    alt="Saat Saheli – Launch Issue magazine cover"
-                    className="home-hero-amazon-cover"
-                    loading="lazy"
-                  />
-                  <div className="home-hero-amazon-toptext">
-                    <h2 className="home-hero-amazon-title">📖 Get Your Printed Copy</h2>
-                    <p className="home-hero-amazon-sub"><strong>Saat Saheli – Launch Issue</strong> is now on Amazon.</p>
-                  </div>
+                <div className="home-hero-amazon-covers">
+                  <a
+                    className="home-hero-amazon-cover-link"
+                    href={AMAZON_LAUNCH_ISSUE_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <img
+                      src="/images/amazoncover.png"
+                      alt="Saat Saheli – Launch Issue magazine cover"
+                      className="home-hero-amazon-cover home-hero-amazon-cover--left"
+                      loading="lazy"
+                    />
+                    <span className="home-hero-amazon-cover-cap">Launch Issue</span>
+                  </a>
+                  <a
+                    className="home-hero-amazon-cover-link"
+                    href={AMAZON_SERIES_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <img
+                      src="/images/issue2cover.jpg"
+                      alt="Saat Saheli – Issue 2, Summer Special (July–August) magazine cover"
+                      className="home-hero-amazon-cover home-hero-amazon-cover--right"
+                      loading="lazy"
+                    />
+                    <span className="home-hero-amazon-cover-cap">Issue 2 · Jul–Aug</span>
+                  </a>
+                </div>
+                <div className="home-hero-amazon-toptext">
+                  <h2 className="home-hero-amazon-title">📖 Get Your Printed Copy</h2>
+                  <p className="home-hero-amazon-sub"><strong>Both issues</strong> are now on Amazon.</p>
                 </div>
                 <p>Enjoy poetry, creative writing, recipes, crafts, lifestyle &amp; cultural stories — in one beautifully printed magazine.</p>
                 <p className="home-hero-amazon-hard"><strong>👉 Get your hard copy today</strong></p>
                 <a
                   className="home-hero-amazon-btn"
-                  href="https://www.amazon.com/dp/B0H3LW82QK"
+                  href={AMAZON_SERIES_URL}
                   target="_blank"
                   rel="noopener noreferrer"
                 >

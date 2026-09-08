@@ -1086,22 +1086,44 @@ a.home-gallery-author:hover { text-decoration: underline; color: var(--accent-bl
   margin-bottom: 12px;
   box-shadow: 0 3px 8px rgba(198, 107, 61, 0.35);
 }
-.home-hero-amazon-top {
+/* Both printed issues, fanned out like a small magazine stack. Each cover is
+   its own link: the launch issue to its product page, issue 2 to the series. */
+.home-hero-amazon-covers {
   display: flex;
-  gap: 14px;
+  justify-content: center;
   align-items: flex-start;
-  margin-bottom: 12px;
+  gap: 18px;
+  margin-bottom: 14px;
 }
+.home-hero-amazon-cover-link {
+  display: block;
+  text-decoration: none;
+  transition: transform 0.15s ease;
+}
+.home-hero-amazon-cover-link:hover { transform: translateY(-3px); }
 .home-hero-amazon-cover {
-  width: 92px;
-  flex: 0 0 92px;
+  display: block;
+  width: 116px;
   height: auto;
   border-radius: 8px;
   box-shadow: 0 8px 18px rgba(120, 60, 20, 0.28);
-  transform: rotate(-3deg);
   border: 2px solid #fff;
 }
-.home-hero-amazon-toptext { min-width: 0; }
+.home-hero-amazon-cover--left { transform: rotate(-3deg); }
+.home-hero-amazon-cover--right { transform: rotate(3deg); }
+.home-hero-amazon-cover-cap {
+  display: block;
+  margin-top: 10px;
+  text-align: center;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: #9a3412;
+}
+.home-hero-amazon-toptext {
+  min-width: 0;
+  margin-bottom: 12px;
+}
 .home-hero-amazon-title {
   font-family: Georgia, "Playfair Display", "Times New Roman", serif;
   font-size: 1.42rem;
