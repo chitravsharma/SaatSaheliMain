@@ -23,6 +23,7 @@ function Account() {
   const navigate = useNavigate();
   const [books, setBooks] = useState([]);
   const [profile, setProfile] = useState(null);
+  const [profileShared, setProfileShared] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [articles, setArticles] = useState([]);
@@ -236,6 +237,21 @@ function Account() {
     }
   };
 
+  // Same behaviour as the Share button on the public profile page: native share
+  // sheet on phones, copy-to-clipboard on desktop.
+  const shareMyProfile = async () => {
+    const name = profile?.displayName || user?.name || "";
+    const url = `${window.location.origin}${profileUrl(user.userId, name, profile?.handle)}`;
+    const text = `Check out ${name}'s profile on Saat Saheli!`;
+    if (navigator.share) {
+      try { await navigator.share({ title: name, text, url }); } catch { /* cancelled */ }
+    } else {
+      try { await navigator.clipboard.writeText(`${text}\n${url}`); } catch { /* clipboard blocked */ }
+      setProfileShared(true);
+      setTimeout(() => setProfileShared(false), 2000);
+    }
+  };
+
   const userInterests = profile?.interests ? profile.interests.split(",").map(s => s.trim()) : [];
 
   if (!user) {
@@ -375,6 +391,12 @@ function Account() {
             <Link to={profileUrl(user.userId, profile?.displayName, profile?.handle)} className="acct-profile-link acct-profile-link-secondary">
               {strings.account.viewPublicProfile}
             </Link>
+          )}
+          {profile?.displayName && (
+            <button type="button" onClick={shareMyProfile} className="acct-profile-link acct-profile-link-secondary" title={strings.account.shareProfile}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ verticalAlign: "-2px", marginRight: 6 }}><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+              {profileShared ? strings.account.shareProfileCopied : strings.account.shareProfile}
+            </button>
           )}
           <Link to="/help-support" className="acct-profile-link acct-profile-link-secondary">
             Help & Support
