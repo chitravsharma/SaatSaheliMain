@@ -75,11 +75,11 @@ public class NotificationService {
     }
 
     /** Resolved content owner, display title, deep link and a human item label. */
-    private static class Target {
-        final Long ownerId;
-        final String title;
-        final String link;      // relative, e.g. "/read/4"
-        final String itemLabel; // human word, e.g. "book"
+    public static class Target {
+        public final Long ownerId;
+        public final String title;
+        public final String link;      // relative, e.g. "/read/4"
+        public final String itemLabel; // human word, e.g. "book"
         Target(Long ownerId, String title, String link, String itemLabel) {
             this.ownerId = ownerId; this.title = title; this.link = link; this.itemLabel = itemLabel;
         }
@@ -209,7 +209,8 @@ public class NotificationService {
     }
 
     /** Resolve the content owner, title, deep link and label for a comment target. */
-    private Target resolveTarget(String targetType, Long targetId) {
+    /** Resolve a comment target to its owner, title and deep link. Public so the admin feed can reuse it. */
+    public Target resolveTarget(String targetType, Long targetId) {
         if (targetType == null || targetId == null) return null;
         // ?focus=comments tells each item view to auto-open + scroll to the comment section.
         switch (targetType.toUpperCase()) {
