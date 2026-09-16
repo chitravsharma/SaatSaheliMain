@@ -8,6 +8,8 @@ import com.SaatSaheli.spring.repository.ContentLikeRepository;
 import com.SaatSaheli.spring.repository.GalleryImageRepository;
 import com.SaatSaheli.spring.repository.GalleryRepository;
 import com.SaatSaheli.spring.repository.UserRepository;
+import com.SaatSaheli.spring.util.PlanLimitException;
+import com.SaatSaheli.spring.util.PlanLimits;
 import com.SaatSaheli.spring.util.RoleUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -62,6 +64,7 @@ public class GalleryService {
         if (opt.isEmpty()) throw new RuntimeException("Gallery not found");
         Gallery gallery = opt.get();
         gallery.setImages(imageRepo.findByGalleryIdOrderByOrderIndexAsc(id));
+        maskSaleIfIneligible(gallery);
         enrichWithAuthor(gallery);
         enrichWithCounts(gallery);
         return gallery;
@@ -72,6 +75,7 @@ public class GalleryService {
         Map<Long, User> userMap = getUserMap();
         for (Gallery g : galleries) {
             g.setImages(imageRepo.findByGalleryIdOrderByOrderIndexAsc(g.getId()));
+            maskSaleIfIneligible(g, userMap.get(g.getUserId()));
             if (g.getUserId() != null && userMap.containsKey(g.getUserId())) {
                 User u = userMap.get(g.getUserId());
                 g.setAuthorName(buildName(u));
@@ -105,6 +109,7 @@ public class GalleryService {
 
         for (Gallery g : galleries) {
             g.setImages(imageRepo.findByGalleryIdOrderByOrderIndexAsc(g.getId()));
+            maskSaleIfIneligible(g);
             enrichWithCounts(g);
         }
         return galleries;
@@ -188,6 +193,92 @@ public class GalleryService {
         }
         img.setCaption(caption);
         return imageRepo.save(img);
+    }
+
+    // ── For Sale (Premium+) ──────────────────────────────────────────────────
+
+    /**
+     * Owner marks/unmarks an image For Sale. Turning it ON requires a plan with
+     * canUseMarketChat and respects maxForSaleItems; admins are exempt. Editing
+     * price/note/status of an already-listed item, or turning it OFF, is always
+     * allowed so a lapsed subscriber can still tidy up.
+     */
+    public GalleryImage updateImageSale(Long imageId, boolean forSale, String price, String status,
+                                        String note, Long requestUserId) {
+        GalleryImage img = imageRepo.findById(imageId).orElseThrow(() -> new RuntimeException("Image not found"));
+        Gallery gallery = galleryRepo.findById(img.getGalleryId()).orElseThrow(() -> new RuntimeException("Gallery not found"));
+        User actor = requestUserId == null ? null : userRepo.findById(requestUserId).orElse(null);
+        boolean admin = actor != null && RoleUtil.isAdmin(actor.getRole());
+        if (!admin && (requestUserId == null || !requestUserId.equals(gallery.getUserId()))) {
+            throw new RuntimeException("Only the owner can change sale details");
+        }
+        if (forSale && !img.isForSale() && !admin) {
+            PlanLimits lim = PlanLimits.forPlan(actor == null ? "Free" : actor.getPlan());
+            if (!lim.canUseMarketChat) {
+                throw new PlanLimitException("Marking items For Sale is available on the Premium and Creator plans. Upgrade to list your artwork.");
+            }
+            if (!PlanLimits.isUnlimited(lim.maxForSaleItems)) {
+                int listed = countForSale(gallery.getUserId());
+                if (listed >= lim.maxForSaleItems) {
+                    throw new PlanLimitException("Your " + lim.plan + " plan allows " + lim.maxForSaleItems
+                            + " items For Sale at a time. Mark one as sold or removed, or upgrade to Creator for unlimited.");
+                }
+            }
+        }
+        img.setForSale(forSale);
+        if (forSale) {
+            // null = "not provided, keep current"; empty string = clear.
+            if (price != null) {
+                String p = price.trim();
+                img.setSalePrice(p.isEmpty() ? null : (p.length() > 60 ? p.substring(0, 60) : p));
+            }
+            String st = status == null ? "" : status.trim().toUpperCase();
+            if (status != null || img.getSaleStatus() == null) {
+                img.setSaleStatus("SOLD".equals(st) ? "SOLD" : "AVAILABLE");
+            }
+            if (note != null) {
+                String n = note.trim();
+                img.setSaleNote(n.isEmpty() ? null : (n.length() > 1000 ? n.substring(0, 1000) : n));
+            }
+        } else {
+            img.setSaleStatus(null);
+        }
+        return imageRepo.save(img);
+    }
+
+    /** Items currently For Sale across all of a user's galleries. */
+    public int countForSale(Long userId) {
+        int n = 0;
+        for (Gallery g : galleryRepo.findByUserId(userId)) {
+            for (GalleryImage i : imageRepo.findByGalleryIdOrderByOrderIndexAsc(g.getId())) {
+                if (i.isForSale()) n++;
+            }
+        }
+        return n;
+    }
+
+    /**
+     * If the owner's plan no longer includes selling, hide the For Sale details
+     * from public responses (nothing is deleted — they reappear on resubscribe).
+     */
+    private void maskSaleIfIneligible(Gallery g) {
+        User owner = g.getUserId() == null ? null : userRepo.findById(g.getUserId()).orElse(null);
+        maskSaleIfIneligible(g, owner);
+    }
+
+    private void maskSaleIfIneligible(Gallery g, User owner) {
+        if (g.getImages() == null || g.getImages().isEmpty()) return;
+        boolean eligible = owner != null && (RoleUtil.isAdmin(owner.getRole())
+                || PlanLimits.forPlan(owner.getPlan()).canUseMarketChat);
+        if (eligible) return;
+        for (GalleryImage img : g.getImages()) {
+            if (img.isForSale()) {
+                img.setForSale(false);
+                img.setSalePrice(null);
+                img.setSaleStatus(null);
+                img.setSaleNote(null);
+            }
+        }
     }
 
     private void enrichWithAuthor(Gallery gallery) {

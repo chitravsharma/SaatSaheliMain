@@ -360,6 +360,12 @@ function GalleryView() {
                     onError={() => setBrokenImageIds(prev => new Set(prev).add(img.id))}
                   />
                 )}
+                {img.forSale && (
+                  <span className={`gv-sale-ribbon ${img.saleStatus === "SOLD" ? "gv-sale-ribbon-sold" : ""}`}>
+                    {img.saleStatus === "SOLD" ? strings.gallery.sold : strings.gallery.forSale}
+                    {img.saleStatus !== "SOLD" && img.salePrice ? ` · ${img.salePrice}` : ""}
+                  </span>
+                )}
                 {img.caption && <div className="gv-grid-caption">{img.caption}</div>}
               </div>
               <div className="gv-image-actions" onClick={(e) => e.stopPropagation()}>
@@ -456,6 +462,22 @@ function GalleryView() {
             <button className="gv-lightbox-next" onClick={nextImage} aria-label="Next image">&rsaquo;</button>
             {images[lightboxIndex].caption && (
               <div className="gv-lightbox-caption">{images[lightboxIndex].caption}</div>
+            )}
+            {images[lightboxIndex].forSale && (
+              <div className={`gv-lightbox-sale ${images[lightboxIndex].saleStatus === "SOLD" ? "gv-lightbox-sale-sold" : ""}`}>
+                <div className="gv-lightbox-sale-head">
+                  <span className="gv-lightbox-sale-badge">
+                    {images[lightboxIndex].saleStatus === "SOLD" ? strings.gallery.sold : strings.gallery.forSale}
+                  </span>
+                  {images[lightboxIndex].saleStatus !== "SOLD" && (
+                    <span className="gv-lightbox-sale-price">{images[lightboxIndex].salePrice || strings.gallery.askPrice}</span>
+                  )}
+                </div>
+                {images[lightboxIndex].saleNote && (
+                  <p className="gv-lightbox-sale-note">{images[lightboxIndex].saleNote}</p>
+                )}
+                {/* Contact creator (Premium private chat) is wired in the Messages phase. */}
+              </div>
             )}
             <div className="gv-lightbox-counter">{lightboxIndex + 1} / {images.length}</div>
           </div>

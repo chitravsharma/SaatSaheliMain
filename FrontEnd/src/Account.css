@@ -681,3 +681,33 @@ button.acct-profile-link {
 .acct-usage-fill-warn { background: #d97706; }
 .acct-usage-fill-full { background: #dc2626; }
 .acct-usage-note { margin: 12px 0 0; font-size: 0.85rem; color: var(--text-muted); }
+
+/* ── For Sale editor (Account gallery cells) ── */
+.acct-sale-chip {
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid #d97706;
+  background: #fff7ed;
+  color: #b45309;
+  cursor: pointer;
+  text-align: left;
+}
+.acct-sale-chip-sold { border-color: #64748b; background: #f1f5f9; color: #475569; }
+.acct-sale-chip-off { border-style: dashed; border-color: var(--border-default); background: transparent; color: var(--text-muted); }
+.acct-sale-chip-off:hover { border-color: #d97706; color: #b45309; }
+.acct-sale-chip-locked { opacity: 0.7; }
+.acct-sale-form { display: flex; flex-direction: column; gap: 6px; }
+.acct-sale-form input[type="text"], .acct-sale-form textarea {
+  font: inherit;
+  font-size: 0.85rem;
+  padding: 6px 8px;
+  border: 1px solid var(--border-default);
+  border-radius: 6px;
+  background: var(--bg-body);
+  color: var(--text-primary);
+}
+.acct-sale-sold { display: flex; align-items: center; gap: 6px; font-size: 0.82rem; color: var(--text-muted); }
+.acct-sale-remove { color: #dc2626; border-color: #dc2626; }

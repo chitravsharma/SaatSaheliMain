@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import api, { profileUrl } from "../utils/api";
+import { emitUpgrade } from "../utils/upgradeModalBus";
 import { optimizeCloudinary } from "../utils/imageUrl";
 import { useAuth } from "../AuthContext";
 import { useGatedClick } from "../contexts/LoginGateContext";
@@ -86,6 +87,9 @@ function Account() {
   const [newGalleryTitle, setNewGalleryTitle] = useState("");
   const [selectedGalleryId, setSelectedGalleryId] = useState(null);
   const [editingCaptionId, setEditingCaptionId] = useState(null);
+  // For Sale editor (Premium+): which image's sale form is open + its draft
+  const [saleEditId, setSaleEditId] = useState(null);
+  const [saleDraft, setSaleDraft] = useState({ salePrice: "", saleNote: "", saleStatus: "AVAILABLE" });
   const [captionDraft, setCaptionDraft] = useState("");
   const [editingGalleryId, setEditingGalleryId] = useState(null);
   const [editGalleryTitle, setEditGalleryTitle] = useState("");
@@ -207,6 +211,38 @@ function Account() {
     setEditingCaptionId(null);
     setCaptionDraft("");
   };
+
+  const canSell = !!(usage && (usage.canUseMarketChat || usage.admin));
+
+  const openSaleEditor = (img) => {
+    if (!canSell) {
+      emitUpgrade(strings.account.saleUpgradeMsg);
+      return;
+    }
+    setSaleEditId(img.id);
+    setSaleDraft({
+      salePrice: img.salePrice || "",
+      saleNote: img.saleNote || "",
+      saleStatus: img.saleStatus || "AVAILABLE",
+    });
+  };
+
+  const saveSale = async (imageId, payload) => {
+    try {
+      const res = await api.put(`${API_GALLERIES}/images/${imageId}/sale`, payload);
+      setGalleryImages(galleryImages.map(img => img.id === imageId ? res.data : img));
+      setGalleries(galleries.map(g => g.id === selectedGalleryId
+        ? { ...g, images: (g.images || []).map(img => img.id === imageId ? res.data : img) }
+        : g));
+      setSaleEditId(null);
+      setGalleryMsg(payload.forSale ? strings.account.saleSaved : strings.account.saleRemoved);
+      api.get(`${API}/api/account/usage`).then(r => setUsage(r.data)).catch(() => {});
+    } catch (err) {
+      // 403 + upgradeRequired is handled globally by the UpgradeModal.
+      if (!err?.response?.data?.upgradeRequired) setGalleryMsg(err?.response?.data?.error || strings.account.saleFailed);
+    }
+  };
+
 
   const startEditGallery = (g) => {
     setEditingGalleryId(g.id);
@@ -705,6 +741,51 @@ function Account() {
                             title="Click to edit description"
                           >
                             {img.caption ? img.caption : <em className="acct-gallery-caption-empty">+ Add description</em>}
+                          </button>
+                        )}
+
+                        {/* For Sale (Premium+) */}
+                        {saleEditId === img.id ? (
+                          <div className="acct-sale-form">
+                            <input
+                              type="text"
+                              value={saleDraft.salePrice}
+                              onChange={(e) => setSaleDraft({ ...saleDraft, salePrice: e.target.value })}
+                              placeholder={strings.account.salePricePlaceholder}
+                              maxLength={60}
+                              autoFocus
+                            />
+                            <textarea
+                              value={saleDraft.saleNote}
+                              onChange={(e) => setSaleDraft({ ...saleDraft, saleNote: e.target.value })}
+                              placeholder={strings.account.saleNotePlaceholder}
+                              maxLength={1000}
+                              rows={2}
+                            />
+                            <label className="acct-sale-sold">
+                              <input
+                                type="checkbox"
+                                checked={saleDraft.saleStatus === "SOLD"}
+                                onChange={(e) => setSaleDraft({ ...saleDraft, saleStatus: e.target.checked ? "SOLD" : "AVAILABLE" })}
+                              />
+                              {strings.account.saleMarkSold}
+                            </label>
+                            <div className="acct-gallery-caption-actions">
+                              <button className="ss-btn ss-btn-primary ss-btn-sm" onClick={() => saveSale(img.id, { forSale: true, ...saleDraft })}>{strings.common.save}</button>
+                              <button className="ss-btn ss-btn-outline ss-btn-sm" onClick={() => setSaleEditId(null)}>{strings.common.cancel}</button>
+                              {img.forSale && (
+                                <button className="ss-btn ss-btn-outline ss-btn-sm acct-sale-remove" onClick={() => saveSale(img.id, { forSale: false })}>{strings.account.saleRemove}</button>
+                              )}
+                            </div>
+                          </div>
+                        ) : img.forSale ? (
+                          <button type="button" className={`acct-sale-chip ${img.saleStatus === "SOLD" ? "acct-sale-chip-sold" : ""}`} onClick={() => openSaleEditor(img)} title={strings.account.saleEdit}>
+                            {img.saleStatus === "SOLD" ? strings.account.saleSold : strings.account.saleForSale}
+                            {img.salePrice ? ` · ${img.salePrice}` : ""}
+                          </button>
+                        ) : (
+                          <button type="button" className={`acct-sale-chip acct-sale-chip-off ${canSell ? "" : "acct-sale-chip-locked"}`} onClick={() => openSaleEditor(img)}>
+                            {strings.account.saleMark}{canSell ? "" : ` · ${strings.account.salePremium}`}
                           </button>
                         )}
                       </div>
