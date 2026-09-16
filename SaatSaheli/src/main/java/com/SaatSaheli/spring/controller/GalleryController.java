@@ -4,6 +4,8 @@ import com.SaatSaheli.spring.model.Gallery;
 import com.SaatSaheli.spring.model.GalleryImage;
 import com.SaatSaheli.spring.service.MediaStorageService;
 import com.SaatSaheli.spring.service.GalleryService;
+import com.SaatSaheli.spring.service.QuotaService;
+import com.SaatSaheli.spring.util.PlanLimitException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -23,6 +25,9 @@ public class GalleryController {
 
     @Autowired
     private MediaStorageService mediaStorage;
+
+    @Autowired
+    private QuotaService quotaService;
 
     @GetMapping
     public ResponseEntity<?> getPublishedGalleries() {
@@ -81,8 +86,11 @@ public class GalleryController {
             if (title == null || title.trim().isEmpty()) {
                 return ResponseEntity.badRequest().body(errorMap("Title is required"));
             }
+            quotaService.assertCanCreateGallery(jwtUserId);
             Gallery gallery = galleryService.createGallery(title.trim(), description, jwtUserId, status);
             return ResponseEntity.ok(gallery);
+        } catch (PlanLimitException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(upgradeMap(e.getMessage()));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorMap(e.getMessage()));
         }
@@ -128,16 +136,26 @@ public class GalleryController {
             @PathVariable Long galleryId,
             @RequestParam("file") MultipartFile file,
             @RequestParam(value = "caption", required = false) String caption,
-            @RequestParam(value = "userId", required = false) Long userId) {
+            @RequestParam(value = "userId", required = false) Long userId,
+            HttpServletRequest request) {
         if (isHeicLike(file)) {
             return ResponseEntity.status(HttpStatus.UNSUPPORTED_MEDIA_TYPE)
                     .body(errorMap("HEIC/HEIF images aren't supported in browsers. Please convert to JPEG or PNG before uploading."));
         }
         try {
+            // Prefer the authenticated identity; the userId param is a legacy fallback.
+            Long jwtUserId = (Long) request.getAttribute("jwtUserId");
+            Long actor = jwtUserId != null ? jwtUserId : userId;
+            if (actor == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorMap("Authentication required"));
+            }
             com.SaatSaheli.spring.util.UploadValidator.requireSafeImage(file);
+            quotaService.assertCanAddPicture(actor, file.getSize());
             String imageUrl = mediaStorage.uploadFile(file);
-            GalleryImage img = galleryService.addImage(galleryId, imageUrl, caption, userId);
+            GalleryImage img = galleryService.addImage(galleryId, imageUrl, caption, actor);
             return ResponseEntity.ok(img);
+        } catch (PlanLimitException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(upgradeMap(e.getMessage()));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.UNSUPPORTED_MEDIA_TYPE).body(errorMap(e.getMessage()));
         } catch (RuntimeException e) {
@@ -188,6 +206,14 @@ public class GalleryController {
             if (n.endsWith(".heic") || n.endsWith(".heif")) return true;
         }
         return false;
+    }
+
+    /** 403 body the frontend's UpgradeModal listens for. */
+    private Map<String, Object> upgradeMap(String message) {
+        Map<String, Object> map = new HashMap<>();
+        map.put("error", message);
+        map.put("upgradeRequired", true);
+        return map;
     }
 
     private Map<String, String> errorMap(String message) {

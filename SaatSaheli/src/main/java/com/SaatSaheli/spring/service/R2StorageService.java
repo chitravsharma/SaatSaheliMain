@@ -237,8 +237,25 @@ public class R2StorageService implements MediaStorageService {
                 .contentType(contentType != null ? contentType : "application/octet-stream")
                 .build();
         s3.putObject(req, RequestBody.fromBytes(data));
-        return publicBaseUrl + "/" + key;
+        String url = publicBaseUrl + "/" + key;
+        recordAsset(url, data.length, contentType);
+        return url;
     }
+
+    /** Size ledger for storage quotas — never fails the upload. */
+    private void recordAsset(String url, long bytes, String contentType) {
+        if (mediaAssetRepo == null) return;
+        try {
+            if (!mediaAssetRepo.existsByUrl(url)) {
+                mediaAssetRepo.save(new com.SaatSaheli.spring.model.MediaAsset(url, bytes, contentType));
+            }
+        } catch (Exception e) {
+            UPLOAD_LOG.warn("Could not record media asset size for {}: {}", url, e.getMessage());
+        }
+    }
+
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private com.SaatSaheli.spring.repository.MediaAssetRepository mediaAssetRepo;
 
     @Override
     public String uploadFile(MultipartFile file) throws IOException {
