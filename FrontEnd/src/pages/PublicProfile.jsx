@@ -21,7 +21,8 @@ function resolveImageUrl(url) {
 }
 
 function PublicProfile() {
-  const { userId } = useParams();
+  // key = creator handle (/profile/Chitra-Sharma) or a legacy numeric user id
+  const { key } = useParams();
   const gateClick = useGatedClick();
   const strings = useStrings();
   const navigate = useNavigate();
@@ -38,16 +39,28 @@ function PublicProfile() {
 
   useEffect(() => {
     window.scrollTo(0, 0);
+    setLoading(true);
+    setError(false);
+    let redirected = false;
     const fetchData = async () => {
       try {
-        const [profileRes, booksRes, articlesRes, galleriesRes, recipesRes] = await Promise.all([
-          api.get(`${API}/api/auth/public-profile/${userId}`),
+        const profileRes = await api.get(`${API}/api/auth/public-profile/${encodeURIComponent(key)}`);
+        const p = profileRes.data;
+        // Old links (/profile/1/Chitra-Sharma) and id-only links land on the
+        // canonical handle URL so the address bar shows the shareable form.
+        if (p.handle && p.handle !== key) {
+          redirected = true; // keep the spinner up until the new key's fetch lands
+          navigate(profileUrl(p.id, p.displayName, p.handle), { replace: true });
+          return;
+        }
+        const userId = p.id;
+        const [booksRes, articlesRes, galleriesRes, recipesRes] = await Promise.all([
           api.get(`${API}/api/books/user/${userId}`).catch(() => ({ data: [] })),
           api.get(`${API}/api/articles`).catch(() => ({ data: [] })),
           api.get(`${API}/api/galleries/user/${userId}`).catch(() => ({ data: [] })),
           api.get(`${API}/api/recipes/user/${userId}`).catch(() => ({ data: [] })),
         ]);
-        setProfile(profileRes.data);
+        setProfile(p);
         const published = (Array.isArray(booksRes.data) ? booksRes.data : [])
           .filter((b) => b.status === "PUBLISHED");
         setBooks(published);
@@ -65,14 +78,14 @@ function PublicProfile() {
       } catch {
         setError(true);
       } finally {
-        setLoading(false);
+        if (!redirected) setLoading(false);
       }
     };
     fetchData();
-  }, [userId]);
+  }, [key, navigate]);
 
   const handleShareProfile = async () => {
-    const url = `${window.location.origin}${profileUrl(userId, displayName)}`;
+    const url = `${window.location.origin}${profileUrl(profile.id, displayName, profile.handle)}`;
     const text = `Check out ${displayName}'s profile on Saat Saheli!`;
     if (navigator.share) {
       try { await navigator.share({ title: displayName, text, url }); } catch { /* cancelled */ }

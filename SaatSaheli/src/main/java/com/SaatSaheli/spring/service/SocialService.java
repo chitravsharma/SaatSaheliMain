@@ -123,6 +123,16 @@ public class SocialService {
         commentRepo.save(comment);
     }
 
+    /** Moderation: soft-delete any comment regardless of author. Caller must already be verified as admin. */
+    public boolean adminDeleteComment(Long commentId) {
+        Optional<Comment> opt = commentRepo.findById(commentId);
+        if (opt.isEmpty()) return false;
+        Comment comment = opt.get();
+        comment.setDeleted(true);
+        commentRepo.save(comment);
+        return true;
+    }
+
     // ── Favorites ──
 
     @Transactional

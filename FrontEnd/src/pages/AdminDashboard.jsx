@@ -368,6 +368,14 @@ const AdminDashboard = () => {
     const [supportLoading, setSupportLoading] = useState(false);
     const [supportFilter, setSupportFilter] = useState("ALL");
     const [supportSearch, setSupportSearch] = useState("");
+
+    // Comments moderation feed
+    const [comments, setComments] = useState([]);
+    const [commentsLoading, setCommentsLoading] = useState(false);
+    const [commentsDays, setCommentsDays] = useState(30);
+    const [commentsSearch, setCommentsSearch] = useState("");
+    const [commentsTypeFilter, setCommentsTypeFilter] = useState("ALL");
+    const [commentsShowDeleted, setCommentsShowDeleted] = useState(false);
     const [expandedQueryId, setExpandedQueryId] = useState(null);
     const [selectedQueryIds, setSelectedQueryIds] = useState(() => new Set());
     // Rows whose status was just changed — kept visible in the table for ~6 seconds
@@ -478,6 +486,26 @@ const AdminDashboard = () => {
         } catch { /* ignore */ }
         setSupportLoading(false);
     }, [user?.userId]);
+
+    const fetchComments = useCallback(async () => {
+        setCommentsLoading(true);
+        try {
+            const res = await api.get(`${API}/api/admin/comments?days=${commentsDays}`);
+            setComments(Array.isArray(res.data?.comments) ? res.data.comments : []);
+        } catch { /* ignore */ }
+        setCommentsLoading(false);
+    }, [user?.userId, commentsDays]);
+
+    const deleteCommentAsAdmin = async (commentId) => {
+        if (!window.confirm("Remove this comment? It will disappear from the item for everyone.")) return;
+        try {
+            await api.delete(`${API}/api/admin/comments/${commentId}`);
+            setMessage("Comment removed");
+            setComments(prev => prev.map(c => (c.id === commentId ? { ...c, deleted: true } : c)));
+        } catch {
+            setMessage("Failed to remove comment");
+        }
+    };
 
     const fetchPayments = useCallback(async () => {
         setPaymentsLoading(true);
@@ -605,9 +633,10 @@ const AdminDashboard = () => {
         if (tab === "analytics") fetchAnalytics();
         if (tab === "advertisements") fetchAdvertisements();
         if (tab === "support") fetchSupportQueries();
+        if (tab === "comments") fetchComments();
         if (tab === "payments") fetchPayments();
         if (tab === "heroSlides") fetchHeroSlides();
-    }, [tab, fetchUsers, fetchBooks, fetchArticles, fetchRecipes, fetchGalleries, fetchListings, fetchAuditLog, fetchAnalytics, fetchAdvertisements, fetchSupportQueries, fetchPayments, fetchHeroSlides]);
+    }, [tab, fetchUsers, fetchBooks, fetchArticles, fetchRecipes, fetchGalleries, fetchListings, fetchAuditLog, fetchAnalytics, fetchAdvertisements, fetchSupportQueries, fetchComments, fetchPayments, fetchHeroSlides]);
 
     const changeRole = async (userId, newRole) => {
         try {
@@ -1004,6 +1033,9 @@ const AdminDashboard = () => {
                 </button>
                 <button className={tab === "support" ? "active" : ""} onClick={() => setTab("support")}>
                     Support Queries
+                </button>
+                <button className={tab === "comments" ? "active" : ""} onClick={() => setTab("comments")}>
+                    Comments
                 </button>
                 <button className={tab === "payments" ? "active" : ""} onClick={() => setTab("payments")}>
                     Payments
@@ -2515,6 +2547,120 @@ const AdminDashboard = () => {
                                             </React.Fragment>
                                         );
                                     })}
+                                </tbody>
+                            </table>
+                            </div>
+                        )}
+                    </div>
+                );
+            })()}
+
+            {tab === "comments" && (() => {
+                const TYPE_LABELS = {
+                    BOOK: "Book", ARTICLE: "Article", RECIPE: "Recipe",
+                    GALLERY: "Gallery", GALLERY_IMAGE: "Gallery", PODCAST: "Podcast",
+                };
+                const typeOf = (c) => TYPE_LABELS[c.targetType] || c.targetType || "?";
+                const filtered = comments.filter(c => {
+                    if (!commentsShowDeleted && c.deleted) return false;
+                    if (commentsTypeFilter !== "ALL" && typeOf(c) !== commentsTypeFilter) return false;
+                    if (commentsSearch) {
+                        const q = commentsSearch.toLowerCase();
+                        return (c.userName || "").toLowerCase().includes(q)
+                            || (c.content || "").toLowerCase().includes(q)
+                            || (c.targetTitle || "").toLowerCase().includes(q);
+                    }
+                    return true;
+                });
+                const live = comments.filter(c => !c.deleted);
+                const typeCounts = {};
+                live.forEach(c => { const t = typeOf(c); typeCounts[t] = (typeCounts[t] || 0) + 1; });
+                const removedCount = comments.length - live.length;
+
+                return (
+                    <div>
+                        <h2>Comments ({live.length} in last {commentsDays} days)</h2>
+
+                        <div className="admin-stats-grid" style={{ marginBottom: 16 }}>
+                            {Object.values(TYPE_LABELS).filter((v, i, a) => a.indexOf(v) === i).map(label => (
+                                <div key={label} className="stat-card" style={{ cursor: "pointer" }}
+                                     onClick={() => setCommentsTypeFilter(commentsTypeFilter === label ? "ALL" : label)}>
+                                    <div className="stat-value">{typeCounts[label] || 0}</div>
+                                    <div className="stat-label">{label}{commentsTypeFilter === label ? " ✓" : ""}</div>
+                                </div>
+                            ))}
+                            <div className="stat-card" style={{ cursor: "pointer", borderLeft: "4px solid #dc2626" }}
+                                 onClick={() => setCommentsShowDeleted(v => !v)}>
+                                <div className="stat-value">{removedCount}</div>
+                                <div className="stat-label" style={{ color: "#dc2626" }}>Removed{commentsShowDeleted ? " (shown)" : ""}</div>
+                            </div>
+                        </div>
+
+                        <div style={{ display: "flex", gap: 12, marginBottom: 16, flexWrap: "wrap", alignItems: "center" }}>
+                            <input
+                                type="text"
+                                placeholder="Search by commenter, text, or item..."
+                                value={commentsSearch}
+                                onChange={(e) => setCommentsSearch(e.target.value)}
+                                className="admin-search-input"
+                                style={{ flex: 1, minWidth: 200 }}
+                            />
+                            <select value={commentsDays} onChange={(e) => setCommentsDays(Number(e.target.value))}
+                                    className="admin-select">
+                                <option value={7}>Last 7 days</option>
+                                <option value={30}>Last 30 days</option>
+                                <option value={90}>Last 90 days</option>
+                                <option value={365}>Last year</option>
+                            </select>
+                            <label style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                                <input type="checkbox" checked={commentsShowDeleted}
+                                       onChange={(e) => setCommentsShowDeleted(e.target.checked)} />
+                                Show removed
+                            </label>
+                            <button className="admin-btn" onClick={fetchComments}>Refresh</button>
+                        </div>
+
+                        {commentsLoading && <p>Loading...</p>}
+                        {!commentsLoading && filtered.length === 0 && <p>No comments found.</p>}
+                        {!commentsLoading && filtered.length > 0 && (
+                            <div className="admin-table-wrap">
+                            <table className="admin-table">
+                                <thead>
+                                    <tr>
+                                        <th>When</th>
+                                        <th>Who</th>
+                                        <th>Comment</th>
+                                        <th>On</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {filtered.map(c => (
+                                        <tr key={c.id} style={c.deleted ? { opacity: 0.55 } : undefined}>
+                                            <td style={{ whiteSpace: "nowrap" }}>{toPSTDateTime(c.createdDate)}</td>
+                                            <td>
+                                                {c.userName || "Guest"}
+                                                {c.userId != null && <div style={{ fontSize: 11, color: "#888" }}>user #{c.userId}</div>}
+                                            </td>
+                                            <td style={{ maxWidth: 420, whiteSpace: "pre-wrap", wordBreak: "break-word" }}>
+                                                {c.deleted && <span className="status-badge status-deleted" style={{ marginRight: 6 }}>Removed</span>}
+                                                {c.content}
+                                            </td>
+                                            <td>
+                                                <span className="status-badge status-archived" style={{ marginRight: 6 }}>{typeOf(c)}</span>
+                                                {c.targetLink
+                                                    ? <a href={c.targetLink} target="_blank" rel="noreferrer">{c.targetTitle || `#${c.targetId}`}</a>
+                                                    : <span>{c.targetTitle || `#${c.targetId}`} <em style={{ color: "#888" }}>(item no longer exists)</em></span>}
+                                            </td>
+                                            <td>
+                                                {!c.deleted && (
+                                                    <button className="admin-btn admin-btn-danger" onClick={() => deleteCommentAsAdmin(c.id)}>
+                                                        Remove
+                                                    </button>
+                                                )}
+                                            </td>
+                                        </tr>
+                                    ))}
                                 </tbody>
                             </table>
                             </div>

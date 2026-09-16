@@ -2,6 +2,7 @@ package com.SaatSaheli.spring.controller;
 
 import com.SaatSaheli.spring.model.Article;
 import com.SaatSaheli.spring.model.Book;
+import com.SaatSaheli.spring.model.Comment;
 import com.SaatSaheli.spring.util.PageSizes;
 import com.SaatSaheli.spring.model.Gallery;
 import com.SaatSaheli.spring.model.Login;
@@ -13,6 +14,7 @@ import com.SaatSaheli.spring.model.User;
 import com.SaatSaheli.spring.repository.ArticleRepository;
 import com.SaatSaheli.spring.repository.PaymentTransactionRepository;
 import com.SaatSaheli.spring.repository.BookRepository;
+import com.SaatSaheli.spring.repository.CommentRepository;
 import com.SaatSaheli.spring.repository.GalleryRepository;
 import com.SaatSaheli.spring.repository.LoginRepository;
 import com.SaatSaheli.spring.repository.MarketplaceListingRepository;
@@ -22,6 +24,8 @@ import com.SaatSaheli.spring.repository.UserRepository;
 import com.SaatSaheli.spring.service.ArticleService;
 import com.SaatSaheli.spring.service.BookService;
 import com.SaatSaheli.spring.service.DocumentExtractionService;
+import com.SaatSaheli.spring.service.NotificationService;
+import com.SaatSaheli.spring.service.SocialService;
 import com.SaatSaheli.spring.util.RoleUtil;
 import com.SaatSaheli.spring.util.StripePaymentMapper;
 import jakarta.servlet.http.HttpServletRequest;
@@ -76,6 +80,15 @@ public class AdminController {
 
     @Autowired
     private DocumentExtractionService documentExtractionService;
+
+    @Autowired
+    private CommentRepository commentRepo;
+
+    @Autowired
+    private SocialService socialService;
+
+    @Autowired
+    private NotificationService notificationService;
 
     @Autowired
     private PaymentTransactionRepository txRepo;
@@ -352,6 +365,7 @@ public class AdminController {
                             : ((u.getFirstName() != null ? u.getFirstName() : "")
                             + (u.getLastName() != null ? " " + u.getLastName() : "")).trim();
                     article.setAuthorName(name);
+                    article.setAuthorHandle(u.getHandle());
                 }
             }
             return ResponseEntity.ok(articles);
@@ -428,6 +442,7 @@ public class AdminController {
                             : ((u.getFirstName() != null ? u.getFirstName() : "")
                             + (u.getLastName() != null ? " " + u.getLastName() : "")).trim();
                     recipe.setAuthorName(name);
+                    recipe.setAuthorHandle(u.getHandle());
                 }
             }
             return ResponseEntity.ok(recipes);
@@ -525,6 +540,7 @@ public class AdminController {
                             : ((u.getFirstName() != null ? u.getFirstName() : "")
                             + (u.getLastName() != null ? " " + u.getLastName() : "")).trim();
                     g.setAuthorName(name);
+                    g.setAuthorHandle(u.getHandle());
                 }
             }
             return ResponseEntity.ok(galleries);
@@ -582,6 +598,76 @@ public class AdminController {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(errorMap("Failed to change gallery status: " + e.getMessage()));
+        }
+    }
+
+    // ── Comments (site-wide moderation feed) ──
+
+    /**
+     * GET /api/admin/comments?days=30 — every comment on any item in the last N
+     * days (newest first), enriched with the item's title + deep link so an admin
+     * can see WHERE it was posted and jump straight to it. Soft-deleted rows are
+     * included (flagged) so moderators can see what was removed.
+     */
+    @GetMapping("/comments")
+    public ResponseEntity<?> listComments(@RequestParam(defaultValue = "30") int days,
+                                          HttpServletRequest request) {
+        try {
+            User caller = verifyCaller(getAuthUserId(request), false);
+            if (caller == null) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorMap("Admin access required"));
+            }
+            int window = Math.max(1, Math.min(days, 365));
+            LocalDateTime cutoff = LocalDateTime.now().minusDays(window);
+            List<Comment> comments = commentRepo.findByCreatedDateAfterOrderByCreatedDateDesc(cutoff);
+
+            // Resolve each distinct target once — many comments share the same item.
+            Map<String, NotificationService.Target> targetCache = new HashMap<>();
+            List<Map<String, Object>> rows = new ArrayList<>(comments.size());
+            for (Comment c : comments) {
+                String key = c.getTargetType() + ":" + c.getTargetId();
+                NotificationService.Target t = targetCache.computeIfAbsent(key,
+                        k -> notificationService.resolveTarget(c.getTargetType(), c.getTargetId()));
+                Map<String, Object> row = new HashMap<>();
+                row.put("id", c.getId());
+                row.put("userId", c.getUserId());
+                row.put("userName", c.getUserName());
+                row.put("content", c.getContent());
+                row.put("deleted", c.isDeleted());
+                row.put("createdDate", c.getCreatedDate() == null ? null : c.getCreatedDate().toString());
+                row.put("targetType", c.getTargetType());
+                row.put("targetId", c.getTargetId());
+                row.put("targetTitle", t == null ? null : t.title);
+                row.put("targetLink", t == null ? null : t.link);
+                row.put("targetLabel", t == null ? null : t.itemLabel);
+                row.put("targetOwnerId", t == null ? null : t.ownerId);
+                rows.add(row);
+            }
+            Map<String, Object> body = new HashMap<>();
+            body.put("days", window);
+            body.put("comments", rows);
+            return ResponseEntity.ok(body);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(errorMap("Failed to list comments: " + e.getMessage()));
+        }
+    }
+
+    /** DELETE /api/admin/comments/{commentId} — Moderation: soft-delete any comment */
+    @DeleteMapping("/comments/{commentId}")
+    public ResponseEntity<?> deleteComment(@PathVariable Long commentId, HttpServletRequest request) {
+        try {
+            User caller = verifyCaller(getAuthUserId(request), false);
+            if (caller == null) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorMap("Admin access required"));
+            }
+            if (!socialService.adminDeleteComment(commentId)) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorMap("Comment not found"));
+            }
+            return ResponseEntity.ok(Map.of("message", "Comment deleted"));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(errorMap("Failed to delete comment: " + e.getMessage()));
         }
     }
 

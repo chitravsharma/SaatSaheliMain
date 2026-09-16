@@ -108,6 +108,7 @@ public class PodcastService {
                         : ((u.getFirstName() != null ? u.getFirstName() : "")
                         + (u.getLastName() != null ? " " + u.getLastName() : "")).trim();
                 podcast.setAuthorName(name);
+                podcast.setAuthorHandle(u.getHandle());
             }
         }
     }

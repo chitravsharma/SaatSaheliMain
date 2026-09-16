@@ -52,7 +52,7 @@ const About = () => {
         <h2 className="about-section-title">Founder Profile</h2>
         <div className="about-team-grid">
           {team.map((m) => {
-            const url = profileUrl(m.id, m.displayName);
+            const url = profileUrl(m.id, m.displayName, m.handle);
             const imgSrc = m.profileImageUrl
               ? (m.profileImageUrl.startsWith('http') ? m.profileImageUrl : `${API}${m.profileImageUrl}`)
               : null;

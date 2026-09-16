@@ -66,6 +66,14 @@ public class User {
     @Column(name = "team_role")
     private String teamRole; // SaatSaheli team title, admin-assignable only
 
+    /**
+     * Public profile URL id, e.g. "Chitra-Sharma" → saatsaheli.com/profile/Chitra-Sharma.
+     * Unique (case-insensitive) and never all-digits so it can't be confused with a
+     * numeric user id in the same route. Auto-generated from the name; user-editable.
+     */
+    @Column(unique = true)
+    private String handle;
+
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     @Column(name = "created_date")
     private LocalDateTime createdDate;
@@ -138,6 +146,9 @@ public class User {
 
     public String getTeamRole() { return teamRole; }
     public void setTeamRole(String teamRole) { this.teamRole = teamRole; }
+
+    public String getHandle() { return handle; }
+    public void setHandle(String handle) { this.handle = handle; }
 
     public LocalDateTime getCreatedDate() { return createdDate; }
     public void setCreatedDate(LocalDateTime createdDate) { this.createdDate = createdDate; }

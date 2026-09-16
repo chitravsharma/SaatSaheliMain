@@ -57,6 +57,11 @@ public class Article {
     @Transient
     private String authorName;
 
+
+    @Transient
+
+    private String authorHandle; // public profile URL id, enriched by service
+
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
@@ -89,6 +94,9 @@ public class Article {
 
     public String getAuthorName() { return authorName; }
     public void setAuthorName(String authorName) { this.authorName = authorName; }
+
+    public String getAuthorHandle() { return authorHandle; }
+    public void setAuthorHandle(String authorHandle) { this.authorHandle = authorHandle; }
 
     public Long getCreatedBy() { return createdBy; }
     public void setCreatedBy(Long createdBy) { this.createdBy = createdBy; }

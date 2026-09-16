@@ -55,7 +55,7 @@ export default function Recipes() {
           {r.authorName && (
             <div className="recipe-author">
               by{" "}
-              <Link to={profileUrl(r.userId, r.authorName)} onClick={(e) => e.stopPropagation()}>
+              <Link to={profileUrl(r.userId, r.authorName, r.authorHandle)} onClick={(e) => e.stopPropagation()}>
                 {r.authorName}
               </Link>
             </div>

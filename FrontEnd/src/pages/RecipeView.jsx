@@ -185,7 +185,7 @@ export default function RecipeView() {
         {recipe.cuisine && <p className="recipe-view-cuisine">{recipe.cuisine}</p>}
         {recipe.authorName && (
           <p className="recipe-view-author">
-            by <Link to={profileUrl(recipe.userId, recipe.authorName)}>{recipe.authorName}</Link>
+            by <Link to={profileUrl(recipe.userId, recipe.authorName, recipe.authorHandle)}>{recipe.authorName}</Link>
           </p>
         )}
 

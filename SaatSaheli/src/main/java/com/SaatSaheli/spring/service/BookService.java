@@ -328,6 +328,7 @@ public class BookService {
                         : ((u.getFirstName() != null ? u.getFirstName() : "")
                         + (u.getLastName() != null ? " " + u.getLastName() : "")).trim();
                 book.setAuthorName(name);
+                book.setAuthorHandle(u.getHandle());
             }
         }
         enrichWithCoverImages(books);
@@ -547,6 +548,7 @@ public class BookService {
                         : ((u.getFirstName() != null ? u.getFirstName() : "")
                         + (u.getLastName() != null ? " " + u.getLastName() : "")).trim();
                 book.setAuthorName(name);
+                book.setAuthorHandle(u.getHandle());
             }
         }
         enrichWithCoverImages(books);
@@ -634,6 +636,7 @@ public class BookService {
                         : ((u.getFirstName() != null ? u.getFirstName() : "")
                         + (u.getLastName() != null ? " " + u.getLastName() : "")).trim();
                 book.setAuthorName(name);
+                book.setAuthorHandle(u.getHandle());
             }
             book.setPages(pageRepo.findByBookIdOrderByPageNumberAsc(book.getId()));
         }

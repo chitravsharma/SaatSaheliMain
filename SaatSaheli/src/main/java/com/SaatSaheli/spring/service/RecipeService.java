@@ -90,6 +90,7 @@ public class RecipeService {
             r.setImages(imageRepo.findByRecipeIdOrderByOrderIndexAsc(r.getId()));
             if (r.getUserId() != null && userMap.containsKey(r.getUserId())) {
                 r.setAuthorName(buildName(userMap.get(r.getUserId())));
+                r.setAuthorHandle(userMap.get(r.getUserId()).getHandle());
             }
             enrichWithCounts(r);
         }
@@ -161,7 +162,7 @@ public class RecipeService {
     private void enrichWithAuthor(Recipe recipe) {
         if (recipe.getUserId() != null) {
             Optional<User> userOpt = userRepo.findById(recipe.getUserId());
-            userOpt.ifPresent(u -> recipe.setAuthorName(buildName(u)));
+            userOpt.ifPresent(u -> { recipe.setAuthorName(buildName(u)); recipe.setAuthorHandle(u.getHandle()); });
         }
     }
 
