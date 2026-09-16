@@ -756,7 +756,7 @@ function Home() {
                           </Link>
                           {category !== magLabel && book.authorName && (
                             <Link
-                              to={profileUrl(book.userId, book.authorName)}
+                              to={profileUrl(book.userId, book.authorName, book.authorHandle)}
                               className="home-book-author"
                             >by {book.authorName}</Link>
                           )}
@@ -836,7 +836,7 @@ function Home() {
                   </Link>
                   {gallery.authorName && (
                     <Link
-                      to={profileUrl(gallery.userId, gallery.authorName)}
+                      to={profileUrl(gallery.userId, gallery.authorName, gallery.authorHandle)}
                       className="home-gallery-author"
                     >by {gallery.authorName}</Link>
                   )}
@@ -887,7 +887,7 @@ function Home() {
               </Link>
               {article.authorName && (
                 <Link
-                  to={profileUrl(article.userId, article.authorName)}
+                  to={profileUrl(article.userId, article.authorName, article.authorHandle)}
                   className="home-article-author home-article-author-link"
                 >by {article.authorName}</Link>
               )}

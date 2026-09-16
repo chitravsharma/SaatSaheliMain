@@ -674,7 +674,8 @@ CREATE TABLE public.users (
     interests text,
     plan character varying(255),
     team_role character varying(255),
-    occupation character varying(255)
+    occupation character varying(255),
+    handle character varying(255) UNIQUE
 );
 
 

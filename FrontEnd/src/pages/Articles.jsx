@@ -414,7 +414,7 @@ function Articles() {
         </div>
 
         {!isOwner && article.authorName && (
-          <Link to={profileUrl(article.userId, article.authorName)} className="art-author-link">
+          <Link to={profileUrl(article.userId, article.authorName, article.authorHandle)} className="art-author-link">
             by {article.authorName}
           </Link>
         )}

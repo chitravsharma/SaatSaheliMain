@@ -19,6 +19,17 @@ const TEAM_ROLE_OPTIONS = [
 
 const BIO_MAX = 3000; // ~500 words
 
+// Mirrors ProfileHandleService.slugify: "Chitra  Sharma!" → "Chitra-Sharma".
+function suggestHandle(name) {
+  return (name || "")
+    .normalize("NFC")
+    .replace(/[^\p{L}\p{M}\p{N}\s-]/gu, "")
+    .trim()
+    .replace(/[\s-]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 40);
+}
+
 function Profile() {
   const { user } = useAuth();
   const strings = useStrings();
@@ -28,6 +39,7 @@ function Profile() {
 
   const [form, setForm] = useState({
     displayName: "",
+    handle: "",
     headline: "",
     occupation: "",
     location: "",
@@ -44,6 +56,29 @@ function Profile() {
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
+  // Profile URL id: letters, digits, hyphens; never only digits (those are legacy ids).
+  const handleValid = (h) => /^[\p{L}\p{M}\p{N}-]{2,40}$/u.test(h) && !/^\p{N}+$/u.test(h);
+  const [handleStatus, setHandleStatus] = useState(null); // null | "checking" | "ok" | "taken" | "invalid"
+  const [handleTouched, setHandleTouched] = useState(false);
+  const [savedHandle, setSavedHandle] = useState("");
+
+  useEffect(() => {
+    const h = (form.handle || "").trim();
+    if (!h) { setHandleStatus(null); return; }
+    if (!handleValid(h)) { setHandleStatus("invalid"); return; }
+    if (h.toLowerCase() === savedHandle.toLowerCase()) { setHandleStatus("ok"); return; }
+    setHandleStatus("checking");
+    const t = setTimeout(async () => {
+      try {
+        const res = await api.get(`${API}/api/auth/handle-available`, { params: { handle: h } });
+        setHandleStatus(res.data?.available ? "ok" : "taken");
+      } catch {
+        setHandleStatus(null);
+      }
+    }, 400);
+    return () => clearTimeout(t);
+  }, [form.handle, savedHandle]);
+
   useEffect(() => {
     if (!user) return;
     const fetchProfile = async () => {
@@ -52,6 +87,7 @@ function Profile() {
         const data = res.data;
         setForm({
           displayName: data.displayName || "",
+          handle: data.handle || "",
           headline: data.headline || "",
           occupation: data.occupation || "",
           location: data.location || "",
@@ -59,6 +95,7 @@ function Profile() {
           teamRole: data.teamRole || "",
         });
         setProfileImageUrl(data.profileImageUrl || "");
+        setSavedHandle(data.handle || "");
         setInterests(data.interests ? data.interests.split(",") : []);
         setFields(data.fields ? data.fields.split(",") : []);
       } catch {
@@ -80,6 +117,20 @@ function Profile() {
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
+  };
+
+  // Suggest a URL id from the display name until the creator edits the id themselves.
+  const handleDisplayNameChange = (e) => {
+    const displayName = e.target.value;
+    setForm(f => ({
+      ...f,
+      displayName,
+      handle: handleTouched || savedHandle ? f.handle : suggestHandle(displayName),
+    }));
+  };
+  const handleHandleChange = (e) => {
+    setHandleTouched(true);
+    setForm(f => ({ ...f, handle: e.target.value.replace(/\s+/g, "-") }));
   };
 
   const uploadProfileImage = async (file) => {
@@ -117,12 +168,21 @@ function Profile() {
       setError(s.nameRequired);
       return;
     }
+    if (form.handle.trim() && handleStatus === "invalid") {
+      setError(s.handleInvalid);
+      return;
+    }
+    if (handleStatus === "taken") {
+      setError(s.handleTaken);
+      return;
+    }
     setSaving(true);
     setError("");
     setMessage("");
     try {
       const payload = {
         displayName: form.displayName,
+        handle: form.handle.trim(), // blank → server generates one from the name
         headline: form.headline,
         occupation: form.occupation,
         location: form.location,
@@ -132,10 +192,14 @@ function Profile() {
         fields: fields.join(","),
       };
       if (isAdmin) payload.teamRole = form.teamRole;
-      await api.put(`${API}/api/auth/user/${user.userId}`, payload);
-      navigate(profileUrl(user.userId, form.displayName || user.name));
-    } catch {
-      setError(s.saveFailed);
+      const res = await api.put(`${API}/api/auth/user/${user.userId}`, payload);
+      const saved = res.data || {};
+      navigate(profileUrl(user.userId, saved.displayName || form.displayName || user.name, saved.handle));
+    } catch (err) {
+      const status = err?.response?.status;
+      if (status === 409) setError(s.handleTaken);
+      else if (status === 400 && err?.response?.data?.error) setError(s.handleInvalid);
+      else setError(s.saveFailed);
     } finally {
       setSaving(false);
     }
@@ -160,11 +224,37 @@ function Profile() {
             name="displayName"
             type="text"
             value={form.displayName}
-            onChange={handleChange}
+            onChange={handleDisplayNameChange}
             placeholder={s.placeholderDisplayName}
             maxLength={100}
             required
           />
+        </div>
+
+        <div className="profile-field">
+          <label htmlFor="handle">{s.labelHandle}</label>
+          <div className="profile-handle-row">
+            <span className="profile-handle-prefix">saatsaheli.com/profile/</span>
+            <input
+              id="handle"
+              name="handle"
+              type="text"
+              value={form.handle}
+              onChange={handleHandleChange}
+              placeholder={s.placeholderHandle}
+              maxLength={40}
+              autoComplete="off"
+              spellCheck={false}
+              aria-describedby="handle-help"
+            />
+          </div>
+          <small id="handle-help" className={`profile-handle-help profile-handle-${handleStatus || "idle"}`}>
+            {handleStatus === "checking" && s.handleChecking}
+            {handleStatus === "ok" && s.handleAvailable}
+            {handleStatus === "taken" && s.handleTaken}
+            {handleStatus === "invalid" && s.handleInvalid}
+            {!handleStatus && s.handleHelp}
+          </small>
         </div>
 
         <div className="profile-field">

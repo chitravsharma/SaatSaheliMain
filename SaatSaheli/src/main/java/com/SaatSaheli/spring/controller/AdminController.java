@@ -365,6 +365,7 @@ public class AdminController {
                             : ((u.getFirstName() != null ? u.getFirstName() : "")
                             + (u.getLastName() != null ? " " + u.getLastName() : "")).trim();
                     article.setAuthorName(name);
+                    article.setAuthorHandle(u.getHandle());
                 }
             }
             return ResponseEntity.ok(articles);
@@ -441,6 +442,7 @@ public class AdminController {
                             : ((u.getFirstName() != null ? u.getFirstName() : "")
                             + (u.getLastName() != null ? " " + u.getLastName() : "")).trim();
                     recipe.setAuthorName(name);
+                    recipe.setAuthorHandle(u.getHandle());
                 }
             }
             return ResponseEntity.ok(recipes);
@@ -538,6 +540,7 @@ public class AdminController {
                             : ((u.getFirstName() != null ? u.getFirstName() : "")
                             + (u.getLastName() != null ? " " + u.getLastName() : "")).trim();
                     g.setAuthorName(name);
+                    g.setAuthorHandle(u.getHandle());
                 }
             }
             return ResponseEntity.ok(galleries);

@@ -45,6 +45,9 @@ public class AuthController {
     private UserRepository userRepo;
 
     @Autowired
+    private com.SaatSaheli.spring.service.ProfileHandleService handleService;
+
+    @Autowired
     private LoginRepository loginRepo;
 
     @Autowired
@@ -135,6 +138,9 @@ public class AuthController {
             user.setPlan("Free");
             user.setCreatedDate(now);
             user.setModifiedDate(now);
+            user = userRepo.save(user);
+            // Public profile URL id (saatsaheli.com/profile/{handle}); needs the id for the fallback.
+            handleService.ensureHandle(user);
             user = userRepo.save(user);
 
             Login login = new Login();
@@ -336,6 +342,7 @@ public class AuthController {
             for (User user : userRepo.findAllById(creatorIds)) {
                 Map<String, Object> w = new HashMap<>();
                 w.put("id", user.getId());
+                w.put("handle", user.getHandle());
                 w.put("displayName", user.getDisplayName());
                 w.put("firstName", user.getFirstName());
                 w.put("lastName", user.getLastName());
@@ -385,6 +392,7 @@ public class AuthController {
                 .map(u -> {
                     Map<String, Object> m = new HashMap<>();
                     m.put("id", u.getId());
+                    m.put("handle", u.getHandle());
                     m.put("displayName", u.getDisplayName());
                     m.put("headline", u.getHeadline());
                     m.put("profileImageUrl", u.getProfileImageUrl());
@@ -405,18 +413,38 @@ public class AuthController {
     }
 
     /**
-     * GET /api/auth/public-profile/{userId} — no auth required
+     * GET /api/auth/handle-available?handle=X — live check for the profile form.
+     * The caller's own current handle reports as available.
      */
-    @GetMapping("/public-profile/{userId}")
-    public ResponseEntity<?> getPublicProfile(@PathVariable Long userId) {
+    @GetMapping("/handle-available")
+    public ResponseEntity<?> handleAvailable(@RequestParam String handle, HttpServletRequest request) {
+        Long callerUserId = getAuthUserId(request);
+        String h = handle == null ? "" : handle.trim();
+        Map<String, Object> out = new HashMap<>();
+        out.put("handle", h);
+        out.put("valid", handleService.isValid(h));
+        out.put("available", handleService.isValid(h) && handleService.isAvailable(h, callerUserId));
+        return ResponseEntity.ok(out);
+    }
+
+    /**
+     * GET /api/auth/public-profile/{key} — no auth required; key = handle or legacy numeric id
+     */
+    @GetMapping("/public-profile/{key}")
+    public ResponseEntity<?> getPublicProfile(@PathVariable String key) {
         try {
-            Optional<User> userOpt = userRepo.findById(userId);
+            // {key} is a profile handle (saatsaheli.com/profile/Chitra-Sharma) or, for
+            // links shared before handles existed, a numeric user id.
+            Optional<User> userOpt = key.matches("\\d+")
+                    ? userRepo.findById(Long.parseLong(key))
+                    : userRepo.findByHandleIgnoreCase(key);
             if (userOpt.isEmpty()) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorMap("User not found"));
             }
             User user = userOpt.get();
             Map<String, Object> profile = new HashMap<>();
             profile.put("id", user.getId());
+            profile.put("handle", user.getHandle());
             profile.put("displayName", user.getDisplayName());
             profile.put("firstName", user.getFirstName());
             profile.put("lastName", user.getLastName());
@@ -494,6 +522,26 @@ public class AuthController {
             if (updated.getAge() != null) user.setAge(updated.getAge());
             if (updated.getGender() != null) user.setGender(updated.getGender());
             if (updated.getDisplayName() != null) user.setDisplayName(updated.getDisplayName());
+            if (updated.getHandle() != null) {
+                String h = updated.getHandle().trim();
+                if (h.isEmpty()) {
+                    // Cleared on the form → regenerate from the (possibly new) name.
+                    user.setHandle(null);
+                } else if (!h.equalsIgnoreCase(user.getHandle())) {
+                    if (!handleService.isValid(h)) {
+                        return ResponseEntity.badRequest().body(errorMap(
+                                "Profile URL id must be 2-40 letters, numbers or hyphens and can't be only numbers"));
+                    }
+                    if (!handleService.isAvailable(h, userId)) {
+                        return ResponseEntity.status(HttpStatus.CONFLICT)
+                                .body(errorMap("That profile URL id is already taken"));
+                    }
+                    user.setHandle(h);
+                } else if (!h.equals(user.getHandle())) {
+                    user.setHandle(h); // same handle, new capitalisation
+                }
+            }
+            handleService.ensureHandle(user);
             if (updated.getHeadline() != null) user.setHeadline(updated.getHeadline());
             if (updated.getOccupation() != null) user.setOccupation(updated.getOccupation());
             if (updated.getProfileImageUrl() != null) user.setProfileImageUrl(updated.getProfileImageUrl());

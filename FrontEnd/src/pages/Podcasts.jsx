@@ -412,7 +412,7 @@ function Podcasts() {
           </div>
           <h3 className="podcast-title">{podcast.title}</h3>
           {!isOwner && podcast.authorName && (
-            <Link to={profileUrl(podcast.userId, podcast.authorName)} className="podcast-author">by {podcast.authorName}</Link>
+            <Link to={profileUrl(podcast.userId, podcast.authorName, podcast.authorHandle)} className="podcast-author">by {podcast.authorName}</Link>
           )}
           {podcast.description && <p className="podcast-desc">{podcast.description}</p>}
           <span className="podcast-date">{new Date(podcast.createdDate).toLocaleDateString()}</span>

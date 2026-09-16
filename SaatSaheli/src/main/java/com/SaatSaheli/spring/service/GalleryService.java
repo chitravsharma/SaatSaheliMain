@@ -75,6 +75,7 @@ public class GalleryService {
             if (g.getUserId() != null && userMap.containsKey(g.getUserId())) {
                 User u = userMap.get(g.getUserId());
                 g.setAuthorName(buildName(u));
+                g.setAuthorHandle(u.getHandle());
             }
             enrichWithCounts(g);
         }
@@ -192,7 +193,7 @@ public class GalleryService {
     private void enrichWithAuthor(Gallery gallery) {
         if (gallery.getUserId() != null) {
             Optional<User> userOpt = userRepo.findById(gallery.getUserId());
-            userOpt.ifPresent(u -> gallery.setAuthorName(buildName(u)));
+            userOpt.ifPresent(u -> { gallery.setAuthorName(buildName(u)); gallery.setAuthorHandle(u.getHandle()); });
         }
     }
 

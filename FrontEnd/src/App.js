@@ -101,8 +101,9 @@ function App() {
           <Route path="/read/:bookId" element={<ReadBook />} />
           <Route path="/account" element={<Account />} />
           <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
-          <Route path="/profile/:userId/:nameSlug" element={<PublicProfile />} />
-          <Route path="/profile/:userId" element={<PublicProfile />} />
+          {/* :key = creator handle (/profile/Chitra-Sharma) or a legacy numeric id */}
+          <Route path="/profile/:key/:nameSlug" element={<PublicProfile />} />
+          <Route path="/profile/:key" element={<PublicProfile />} />
           <Route path="/policies" element={<SitePolicies />} />
           <Route path="/refund-policy" element={<RefundPolicy />} />
           <Route path="/refund" element={<RefundPolicy />} />

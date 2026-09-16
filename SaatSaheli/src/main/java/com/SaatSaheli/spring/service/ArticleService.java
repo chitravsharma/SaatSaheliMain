@@ -120,6 +120,7 @@ public class ArticleService {
                         : ((u.getFirstName() != null ? u.getFirstName() : "")
                         + (u.getLastName() != null ? " " + u.getLastName() : "")).trim();
                 article.setAuthorName(name);
+                article.setAuthorHandle(u.getHandle());
             }
         }
     }

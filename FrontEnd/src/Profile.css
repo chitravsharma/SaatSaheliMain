@@ -182,3 +182,42 @@
     border: 2px solid ButtonText;
   }
 }
+
+/* Profile URL id (handle) */
+.profile-handle-row {
+  display: flex;
+  align-items: stretch;
+  border: 2px solid var(--border-strong);
+  border-radius: 8px;
+  overflow: hidden;
+  background-color: var(--bg-body);
+  transition: border-color 0.2s;
+}
+.profile-handle-row:focus-within {
+  border-color: var(--accent-blue);
+}
+.profile-handle-prefix {
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+  font-size: 0.85rem;
+  color: var(--text-subtle);
+  background: var(--bg-muted, rgba(0, 0, 0, 0.04));
+  white-space: nowrap;
+  user-select: none;
+}
+.profile-field .profile-handle-row input[type="text"] {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  border-radius: 0;
+}
+.profile-handle-help {
+  font-size: 0.8rem;
+  color: var(--text-subtle);
+}
+.profile-handle-ok { color: #059669; }
+.profile-handle-taken, .profile-handle-invalid { color: #dc2626; }
+@media (max-width: 480px) {
+  .profile-handle-prefix { font-size: 0.75rem; padding: 0 8px; }
+}

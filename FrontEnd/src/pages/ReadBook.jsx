@@ -213,7 +213,7 @@ function ReadBook() {
         <div className="rb-book-header">
           <h2 className="rb-book-title">{book.title}</h2>
           {book.authorName && (
-            <Link to={profileUrl(book.userId, book.authorName)} className="rb-book-author">by {book.authorName}</Link>
+            <Link to={profileUrl(book.userId, book.authorName, book.authorHandle)} className="rb-book-author">by {book.authorName}</Link>
           )}
         </div>
       )}

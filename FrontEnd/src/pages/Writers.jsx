@@ -115,7 +115,7 @@ export default function Writers() {
           return (
             <Link
               key={w.id}
-              to={profileUrl(w.id, name)}
+              to={profileUrl(w.id, name, w.handle)}
               className="writer-card"
               aria-label={`View profile for ${name}`}
             >

@@ -302,7 +302,7 @@ function GalleryView() {
       <div className="gv-header">
         <h1 className="gv-title">{gallery.title}</h1>
         {gallery.authorName && (
-          <Link to={profileUrl(gallery.userId, gallery.authorName)} className="gv-author">by {gallery.authorName}</Link>
+          <Link to={profileUrl(gallery.userId, gallery.authorName, gallery.authorHandle)} className="gv-author">by {gallery.authorName}</Link>
         )}
         {gallery.description && <p className="gv-description">{gallery.description}</p>}
       </div>

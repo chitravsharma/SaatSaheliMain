@@ -56,7 +56,12 @@ export function getAnonId() {
     return id;
 }
 
-export function profileUrl(userId, name) {
+// Public profile link. Creators have a unique handle ("url id") so the canonical
+// link is /profile/Chitra-Sharma. Callers that only know the user id (older API
+// payloads without authorHandle) fall back to the legacy /profile/{id}/{name}
+// form, which PublicProfile resolves and then redirects to the handle URL.
+export function profileUrl(userId, name, handle) {
+    if (handle) return `/profile/${encodeURIComponent(handle)}`;
     const slug = (name || "")
         .trim()
         .replace(/[^a-zA-Z0-9\s-]/g, "")

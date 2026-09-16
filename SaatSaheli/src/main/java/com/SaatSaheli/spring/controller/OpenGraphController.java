@@ -191,10 +191,12 @@ public class OpenGraphController {
      * the creator's own photo + headline instead of the generic site card. Mirrors
      * what /api/auth/public-profile exposes (already public), nothing more.
      */
-    @GetMapping({"/profile/{id}", "/profile/{id}/", "/profile/{id}/{slug}", "/profile/{id}/{slug}/"})
-    public ResponseEntity<String> profile(@PathVariable String id, HttpServletRequest req) {
-        Long uid = parseId(id);
-        User u = uid == null ? null : userRepo.findById(uid).orElse(null);
+    @GetMapping({"/profile/{key}", "/profile/{key}/", "/profile/{key}/{slug}", "/profile/{key}/{slug}/"})
+    public ResponseEntity<String> profile(@PathVariable String key, HttpServletRequest req) {
+        // key = profile handle (/profile/Chitra-Sharma) or a legacy numeric user id.
+        Long uid = parseId(key);
+        User u = uid != null ? userRepo.findById(uid).orElse(null)
+                : userRepo.findByHandleIgnoreCase(key).orElse(null);
         if (u == null) return html(defaultDoc(), req);
         String name = blank(u.getDisplayName())
                 ? ((safe(u.getFirstName()) + " " + safe(u.getLastName())).trim())

@@ -59,6 +59,11 @@ public class Recipe {
     @Transient
     private String authorName;
 
+
+    @Transient
+
+    private String authorHandle; // public profile URL id, enriched by service
+
     @Transient
     private int likeCount;
 
@@ -97,6 +102,9 @@ public class Recipe {
 
     public String getAuthorName() { return authorName; }
     public void setAuthorName(String authorName) { this.authorName = authorName; }
+
+    public String getAuthorHandle() { return authorHandle; }
+    public void setAuthorHandle(String authorHandle) { this.authorHandle = authorHandle; }
 
     public int getLikeCount() { return likeCount; }
     public void setLikeCount(int likeCount) { this.likeCount = likeCount; }
