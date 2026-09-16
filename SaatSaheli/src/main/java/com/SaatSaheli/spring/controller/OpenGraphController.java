@@ -78,6 +78,7 @@ public class OpenGraphController {
     private final GalleryRepository galleryRepo;
     private final GalleryImageRepository galleryImageRepo;
     private final PodcastRepository podcastRepo;
+    private final UserRepository userRepo;
     private final BookService bookService;
 
     /** Lazily-loaded, cached copy of the built index.html. */
@@ -91,8 +92,10 @@ public class OpenGraphController {
                                GalleryRepository galleryRepo,
                                GalleryImageRepository galleryImageRepo,
                                PodcastRepository podcastRepo,
+                               UserRepository userRepo,
                                BookService bookService) {
         this.bookService = bookService;
+        this.userRepo = userRepo;
         this.articleRepo = articleRepo;
         this.bookRepo = bookRepo;
         this.listingRepo = listingRepo;
@@ -181,6 +184,26 @@ public class OpenGraphController {
         String image = p.getCoverImageUrl();
         if (blank(image)) image = youtubeThumb(p.getYoutubeUrl());
         return html(render(p.getTitle(), desc, image, "article", req), req);
+    }
+
+    /**
+     * Creator profile: /profile/:userId and /profile/:userId/:nameSlug. Shares show
+     * the creator's own photo + headline instead of the generic site card. Mirrors
+     * what /api/auth/public-profile exposes (already public), nothing more.
+     */
+    @GetMapping({"/profile/{id}", "/profile/{id}/", "/profile/{id}/{slug}", "/profile/{id}/{slug}/"})
+    public ResponseEntity<String> profile(@PathVariable String id, HttpServletRequest req) {
+        Long uid = parseId(id);
+        User u = uid == null ? null : userRepo.findById(uid).orElse(null);
+        if (u == null) return html(defaultDoc(), req);
+        String name = blank(u.getDisplayName())
+                ? ((safe(u.getFirstName()) + " " + safe(u.getLastName())).trim())
+                : u.getDisplayName();
+        if (blank(name)) return html(defaultDoc(), req);
+        String desc = !blank(u.getHeadline()) ? u.getHeadline()
+                : !blank(u.getBio()) ? u.getBio()
+                : name + "'s creator profile on " + SITE_NAME + " — books, poems, articles, recipes and galleries.";
+        return html(render(name, desc, u.getProfileImageUrl(), "profile", req), req);
     }
 
     // ── Rendering ──────────────────────────────────────────────────────────
