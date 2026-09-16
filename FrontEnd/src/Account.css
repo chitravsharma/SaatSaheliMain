@@ -629,3 +629,55 @@ button.acct-profile-link {
     border: 2px solid ButtonText;
   }
 }
+
+/* ── Plan usage meter ── */
+.acct-usage {
+  background: var(--bg-card);
+  border: 2px solid var(--border-default);
+  border-radius: 14px;
+  padding: 18px 20px;
+  margin: -16px 0 32px;
+}
+.acct-usage-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+.acct-usage-title { font-weight: 700; color: var(--text-primary); }
+.acct-usage-plan {
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  background: rgba(201, 168, 76, 0.15);
+  color: var(--accent-gold);
+}
+.acct-usage-plan-free { background: rgba(100, 116, 139, 0.15); color: var(--text-muted); }
+.acct-usage-upgrade {
+  margin-left: auto;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--accent-blue);
+}
+.acct-usage-row { margin: 8px 0; }
+.acct-usage-label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+}
+.acct-usage-count { font-variant-numeric: tabular-nums; color: var(--text-primary); }
+.acct-usage-bar {
+  height: 8px;
+  border-radius: 999px;
+  background: var(--border-default);
+  overflow: hidden;
+}
+.acct-usage-fill { height: 100%; border-radius: 999px; background: var(--accent-blue); transition: width 0.4s; }
+.acct-usage-fill-warn { background: #d97706; }
+.acct-usage-fill-full { background: #dc2626; }
+.acct-usage-note { margin: 12px 0 0; font-size: 0.85rem; color: var(--text-muted); }

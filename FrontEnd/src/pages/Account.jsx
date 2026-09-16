@@ -16,6 +16,56 @@ const API_GALLERIES = `${API}/api/galleries`;
 const API_ARTICLES = `${API}/api/articles`;
 const API_RECIPES = `${API}/api/recipes`;
 
+
+const fmtBytes = (b) => {
+  if (b >= 1024 ** 3) return `${(b / 1024 ** 3).toFixed(1)} GB`;
+  if (b >= 1024 ** 2) return `${Math.round(b / 1024 ** 2)} MB`;
+  return `${Math.max(1, Math.round(b / 1024))} KB`;
+};
+
+/** Plan usage meter: galleries / pictures / storage against the user's plan caps. */
+function UsageMeter({ usage, strings }) {
+  const rows = [
+    { key: "galleries", label: strings.usageGalleries, used: usage.galleries.used, limit: usage.galleries.limit, fmt: (v) => v },
+    { key: "pictures", label: strings.usagePictures, used: usage.pictures.used, limit: usage.pictures.limit, fmt: (v) => v },
+    { key: "storage", label: strings.usageStorage, used: usage.storage.usedBytes, limit: usage.storage.limitBytes, fmt: fmtBytes },
+  ];
+  if (usage.canCreateBooks) {
+    rows.push({ key: "books", label: strings.usageBooks, used: usage.books.used, limit: usage.books.limit, fmt: (v) => v });
+  }
+  const showUpgrade = usage.plan === "Free" || usage.plan === "Premium";
+  return (
+    <div className="acct-usage">
+      <div className="acct-usage-head">
+        <span className="acct-usage-title">{strings.usageTitle}</span>
+        <span className={`acct-usage-plan acct-usage-plan-${usage.plan.toLowerCase()}`}>{usage.plan}</span>
+        {showUpgrade && <Link to="/pricing" className="acct-usage-upgrade">{strings.usageUpgrade}</Link>}
+      </div>
+      {rows.map(r => {
+        const unlimited = r.limit < 0;
+        const pct = unlimited || !r.limit ? 0 : Math.min(100, Math.round((r.used / r.limit) * 100));
+        const level = pct >= 100 ? "full" : pct >= 80 ? "warn" : "ok";
+        return (
+          <div key={r.key} className="acct-usage-row">
+            <div className="acct-usage-label">
+              <span>{r.label}</span>
+              <span className="acct-usage-count">
+                {r.fmt(r.used)} / {unlimited ? "\u221e" : r.fmt(r.limit)}
+              </span>
+            </div>
+            <div className="acct-usage-bar" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100}>
+              <div className={`acct-usage-fill acct-usage-fill-${level}`} style={{ width: `${pct}%` }} />
+            </div>
+          </div>
+        );
+      })}
+      {!usage.canUseMarketChat && (
+        <p className="acct-usage-note">{strings.usageMarketNote} <Link to="/pricing">{strings.usageUpgrade}</Link></p>
+      )}
+    </div>
+  );
+}
+
 function Account() {
   const { user } = useAuth();
   const gateClick = useGatedClick();
@@ -24,6 +74,7 @@ function Account() {
   const [books, setBooks] = useState([]);
   const [profile, setProfile] = useState(null);
   const [profileShared, setProfileShared] = useState(false);
+  const [usage, setUsage] = useState(null); // plan limits + current usage (/api/account/usage)
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [articles, setArticles] = useState([]);
@@ -237,6 +288,11 @@ function Account() {
     }
   };
 
+  useEffect(() => {
+    if (!user) return;
+    api.get(`${API}/api/account/usage`).then(r => setUsage(r.data)).catch(() => setUsage(null));
+  }, [user]);
+
   // Same behaviour as the Share button on the public profile page: native share
   // sheet on phones, copy-to-clipboard on desktop.
   const shareMyProfile = async () => {
@@ -409,6 +465,8 @@ function Account() {
           </Link>
         </div>
       </div>
+
+      {usage && !usage.admin && <UsageMeter usage={usage} strings={strings.account} />}
 
       {loading && <div className="loading-spinner" />}
       {error && <p className="acct-error">{error}</p>}
