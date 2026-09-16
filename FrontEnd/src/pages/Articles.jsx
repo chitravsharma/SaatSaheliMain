@@ -46,9 +46,10 @@ function Articles() {
 
   const [tab, setTab] = useState("published"); // default to browse all
   const [filterType, setFilterType] = useState(urlContentType || "");
-  // Browse-All grouping: which "<type>::<authorName>" buckets are expanded.
-  // Default closed — user clicks an author row to reveal that author's items.
-  const [expandedAuthors, setExpandedAuthors] = useState({});
+  // Browse-All grouping: which "<type>::<authorName>" buckets the user has
+  // collapsed. Default OPEN — every author's list is visible on arrival so a
+  // visitor sees the titles at a glance; clicking an author row folds it away.
+  const [collapsedAuthors, setCollapsedAuthors] = useState({});
   const [copiedId, setCopiedId] = useState(null);
   const [articles, setArticles] = useState([]);
   const [publicArticles, setPublicArticles] = useState([]);
@@ -685,16 +686,17 @@ function Articles() {
                     <ul className="art-browse-list">
                       {authors.map(author => {
                         const key = `${sec.type}::${author}`;
-                        const isOpen = !!expandedAuthors[key];
+                        const isOpen = !collapsedAuthors[key];
+                        // Newest first — the latest piece sits at the top of each list.
                         const works = groups[author].slice().sort(
-                          (a, b) => (a.headline || "").localeCompare(b.headline || "")
+                          (a, b) => new Date(b.createdDate || 0) - new Date(a.createdDate || 0)
                         );
                         return (
                           <li key={key} className="art-browse-author-row">
                             <button
                               type="button"
                               className={`art-browse-author-btn ${isOpen ? "art-browse-author-btn-open" : ""}`}
-                              onClick={() => setExpandedAuthors(s => ({ ...s, [key]: !s[key] }))}
+                              onClick={() => setCollapsedAuthors(s => ({ ...s, [key]: !s[key] }))}
                               aria-expanded={isOpen}
                             >
                               <span className={`art-browse-dot art-browse-dot-${sec.type.toLowerCase()}`} />
@@ -735,8 +737,8 @@ function Articles() {
               : publicArticles
             )
               .slice()
-              .sort((a, b) => (a.authorName || "").localeCompare(b.authorName || "")
-                || (a.headline || "").localeCompare(b.headline || ""))
+              // Latest first, matching the author lists above.
+              .sort((a, b) => new Date(b.createdDate || 0) - new Date(a.createdDate || 0))
               .map(article => (
                 <div key={article.id} id={`art-detail-${article.id}`}>
                   {renderArticleCard(article, userId && article.userId === userId)}
