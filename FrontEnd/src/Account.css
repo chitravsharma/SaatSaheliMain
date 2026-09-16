@@ -32,12 +32,41 @@
 
 /* ── Profile Card ── */
 .acct-profile-card {
+  position: relative;
   background: var(--bg-card);
   border: 2px solid var(--border-default);
   border-radius: 16px;
   padding: 28px;
   margin-bottom: 36px;
   box-shadow: 0 2px 12px rgba(37, 99, 235, 0.1);
+}
+
+/* Share pill pinned to the card's top-right corner (mirrors the public profile page) */
+.acct-share-corner {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: transparent;
+  color: var(--accent-gold);
+  border: 1px solid var(--border-default);
+  border-radius: 8px;
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s;
+}
+.acct-share-corner:hover {
+  border-color: var(--accent-gold);
+  background: rgba(201, 168, 76, 0.1);
+}
+@media (max-width: 480px) {
+  .acct-share-corner { top: 10px; right: 10px; padding: 6px 8px; }
+  .acct-share-corner span { display: none; }
 }
 
 .acct-profile-top {

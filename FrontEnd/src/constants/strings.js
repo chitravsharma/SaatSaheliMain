@@ -8,6 +8,7 @@ export const SHOP_SELLER_URL = "https://avikaventures.com/";
 export const en = {
   common: {
     back: "Back",
+    share: "Share",
     edit: "Edit",
     delete: "Delete",
     save: "Save",
@@ -754,6 +755,7 @@ export const en = {
 export const hi = {
   common: {
     back: "वापस",
+    share: "साझा करें",
     edit: "संपादित करें",
     delete: "हटाएं",
     save: "सहेजें",
