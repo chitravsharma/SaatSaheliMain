@@ -18,4 +18,7 @@ public interface ConversationRepository extends JpaRepository<Conversation, Long
     long unreadFor(@Param("uid") Long userId);
 
     List<Conversation> findAllByOrderByLastMessageAtDesc();
+
+    Optional<Conversation> findFirstBySellerIdAndTargetTypeAndTargetIdAndGuestEmailIgnoreCase(
+            Long sellerId, String targetType, Long targetId, String guestEmail);
 }

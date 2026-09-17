@@ -63,8 +63,13 @@ public class MessagingNotifier {
             LocalDateTime lastEmail = senderIsSeller ? c.getBuyerEmailedAt() : c.getSellerEmailedAt();
             if (lastEmail != null && Duration.between(lastEmail, LocalDateTime.now()).compareTo(EMAIL_THROTTLE) < 0) return;
             if (recipient.getEmail() == null || recipient.getEmail().isBlank()) return;
+            String emailBody = m.getBody();
+            if (c.isGuest()) {
+                emailBody = "From: " + c.getGuestName() + "\nEmail: " + c.getGuestEmail() + "\nPhone: " + c.getGuestPhone()
+                        + "\n\n" + m.getBody() + "\n\n(This buyer has no SaatSaheli inbox — reply to them by email or phone.)";
+            }
             emailService.sendMessageNotification(recipient.getEmail(), MessagingService.displayName(recipient), m.getSenderName(),
-                    c.getItemTitle(), m.getBody(), frontendUrl + link);
+                    c.getItemTitle(), emailBody, frontendUrl + link);
             Conversation fresh = convRepo.findById(c.getId()).orElse(null);
             if (fresh != null) {
                 if (senderIsSeller) fresh.setBuyerEmailedAt(LocalDateTime.now()); else fresh.setSellerEmailedAt(LocalDateTime.now());

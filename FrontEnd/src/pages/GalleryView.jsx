@@ -3,23 +3,30 @@ import { useParams, useNavigate, Link, useSearchParams } from "react-router-dom"
 import api, { profileUrl } from "../utils/api";
 import { optimizeCloudinary } from "../utils/imageUrl";
 import { useAuth } from "../AuthContext";
-import { useLoginGate } from "../contexts/LoginGateContext";
+import ReCAPTCHA from "react-google-recaptcha";
 import { useStrings } from "../LanguageContext";
 import "./GalleryView.css";
 
 const API = process.env.REACT_APP_API_URL;
+const RECAPTCHA_SITE_KEY = process.env.REACT_APP_RECAPTCHA_SITE_KEY;
 
 function GalleryView() {
   const { galleryId } = useParams();
   const { user } = useAuth();
-  const { requireLogin } = useLoginGate();
   const [contacting, setContacting] = useState(false);
+  // Guest enquiry (visitor without an account): name + email + phone + message.
+  const [guestForm, setGuestForm] = useState(null); // null | { imageId }
+  const [guest, setGuest] = useState({ name: "", email: "", phone: "", message: "", website: "" });
+  const [guestToken, setGuestToken] = useState("");
+  const [guestError, setGuestError] = useState("");
+  const [guestSent, setGuestSent] = useState(false);
+  const guestCaptchaRef = useRef(null);
 
-  // "Contact seller" on an item For Sale → open (or resume) the private thread.
-  // Any logged-in member may contact a seller; logged-out → login gate.
+  // "Contact seller" on an item For Sale. Logged in → private thread; not logged
+  // in → a short form (name, email, phone, message) the seller replies to directly.
   const contactCreator = async (imageId) => {
     if (!user) {
-      requireLogin(`${window.location.pathname}?img=${imageId}`);
+      setGuestError(""); setGuestSent(false); setGuestForm({ imageId });
       return;
     }
     setContacting(true);
@@ -30,6 +37,31 @@ function GalleryView() {
       if (!err?.response?.data?.upgradeRequired) {
         window.alert(err?.response?.data?.error || "Could not start a conversation.");
       }
+    } finally {
+      setContacting(false);
+    }
+  };
+
+  const submitGuestEnquiry = async (e) => {
+    e.preventDefault();
+    const g = strings.gallery;
+    if (guest.name.trim().length < 2) { setGuestError(g.guestNeedName); return; }
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(guest.email.trim())) { setGuestError(g.guestNeedEmail); return; }
+    if (!/^[+\d][\d\s().-]{6,19}$/.test(guest.phone.trim())) { setGuestError(g.guestNeedPhone); return; }
+    if (!guest.message.trim()) { setGuestError(g.guestNeedMessage); return; }
+    if (RECAPTCHA_SITE_KEY && !guestToken) { setGuestError(g.guestNeedCaptcha); return; }
+    setContacting(true); setGuestError("");
+    try {
+      await api.post(`${API}/api/messages/guest-enquiry`, {
+        targetType: "GALLERY_IMAGE", targetId: guestForm.imageId,
+        name: guest.name.trim(), email: guest.email.trim(), phone: guest.phone.trim(),
+        message: guest.message.trim(), website: guest.website, recaptchaToken: guestToken,
+      });
+      setGuestSent(true);
+      setGuest({ name: "", email: "", phone: "", message: "", website: "" });
+    } catch (err) {
+      setGuestError(err?.response?.data?.error || g.guestFailed);
+      guestCaptchaRef.current?.reset(); setGuestToken("");
     } finally {
       setContacting(false);
     }
@@ -499,7 +531,7 @@ function GalleryView() {
                 {images[lightboxIndex].saleNote && (
                   <p className="gv-lightbox-sale-note">{images[lightboxIndex].saleNote}</p>
                 )}
-                {images[lightboxIndex].saleStatus !== "SOLD" && !(user && gallery && String(gallery.userId) === String(user.userId)) && (
+                {images[lightboxIndex].saleStatus !== "SOLD" && !(user && gallery && String(gallery.userId) === String(user.userId)) && !(guestForm && guestForm.imageId === images[lightboxIndex].id) && (
                   <button
                     type="button"
                     className="gv-contact-btn"
@@ -508,6 +540,39 @@ function GalleryView() {
                   >
                     {contacting ? "…" : strings.gallery.contactCreator}
                   </button>
+                )}
+                {guestForm && guestForm.imageId === images[lightboxIndex].id && (
+                  guestSent ? (
+                    <div className="gv-guest-sent">
+                      <strong>{strings.gallery.guestSentTitle}</strong>
+                      <p>{strings.gallery.guestSentText}</p>
+                      <button type="button" className="ss-btn ss-btn-outline ss-btn-sm" onClick={() => setGuestForm(null)}>{strings.common.close || "Close"}</button>
+                    </div>
+                  ) : (
+                    <form className="gv-guest-form" onSubmit={submitGuestEnquiry}>
+                      <div className="gv-guest-head">
+                        <strong>{strings.gallery.guestTitle}</strong>
+                        <Link to={`/Login?redirect=${encodeURIComponent(`${window.location.pathname}?img=${images[lightboxIndex].id}`)}`} className="gv-guest-login">{strings.gallery.guestLoginInstead}</Link>
+                      </div>
+                      <input type="text" placeholder={strings.gallery.guestName} value={guest.name} onChange={(e) => setGuest({ ...guest, name: e.target.value })} maxLength={80} autoComplete="name" required />
+                      <input type="email" placeholder={strings.gallery.guestEmail} value={guest.email} onChange={(e) => setGuest({ ...guest, email: e.target.value })} maxLength={200} autoComplete="email" inputMode="email" required />
+                      <input type="tel" placeholder={strings.gallery.guestPhone} value={guest.phone} onChange={(e) => setGuest({ ...guest, phone: e.target.value })} maxLength={20} autoComplete="tel" inputMode="tel" required />
+                      <textarea placeholder={strings.gallery.guestMessage} value={guest.message} onChange={(e) => setGuest({ ...guest, message: e.target.value })} maxLength={2000} rows={3} required />
+                      {/* Honeypot — hidden from people, filled by bots. */}
+                      <input type="text" name="website" value={guest.website} onChange={(e) => setGuest({ ...guest, website: e.target.value })} tabIndex={-1} autoComplete="off" className="gv-guest-hp" aria-hidden="true" />
+                      {RECAPTCHA_SITE_KEY && (
+                        <div className="gv-guest-captcha">
+                          <ReCAPTCHA ref={guestCaptchaRef} sitekey={RECAPTCHA_SITE_KEY} onChange={(t) => setGuestToken(t || "")} onExpired={() => setGuestToken("")} size="compact" />
+                        </div>
+                      )}
+                      {guestError && <p className="gv-guest-error">{guestError}</p>}
+                      <div className="gv-guest-actions">
+                        <button type="submit" className="gv-contact-btn" disabled={contacting}>{contacting ? "…" : strings.gallery.guestSend}</button>
+                        <button type="button" className="ss-btn ss-btn-outline ss-btn-sm" onClick={() => setGuestForm(null)}>{strings.common.cancel}</button>
+                      </div>
+                      <p className="gv-guest-privacy">{strings.gallery.guestPrivacy}</p>
+                    </form>
+                  )
                 )}
               </div>
             )}

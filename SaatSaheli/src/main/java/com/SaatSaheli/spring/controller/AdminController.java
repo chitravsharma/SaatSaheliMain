@@ -696,6 +696,9 @@ public class AdminController {
                 row.put("buyerId", c.getBuyerId());
                 row.put("buyerName", c.getBuyerName());
                 row.put("buyerHandle", c.getBuyerHandle());
+                row.put("guest", c.isGuest());
+                row.put("guestEmail", c.getGuestEmail());
+                row.put("guestPhone", c.getGuestPhone());
                 row.put("itemTitle", c.getItemTitle());
                 row.put("itemImageUrl", c.getItemImageUrl());
                 row.put("itemLink", c.getItemLink());

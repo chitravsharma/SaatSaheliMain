@@ -125,6 +125,7 @@ function Messages() {
   const otherOf = (c) => {
     const isSeller = String(c.sellerId) === String(user.userId);
     return {
+      guest: !!c.guestEmail && c.buyerId == null,
       name: isSeller ? c.buyerName : c.sellerName,
       handle: isSeller ? c.buyerHandle : c.sellerHandle,
       id: isSeller ? c.buyerId : c.sellerId,
@@ -169,7 +170,7 @@ function Messages() {
                 <img src={optimizeCloudinary(c.itemImageUrl)} alt="" className="msg-row-thumb" loading="lazy" />
                 <div className="msg-row-body">
                   <div className="msg-row-top">
-                    <span className="msg-row-name">{o.name}</span>
+                    <span className="msg-row-name">{o.name}{o.guest && <span className="msg-guest-badge">{s.guestBadge}</span>}</span>
                     <span className="msg-row-time">{fmtTime(c.lastMessageAt)}</span>
                   </div>
                   <div className="msg-row-item">{c.itemTitle}</div>
@@ -194,13 +195,24 @@ function Messages() {
               <button type="button" className="msg-back" onClick={() => navigate("/messages")} aria-label={strings.common.back}>&#8592;</button>
               <img src={optimizeCloudinary(active.itemImageUrl)} alt="" className="msg-thread-thumb" />
               <div className="msg-thread-meta">
-                <Link to={profileUrl(other.id, other.name, other.handle)} className="msg-thread-name">{other.name}</Link>
+                {other.guest
+                  ? <span className="msg-thread-name">{other.name}</span>
+                  : <Link to={profileUrl(other.id, other.name, other.handle)} className="msg-thread-name">{other.name}</Link>}
                 <span className="msg-thread-role">{other.role}</span>
                 <a href={active.itemLink} className="msg-thread-item" target="_blank" rel="noreferrer">{active.itemTitle}</a>
               </div>
               {active.status === "CLOSED" && <span className="msg-closed">{s.closed}</span>}
             </header>
 
+            {other.guest && (
+              <div className="msg-guest-banner">
+                <p>{s.guestBanner}</p>
+                <div className="msg-guest-contact">
+                  <a href={`mailto:${active.guestEmail}?subject=${encodeURIComponent(`Re: ${active.itemTitle || ""} on Saat Saheli`)}`} className="ss-btn ss-btn-primary ss-btn-sm">{s.guestReplyEmail}: {active.guestEmail}</a>
+                  {active.guestPhone && <a href={`tel:${active.guestPhone.replace(/[^+\d]/g, "")}`} className="ss-btn ss-btn-outline ss-btn-sm">{s.guestCall}: {active.guestPhone}</a>}
+                </div>
+              </div>
+            )}
             <div className="msg-scroll">
               {messages.length === 0 && <p className="msg-muted msg-first-hint">{s.firstHint}</p>}
               {messages.map(m => {
@@ -224,7 +236,7 @@ function Messages() {
               <textarea
                 value={draft}
                 onChange={(e) => setDraft(e.target.value)}
-                placeholder={active.status === "CLOSED" ? s.closedHint : s.composePlaceholder}
+                placeholder={active.status === "CLOSED" ? s.closedHint : other.guest ? s.guestNotePlaceholder : s.composePlaceholder}
                 maxLength={2000}
                 rows={1}
                 disabled={active.status === "CLOSED"}

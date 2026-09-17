@@ -59,7 +59,79 @@ public class MessagingService {
     }
 
     private boolean isParticipant(Conversation c, Long userId) {
-        return userId != null && (userId.equals(c.getSellerId()) || userId.equals(c.getBuyerId()));
+        return userId != null && (userId.equals(c.getSellerId()) || (c.getBuyerId() != null && userId.equals(c.getBuyerId())));
+    }
+
+    private static final java.util.regex.Pattern EMAIL = java.util.regex.Pattern.compile("^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$");
+    private static final java.util.regex.Pattern PHONE = java.util.regex.Pattern.compile("^[+\\d][\\d\\s().-]{6,19}$");
+
+    /**
+     * Enquiry from a visitor without an account. Name, email and phone are all
+     * required so the seller can reply directly; the thread lands in the seller's
+     * inbox tagged as a guest enquiry. Repeat enquiries from the same email about
+     * the same item append to the existing thread.
+     */
+    @Transactional
+    public Conversation guestEnquiry(String targetType, Long targetId, String name, String email,
+                                     String phone, String rawBody) {
+        String n = name == null ? "" : name.trim();
+        String e = email == null ? "" : email.trim();
+        String ph = phone == null ? "" : phone.trim();
+        String body = rawBody == null ? "" : rawBody.trim();
+        if (n.length() < 2 || n.length() > 80) throw new IllegalArgumentException("Please enter your name");
+        if (!EMAIL.matcher(e).matches() || e.length() > 200) throw new IllegalArgumentException("Please enter a valid email address");
+        if (!PHONE.matcher(ph).matches()) throw new IllegalArgumentException("Please enter a valid phone number");
+        if (body.isEmpty()) throw new IllegalArgumentException("Please write a message");
+        if (body.length() > MAX_BODY) body = body.substring(0, MAX_BODY);
+        if (!"GALLERY_IMAGE".equalsIgnoreCase(targetType)) {
+            throw new IllegalArgumentException("Only gallery items can be enquired about right now");
+        }
+        GalleryImage img = galleryImageRepo.findById(targetId).orElseThrow(() -> new NoSuchElementException("Item not found"));
+        Gallery gallery = galleryRepo.findById(img.getGalleryId()).orElseThrow(() -> new NoSuchElementException("Gallery not found"));
+        Long sellerId = gallery.getUserId();
+        User seller = sellerId == null ? null : userRepo.findById(sellerId).orElse(null);
+        if (seller == null || !img.isForSale() || !canUseMessaging(seller)) {
+            throw new IllegalArgumentException("This item is not currently for sale");
+        }
+
+        Conversation c = convRepo.findFirstBySellerIdAndTargetTypeAndTargetIdAndGuestEmailIgnoreCase(
+                sellerId, "GALLERY_IMAGE", targetId, e).orElseGet(() -> {
+            Conversation x = new Conversation();
+            x.setSellerId(sellerId);
+            x.setBuyerId(null);
+            x.setTargetType("GALLERY_IMAGE");
+            x.setTargetId(targetId);
+            x.setStatus("OPEN");
+            x.setCreatedDate(LocalDateTime.now());
+            return x;
+        });
+        c.setGuestName(n);
+        c.setGuestEmail(e);
+        c.setGuestPhone(ph);
+        String title = img.getCaption() != null && !img.getCaption().isBlank() ? img.getCaption() : gallery.getTitle();
+        c.setItemTitle(title);
+        c.setItemImageUrl(img.getImageUrl());
+        c.setItemLink("/gallery/" + gallery.getId() + "?img=" + img.getId());
+        if ("CLOSED".equalsIgnoreCase(c.getStatus())) throw new IllegalStateException("This conversation is closed");
+        c = convRepo.save(c);
+
+        ConversationMessage m = new ConversationMessage();
+        m.setConversationId(c.getId());
+        m.setSenderId(null);
+        m.setSenderName(n + " (guest)");
+        m.setBody(body);
+        m.setCreatedDate(LocalDateTime.now());
+        m = msgRepo.save(m);
+
+        c.setSellerUnread(c.getSellerUnread() + 1);
+        c.setLastPreview(body.length() > 160 ? body.substring(0, 160) + "…" : body);
+        c.setLastSenderId(null);
+        c.setLastMessageAt(m.getCreatedDate());
+        c = convRepo.save(c);
+
+        notifier.notifyRecipient(c, m, sellerId, false);
+        decorate(c, null);
+        return c;
     }
 
     private Conversation requireReadable(Long convId, User u) {
@@ -162,12 +234,17 @@ public class MessagingService {
         boolean senderIsSeller = senderId.equals(c.getSellerId());
         Long recipientId = senderIsSeller ? c.getBuyerId() : c.getSellerId();
         if (senderIsSeller) c.setBuyerUnread(c.getBuyerUnread() + 1); else c.setSellerUnread(c.getSellerUnread() + 1);
+        // Guest thread: the buyer has no inbox — the seller replies by email/phone;
+        // anything typed here is the seller's own record.
+        if (recipientId == null) {
+            c.setBuyerUnread(0);
+        }
         c.setLastPreview(body.length() > 160 ? body.substring(0, 160) + "…" : body);
         c.setLastSenderId(senderId);
         c.setLastMessageAt(m.getCreatedDate());
         convRepo.save(c);
 
-        notifier.notifyRecipient(c, m, recipientId, senderIsSeller);
+        if (recipientId != null) notifier.notifyRecipient(c, m, recipientId, senderIsSeller);
         return m;
     }
 
@@ -202,7 +279,11 @@ public class MessagingService {
 
     private void decorate(Conversation c, User viewer) {
         userRepo.findById(c.getSellerId()).ifPresent(s -> { c.setSellerName(displayName(s)); c.setSellerHandle(s.getHandle()); });
-        userRepo.findById(c.getBuyerId()).ifPresent(b -> { c.setBuyerName(displayName(b)); c.setBuyerHandle(b.getHandle()); });
+        if (c.getBuyerId() == null) {
+            c.setBuyerName((c.getGuestName() == null ? "Guest" : c.getGuestName()) + " (guest)");
+        } else {
+            userRepo.findById(c.getBuyerId()).ifPresent(b -> { c.setBuyerName(displayName(b)); c.setBuyerHandle(b.getHandle()); });
+        }
     }
 
     static String displayName(User u) {

@@ -96,3 +96,8 @@
   .msg-bubble { max-width: 88%; }
   .msg-compose { position: sticky; bottom: 0; }
 }
+.msg-guest-badge { margin-left: 6px; padding: 1px 6px; border-radius: 999px; background: #e0e7ff; color: #3730a3; font-size: 0.68rem; font-weight: 700; vertical-align: middle; }
+.msg-guest-banner { padding: 10px 14px; border-bottom: 1px solid var(--border-default); background: #eef2ff; color: #312e81; font-size: 0.85rem; }
+.msg-guest-banner p { margin: 0 0 8px; }
+.msg-guest-contact { display: flex; gap: 8px; flex-wrap: wrap; }
+.msg-guest-contact a { text-decoration: none; word-break: break-all; }

@@ -2713,6 +2713,8 @@ const AdminDashboard = () => {
                 const filtered = convos.filter(c => !q
                     || (c.sellerName || "").toLowerCase().includes(q)
                     || (c.buyerName || "").toLowerCase().includes(q)
+                    || (c.guestEmail || "").toLowerCase().includes(q)
+                    || (c.guestPhone || "").toLowerCase().includes(q)
                     || (c.itemTitle || "").toLowerCase().includes(q)
                     || (c.lastPreview || "").toLowerCase().includes(q));
                 const openCount = convos.filter(c => c.status !== "CLOSED").length;
@@ -2759,7 +2761,12 @@ const AdminDashboard = () => {
                                                 <a href={c.itemLink} target="_blank" rel="noreferrer">{c.itemTitle || `#${c.id}`}</a>
                                             </td>
                                             <td>{c.sellerName} <div style={{ fontSize: 11, color: "#888" }}>user #{c.sellerId}</div></td>
-                                            <td>{c.buyerName} <div style={{ fontSize: 11, color: "#888" }}>user #{c.buyerId}</div></td>
+                                            <td>
+                                                {c.buyerName}
+                                                {c.guest
+                                                    ? <div style={{ fontSize: 11, color: "#3730a3" }}>{c.guestEmail} · {c.guestPhone}</div>
+                                                    : <div style={{ fontSize: 11, color: "#888" }}>user #{c.buyerId}</div>}
+                                            </td>
                                             <td style={{ maxWidth: 320, whiteSpace: "pre-wrap", wordBreak: "break-word" }}>{c.lastPreview || <em style={{ color: "#888" }}>none yet</em>}</td>
                                             <td>{c.messageCount}</td>
                                             <td><span className={`status-badge ${c.status === "CLOSED" ? "status-deleted" : "status-published"}`}>{c.status}</span></td>

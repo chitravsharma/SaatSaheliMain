@@ -22,9 +22,17 @@ public class RecaptchaService {
     @Value("${RECAPTCHA_SECRET_KEY:}")
     private String secretKey;
 
+    /** Dev-only escape hatch (application-dev.properties) so local API tests can post public forms. */
+    @Value("${app.recaptcha.enabled:true}")
+    private boolean enabled;
+
     private final RestTemplate restTemplate = new RestTemplate();
 
     public boolean verify(String token, String clientIp) {
+        if (!enabled) {
+            log.warn("reCAPTCHA verification disabled by app.recaptcha.enabled=false (dev only)");
+            return true;
+        }
         if (secretKey == null || secretKey.isBlank()) {
             // No key configured — skip verification so local dev without keys still works.
             // Production must always set RECAPTCHA_SECRET_KEY.

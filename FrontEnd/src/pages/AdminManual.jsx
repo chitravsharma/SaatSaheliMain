@@ -198,7 +198,8 @@ const AdminManual = () => {
           lists every such conversation for safety oversight.
         </p>
         <ul>
-          <li>Each row shows the item, creator (seller), buyer, last message, message count and status. Search matches names, item titles and message text.</li>
+          <li>Each row shows the item, creator (seller), buyer, last message, message count and status. Search matches names, item titles, message text, and a guest&rsquo;s email/phone.</li>
+          <li><strong>Guest enquiries</strong> come from visitors without an account; the buyer column shows their email and phone. The seller replies to them by email/phone, so a guest thread normally holds only the enquiry and the seller&rsquo;s private notes.</li>
           <li><strong>Read</strong> opens the full thread below the table. Admins are strictly <strong>read-only</strong> &mdash; you cannot post into a private conversation.</li>
           <li><strong>Close</strong> freezes a thread that breaks community rules (scams, harassment, sharing bank details/OTPs). Both participants see it as closed and cannot send further messages. <strong>Reopen</strong> reverses this.</li>
           <li>Participants are told on the page that admins may review conversations, so oversight is expected and transparent. Keep what you read confidential and act only on rule violations.</li>

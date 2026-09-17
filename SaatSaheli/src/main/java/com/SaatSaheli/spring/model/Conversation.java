@@ -26,8 +26,19 @@ public class Conversation {
     @Column(name = "seller_id", nullable = false)
     private Long sellerId;
 
-    @Column(name = "buyer_id", nullable = false)
+    /** Null for a guest enquiry (visitor without an account) — see guest* fields. */
+    @Column(name = "buyer_id")
     private Long buyerId;
+
+    // ── Guest enquiry (buyer not logged in): contact details the seller replies to ──
+    @Column(name = "guest_name")
+    private String guestName;
+
+    @Column(name = "guest_email")
+    private String guestEmail;
+
+    @Column(name = "guest_phone")
+    private String guestPhone;
 
     /** GALLERY_IMAGE for now; polymorphic so books/recipes can follow. */
     @Column(name = "target_type", nullable = false)
@@ -116,6 +127,15 @@ public class Conversation {
     public void setBuyerEmailedAt(LocalDateTime t) { this.buyerEmailedAt = t; }
     public LocalDateTime getCreatedDate() { return createdDate; }
     public void setCreatedDate(LocalDateTime createdDate) { this.createdDate = createdDate; }
+    public String getGuestName() { return guestName; }
+    public void setGuestName(String guestName) { this.guestName = guestName; }
+    public String getGuestEmail() { return guestEmail; }
+    public void setGuestEmail(String guestEmail) { this.guestEmail = guestEmail; }
+    public String getGuestPhone() { return guestPhone; }
+    public void setGuestPhone(String guestPhone) { this.guestPhone = guestPhone; }
+    /** True when the buyer is a visitor without an account. */
+    public boolean isGuest() { return buyerId == null; }
+
     public String getSellerName() { return sellerName; }
     public void setSellerName(String sellerName) { this.sellerName = sellerName; }
     public String getSellerHandle() { return sellerHandle; }

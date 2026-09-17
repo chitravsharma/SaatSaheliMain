@@ -591,7 +591,8 @@ const UserManual = () => {
           <p>
             <strong>Messages</strong> is a private, one-to-one conversation
             between a buyer and the creator of an artwork marked{" "}
-            <em>For sale</em>. Any logged-in member can contact a seller;
+            <em>For sale</em>. Anyone can contact a seller &mdash; logged-in
+            members chat on the site, visitors leave their contact details;
             listing items For Sale (and so receiving enquiries) is part of the{" "}
             <strong>Premium</strong> and <strong>Creator</strong> plans. (This
             is different from the public <a href="#chat">Chat</a> rooms.)
@@ -611,6 +612,16 @@ const UserManual = () => {
               conversation; there is one thread per picture per buyer.
             </li>
           </ol>
+
+          <h3>Contacting a Seller Without an Account</h3>
+          <p>
+            Not logged in? <strong>Contact seller</strong> opens a short form
+            instead: your name, email address, phone number and message (all
+            required so the seller can reach you). The seller receives it in
+            their inbox and by email and replies to you directly by email or
+            phone. Prefer to chat on the site? Use the <em>Log in to chat</em>{" "}
+            link on the form.
+          </p>
 
           <h3>Replying as a Creator</h3>
           <p>

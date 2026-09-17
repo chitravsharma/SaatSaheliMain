@@ -16,7 +16,8 @@ public class ConversationMessage {
     @Column(name = "conversation_id", nullable = false)
     private Long conversationId;
 
-    @Column(name = "sender_id", nullable = false)
+    /** Null when sent by a guest (visitor without an account). */
+    @Column(name = "sender_id")
     private Long senderId;
 
     @Column(name = "sender_name")

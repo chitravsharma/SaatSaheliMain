@@ -23,6 +23,7 @@ public class MessagingController {
 
     @Autowired private MessagingService messaging;
     @Autowired private RateLimiter rateLimiter;
+    @Autowired private com.SaatSaheli.spring.service.RecaptchaService recaptchaService;
 
     private Long uid(HttpServletRequest r) { return (Long) r.getAttribute("jwtUserId"); }
 
@@ -39,6 +40,38 @@ public class MessagingController {
             return map(e);
         }
     }
+
+    /**
+     * POST /guest-enquiry — visitor without an account contacts a seller.
+     * Public; protected by reCAPTCHA (when configured), a honeypot field and a
+     * per-IP rate limit. Name, email and phone are required.
+     */
+    @PostMapping("/guest-enquiry")
+    public ResponseEntity<?> guestEnquiry(@RequestBody Map<String, Object> body, HttpServletRequest request) {
+        String ip = request.getRemoteAddr();
+        // Honeypot: real users never fill "website".
+        if (body.get("website") != null && !String.valueOf(body.get("website")).isBlank()) {
+            return ResponseEntity.ok(Map.of("ok", true));
+        }
+        if (!rateLimiter.tryAcquire("guest-enquiry:" + ip, 5, 60L * 60 * 1000)) {
+            return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).body(err("Too many enquiries from this connection. Please try again later."));
+        }
+        String token = body.get("recaptchaToken") == null ? null : body.get("recaptchaToken").toString();
+        if (!recaptchaService.verify(token, ip)) {
+            return ResponseEntity.badRequest().body(err("Please complete the reCAPTCHA challenge."));
+        }
+        try {
+            String type = body.get("targetType") == null ? "GALLERY_IMAGE" : body.get("targetType").toString();
+            Long targetId = Long.parseLong(String.valueOf(body.get("targetId")));
+            Conversation c = messaging.guestEnquiry(type, targetId,
+                    str(body, "name"), str(body, "email"), str(body, "phone"), str(body, "message"));
+            return ResponseEntity.ok(Map.of("ok", true, "conversationId", c.getId()));
+        } catch (Exception e) {
+            return map(e);
+        }
+    }
+
+    private static String str(Map<String, Object> b, String k) { return b.get(k) == null ? null : b.get(k).toString(); }
 
     @GetMapping("/conversations")
     public ResponseEntity<?> list(HttpServletRequest request) {
