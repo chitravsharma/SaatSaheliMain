@@ -384,10 +384,10 @@ const UserManual = () => {
             </li>
           </ol>
           <p>
-            Premium members can list up to 10 pictures at a time; Creator
-            members have no limit. If your subscription lapses your listings
-            are hidden (not deleted) until you renew. Free members see the
-            button locked with an upgrade prompt.
+            There is no limit on how many pictures you list &mdash; your plan&rsquo;s
+            gallery, picture and storage caps are the only limits. If your
+            subscription lapses your listings are hidden (not deleted) until you
+            renew. Free members see the button locked with an upgrade prompt.
           </p>
 
           <div className="manual-tip">
@@ -655,13 +655,13 @@ const UserManual = () => {
             </li>
             <li>
               <strong>Premium</strong> &mdash; 15 galleries, 300 pictures,
-              2&nbsp;GB; mark up to 10 pictures For Sale at a time; private
-              Messages; create up to 10 books of 50 pages; PDF/DOCX export.
+              2&nbsp;GB; mark any picture For Sale; private Messages; create
+              up to 10 books of 50 pages; PDF/DOCX export.
             </li>
             <li>
               <strong>Creator / Pro</strong> &mdash; 50 galleries, 1,500
-              pictures, 10&nbsp;GB; unlimited items For Sale; 25 books of 100
-              pages; plus the Creator extras listed on the Plans page.
+              pictures, 10&nbsp;GB; 25 books of 100 pages; plus the Creator
+              extras listed on the Plans page.
             </li>
           </ul>
 

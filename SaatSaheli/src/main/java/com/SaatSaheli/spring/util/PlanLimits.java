@@ -30,7 +30,7 @@ public final class PlanLimits {
     public final long maxStorageBytes;
     /** Mark gallery items For Sale, contact creators, and use the private Messages inbox. */
     public final boolean canUseMarketChat;
-    /** Gallery items that may be marked For Sale at once (UNLIMITED for Creator/Pro). */
+    /** Gallery items that may be marked For Sale at once — UNLIMITED on every paid plan (the gallery/picture/storage caps are the only limits). */
     public final int maxForSaleItems;
 
     private PlanLimits(String plan, int maxBooks, int maxPagesPerBook, int maxImages,
@@ -55,7 +55,7 @@ public final class PlanLimits {
         switch (p) {
             case "Premium":
                 return new PlanLimits("Premium", 10, 50, 300, true, true,
-                        15, 300, 2 * GB, true, 10);
+                        15, 300, 2 * GB, true, UNLIMITED);
             case "Gold":     // legacy tier (no longer sold) — treat as Creator-level
             case "Creator":
                 return new PlanLimits(p, 25, 100, 1500, true, true,

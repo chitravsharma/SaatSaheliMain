@@ -37,7 +37,7 @@ const plans = [
     priceNote: "/ month",
     monthlyPrice: 3,
     features: [
-      "Mark gallery items For Sale (up to 10 at a time)",
+      "Mark any gallery item For Sale",
       "Contact creators & chat privately about items",
       "Gallery: 15 galleries · 300 pictures · 2 GB",
       "Create up to 10 books · 50 pages each",
@@ -59,7 +59,6 @@ const plans = [
     monthlyPrice: 7,
     features: [
       "Everything in Premium",
-      "Unlimited items For Sale",
       "Sold archive & enquiry stats on your profile",
       "Custom \u201chow to buy\u201d note on every item",
       "Featured Creator badge · first in Home \u201cFresh\u201d",
