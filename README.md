@@ -72,3 +72,9 @@ npm start
 ```
 
 The frontend dev server runs on port 3000.
+
+## Reference documents
+
+- `TECHNICAL_DESIGN.md` — architecture, third-party services, data model, plans & quotas, gallery For Sale + private messaging, profile handles, admin moderation.
+- `TESTING_DOCUMENT.md` — manual + automated test matrix (Section 11 covers the 2026-09 features).
+- In-app manuals: `/manual` (users) and `/admin-manual` (admins) — kept in `FrontEnd/src/pages/UserManual.jsx` / `AdminManual.jsx`.

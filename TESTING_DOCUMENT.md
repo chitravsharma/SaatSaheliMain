@@ -1,7 +1,7 @@
 # SaatSaheli — Comprehensive Testing Document
 
-**Date:** April 3, 2026
-**Version:** Post-fix (all 33 functional issues addressed)
+**Date:** April 3, 2026 — Section 11 added September 17, 2026
+**Version:** Post-fix (all 33 functional issues addressed) + plans / For Sale / messaging / profile handles
 **Test URL (Local):** http://localhost:3000/SaatSaheliMain/
 **Backend:** http://localhost:8081
 **Contact Email:** avikaventures.info@gmail.com
@@ -494,3 +494,82 @@ If a test fails, log it here:
 
 *Total test cases: 140+*
 *Generated April 3, 2026*
+
+---
+
+## SECTION 11: PLANS, GALLERY FOR SALE, PRIVATE MESSAGES, PROFILE HANDLES (added 2026-09-17)
+
+Automated coverage: three Playwright scripts drive the real dev app
+(`npm start` on :3000 + backend on :8081 with the `dev` profile) in headless
+Chrome — `ui_test.py` (39 checks: seller / anonymous / Free buyer / Premium
+buyer on a phone viewport / seller reply / admin tab), `guest_test.py`
+(14 checks: guest form + seller's guest thread), `lb2_test.py` (21 checks:
+one-screen lightbox on 360×640, 390×844, 1280×800). Pre-conditions: the
+`TermsGate` must be bypassed per user with
+`localStorage.terms_accepted_<userId> = "true"`, and the dev profile has
+`app.recaptcha.enabled=false`. Dev accounts: seller `magtest@example.com`
+(Creator), buyer `chitra.shr@gmail.com` (Premium) — password `MagTest2026`.
+
+### 11.1 Plans & usage
+| # | Test | Expected |
+|---|---|---|
+| 1 | Log in (any plan) → My Account | "Your plan & usage" card shows plan badge, bars for galleries / pictures / storage (books on paid plans), Upgrade link for Free/Premium |
+| 2 | Free user with 2 galleries → create a 3rd | 403 + upgrade modal "reached your Free plan limit of 2 galleries" |
+| 3 | Free user with 20 pictures → upload another | Upgrade modal "limit of 20 pictures"; existing pictures still editable/deletable |
+| 4 | Any user → `/pricing` | Free / Premium / Creator cards show gallery limits, For Sale and messaging lines; dark readable text |
+| 5 | Admin account | No caps enforced; usage card hidden |
+
+### 11.2 Mark for sale (seller)
+| # | Test | Expected |
+|---|---|---|
+| 1 | Premium/Creator → Account → Gallery → picture → **Mark for sale** → price `₹5,000`, note, Save | Chip becomes "For sale · ₹5,000"; public gallery tile shows the ribbon; lightbox shows badge · price · by seller · Contact seller on one screen |
+| 2 | Tick **Mark as sold** | Ribbon "Sold", Contact button gone, price hidden |
+| 3 | **Remove from sale** | Chip back to "Mark for sale" |
+| 4 | Free user | Chip reads "Mark for sale · Premium"; click → upgrade modal |
+| 5 | Seller's plan set to Free while items listed | Ribbons disappear publicly; DB still has the listing; re-upgrade restores |
+| 6 | Owner opens their own for-sale picture | No Contact button (cannot message self) |
+
+### 11.3 Contact seller — logged in
+| # | Test | Expected |
+|---|---|---|
+| 1 | Any logged-in member (Free included) → Contact seller | Lands on `/messages/<id>`; envelope appears in header |
+| 2 | Send a message; seller logs in | Seller sees red badge on envelope, bell notification, one email (further emails throttled 15 min/thread) |
+| 3 | Same buyer clicks Contact again | Same thread re-opens (idempotent) |
+| 4 | Phone viewport | List and thread are separate screens; back arrow returns; composer stays above keyboard; no horizontal scroll |
+| 5 | Desktop | Enter sends; Shift+Enter newline. Phones: Enter = newline, button sends |
+| 6 | Admin closes thread (Admin → Messages → Close) | Participants see "Closed"; send returns "This conversation is closed"; Reopen reverses |
+| 7 | Unrelated member opens `/messages/<someone else's id>` | 403 / "Could not load this conversation" |
+
+### 11.4 Contact seller — guest (not logged in)
+| # | Test | Expected |
+|---|---|---|
+| 1 | Logged out → Contact seller | Inline form: name, email, phone, message, reCAPTCHA; "Have an account? Log in to chat" link |
+| 2 | Submit without phone / with `12` | Blocked: native required, then "Please enter a valid phone number" |
+| 3 | Valid submit | "Sent! The seller has your message…"; seller inbox shows thread with **Guest** badge, banner with Reply-by-email (mailto) and Call (tel); seller email contains name/email/phone |
+| 4 | Second enquiry, same email, same item | Appends to the same thread |
+| 5 | Bot fills hidden `website` field | 200 OK but nothing stored |
+| 6 | 11th enquiry from one IP within an hour (prod) | 429 "Too many enquiries from this connection" |
+| 7 | Admin → Messages | Guest row shows email · phone; search matches them |
+
+### 11.5 Lightbox
+| # | Test | Expected |
+|---|---|---|
+| 1 | Open any picture | Picture fits the screen; fixed bar top-right: − / 100% / + / × |
+| 2 | Tap picture or + | Zooms (max 400%), pans by scrolling; Reset / tap again returns to 100% |
+| 3 | For-sale picture on 360×640 | Badge, price, seller, Contact seller all visible without scrolling |
+| 4 | Guest form open | Overlay scrolls to reach Send; no horizontal scroll |
+
+### 11.6 Profile handles & sharing
+| # | Test | Expected |
+|---|---|---|
+| 1 | Open `/profile/1/Chitra-Sharma` or `/profile/1` | Redirects to `/profile/Chitra-Sharma` |
+| 2 | Edit Profile → Profile URL id | Suggested from name; live "available / taken / invalid"; saving a taken id → 409 message; all-digits rejected |
+| 3 | Two users named the same | Second gets `Name2` |
+| 4 | Share a profile link in WhatsApp | Preview shows the creator's photo + name + headline |
+| 5 | My Account | Share pill in card corner + "Share My Profile" button (copy link / native share) |
+
+### 11.7 Admin Comments tab
+| # | Test | Expected |
+|---|---|---|
+| 1 | Admin → Comments | All comments, newest first, item deep-links (blog → `/blogs/:id`) |
+| 2 | Remove a comment | Gone from the item; visible here with "Show removed" |

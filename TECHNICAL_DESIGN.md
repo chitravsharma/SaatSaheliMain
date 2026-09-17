@@ -1,7 +1,7 @@
 # SaatSaheli — Technical Design
 
 Living document. Updated as services / decisions change.
-Last revised: 2026-05-10.
+Last revised: 2026-09-17 (plans & quotas, gallery For Sale, private messages, profile handles, admin moderation tabs).
 
 ---
 
@@ -24,9 +24,10 @@ Last revised: 2026-05-10.
 - **Frontend:** Create React App 5.0.1 + React 19.1.1 + react-router 7.9.1.
   Built and deployed by Render alongside the backend (`pom.xml` copies
   `FrontEnd/build/` into `target/classes/static`).
-- **Backend:** Spring Boot 3.4.5 on Java 21. Deployed to **Render Starter**
-  (always-on). Source at `SaatSaheli/`.
-- **Database:** **Neon Postgres** (paid Launch plan, autosuspend OFF).
+- **Backend:** Spring Boot 3.4.5 on Java 21. Deployed to **Render Standard
+  (1 CPU / 2 GB)** as ONE Docker web service that also serves the React build;
+  JVM flags live in the root `Dockerfile` (`-Xmx1024m`). Source at `SaatSaheli/`.
+- **Database:** **Neon Postgres** (paid Launch plan, autosuspend ON — low steady load).
   Connection via env vars `NEON_DB_URL` / `NEON_DB_USERNAME` / `NEON_DB_PASSWORD`.
   HikariCP pool: max 10, min idle 2, keepalive 5 min.
 - **Static assets:** Routed via `MediaStorageService` (interface), with two
@@ -146,9 +147,12 @@ without keys). In production both must be set.
 
 ### 2.6 Render (hosting)
 
-- Backend: Render web service (Starter), always-on.
-- Auto-deploys on push to `postgres-migration` branch.
-- ~3–5 min from push to live.
+- One Docker web service (Standard, 2 GB) built from the root `Dockerfile`;
+  React build is bundled into the Spring Boot jar, no separate frontend deploy.
+- Deploy branch `postgres-migration`, **Manual Deploy only** — a push alone
+  does not publish. ~5 min from click to live; zero-downtime health checks.
+- ⚠️ The installed PWA's service worker keeps the previous bundle: after a
+  deploy, verify in Incognito or unregister the SW before judging the UI.
 
 ### 2.7 Email (SMTP)
 
@@ -347,7 +351,143 @@ Canvas: **550 × 700 px** (portrait) — hard-coded in
 
 ---
 
-## 7. Open / planned
+## 7. Membership plans, quotas & storage accounting (2026-09)
+
+`PlanLimits.java` is the single source of truth; the Pricing page cards and
+the Account "Your plan & usage" meter are rendered from the same numbers via
+`GET /api/account/usage`.
+
+| | Free | Premium $3/mo | Creator / Pro $7/mo |
+|---|---|---|---|
+| Galleries · pictures · storage | 2 · 20 · 100 MB | 15 · 300 · 2 GB | 50 · 1,500 · 10 GB |
+| Books · pages/book | ✗ | 10 · 50 | 25 · 100 |
+| Mark gallery items For Sale (`canUseMarketChat`) | ✗ | ✓ unlimited | ✓ unlimited |
+| Seller inbox (receive buyer enquiries) | ✗ | ✓ | ✓ |
+| Contact a seller | ✓ (any member, and visitors via guest form) | ✓ | ✓ |
+
+- **Storage ledger:** `media_assets (url UNIQUE, size_bytes, content_type)`.
+  `R2StorageService.putObject` records every object it stores. A one-time
+  `ApplicationReadyEvent` backfill (`QuotaService.backfillLedger`, async,
+  idempotent, `app.quota.backfill-on-startup`) HEADs any referenced R2 URL
+  that predates the ledger.
+- **Usage is derived, not counted:** `QuotaService.usageFor(userId)` collects
+  the URLs the user's content references (gallery images, book pages
+  `imageUrl`/`imageUrl2`, recipe + article images, profile photo) and sums
+  their ledger sizes — so deleting content lowers usage without hooking every
+  delete path. Legacy Cloudinary URLs have no ledger row and count 0.
+- **Gates** (all throw `PlanLimitException` → `403 {error, upgradeRequired:true}`,
+  which the frontend's global `UpgradeModal` renders): `assertCanCreateGallery`
+  (`POST /api/galleries`), `assertCanAddPicture` (`POST /api/galleries/{id}/images`,
+  count + bytes), `assertCanStore` (`POST /api/upload`, bytes only — the
+  upload's purpose is unknown there). Book caps are unchanged (`BookService`).
+- **Grandfathering:** limits only block *new* uploads; a user already over a
+  cap keeps everything and can still edit/delete/publish. Admins are exempt
+  from every cap.
+- **Capacity (measured 2026-09-16):** R2 900 objects / 499 MB (median 143 KB,
+  avg 568 KB); DB ~15 MB. R2 costs $0.015/GB-mo — a Pro user at the full
+  10 GB cap costs ~$0.15/mo. Storage never limits growth; Render RAM during
+  PDF imports does.
+
+---
+
+## 8. Gallery items For Sale + private messaging (2026-09)
+
+**Model:** the platform never takes payment. A creator marks a gallery picture
+For Sale; buyers reach the seller through a private thread (or a contact form
+if not logged in); price/shipping/payment are agreed directly.
+
+### 8.1 For Sale (seller side — Premium/Creator, admins exempt)
+- `gallery_images` + `for_sale BOOLEAN DEFAULT false` (JPA field is `Boolean`,
+  because rows created before the column existed are NULL), `sale_price` (free
+  text: "₹5,000", "$120", "Ask for price"), `sale_status AVAILABLE|SOLD`,
+  `sale_note TEXT` (size, medium, shipping, how to pay).
+- `PUT /api/galleries/images/{id}/sale {forSale, salePrice, saleStatus, saleNote}`
+  — owner only via JWT; **partial** update (absent field = keep). Turning ON
+  requires `canUseMarketChat`; turning OFF / editing an existing listing is
+  always allowed so a lapsed subscriber can tidy up.
+- `GalleryService.maskSaleIfIneligible` strips the sale fields from public
+  responses when the owner's current plan lacks selling — the DB keeps them
+  and they reappear on resubscribe.
+- UI: Account → Gallery → chip under each picture (`Mark for sale` / `For sale ·
+  ₹5,000` / `Sold`); Free sees the chip locked and gets the upgrade modal.
+  Public: ribbon on the tile; in the lightbox a one-screen strip — badge ·
+  price · *by seller* (profile link) · **Contact seller**.
+
+### 8.2 Conversations
+```
+conversations          id, seller_id, buyer_id (NULL = guest), target_type, target_id,
+                       guest_name/email/phone, item_title, item_image_url, item_link,
+                       status OPEN|CLOSED, last_preview, last_sender_id, last_message_at,
+                       seller_unread, buyer_unread, seller_emailed_at, buyer_emailed_at
+                       UNIQUE (seller_id, buyer_id, target_type, target_id)
+conversation_messages  id, conversation_id, sender_id (NULL = guest), sender_name, body, is_deleted, created_date
+```
+`target_type` is polymorphic (`GALLERY_IMAGE` today) so books/recipes can be
+sold later without a schema change.
+
+**`/api/messages`** (JWT unless noted):
+| Route | Who | Notes |
+|---|---|---|
+| `POST /conversations {targetType,targetId}` | any member | find-or-create; rejects own item, not-for-sale, ineligible seller |
+| `POST /guest-enquiry {targetId,name,email,phone,message,recaptchaToken,website}` | **public** | name+email+phone all required; reCAPTCHA; honeypot `website`; `app.messages.guest-enquiries-per-hour` per IP (prod 10, dev 1000); same email + item appends to the existing thread |
+| `GET /conversations`, `GET /conversations/{id}` | participant | decorated with names/handles; guest name shown as "Name (guest)" |
+| `GET /conversations/{id}/messages?after=<id>` | participant or admin | cheap poll; client polls every 5 s |
+| `POST /conversations/{id}/messages {body}` | participants only | ≤2,000 chars, 20/min/user (`RateLimiter`); closed thread → 400; admins cannot write |
+| `POST /conversations/{id}/read` | participant | zero own unread counter |
+| `GET /unread-count` | any | `{count, eligible}` — `eligible` (seller plan, admin, or has a thread) drives the header envelope |
+
+- **Guest threads:** the buyer has no inbox. The seller sees a *Guest* badge
+  and a banner with `mailto:` / `tel:` buttons and replies off-site; anything
+  the seller types in that thread is kept as a private note (no recipient).
+- **Notifications** (`MessagingNotifier`, separate bean so `@Async` is honoured):
+  bell `Notification` type `MESSAGE` → `/messages/{id}` on every message; email
+  via `EmailService.sendMessageNotification` throttled to one per thread per
+  side per 15 min (`*_emailed_at`). Guest enquiries put the buyer's name /
+  email / phone into the seller's email body.
+- **Admin oversight (read-only):** `GET /api/admin/conversations` (guest
+  email/phone included), `GET /api/admin/conversations/{id}/messages`,
+  `PUT /api/admin/conversations/{id}/status {OPEN|CLOSED}`. Admin → Messages
+  tab. Threads show "Saat Saheli admins may review conversations for safety."
+- **Frontend:** `pages/Messages.jsx` (+css) — list + thread, phones show one
+  or the other; `modules/MessagesEnvelope.jsx` in the header; guest form and
+  zoomable lightbox in `pages/GalleryView.jsx`.
+
+---
+
+## 9. Creator profile handles & share previews (2026-09)
+
+- `users.handle` (UNIQUE, case-insensitive uniqueness enforced in
+  `ProfileHandleService`): 2–40 chars of `\p{L}\p{M}\p{N}-` (the `\p{M}` keeps
+  Hindi matras), never all-digits so `/profile/{key}` can distinguish a handle
+  from a legacy numeric id. Generated from display name (else first+last);
+  collisions become `Name2`, `Name3`…; startup backfill assigns one to every
+  existing user; signup assigns immediately.
+- `PUT /api/auth/user/{id}` accepts `handle` (blank = regenerate; invalid →
+  400; taken → 409). `GET /api/auth/handle-available?handle=` backs the live
+  check on the Create/Edit Profile form ("Profile URL id").
+- `GET /api/auth/public-profile/{key}` resolves handle **or** legacy id.
+  Content models carry `@Transient authorHandle`; `profileUrl(userId, name,
+  handle)` in `utils/api.js` prefers the handle and falls back to the old
+  `/profile/{id}/{slug}` form, which `PublicProfile` redirects to the canonical
+  `/profile/{handle}`.
+- `OpenGraphController` also rewrites `og:*` for `/profile/{key}[/{slug}]`
+  (creator photo, name, headline) so shared profile links show the creator's
+  picture. Account page has a Share pill (native share sheet / copy link).
+
+---
+
+## 10. Admin moderation tabs (2026-09)
+
+- **Comments:** `GET /api/admin/comments?days=N` — every comment site-wide,
+  enriched with item title + deep link via `NotificationService.resolveTarget`
+  (Blog → `/blogs/:id`, Poetry → `/poems/:id`, else `/articles/:id`);
+  `DELETE /api/admin/comments/{id}` soft-deletes (admin moderation; the public
+  delete endpoint still requires the author).
+- **Messages:** see §8.2.
+
+---
+
+## 11. Open / planned
 
 | Item | State | Doc |
 |---|---|---|
@@ -357,11 +497,14 @@ Canvas: **550 × 700 px** (portrait) — hard-coded in
 | Per-magazine size/orientation | Designed | Section 4 |
 | Privacy/tracker cleanup (self-host fonts, replace GA4, replace reCAPTCHA) | Logged | `memory/project_saatsaheli_tracker_cleanup.md` |
 | #24 SuperAdmin Phase 3 (admin UI) | Phase 1+2 shipped, Phase 3 pending | `memory/project_saatsaheli_superadmin_impersonation.md` |
-| Render OOM 2026-05-09 fix (DocumentExtractionService 150→100 DPI JPEG) | Written, never committed; lost when repo relocated. Re-do | `memory/project_saatsaheli_oom_2026-05-09.md` |
+| Render OOM — instance now Standard 2 GB, heap 1 GB (2026-08) | **Measure peak RSS on next magazine upload**; async PDF pipeline still the permanent fix | `memory/project_saatsaheli_oom_2026-05-09.md` |
+| Creator/Pro card extras: Sold archive on profile, enquiry stats, Featured badge / first in Home "Fresh" | Promised on `/pricing`, **not built** (the "how to buy" note is) | Section 8 |
+| Selling books/recipes (polymorphic `target_type`) | Schema ready, no UI | Section 8 |
+| Guest → on-site reply link (token, no account) | Designed, not built; sellers reply by email/phone today | Section 8.2 |
 
 ---
 
-## 8. Operational reminders
+## 12. Operational reminders
 
 - **Never hit prod DB from local backend.** Always use `-Dspring-boot.run.profiles=dev`.
   Default profile = prod Neon.
@@ -381,6 +524,12 @@ Canvas: **550 × 700 px** (portrait) — hard-coded in
   piped through `sed 's/=.*/=<redacted>/'`. R2 and Cloudinary secrets
   have already leaked once each via unfiltered greps and forced
   emergency rotations.
+- **After every deploy, check the UI in Incognito.** The PWA service worker
+  serves the previous bundle to returning browsers; "the feature isn't there"
+  after a green deploy has been this every time.
+- **Dev profile skips reCAPTCHA** (`app.recaptcha.enabled=false` in
+  `application-dev.properties`) and allows 1000 guest enquiries/IP/hour so
+  local API tests can post public forms. Prod verifies and limits to 10.
 - **Never commit `.env` files.** Both backend and frontend `.env` are
   gitignored. The repo only ships `.env.example` placeholders. When
   re-cloning, copy `.env` from a known-good source (the previous working
