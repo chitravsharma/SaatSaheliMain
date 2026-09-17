@@ -591,10 +591,10 @@ const UserManual = () => {
           <p>
             <strong>Messages</strong> is a private, one-to-one conversation
             between a buyer and the creator of an artwork marked{" "}
-            <em>For sale</em>. It is part of the <strong>Premium</strong> and{" "}
-            <strong>Creator</strong> plans &mdash; both the person asking and
-            the creator need a plan that includes it. (This is different from
-            the public <a href="#chat">Chat</a> rooms, which everyone can use.)
+            <em>For sale</em>. Any logged-in member can contact a seller;
+            listing items For Sale (and so receiving enquiries) is part of the{" "}
+            <strong>Premium</strong> and <strong>Creator</strong> plans. (This
+            is different from the public <a href="#chat">Chat</a> rooms.)
           </p>
 
           <h3>Contacting a Creator About an Artwork</h3>
@@ -650,8 +650,8 @@ const UserManual = () => {
             <li>
               <strong>Free</strong> &mdash; read everything, comment, build a
               profile and share it, and keep a small gallery: 2 galleries,
-              20 pictures, 100&nbsp;MB. Cannot create books, mark items For
-              Sale, or message creators.
+              20 pictures, 100&nbsp;MB; message sellers about artwork For
+              Sale. Cannot create books or mark items For Sale.
             </li>
             <li>
               <strong>Premium</strong> &mdash; 15 galleries, 300 pictures,

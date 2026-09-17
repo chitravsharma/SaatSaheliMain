@@ -460,7 +460,7 @@ export const en = {
     usageStorage: "Storage",
     usageBooks: "Books",
     usageUpgrade: "Upgrade",
-    usageMarketNote: "Marking gallery items For Sale and messaging creators are Premium features.",
+    usageMarketNote: "Marking gallery items For Sale is a Premium feature.",
     saleMark: "Mark for sale",
     salePremium: "Premium",
     saleForSale: "For sale",
@@ -473,7 +473,7 @@ export const en = {
     saleSaved: "Sale details saved.",
     saleRemoved: "Removed from sale.",
     saleFailed: "Could not save sale details.",
-    saleUpgradeMsg: "Marking gallery items For Sale is a Premium feature. Upgrade to list your artwork and chat with buyers.",
+    saleUpgradeMsg: "Marking gallery items For Sale is a Premium feature. Upgrade to list your artwork and hear from buyers.",
     labelHeadline: "Headline",
     labelLocation: "Location",
     labelBio: "About Me",
@@ -688,8 +688,8 @@ export const en = {
     closed: "Closed",
     closedHint: "This conversation has been closed.",
     privacyNote: "Private between you and the other party. Saat Saheli admins may review conversations for safety.",
-    lockedText: "Private messaging with creators is part of the Premium and Creator plans.",
-    lockedCta: "See plans",
+    lockedText: "Please log in to see your messages.",
+    lockedCta: "Log in",
   },
 
   gallery: {
@@ -1249,7 +1249,7 @@ export const hi = {
     usageStorage: "स्टोरेज",
     usageBooks: "किताबें",
     usageUpgrade: "अपग्रेड करें",
-    usageMarketNote: "गैलरी आइटम को बिक्री के लिए चिह्नित करना और रचनाकारों को संदेश भेजना प्रीमियम सुविधाएँ हैं।",
+    usageMarketNote: "गैलरी आइटम को बिक्री के लिए चिह्नित करना एक प्रीमियम सुविधा है।",
     saleMark: "बिक्री के लिए चिह्नित करें",
     salePremium: "प्रीमियम",
     saleForSale: "बिक्री के लिए",
@@ -1477,8 +1477,8 @@ export const hi = {
     closed: "बंद",
     closedHint: "यह बातचीत बंद कर दी गई है।",
     privacyNote: "यह आपके और दूसरे पक्ष के बीच निजी है। सुरक्षा के लिए सात सहेली के एडमिन बातचीत की समीक्षा कर सकते हैं।",
-    lockedText: "रचनाकारों के साथ निजी संदेश प्रीमियम और क्रिएटर योजनाओं का हिस्सा है।",
-    lockedCta: "योजनाएँ देखें",
+    lockedText: "अपने संदेश देखने के लिए कृपया लॉग इन करें।",
+    lockedCta: "लॉग इन करें",
   },
 
   gallery: {

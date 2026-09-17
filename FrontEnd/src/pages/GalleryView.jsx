@@ -15,9 +15,8 @@ function GalleryView() {
   const { requireLogin } = useLoginGate();
   const [contacting, setContacting] = useState(false);
 
-  // "Contact creator" on an item For Sale → open (or resume) the private thread.
-  // Logged-out → login gate; Free plan → the API answers 403 upgradeRequired and
-  // the global UpgradeModal takes over.
+  // "Contact seller" on an item For Sale → open (or resume) the private thread.
+  // Any logged-in member may contact a seller; logged-out → login gate.
   const contactCreator = async (imageId) => {
     if (!user) {
       requireLogin(`${window.location.pathname}?img=${imageId}`);

@@ -28,7 +28,7 @@ public final class PlanLimits {
     public final int maxPictures;
     /** Total bytes of media this user's content references on R2. */
     public final long maxStorageBytes;
-    /** Mark gallery items For Sale, contact creators, and use the private Messages inbox. */
+    /** Seller side: mark gallery items For Sale and receive buyer enquiries in Messages. (Any member may contact a seller.) */
     public final boolean canUseMarketChat;
     /** Gallery items that may be marked For Sale at once — UNLIMITED on every paid plan (the gallery/picture/storage caps are the only limits). */
     public final int maxForSaleItems;

@@ -192,8 +192,8 @@ const AdminManual = () => {
       <section className="admin-manual-section" id="messages-tab">
         <h2>8. Messages Tab (Private Buyer &harr; Creator)</h2>
         <p>
-          Premium and Creator members can mark gallery pictures <em>For Sale</em>; other
-          Premium members can then open a private conversation with the creator. The site
+          Premium and Creator members can mark gallery pictures <em>For Sale</em>; any
+          logged-in member can then open a private conversation with the seller. The site
           never handles payment &mdash; the two parties agree terms in the thread. This tab
           lists every such conversation for safety oversight.
         </p>

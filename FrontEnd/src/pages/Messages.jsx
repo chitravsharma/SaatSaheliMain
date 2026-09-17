@@ -34,7 +34,7 @@ function Messages() {
 
   const [conversations, setConversations] = useState([]);
   const [listLoading, setListLoading] = useState(true);
-  const [locked, setLocked] = useState(false); // plan doesn't include messaging
+  const [locked, setLocked] = useState(false); // not authenticated (shouldn't happen behind ProtectedRoute)
   const [active, setActive] = useState(null);
   const [messages, setMessages] = useState([]);
   const [draft, setDraft] = useState("");
@@ -49,7 +49,7 @@ function Messages() {
       setConversations(Array.isArray(r.data) ? r.data : []);
       setLocked(false);
     } catch (err) {
-      if (err?.response?.status === 403) setLocked(true);
+      if (err?.response?.status === 401 || err?.response?.status === 403) setLocked(true);
     } finally {
       setListLoading(false);
     }
@@ -139,7 +139,7 @@ function Messages() {
         <div className="msg-locked">
           <h1>{s.title}</h1>
           <p>{s.lockedText}</p>
-          <Link to="/pricing" className="ss-btn ss-btn-primary">{s.lockedCta}</Link>
+          <Link to="/Login" className="ss-btn ss-btn-primary">{s.lockedCta}</Link>
         </div>
       </div>
     );

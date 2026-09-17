@@ -2,7 +2,6 @@ package com.SaatSaheli.spring.service;
 
 import com.SaatSaheli.spring.model.*;
 import com.SaatSaheli.spring.repository.*;
-import com.SaatSaheli.spring.util.PlanLimitException;
 import com.SaatSaheli.spring.util.PlanLimits;
 import com.SaatSaheli.spring.util.RoleUtil;
 import org.slf4j.Logger;
@@ -15,7 +14,9 @@ import java.time.LocalDateTime;
 import java.util.*;
 
 /**
- * Private buyer ↔ seller messaging about items For Sale (Premium+ on both sides).
+ * Private buyer ↔ seller messaging about items For Sale. Any logged-in member may
+ * contact a seller; only the seller side needs a plan that includes selling
+ * (an item is only For Sale while its owner's plan allows it).
  *
  * Access: the two participants read + write; ADMIN/SUPER_ADMIN read every thread
  * (and may close one) but never write into it. Nothing is real-time — the client
@@ -38,22 +39,22 @@ public class MessagingService {
 
     public boolean isAdmin(User u) { return u != null && RoleUtil.isAdmin(u.getRole()); }
 
-    /** Premium/Creator (or admin) may use private messaging. */
+    /** Seller side: Premium/Creator (or admin) may have items For Sale and receive enquiries. */
     public boolean canUseMessaging(User u) {
         return u != null && (isAdmin(u) || PlanLimits.forPlan(u.getPlan()).canUseMarketChat);
     }
 
+    /** Show the inbox/envelope to sellers, admins, and anyone who already has a thread. */
     public boolean isEligible(Long userId) {
         User u = userId == null ? null : userRepo.findById(userId).orElse(null);
-        return canUseMessaging(u);
+        if (u == null) return false;
+        return canUseMessaging(u) || !convRepo.findMine(userId).isEmpty();
     }
 
+    /** Any logged-in member can message. */
     private User requireMessagingUser(Long userId) {
         User u = userId == null ? null : userRepo.findById(userId).orElse(null);
         if (u == null) throw new IllegalStateException("Authentication required");
-        if (!canUseMessaging(u)) {
-            throw new PlanLimitException("Private messaging with creators is a Premium feature. Upgrade to contact this creator.");
-        }
         return u;
     }
 
@@ -117,14 +118,12 @@ public class MessagingService {
     }
 
     public long unreadCount(Long userId) {
-        User u = userId == null ? null : userRepo.findById(userId).orElse(null);
-        if (u == null || !canUseMessaging(u)) return 0;
+        if (userId == null) return 0;
         return convRepo.unreadFor(userId);
     }
 
     public Conversation get(Long convId, Long userId) {
-        User u = userRepo.findById(userId).orElseThrow(() -> new IllegalStateException("Authentication required"));
-        if (!isAdmin(u)) requireMessagingUser(userId);
+        User u = requireMessagingUser(userId);
         Conversation c = requireReadable(convId, u);
         decorate(c, u);
         return c;
@@ -133,8 +132,7 @@ public class MessagingService {
     // ── Messages ─────────────────────────────────────────────────────────────
 
     public List<ConversationMessage> messages(Long convId, Long userId, Long afterId) {
-        User u = userRepo.findById(userId).orElseThrow(() -> new IllegalStateException("Authentication required"));
-        if (!isAdmin(u)) requireMessagingUser(userId);
+        User u = requireMessagingUser(userId);
         requireReadable(convId, u);
         List<ConversationMessage> list = afterId == null || afterId <= 0
                 ? msgRepo.findByConversationIdOrderByIdAsc(convId)

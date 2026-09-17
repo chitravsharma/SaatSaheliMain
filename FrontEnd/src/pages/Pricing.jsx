@@ -15,6 +15,7 @@ const plans = [
     features: [
       "Read & explore all published books",
       "Create your profile & share it via link",
+      "Message sellers about artwork For Sale",
       "Gallery: 2 galleries · 20 pictures · 100 MB",
       "Full magazine preview access",
       "Comment & interact with the community",
@@ -22,7 +23,7 @@ const plans = [
     ],
     limitations: [
       "Cannot create or upload books",
-      "Cannot mark items For Sale or message creators",
+      "Cannot mark items For Sale",
       "No PDF / DOCX export",
     ],
     bonus: null,
@@ -38,7 +39,7 @@ const plans = [
     monthlyPrice: 3,
     features: [
       "Mark any gallery item For Sale",
-      "Contact creators & chat privately about items",
+      "Private chat inbox with buyers of your items",
       "Gallery: 15 galleries · 300 pictures · 2 GB",
       "Create up to 10 books · 50 pages each",
       "Export books to PDF & DOCX",
