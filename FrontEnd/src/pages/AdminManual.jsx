@@ -29,6 +29,8 @@ const AdminManual = () => {
           <li><a href="#managing-books">Managing Books</a></li>
           <li><a href="#chat-room-management">Chat Room Management</a></li>
           <li><a href="#content-moderation">Content Moderation</a></li>
+          <li><a href="#comments-tab">Comments Tab</a></li>
+          <li><a href="#messages-tab">Messages Tab (Private Buyer &harr; Creator)</a></li>
           <li><a href="#site-maintenance">Site Maintenance</a></li>
         </ol>
       </nav>
@@ -171,9 +173,46 @@ const AdminManual = () => {
         </p>
       </section>
 
-      {/* 7. Site Maintenance */}
+      {/* 7. Comments Tab */}
+      <section className="admin-manual-section" id="comments-tab">
+        <h2>7. Comments Tab</h2>
+        <p>
+          A site-wide feed of every comment on books, articles, poems, blogs, recipes,
+          galleries and podcasts, newest first. Each row shows who wrote it, the text, and
+          a link to the exact item so you can see it in context.
+        </p>
+        <ul>
+          <li>Count tiles at the top double as filters (click <em>Recipe</em> to see only recipe comments).</li>
+          <li>Search by commenter, comment text, or item title; choose a time window of 7 to 365 days.</li>
+          <li><strong>Remove</strong> soft-deletes a comment: it disappears from the item for everyone but stays visible here (tick <em>Show removed</em>) for the audit trail.</li>
+        </ul>
+      </section>
+
+      {/* 8. Messages Tab */}
+      <section className="admin-manual-section" id="messages-tab">
+        <h2>8. Messages Tab (Private Buyer &harr; Creator)</h2>
+        <p>
+          Premium and Creator members can mark gallery pictures <em>For Sale</em>; other
+          Premium members can then open a private conversation with the creator. The site
+          never handles payment &mdash; the two parties agree terms in the thread. This tab
+          lists every such conversation for safety oversight.
+        </p>
+        <ul>
+          <li>Each row shows the item, creator (seller), buyer, last message, message count and status. Search matches names, item titles and message text.</li>
+          <li><strong>Read</strong> opens the full thread below the table. Admins are strictly <strong>read-only</strong> &mdash; you cannot post into a private conversation.</li>
+          <li><strong>Close</strong> freezes a thread that breaks community rules (scams, harassment, sharing bank details/OTPs). Both participants see it as closed and cannot send further messages. <strong>Reopen</strong> reverses this.</li>
+          <li>Participants are told on the page that admins may review conversations, so oversight is expected and transparent. Keep what you read confidential and act only on rule violations.</li>
+        </ul>
+        <p>
+          Related plan controls live in <code>PlanLimits</code> (galleries, pictures,
+          storage, items For Sale, messaging) and appear to members on the Plans page and
+          the Account usage meter. Admin accounts are exempt from all plan caps.
+        </p>
+      </section>
+
+      {/* 9. Site Maintenance */}
       <section className="admin-manual-section" id="site-maintenance">
-        <h2>7. Site Maintenance</h2>
+        <h2>9. Site Maintenance</h2>
         <p>
           Saat Saheli is deployed across three services. Understanding the architecture
           helps with troubleshooting and maintenance:
@@ -187,11 +226,13 @@ const AdminManual = () => {
           check the Render dashboard for deployment status and logs.
         </p>
 
-        <h3>Frontend &mdash; GitHub Pages</h3>
+        <h3>Frontend &mdash; bundled with the backend on Render</h3>
         <p>
-          The React frontend is deployed to GitHub Pages. Changes pushed to the main
-          branch are automatically built and deployed. If the frontend is not reflecting
-          recent changes, verify the build succeeded in the GitHub Actions tab.
+          The React app is built into the Spring Boot service during the Docker build, so
+          there is no separate frontend deploy. Pushing to the deploy branch does not
+          publish anything by itself &mdash; open the Render service and click{" "}
+          <strong>Manual Deploy</strong>. Because the app is installable (PWA), users may
+          see a cached bundle after a deploy; a hard reload or reopening the app fixes it.
         </p>
 
         <h3>Database &mdash; Neon PostgreSQL</h3>

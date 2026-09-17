@@ -36,6 +36,8 @@ const UserManual = () => {
             <li><a href="#chat">Chat</a></li>
             <li><a href="#categories">Categories</a></li>
             <li><a href="#public-profile">Your Public Profile</a></li>
+            <li><a href="#messages">Messages (Buying &amp; Selling Artwork)</a></li>
+            <li><a href="#plans">Membership Plans &amp; Limits</a></li>
           </ol>
         </nav>
 
@@ -350,6 +352,44 @@ const UserManual = () => {
             <code>?img=&lt;id&gt;</code>).
           </p>
 
+          <h3>Marking an Artwork For Sale (Premium)</h3>
+          <p>
+            Premium and Creator members can offer any gallery picture for sale.
+            Saat Saheli does not take payment &mdash; buyers contact you
+            privately and you agree the details between yourselves.
+          </p>
+          <ol>
+            <li>
+              On your <strong>Account</strong> page, open the gallery and find
+              the picture. Under its description, click{" "}
+              <strong>Mark for sale</strong>.
+            </li>
+            <li>
+              Enter a <strong>price</strong> in any form you like &mdash;{" "}
+              <em>&#8377;5,000</em>, <em>$120</em>, or <em>Ask for price</em>{" "}
+              &mdash; and an optional <strong>note for buyers</strong> (size,
+              medium, shipping, how you accept payment). Click{" "}
+              <strong>Save</strong>.
+            </li>
+            <li>
+              Visitors now see a <strong>For sale</strong> ribbon on the tile
+              and the price and note when they open the picture.
+            </li>
+            <li>
+              Once it sells, open the same panel and tick{" "}
+              <strong>Mark as sold</strong>. The ribbon changes to{" "}
+              <em>Sold</em> and the Contact button disappears. Use{" "}
+              <strong>Remove from sale</strong> to take it off the market
+              entirely.
+            </li>
+          </ol>
+          <p>
+            Premium members can list up to 10 pictures at a time; Creator
+            members have no limit. If your subscription lapses your listings
+            are hidden (not deleted) until you renew. Free members see the
+            button locked with an upgrade prompt.
+          </p>
+
           <div className="manual-tip">
             Use the gallery to showcase artwork, photography, or any images
             that complement your books and other writing. A short caption
@@ -524,15 +564,127 @@ const UserManual = () => {
             </li>
           </ul>
           <p>
-            To see how your profile looks to others, visit your own public
-            profile link. You can share this link with anyone to showcase your
-            work.
+            Your profile lives at a clean address built from your name, for
+            example <code>saatsaheli.com/profile/Chitra-Sharma</code>. You can
+            change the last part (your <strong>Profile URL id</strong>) on the
+            Edit Profile page &mdash; it must be unique, so if a name is already
+            taken add a number or a word.
+          </p>
+          <p>
+            To share it, use the <strong>Share</strong> button in the corner of
+            your Account card (or <strong>Share My Profile</strong> beside{" "}
+            <em>View Public Profile</em>). On a phone this opens the share sheet;
+            on a computer it copies the link. Shared links show your profile
+            photo and headline as the preview.
           </p>
 
           <div className="manual-tip">
             A complete profile with a photo, bio, interests, and a mix of
             published books, articles, recipes, and gallery photos makes the
             best impression on visitors.
+          </div>
+        </section>
+
+        {/* ── 13. Messages ── */}
+        <section id="messages" className="manual-section">
+          <h2>13. Messages (Buying &amp; Selling Artwork)</h2>
+          <p>
+            <strong>Messages</strong> is a private, one-to-one conversation
+            between a buyer and the creator of an artwork marked{" "}
+            <em>For sale</em>. It is part of the <strong>Premium</strong> and{" "}
+            <strong>Creator</strong> plans &mdash; both the person asking and
+            the creator need a plan that includes it. (This is different from
+            the public <a href="#chat">Chat</a> rooms, which everyone can use.)
+          </p>
+
+          <h3>Contacting a Creator About an Artwork</h3>
+          <ol>
+            <li>Open the picture in its gallery &mdash; look for the <strong>For sale</strong> ribbon.</li>
+            <li>Read the price and the creator&rsquo;s note, then click <strong>Contact creator</strong>.</li>
+            <li>
+              You land in <strong>Messages</strong> with a new conversation
+              about that exact picture. Say hello and ask what you need to know
+              &mdash; size, price, shipping, how to pay.
+            </li>
+            <li>
+              Coming back later? The same button re-opens your existing
+              conversation; there is one thread per picture per buyer.
+            </li>
+          </ol>
+
+          <h3>Replying as a Creator</h3>
+          <p>
+            When someone messages you, the <strong>envelope</strong> icon in the
+            header shows a red count, you get a bell notification, and an email
+            (at most one every 15 minutes per conversation, so a quick
+            back-and-forth won&rsquo;t flood your inbox). Open{" "}
+            <strong>Messages</strong>, pick the conversation, and reply. Your
+            list shows the picture, the buyer&rsquo;s name (click it to see
+            their profile), and how many messages are unread.
+          </p>
+
+          <h3>Good to Know</h3>
+          <ul>
+            <li>Saat Saheli never handles the money. Agree the price, payment method and shipping directly with the other person.</li>
+            <li>Conversations are private to the two of you. Saat Saheli admins may review them for safety, and can close a conversation that breaks community rules.</li>
+            <li>Messages are limited to 2,000 characters; there are no attachments &mdash; share extra photos in your gallery instead.</li>
+            <li>On a phone, the list and the conversation are separate screens &mdash; use the back arrow to return to the list.</li>
+          </ul>
+          <div className="manual-tip">
+            Never share bank details, passwords, or one-time codes in a message.
+            If something feels off, stop replying and contact support from the
+            Help &amp; Support page.
+          </div>
+        </section>
+
+        {/* ── 14. Plans ── */}
+        <section id="plans" className="manual-section">
+          <h2>14. Membership Plans &amp; Limits</h2>
+          <p>
+            Every member starts on the <strong>Free</strong> plan. Paid plans
+            unlock creating books, selling artwork, and private messaging, and
+            raise the gallery limits. Full details and prices are on the{" "}
+            <a href="/pricing">Plans</a> page.
+          </p>
+          <ul>
+            <li>
+              <strong>Free</strong> &mdash; read everything, comment, build a
+              profile and share it, and keep a small gallery: 2 galleries,
+              20 pictures, 100&nbsp;MB. Cannot create books, mark items For
+              Sale, or message creators.
+            </li>
+            <li>
+              <strong>Premium</strong> &mdash; 15 galleries, 300 pictures,
+              2&nbsp;GB; mark up to 10 pictures For Sale at a time; private
+              Messages; create up to 10 books of 50 pages; PDF/DOCX export.
+            </li>
+            <li>
+              <strong>Creator / Pro</strong> &mdash; 50 galleries, 1,500
+              pictures, 10&nbsp;GB; unlimited items For Sale; 25 books of 100
+              pages; plus the Creator extras listed on the Plans page.
+            </li>
+          </ul>
+
+          <h3>Seeing Your Usage</h3>
+          <p>
+            Your <strong>Account</strong> page shows a <em>Your plan &amp; usage</em>{" "}
+            card with bars for galleries, pictures and storage (and books on
+            paid plans). Bars turn amber at 80% and red when full.
+          </p>
+
+          <h3>What Happens at a Limit</h3>
+          <p>
+            Limits only stop <em>new</em> uploads &mdash; nothing you already
+            published is ever removed. When you hit a cap you&rsquo;ll see a
+            message explaining which limit applies and an option to upgrade.
+            Deleting pictures frees up both the picture count and storage
+            immediately.
+          </p>
+          <div className="manual-tip">
+            Storage counts the pictures your content actually uses (galleries,
+            book pages, recipe and article images, and your profile photo).
+            Photos are optimised on upload, so most pictures take well under
+            1&nbsp;MB.
           </div>
         </section>
 
