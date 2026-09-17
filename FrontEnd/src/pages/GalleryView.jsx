@@ -327,10 +327,14 @@ function GalleryView() {
     }
   };
 
-  const openLightbox = (index) => setLightboxIndex(index);
-  const closeLightbox = () => setLightboxIndex(-1);
-  const prevImage = () => setLightboxIndex(i => (i > 0 ? i - 1 : gallery.images.length - 1));
-  const nextImage = () => setLightboxIndex(i => (i < gallery.images.length - 1 ? i + 1 : 0));
+  // Lightbox zoom: 1 = fit to screen; >1 enlarges the picture and the image box pans/scrolls.
+  const [zoom, setZoom] = useState(1);
+  const zoomIn = () => setZoom(z => Math.min(4, +(z + 0.5).toFixed(2)));
+  const zoomOut = () => setZoom(z => Math.max(1, +(z - 0.5).toFixed(2)));
+  const openLightbox = (index) => { setZoom(1); setGuestForm(null); setLightboxIndex(index); };
+  const closeLightbox = () => { setZoom(1); setGuestForm(null); setLightboxIndex(-1); };
+  const prevImage = () => { setZoom(1); setLightboxIndex(i => (i > 0 ? i - 1 : gallery.images.length - 1)); };
+  const nextImage = () => { setZoom(1); setLightboxIndex(i => (i < gallery.images.length - 1 ? i + 1 : 0)); };
 
   useEffect(() => {
     const handleKey = (e) => {
@@ -497,49 +501,64 @@ function GalleryView() {
       {/* Lightbox */}
       {lightboxIndex >= 0 && images[lightboxIndex] && (
         <div className="gv-lightbox" onClick={closeLightbox}>
-          <div className="gv-lightbox-content" onClick={(e) => e.stopPropagation()}>
-            <button className="gv-lightbox-close" onClick={closeLightbox} aria-label="Close">&times;</button>
-            <button className="gv-lightbox-prev" onClick={prevImage} aria-label="Previous image">&lsaquo;</button>
-            {brokenImageIds.has(images[lightboxIndex].id) ? (
-              <div className="gv-lightbox-img gv-lightbox-img-broken">
-                Image unavailable
-              </div>
-            ) : (
-              <img
-                src={optimizeCloudinary(images[lightboxIndex].imageUrl)}
-                alt={images[lightboxIndex].caption || ""}
-                className="gv-lightbox-img"
-                decoding="async"
-                loading="eager"
-                onError={() => setBrokenImageIds(prev => new Set(prev).add(images[lightboxIndex].id))}
-              />
-            )}
-            <button className="gv-lightbox-next" onClick={nextImage} aria-label="Next image">&rsaquo;</button>
+          <div className={`gv-lightbox-content ${images[lightboxIndex].forSale ? "gv-lightbox-content-sale" : ""}`} onClick={(e) => e.stopPropagation()}>
+            <div className="gv-lightbox-bar">
+              <button type="button" onClick={zoomOut} aria-label="Zoom out" disabled={zoom <= 1}>&minus;</button>
+              <span className="gv-lightbox-zoom">{Math.round(zoom * 100)}%</span>
+              <button type="button" onClick={zoomIn} aria-label="Zoom in" disabled={zoom >= 4}>+</button>
+              {zoom > 1 && <button type="button" onClick={() => setZoom(1)} aria-label="Reset zoom">Reset</button>}
+              <button type="button" className="gv-lightbox-close" onClick={closeLightbox} aria-label="Close">&times;</button>
+            </div>
+            <div className={`gv-lightbox-imgwrap ${zoom > 1 ? "gv-lightbox-imgwrap-zoomed" : ""}`}>
+              <button className="gv-lightbox-prev" onClick={prevImage} aria-label="Previous image">&lsaquo;</button>
+              {brokenImageIds.has(images[lightboxIndex].id) ? (
+                <div className="gv-lightbox-img gv-lightbox-img-broken">
+                  Image unavailable
+                </div>
+              ) : (
+                <img
+                  src={optimizeCloudinary(images[lightboxIndex].imageUrl)}
+                  alt={images[lightboxIndex].caption || ""}
+                  className="gv-lightbox-img"
+                  style={zoom > 1 ? { width: `${zoom * 100}%`, maxWidth: "none", maxHeight: "none" } : undefined}
+                  onClick={() => (zoom > 1 ? setZoom(1) : zoomIn())}
+                  decoding="async"
+                  loading="eager"
+                  onError={() => setBrokenImageIds(prev => new Set(prev).add(images[lightboxIndex].id))}
+                />
+              )}
+              <button className="gv-lightbox-next" onClick={nextImage} aria-label="Next image">&rsaquo;</button>
+            </div>
             {images[lightboxIndex].caption && (
               <div className="gv-lightbox-caption">{images[lightboxIndex].caption}</div>
             )}
             {images[lightboxIndex].forSale && (
               <div className={`gv-lightbox-sale ${images[lightboxIndex].saleStatus === "SOLD" ? "gv-lightbox-sale-sold" : ""}`}>
-                <div className="gv-lightbox-sale-head">
+                <div className="gv-lightbox-sale-row">
                   <span className="gv-lightbox-sale-badge">
                     {images[lightboxIndex].saleStatus === "SOLD" ? strings.gallery.sold : strings.gallery.forSale}
                   </span>
                   {images[lightboxIndex].saleStatus !== "SOLD" && (
                     <span className="gv-lightbox-sale-price">{images[lightboxIndex].salePrice || strings.gallery.askPrice}</span>
                   )}
+                  {gallery.authorName && (
+                    <Link to={profileUrl(gallery.userId, gallery.authorName, gallery.authorHandle)} className="gv-lightbox-sale-seller">
+                      {strings.gallery.bySeller} {gallery.authorName}
+                    </Link>
+                  )}
+                  {images[lightboxIndex].saleStatus !== "SOLD" && !(user && gallery && String(gallery.userId) === String(user.userId)) && !(guestForm && guestForm.imageId === images[lightboxIndex].id) && (
+                    <button
+                      type="button"
+                      className="gv-contact-btn"
+                      disabled={contacting}
+                      onClick={() => contactCreator(images[lightboxIndex].id)}
+                    >
+                      {contacting ? "…" : strings.gallery.contactCreator}
+                    </button>
+                  )}
                 </div>
                 {images[lightboxIndex].saleNote && (
                   <p className="gv-lightbox-sale-note">{images[lightboxIndex].saleNote}</p>
-                )}
-                {images[lightboxIndex].saleStatus !== "SOLD" && !(user && gallery && String(gallery.userId) === String(user.userId)) && !(guestForm && guestForm.imageId === images[lightboxIndex].id) && (
-                  <button
-                    type="button"
-                    className="gv-contact-btn"
-                    disabled={contacting}
-                    onClick={() => contactCreator(images[lightboxIndex].id)}
-                  >
-                    {contacting ? "…" : strings.gallery.contactCreator}
-                  </button>
                 )}
                 {guestForm && guestForm.imageId === images[lightboxIndex].id && (
                   guestSent ? (
