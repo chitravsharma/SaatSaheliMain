@@ -600,7 +600,7 @@ const UserManual = () => {
           <h3>Contacting a Creator About an Artwork</h3>
           <ol>
             <li>Open the picture in its gallery &mdash; look for the <strong>For sale</strong> ribbon.</li>
-            <li>Read the price and the creator&rsquo;s note, then click <strong>Contact creator</strong>.</li>
+            <li>Read the price and the creator&rsquo;s note, then click <strong>Contact seller</strong>.</li>
             <li>
               You land in <strong>Messages</strong> with a new conversation
               about that exact picture. Say hello and ask what you need to know
