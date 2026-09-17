@@ -47,7 +47,7 @@ const plans = [
       "Priority email support",
     ],
     limitations: null,
-    bonus: ["Share books & your profile via link"],
+    bonus: null,
     highlight: true,
     cta: "Upgrade to Premium",
   },
