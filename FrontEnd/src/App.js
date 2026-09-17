@@ -30,6 +30,7 @@ import UserManual from './pages/UserManual';
 import AdminManual from './pages/AdminManual';
 import GalleryView from './pages/GalleryView';
 import Pricing from './pages/Pricing';
+import Messages from './pages/Messages';
 import CheckoutSuccess from './pages/CheckoutSuccess';
 import Advertise from './pages/Advertise';
 import SponsorUs from './pages/SponsorUs';
@@ -129,6 +130,8 @@ function App() {
           <Route path="/recipes/:recipeId" element={<RecipeView />} />
           <Route path="/recipes/:recipeId/edit" element={<ProtectedRoute><RequireProfile><RecipeEditor /></RequireProfile></ProtectedRoute>} />
           <Route path="/pricing" element={<Pricing />} />
+          <Route path="/messages" element={<ProtectedRoute><Messages /></ProtectedRoute>} />
+          <Route path="/messages/:conversationId" element={<ProtectedRoute><Messages /></ProtectedRoute>} />
           <Route path="/checkout-success" element={<CheckoutSuccess />} />
           <Route path="/advertise" element={<Advertise />} />
           <Route path="/sponsor-us" element={<SponsorUs />} />

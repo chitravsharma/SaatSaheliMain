@@ -369,6 +369,13 @@ const AdminDashboard = () => {
     const [supportFilter, setSupportFilter] = useState("ALL");
     const [supportSearch, setSupportSearch] = useState("");
 
+    // Private messages oversight (read-only)
+    const [convos, setConvos] = useState([]);
+    const [convosLoading, setConvosLoading] = useState(false);
+    const [convoSearch, setConvoSearch] = useState("");
+    const [openConvo, setOpenConvo] = useState(null);      // conversation row
+    const [openConvoMsgs, setOpenConvoMsgs] = useState([]);
+
     // Comments moderation feed
     const [comments, setComments] = useState([]);
     const [commentsLoading, setCommentsLoading] = useState(false);
@@ -486,6 +493,34 @@ const AdminDashboard = () => {
         } catch { /* ignore */ }
         setSupportLoading(false);
     }, [user?.userId]);
+
+    const fetchConvos = useCallback(async () => {
+        setConvosLoading(true);
+        try {
+            const res = await api.get(`${API}/api/admin/conversations`);
+            setConvos(Array.isArray(res.data?.conversations) ? res.data.conversations : []);
+        } catch { /* ignore */ }
+        setConvosLoading(false);
+    }, [user?.userId]);
+
+    const openConversation = async (c) => {
+        setOpenConvo(c);
+        setOpenConvoMsgs([]);
+        try {
+            const res = await api.get(`${API}/api/admin/conversations/${c.id}/messages`);
+            setOpenConvoMsgs(Array.isArray(res.data) ? res.data : []);
+        } catch { setMessage("Failed to load conversation"); }
+    };
+
+    const setConvoStatus = async (c, status) => {
+        if (status === "CLOSED" && !window.confirm("Close this conversation? Neither party will be able to send more messages.")) return;
+        try {
+            await api.put(`${API}/api/admin/conversations/${c.id}/status`, { status });
+            setConvos(prev => prev.map(x => (x.id === c.id ? { ...x, status } : x)));
+            if (openConvo?.id === c.id) setOpenConvo({ ...openConvo, status });
+            setMessage(status === "CLOSED" ? "Conversation closed" : "Conversation reopened");
+        } catch { setMessage("Failed to update conversation"); }
+    };
 
     const fetchComments = useCallback(async () => {
         setCommentsLoading(true);
@@ -634,9 +669,10 @@ const AdminDashboard = () => {
         if (tab === "advertisements") fetchAdvertisements();
         if (tab === "support") fetchSupportQueries();
         if (tab === "comments") fetchComments();
+        if (tab === "messages") fetchConvos();
         if (tab === "payments") fetchPayments();
         if (tab === "heroSlides") fetchHeroSlides();
-    }, [tab, fetchUsers, fetchBooks, fetchArticles, fetchRecipes, fetchGalleries, fetchListings, fetchAuditLog, fetchAnalytics, fetchAdvertisements, fetchSupportQueries, fetchComments, fetchPayments, fetchHeroSlides]);
+    }, [tab, fetchUsers, fetchBooks, fetchArticles, fetchRecipes, fetchGalleries, fetchListings, fetchAuditLog, fetchAnalytics, fetchAdvertisements, fetchSupportQueries, fetchComments, fetchConvos, fetchPayments, fetchHeroSlides]);
 
     const changeRole = async (userId, newRole) => {
         try {
@@ -1036,6 +1072,9 @@ const AdminDashboard = () => {
                 </button>
                 <button className={tab === "comments" ? "active" : ""} onClick={() => setTab("comments")}>
                     Comments
+                </button>
+                <button className={tab === "messages" ? "active" : ""} onClick={() => setTab("messages")}>
+                    Messages
                 </button>
                 <button className={tab === "payments" ? "active" : ""} onClick={() => setTab("payments")}>
                     Payments
@@ -2663,6 +2702,100 @@ const AdminDashboard = () => {
                                     ))}
                                 </tbody>
                             </table>
+                            </div>
+                        )}
+                    </div>
+                );
+            })()}
+
+            {tab === "messages" && (() => {
+                const q = convoSearch.trim().toLowerCase();
+                const filtered = convos.filter(c => !q
+                    || (c.sellerName || "").toLowerCase().includes(q)
+                    || (c.buyerName || "").toLowerCase().includes(q)
+                    || (c.itemTitle || "").toLowerCase().includes(q)
+                    || (c.lastPreview || "").toLowerCase().includes(q));
+                const openCount = convos.filter(c => c.status !== "CLOSED").length;
+                return (
+                    <div>
+                        <h2>Private Messages ({convos.length})</h2>
+                        <p style={{ color: "#666", marginTop: -8 }}>
+                            Buyer ↔ creator conversations about items For Sale. Read-only oversight — admins cannot write into a thread. {openCount} open.
+                        </p>
+                        <div style={{ display: "flex", gap: 12, marginBottom: 16, flexWrap: "wrap", alignItems: "center" }}>
+                            <input
+                                type="text"
+                                placeholder="Search by buyer, creator, item, or text..."
+                                value={convoSearch}
+                                onChange={(e) => setConvoSearch(e.target.value)}
+                                className="admin-search-input"
+                                style={{ flex: 1, minWidth: 200 }}
+                            />
+                            <button className="admin-btn" onClick={fetchConvos}>Refresh</button>
+                        </div>
+
+                        {convosLoading && <p>Loading...</p>}
+                        {!convosLoading && filtered.length === 0 && <p>No conversations found.</p>}
+                        {!convosLoading && filtered.length > 0 && (
+                            <div className="admin-table-wrap">
+                            <table className="admin-table">
+                                <thead>
+                                    <tr>
+                                        <th>Last activity</th>
+                                        <th>Item</th>
+                                        <th>Creator (seller)</th>
+                                        <th>Buyer</th>
+                                        <th>Last message</th>
+                                        <th>Msgs</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {filtered.map(c => (
+                                        <tr key={c.id} style={c.status === "CLOSED" ? { opacity: 0.6 } : undefined}>
+                                            <td style={{ whiteSpace: "nowrap" }}>{toPSTDateTime(c.lastMessageAt || c.createdDate)}</td>
+                                            <td>
+                                                <a href={c.itemLink} target="_blank" rel="noreferrer">{c.itemTitle || `#${c.id}`}</a>
+                                            </td>
+                                            <td>{c.sellerName} <div style={{ fontSize: 11, color: "#888" }}>user #{c.sellerId}</div></td>
+                                            <td>{c.buyerName} <div style={{ fontSize: 11, color: "#888" }}>user #{c.buyerId}</div></td>
+                                            <td style={{ maxWidth: 320, whiteSpace: "pre-wrap", wordBreak: "break-word" }}>{c.lastPreview || <em style={{ color: "#888" }}>none yet</em>}</td>
+                                            <td>{c.messageCount}</td>
+                                            <td><span className={`status-badge ${c.status === "CLOSED" ? "status-deleted" : "status-published"}`}>{c.status}</span></td>
+                                            <td style={{ whiteSpace: "nowrap" }}>
+                                                <button className="admin-btn" onClick={() => openConversation(c)}>Read</button>{" "}
+                                                {c.status === "CLOSED"
+                                                    ? <button className="admin-btn" onClick={() => setConvoStatus(c, "OPEN")}>Reopen</button>
+                                                    : <button className="admin-btn admin-btn-danger" onClick={() => setConvoStatus(c, "CLOSED")}>Close</button>}
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                            </div>
+                        )}
+
+                        {openConvo && (
+                            <div style={{ marginTop: 20, border: "1px solid #ddd", borderRadius: 10, padding: 16, background: "#fff" }}>
+                                <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+                                    <strong>Thread #{openConvo.id}</strong>
+                                    <span>{openConvo.buyerName} (buyer) ↔ {openConvo.sellerName} (creator)</span>
+                                    <a href={openConvo.itemLink} target="_blank" rel="noreferrer">{openConvo.itemTitle}</a>
+                                    <button className="admin-btn" style={{ marginLeft: "auto" }} onClick={() => setOpenConvo(null)}>Close view</button>
+                                </div>
+                                <div style={{ marginTop: 12, display: "flex", flexDirection: "column", gap: 8, maxHeight: 420, overflowY: "auto" }}>
+                                    {openConvoMsgs.length === 0 && <p style={{ color: "#888" }}>No messages yet.</p>}
+                                    {openConvoMsgs.map(m => {
+                                        const fromSeller = String(m.senderId) === String(openConvo.sellerId);
+                                        return (
+                                            <div key={m.id} style={{ alignSelf: fromSeller ? "flex-end" : "flex-start", maxWidth: "80%", background: fromSeller ? "#fde68a" : "#f1f5f9", borderRadius: 10, padding: "8px 12px" }}>
+                                                <div style={{ fontSize: 11, color: "#666" }}>{m.senderName} · {toPSTDateTime(m.createdDate)}</div>
+                                                <div style={{ whiteSpace: "pre-wrap", wordBreak: "break-word" }}>{m.body}</div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
                             </div>
                         )}
                     </div>
