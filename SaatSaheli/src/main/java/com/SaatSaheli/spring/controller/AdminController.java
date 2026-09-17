@@ -24,6 +24,7 @@ import com.SaatSaheli.spring.repository.UserRepository;
 import com.SaatSaheli.spring.service.ArticleService;
 import com.SaatSaheli.spring.service.BookService;
 import com.SaatSaheli.spring.service.DocumentExtractionService;
+import com.SaatSaheli.spring.service.MessagingService;
 import com.SaatSaheli.spring.service.NotificationService;
 import com.SaatSaheli.spring.service.SocialService;
 import com.SaatSaheli.spring.util.RoleUtil;
@@ -89,6 +90,9 @@ public class AdminController {
 
     @Autowired
     private NotificationService notificationService;
+
+    @Autowired
+    private MessagingService messagingService;
 
     @Autowired
     private PaymentTransactionRepository txRepo;
@@ -668,6 +672,76 @@ public class AdminController {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(errorMap("Failed to delete comment: " + e.getMessage()));
+        }
+    }
+
+    // ── Private messages (buyer ↔ seller) — read-only oversight ──
+
+    /** GET /api/admin/conversations — every private thread, newest activity first. */
+    @GetMapping("/conversations")
+    public ResponseEntity<?> listConversations(HttpServletRequest request) {
+        try {
+            User caller = verifyCaller(getAuthUserId(request), false);
+            if (caller == null) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorMap("Admin access required"));
+            }
+            List<Map<String, Object>> rows = new ArrayList<>();
+            for (com.SaatSaheli.spring.model.Conversation c : messagingService.listAll()) {
+                Map<String, Object> row = new HashMap<>();
+                row.put("id", c.getId());
+                row.put("status", c.getStatus());
+                row.put("sellerId", c.getSellerId());
+                row.put("sellerName", c.getSellerName());
+                row.put("sellerHandle", c.getSellerHandle());
+                row.put("buyerId", c.getBuyerId());
+                row.put("buyerName", c.getBuyerName());
+                row.put("buyerHandle", c.getBuyerHandle());
+                row.put("itemTitle", c.getItemTitle());
+                row.put("itemImageUrl", c.getItemImageUrl());
+                row.put("itemLink", c.getItemLink());
+                row.put("lastPreview", c.getLastPreview());
+                row.put("lastMessageAt", c.getLastMessageAt() == null ? null : c.getLastMessageAt().toString());
+                row.put("createdDate", c.getCreatedDate() == null ? null : c.getCreatedDate().toString());
+                row.put("messageCount", messagingService.messageCount(c.getId()));
+                rows.add(row);
+            }
+            return ResponseEntity.ok(Map.of("conversations", rows));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(errorMap("Failed to list conversations: " + e.getMessage()));
+        }
+    }
+
+    /** GET /api/admin/conversations/{id}/messages — full thread, read-only. */
+    @GetMapping("/conversations/{id}/messages")
+    public ResponseEntity<?> conversationMessages(@PathVariable Long id, HttpServletRequest request) {
+        try {
+            Long callerId = getAuthUserId(request);
+            User caller = verifyCaller(callerId, false);
+            if (caller == null) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorMap("Admin access required"));
+            }
+            return ResponseEntity.ok(messagingService.messages(id, callerId, null));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(errorMap("Failed to load conversation: " + e.getMessage()));
+        }
+    }
+
+    /** PUT /api/admin/conversations/{id}/status {status: OPEN|CLOSED} */
+    @PutMapping("/conversations/{id}/status")
+    public ResponseEntity<?> conversationStatus(@PathVariable Long id, @RequestBody Map<String, Object> body,
+                                                HttpServletRequest request) {
+        try {
+            User caller = verifyCaller(getAuthUserId(request), false);
+            if (caller == null) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorMap("Admin access required"));
+            }
+            String status = body.get("status") == null ? "OPEN" : body.get("status").toString();
+            return ResponseEntity.ok(messagingService.setStatus(id, status));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(errorMap("Failed to update conversation: " + e.getMessage()));
         }
     }
 

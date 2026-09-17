@@ -139,6 +139,31 @@ public class EmailService {
         sendHtmlEmail(toEmail, subject, body);
     }
 
+    /** New private message about an item For Sale (buyer ↔ seller). */
+    public void sendMessageNotification(String toEmail, String recipientName, String senderName,
+                                        String itemTitle, String messageBody, String link) {
+        String safeSender = escape(senderName != null ? senderName : "Someone");
+        String safeTitle = escape(itemTitle != null ? itemTitle : "an item");
+        String greeting = (recipientName != null && !recipientName.isBlank())
+                ? "Hi " + escape(recipientName) + "," : "Hi,";
+        String snippet = messageBody == null ? "" : (messageBody.length() > 300 ? messageBody.substring(0, 300) + "…" : messageBody);
+        String subject = "SaatSaheli — " + safeSender + " messaged you about \"" + safeTitle + "\"";
+        String body = """
+                <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 520px; margin: 0 auto; padding: 32px;">
+                  <h2 style="color: #b45309;">New message about "%s"</h2>
+                  <p>%s</p>
+                  <p><strong>%s</strong> wrote:</p>
+                  <div style="background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; padding: 16px; margin: 16px 0; white-space: pre-wrap; color: #78350f;">%s</div>
+                  <p style="margin: 24px 0;">
+                    <a href="%s" style="background: #b45309; color: #fff; text-decoration: none; padding: 10px 20px; border-radius: 6px; display: inline-block;">Reply on SaatSaheli</a>
+                  </p>
+                  <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 24px 0;" />
+                  <p style="color: #9ca3af; font-size: 0.85rem;">You're receiving this because of a private conversation about an item on SaatSaheli. Replies are only visible to you, the other party, and SaatSaheli admins.<br/>— The SaatSaheli Team</p>
+                </div>
+                """.formatted(safeTitle, greeting, safeSender, escape(snippet), link);
+        sendHtmlEmail(toEmail, subject, body);
+    }
+
     /**
      * Send the buyer an order/purchase confirmation with the confirmation number,
      * itemised list, total, and tracking status.
