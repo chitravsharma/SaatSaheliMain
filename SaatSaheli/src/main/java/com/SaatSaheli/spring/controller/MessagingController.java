@@ -25,6 +25,10 @@ public class MessagingController {
     @Autowired private RateLimiter rateLimiter;
     @Autowired private com.SaatSaheli.spring.service.RecaptchaService recaptchaService;
 
+    /** Guest enquiries allowed per IP per hour (shared NAT/office IPs need headroom; dev sets it high). */
+    @org.springframework.beans.factory.annotation.Value("${app.messages.guest-enquiries-per-hour:10}")
+    private int guestEnquiriesPerHour;
+
     private Long uid(HttpServletRequest r) { return (Long) r.getAttribute("jwtUserId"); }
 
     /** POST /conversations {targetType, targetId} → the (existing or new) thread. */
@@ -53,7 +57,7 @@ public class MessagingController {
         if (body.get("website") != null && !String.valueOf(body.get("website")).isBlank()) {
             return ResponseEntity.ok(Map.of("ok", true));
         }
-        if (!rateLimiter.tryAcquire("guest-enquiry:" + ip, 5, 60L * 60 * 1000)) {
+        if (!rateLimiter.tryAcquire("guest-enquiry:" + ip, guestEnquiriesPerHour, 60L * 60 * 1000)) {
             return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).body(err("Too many enquiries from this connection. Please try again later."));
         }
         String token = body.get("recaptchaToken") == null ? null : body.get("recaptchaToken").toString();
