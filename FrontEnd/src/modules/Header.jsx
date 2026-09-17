@@ -6,6 +6,7 @@ import { useCart } from '../contexts/CartContext';
 import { useStrings, useLanguage } from '../LanguageContext';
 import AdBanner from './AdBanner';
 import NotificationBell from './NotificationBell';
+import MessagesEnvelope from './MessagesEnvelope';
 import './Header.css';
 
 const welcomeMessage = process.env.REACT_APP_WELCOME_MESSAGE;
@@ -213,6 +214,7 @@ const Header = () => {
           )}
           {welcomeMessage && <span className="welcome-msg" aria-live="polite">{welcomeMessage}</span>}
 
+          {user && <MessagesEnvelope />}
           {user && <NotificationBell />}
 
           {user ? (

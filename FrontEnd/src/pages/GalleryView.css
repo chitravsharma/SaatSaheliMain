@@ -446,3 +446,18 @@
   .gv-lightbox-sale { padding: 8px 10px; max-width: 94vw; }
   .gv-lightbox-sale-note { font-size: 0.82rem; }
 }
+.gv-contact-btn {
+  margin-top: 10px;
+  width: 100%;
+  min-height: 44px;
+  font: inherit;
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: #1e293b;
+  background: #fbbf24;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+}
+.gv-contact-btn:hover { background: #f59e0b; }
+.gv-contact-btn:disabled { opacity: 0.6; cursor: default; }

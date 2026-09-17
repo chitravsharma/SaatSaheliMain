@@ -3,6 +3,7 @@ import { useParams, useNavigate, Link, useSearchParams } from "react-router-dom"
 import api, { profileUrl } from "../utils/api";
 import { optimizeCloudinary } from "../utils/imageUrl";
 import { useAuth } from "../AuthContext";
+import { useLoginGate } from "../contexts/LoginGateContext";
 import { useStrings } from "../LanguageContext";
 import "./GalleryView.css";
 
@@ -11,6 +12,29 @@ const API = process.env.REACT_APP_API_URL;
 function GalleryView() {
   const { galleryId } = useParams();
   const { user } = useAuth();
+  const { requireLogin } = useLoginGate();
+  const [contacting, setContacting] = useState(false);
+
+  // "Contact creator" on an item For Sale → open (or resume) the private thread.
+  // Logged-out → login gate; Free plan → the API answers 403 upgradeRequired and
+  // the global UpgradeModal takes over.
+  const contactCreator = async (imageId) => {
+    if (!user) {
+      requireLogin(`${window.location.pathname}?img=${imageId}`);
+      return;
+    }
+    setContacting(true);
+    try {
+      const r = await api.post(`${API}/api/messages/conversations`, { targetType: "GALLERY_IMAGE", targetId: imageId });
+      navigate(`/messages/${r.data.id}`);
+    } catch (err) {
+      if (!err?.response?.data?.upgradeRequired) {
+        window.alert(err?.response?.data?.error || "Could not start a conversation.");
+      }
+    } finally {
+      setContacting(false);
+    }
+  };
   const strings = useStrings();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -476,7 +500,16 @@ function GalleryView() {
                 {images[lightboxIndex].saleNote && (
                   <p className="gv-lightbox-sale-note">{images[lightboxIndex].saleNote}</p>
                 )}
-                {/* Contact creator (Premium private chat) is wired in the Messages phase. */}
+                {images[lightboxIndex].saleStatus !== "SOLD" && !(user && gallery && String(gallery.userId) === String(user.userId)) && (
+                  <button
+                    type="button"
+                    className="gv-contact-btn"
+                    disabled={contacting}
+                    onClick={() => contactCreator(images[lightboxIndex].id)}
+                  >
+                    {contacting ? "…" : strings.gallery.contactCreator}
+                  </button>
+                )}
               </div>
             )}
             <div className="gv-lightbox-counter">{lightboxIndex + 1} / {images.length}</div>
