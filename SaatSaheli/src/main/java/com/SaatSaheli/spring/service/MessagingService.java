@@ -43,6 +43,11 @@ public class MessagingService {
         return u != null && (isAdmin(u) || PlanLimits.forPlan(u.getPlan()).canUseMarketChat);
     }
 
+    public boolean isEligible(Long userId) {
+        User u = userId == null ? null : userRepo.findById(userId).orElse(null);
+        return canUseMessaging(u);
+    }
+
     private User requireMessagingUser(Long userId) {
         User u = userId == null ? null : userRepo.findById(userId).orElse(null);
         if (u == null) throw new IllegalStateException("Authentication required");

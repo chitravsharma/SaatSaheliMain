@@ -90,7 +90,11 @@ public class MessagingController {
     public ResponseEntity<?> unread(HttpServletRequest request) {
         Long userId = uid(request);
         if (userId == null) return unauthorized();
-        return ResponseEntity.ok(Map.of("count", messaging.unreadCount(userId)));
+        // eligible=false → the client hides the envelope (Free plan); cheap: one user row + one SUM.
+        Map<String, Object> out = new HashMap<>();
+        out.put("eligible", messaging.isEligible(userId));
+        out.put("count", messaging.unreadCount(userId));
+        return ResponseEntity.ok(out);
     }
 
     // ── helpers ──

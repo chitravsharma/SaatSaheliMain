@@ -23,11 +23,8 @@ function MessagesEnvelope() {
   const refresh = useCallback(async () => {
     if (!user) return;
     try {
-      const u = await api.get(`${API}/api/account/usage`);
-      const ok = !!(u.data?.canUseMarketChat || u.data?.admin);
-      setEligible(ok);
-      if (!ok) return;
       const r = await api.get(`${API}/api/messages/unread-count`);
+      setEligible(!!r.data?.eligible);
       setUnread(Number(r.data?.count) || 0);
     } catch { /* ignore */ }
   }, [user]);
