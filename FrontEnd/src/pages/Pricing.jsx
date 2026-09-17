@@ -7,18 +7,19 @@ import "./Pricing.css";
 const plans = [
   {
     key: "Free",
-    name: "Free (Reader)",
-    tagline: "Best for reading & exploring",
+    name: "Free",
+    tagline: "Best for reading, writing & sharing",
     price: "Free",
     priceNote: null,
     monthlyPrice: 0,
     features: [
       "Read all books, articles, recipes & galleries — free forever",
-      "Create your profile & share it via link",
-      "Message sellers about artwork For Sale",
-      "Gallery: 2 galleries · 20 pictures · 100 MB",
       "Magazine preview — first 10 pages of every issue",
-      "Comment & interact with the community",
+      "Write & publish articles, blogs and poems",
+      "Post recipes with photos",
+      "Gallery: 2 galleries · 20 pictures · 100 MB",
+      "Create your profile & share it via link",
+      "Like, favourite, comment & join the chat rooms",
       "Community support",
     ],
     limitations: [
