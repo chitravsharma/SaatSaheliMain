@@ -582,5 +582,5 @@ one-screen lightbox on 360×640, 390×844, 1280×800). Pre-conditions: the
 | 3 | Free member → same issue | Gate page offers **Upgrade to read the full issue** |
 | 4 | Premium / Creator / admin / the magazine owner | All 50 pages, no gate |
 | 5 | `GET /api/books/44/pages` without a token | 10 pages only (server enforced) |
-| 6 | Ordinary book, Free member | All pages, no gate; anonymous still gets the existing login wall |
+| 6 | Ordinary book, anonymous or any member | All pages, no gate, no login wall; right-click/drag blocked; export 403 unless author |
 | 7 | Magazine with ≤10 pages | No gate |

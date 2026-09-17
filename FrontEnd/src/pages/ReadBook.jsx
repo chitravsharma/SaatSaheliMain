@@ -3,7 +3,6 @@ import { useParams, Link, useNavigate, useSearchParams } from "react-router-dom"
 import api, { profileUrl, getAnonId } from "../utils/api";
 import FlipBook from "../FlipBook";
 import { useAuth } from "../AuthContext";
-import { useLoginGate } from "../contexts/LoginGateContext";
 import { useStrings } from "../LanguageContext";
 import "../BookManager.css";
 
@@ -12,11 +11,9 @@ const API = process.env.REACT_APP_API_URL;
 function ReadBook() {
   const { bookId } = useParams();
   const { user } = useAuth();
-  const { requireLogin } = useLoginGate();
   const strings = useStrings();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const gateTriggeredRef = useRef(false);
 
   // Anonymous user landed on /read/:id directly (or via shared link) — open the
   // login modal once and don't render the reader. After login, user state
@@ -34,16 +31,8 @@ function ReadBook() {
   const commentInputRef = useRef(null);
   const loginPromptRef = useRef(null);
 
-  // Magazines are the exception: anyone may read the free preview (first pages);
-  // the flip-book itself turns to a "log in / upgrade" page after it.
-  const isMagazine = !!book && String(book.category || "").toUpperCase() === "MAGAZINE";
-  useEffect(() => {
-    if (!book) return; // wait until we know what this is
-    if (!user && !isMagazine && !gateTriggeredRef.current) {
-      gateTriggeredRef.current = true;
-      requireLogin(window.location.pathname + window.location.search);
-    }
-  }, [user, book, isMagazine, requireLogin]);
+  // Reading is open to everyone (books, and magazine previews). Commenting and
+  // the full magazine issue are gated separately (login prompt / flip-book gate).
 
   // Fetch book info
   useEffect(() => {
@@ -159,35 +148,6 @@ function ReadBook() {
       setError("Could not delete comment. Please try again.");
     }
   };
-
-  // Don't flash the login wall while we find out whether this is a magazine.
-  if (!user && !book && !error) {
-    return <div className="book-manager"><div className="loading-spinner" /></div>;
-  }
-
-  if (!user && !isMagazine) {
-    return (
-      <div className="book-manager">
-        <div className="rb-top-bar">
-          <button className="rb-back-arrow" onClick={() => navigate(-1)} aria-label={strings.common.back} title={strings.common.back}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="15 18 9 12 15 6"/></svg>
-            {strings.common.back}
-          </button>
-        </div>
-        <div className="rb-anon-gate" style={{ textAlign: "center", padding: "60px 20px" }}>
-          <h2 style={{ marginBottom: 12 }}>Login required</h2>
-          <p style={{ marginBottom: 20, color: "#666" }}>Please sign in or create a free account to continue reading.</p>
-          <button
-            type="button"
-            className="auth-btn auth-btn-primary"
-            onClick={() => requireLogin(window.location.pathname + window.location.search)}
-          >
-            Login to Read
-          </button>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="book-manager">

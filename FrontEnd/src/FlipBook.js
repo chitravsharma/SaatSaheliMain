@@ -574,7 +574,7 @@ function FlipBook({ bookId }) {
       return (
         <div key={index} className="card-box flipbook-page">
           <div style={{ ...innerStyle, padding: 0 }}>
-            <img
+            <img draggable={false}
               src={img1Src}
               alt={isFirstPage ? "Cover" : isLastPage ? "Back Cover" : strings.flipBook.pageImageAlt(pageNum, 1)}
               style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", objectFit: "cover" }}
@@ -651,7 +651,7 @@ function FlipBook({ bookId }) {
               dangerouslySetInnerHTML={{ __html: page.content }}
             />
             {img1Src && (
-              <img
+              <img draggable={false}
                 src={img1Src}
                 alt={strings.flipBook.pageImageAlt(page.pageNumber, 1)}
                 style={{
@@ -666,7 +666,7 @@ function FlipBook({ bookId }) {
               />
             )}
             {img2Src && (
-              <img
+              <img draggable={false}
                 src={img2Src}
                 alt={strings.flipBook.pageImageAlt(page.pageNumber, 2)}
                 style={{
@@ -734,8 +734,15 @@ function FlipBook({ bookId }) {
     </button>
   );
 
+  // Read-only reader: no right-click/save, no drag-to-desktop, no long-press
+  // save sheet on phones, no text selection. (Screenshots are taken by the OS
+  // and cannot be blocked by a web page.)
   const content = (
-    <div className="center-container">
+    <div
+      className="center-container flipbook-readonly"
+      onContextMenu={(e) => e.preventDefault()}
+      onDragStart={(e) => e.preventDefault()}
+    >
       <div className="flipbook-nav-wrapper">
         {/* In fullscreen: minimal toolbar (just nav + exit). Normal: full toolbar */}
         {isFullscreen ? (

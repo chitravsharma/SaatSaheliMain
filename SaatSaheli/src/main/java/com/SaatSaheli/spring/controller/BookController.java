@@ -12,8 +12,6 @@ import com.SaatSaheli.spring.repository.UserRepository;
 import com.SaatSaheli.spring.service.ExportService;
 import com.SaatSaheli.spring.util.PageSizes;
 import com.SaatSaheli.spring.util.RateLimiter;
-import com.SaatSaheli.spring.util.RoleUtil;
-import com.SaatSaheli.spring.util.PlanLimits;
 import com.SaatSaheli.spring.util.PlanLimitException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -567,13 +565,12 @@ public class BookController {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorMap("Book not found"));
             }
 
-            // Export allowed for SUPER_ADMIN, or the book's owner on a plan that includes export (Premium/Creator).
-            boolean isSuper = RoleUtil.isSuperAdmin(caller.getRole());
-            boolean ownsAndCanExport = book.getUserId() != null
-                    && book.getUserId().equals(callerUserId)
-                    && PlanLimits.forPlan(caller.getPlan()).canExport;
-            if (!isSuper && !ownsAndCanExport) {
-                return upgradeRequired("Exporting books to PDF/DOCX is available on the Premium and Creator plans. Upgrade your plan to download your books.");
+            // Export is for the book's own author only — nobody else (not even admins)
+            // can download a creator's book. Reading on the site is free for everyone.
+            boolean isOwner = book.getUserId() != null && book.getUserId().equals(callerUserId);
+            if (!isOwner) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body(errorMap("Only the author can export this book."));
             }
 
             List<Page> pages = book.getPages();

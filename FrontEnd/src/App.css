@@ -867,3 +867,21 @@
 }
 .flipbook-gate-btn:hover { background: #92400e; }
 .flipbook-gate-link { font-size: 0.85rem; color: #92400e; text-decoration: underline; }
+
+/* ── Read-only flip-book (books & magazines): view only, no save/drag/select ── */
+.flipbook-readonly,
+.flipbook-readonly * {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+.flipbook-readonly img {
+  -webkit-user-drag: none;
+  user-drag: none;
+  pointer-events: none;
+}
+/* Controls and the gate page must stay clickable. */
+.flipbook-readonly button,
+.flipbook-readonly a,
+.flipbook-readonly input,
+.flipbook-readonly textarea { pointer-events: auto; }

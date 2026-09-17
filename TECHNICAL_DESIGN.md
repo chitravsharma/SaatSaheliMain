@@ -365,7 +365,7 @@ the Account "Your plan & usage" meter are rendered from the same numbers via
 | Seller inbox (receive buyer enquiries) | ✗ | ✓ | ✓ |
 | Contact a seller | ✓ (any member, and visitors via guest form) | ✓ | ✓ |
 | Magazine issues (`canReadFullMagazine`) | first **10 pages**, then log in / upgrade | full | full |
-| Books, articles, recipes, galleries | free (books need login — reader wall since `8f02006`) | free | free |
+| Books, articles, recipes, galleries | free for everyone, no login (reader wall removed 2026-09-17); books are view-only | free | free |
 
 - **Storage ledger:** `media_assets (url UNIQUE, size_bytes, content_type)`.
   `R2StorageService.putObject` records every object it stores. A one-time
@@ -405,8 +405,12 @@ the Account "Your plan & usage" meter are rendered from the same numbers via
   client and appends a synthetic gate page: anonymous → "Log in to continue"
   (+ See plans); logged-in Free → "Upgrade to read the full issue". The page
   indicator shows `n / <real total>`.
-- `ReadBook.jsx`: the reader's login wall no longer applies to magazines
-  (anyone may open the preview); ordinary books still require sign-in.
+- `ReadBook.jsx`: the sign-in wall is gone — anyone can open any published
+  book or a magazine preview. The flip-book is **view-only**: right-click,
+  drag and long-press save are blocked and pages are unselectable
+  (`.flipbook-readonly`); screenshots are explicitly accepted as unpreventable.
+- **PDF/DOCX export is author-only** (`/api/books/{id}/export/*` → 403 for
+  everyone else, super-admins included); no plan check.
 
 ## 8. Gallery items For Sale + private messaging (2026-09)
 

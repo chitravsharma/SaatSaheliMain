@@ -412,9 +412,18 @@ const UserManual = () => {
             the FlipBook reader.
           </p>
 
+          <h3>Reading Is Free &mdash; View Only</h3>
+          <p>
+            Every published book can be read by anyone, with or without an
+            account. Books are <strong>view only</strong>: the reader blocks
+            saving or dragging pages out, and PDF/DOCX export is available only
+            to the book&rsquo;s own author. Please respect the creators&rsquo;
+            work.
+          </p>
+
           <h3>Magazine Issues &mdash; Free Preview</h3>
           <p>
-            Books are free to read for everyone. <strong>Magazine issues</strong>{" "}
+            <strong>Magazine issues</strong>{" "}
             show the first 10 pages to visitors and Free members; the reader
             then turns to a page asking you to <em>log in</em> (if you
             aren&rsquo;t) or to <em>upgrade to Premium</em> to read the rest.
@@ -677,8 +686,8 @@ const UserManual = () => {
             <li>
               <strong>Premium</strong> &mdash; 15 galleries, 300 pictures,
               2&nbsp;GB; read every magazine issue in full; mark any picture
-              For Sale; private Messages; create up to 10 books of 50 pages;
-              PDF/DOCX export.
+              For Sale; private Messages; create up to 10 books of 50 pages
+              and export your own books to PDF/DOCX.
             </li>
             <li>
               <strong>Creator / Pro</strong> &mdash; 50 galleries, 1,500
