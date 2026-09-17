@@ -692,7 +692,7 @@ const UserManual = () => {
             </li>
             <li>
               <strong>Creator / Pro</strong> &mdash; 50 galleries, 1,500
-              pictures, 10&nbsp;GB; 25 books of 100 pages; plus the Creator
+              pictures, 10&nbsp;GB; 25 books of up to 400 pages (storage permitting); plus the Creator
               extras listed on the Plans page.
             </li>
           </ul>

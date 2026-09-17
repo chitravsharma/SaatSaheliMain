@@ -66,7 +66,7 @@ const plans = [
       "One artwork a month showcased in Sarayu Shop",
       "Priority review for the printed magazine",
       "Gallery: 50 galleries · 1,500 pictures · 10 GB",
-      "Create up to 25 books · 100 pages each",
+      "Create up to 25 books · up to 400 pages each",
       "Free content-creation help — book setup, image design & more",
     ],
     limitations: null,

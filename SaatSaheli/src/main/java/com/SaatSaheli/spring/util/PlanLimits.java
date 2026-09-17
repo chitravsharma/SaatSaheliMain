@@ -64,7 +64,8 @@ public final class PlanLimits {
                         15, 300, 2 * GB, true, UNLIMITED, true);
             case "Gold":     // legacy tier (no longer sold) — treat as Creator-level
             case "Creator":
-                return new PlanLimits(p, 25, 100, 1500, true, true,
+                // 400 pages/book: the 10 GB storage cap is the other ceiling — whichever comes first.
+                return new PlanLimits(p, 25, 400, 1500, true, true,
                         50, 1500, 10 * GB, true, UNLIMITED, true);
             case "Free":
             default:
