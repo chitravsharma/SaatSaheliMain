@@ -558,6 +558,13 @@ export const en = {
   },
 
   flipBook: {
+    gateKicker: (n, total) => `Free preview · ${n} of ${total} pages`,
+    gateTitle: "Enjoying this issue?",
+    gateTextLogin: "Log in to keep reading. Premium and Creator members read every issue in full.",
+    gateTextUpgrade: "Upgrade to Premium to read the full issue — plus every past and future edition.",
+    gateLogin: "Log in to continue",
+    gateUpgrade: "Upgrade to read the full issue",
+    gateSeePlans: "See plans",
     pageHeading: (n) => `Page ${n}`,
     pageImageAlt: (n, i) => `Page ${n} - ${i}`,
     prevPage: "Previous page",
@@ -1369,6 +1376,13 @@ export const hi = {
   },
 
   flipBook: {
+    gateKicker: (n, total) => `निःशुल्क पूर्वावलोकन · ${total} में से ${n} पृष्ठ`,
+    gateTitle: "यह अंक पसंद आ रहा है?",
+    gateTextLogin: "पढ़ना जारी रखने के लिए लॉग इन करें। प्रीमियम और क्रिएटर सदस्य हर अंक पूरा पढ़ते हैं।",
+    gateTextUpgrade: "पूरा अंक पढ़ने के लिए प्रीमियम में अपग्रेड करें — साथ ही हर पिछला और आने वाला संस्करण।",
+    gateLogin: "जारी रखने के लिए लॉग इन करें",
+    gateUpgrade: "पूरा अंक पढ़ने के लिए अपग्रेड करें",
+    gateSeePlans: "योजनाएँ देखें",
     pageHeading: (n) => `पृष्ठ ${n}`,
     pageImageAlt: (n, i) => `पृष्ठ ${n} - ${i}`,
     prevPage: "पिछला पृष्ठ",

@@ -22,6 +22,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -195,6 +196,7 @@ public class BookService {
                 .orElseThrow(() -> new RuntimeException("Book not found"));
     }
 
+    /** Full book with ALL pages — internal use (admin tools, PDF export). Not gated. */
     public Book getBook(Long id) {
         Optional<Book> bookOpt = bookRepo.findById(id);
         if (bookOpt.isEmpty()) throw new RuntimeException("Book not found");
@@ -205,6 +207,45 @@ public class BookService {
             book.setCoverImageUrl(pages.get(0).getImageUrl());
         }
         return book;
+    }
+
+    /** Public read: magazine pages are cut to the free preview unless the caller may read in full. */
+    public Book getBook(Long id, Long callerUserId) {
+        Book book = getBook(id);
+        applyMagazinePreview(book, callerUserId);
+        return book;
+    }
+
+    // ── Magazine preview gate ────────────────────────────────────────────────
+
+    /** Only magazines are gated; books, articles, recipes and galleries are free to read. */
+    public boolean isMagazine(Book book) {
+        return book != null && "MAGAZINE".equalsIgnoreCase(book.getCategory());
+    }
+
+    /** Admins, the magazine's owner, and plans with canReadFullMagazine read every page. */
+    public boolean canReadFullMagazine(Book book, Long callerUserId) {
+        if (callerUserId == null) return false;
+        if (callerUserId.equals(book.getUserId())) return true;
+        return userRepo.findById(callerUserId)
+                .map(u -> RoleUtil.isAdmin(u.getRole()) || PlanLimits.forPlan(u.getPlan()).canReadFullMagazine)
+                .orElse(false);
+    }
+
+    /** Truncate a magazine's pages to the free preview for readers who can't read in full. */
+    public void applyMagazinePreview(Book book, Long callerUserId) {
+        if (!isMagazine(book) || book.getPages() == null) return;
+        int total = book.getPages().size();
+        book.setTotalPages(total);
+        book.setPreviewPages(PlanLimits.MAGAZINE_PREVIEW_PAGES);
+        if (total <= PlanLimits.MAGAZINE_PREVIEW_PAGES || canReadFullMagazine(book, callerUserId)) return;
+        book.setPages(new ArrayList<>(book.getPages().subList(0, PlanLimits.MAGAZINE_PREVIEW_PAGES)));
+        book.setPreviewLimited(true);
+    }
+
+    /** Pages for the reader, with the magazine preview applied. */
+    public Book getReaderView(Long bookId, Long callerUserId) {
+        return getBook(bookId, callerUserId);
     }
 
     public Book updateBook(Long id, String title, String status, Long requestUserId) {
@@ -348,6 +389,12 @@ public class BookService {
         if (mag == null) return null;
         mag.setPages(pageRepo.findByBookIdOrderByPageNumberAsc(mag.getId()));
         enrichWithCoverImages(List.of(mag));
+        return mag;
+    }
+
+    public Book getMagazine(Long callerUserId) {
+        Book mag = getMagazine();
+        if (mag != null) applyMagazinePreview(mag, callerUserId);
         return mag;
     }
 
@@ -863,6 +910,17 @@ public class BookService {
 
     public List<Page> getPagesByBookId(Long bookId) {
         return pageRepo.findByBookIdOrderByPageNumberAsc(bookId);
+    }
+
+    /** Pages with the magazine preview cap applied for this caller. */
+    public List<Page> getPagesByBookId(Long bookId, Long callerUserId) {
+        List<Page> pages = pageRepo.findByBookIdOrderByPageNumberAsc(bookId);
+        Book book = bookRepo.findById(bookId).orElse(null);
+        if (book != null && isMagazine(book) && pages.size() > PlanLimits.MAGAZINE_PREVIEW_PAGES
+                && !canReadFullMagazine(book, callerUserId)) {
+            return new ArrayList<>(pages.subList(0, PlanLimits.MAGAZINE_PREVIEW_PAGES));
+        }
+        return pages;
     }
 
     public Page addPage(Long bookId, Page page, Long requestUserId) {

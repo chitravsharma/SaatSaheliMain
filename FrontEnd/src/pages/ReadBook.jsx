@@ -21,12 +21,6 @@ function ReadBook() {
   // Anonymous user landed on /read/:id directly (or via shared link) — open the
   // login modal once and don't render the reader. After login, user state
   // updates and the reader renders normally.
-  useEffect(() => {
-    if (!user && !gateTriggeredRef.current) {
-      gateTriggeredRef.current = true;
-      requireLogin(window.location.pathname + window.location.search);
-    }
-  }, [user, requireLogin]);
 
   const [book, setBook] = useState(null);
   const [liked, setLiked] = useState(false);
@@ -39,6 +33,17 @@ function ReadBook() {
   const [error, setError] = useState("");
   const commentInputRef = useRef(null);
   const loginPromptRef = useRef(null);
+
+  // Magazines are the exception: anyone may read the free preview (first pages);
+  // the flip-book itself turns to a "log in / upgrade" page after it.
+  const isMagazine = !!book && String(book.category || "").toUpperCase() === "MAGAZINE";
+  useEffect(() => {
+    if (!book) return; // wait until we know what this is
+    if (!user && !isMagazine && !gateTriggeredRef.current) {
+      gateTriggeredRef.current = true;
+      requireLogin(window.location.pathname + window.location.search);
+    }
+  }, [user, book, isMagazine, requireLogin]);
 
   // Fetch book info
   useEffect(() => {
@@ -155,7 +160,12 @@ function ReadBook() {
     }
   };
 
-  if (!user) {
+  // Don't flash the login wall while we find out whether this is a magazine.
+  if (!user && !book && !error) {
+    return <div className="book-manager"><div className="loading-spinner" /></div>;
+  }
+
+  if (!user && !isMagazine) {
     return (
       <div className="book-manager">
         <div className="rb-top-bar">

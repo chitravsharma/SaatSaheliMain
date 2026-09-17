@@ -412,6 +412,15 @@ const UserManual = () => {
             the FlipBook reader.
           </p>
 
+          <h3>Magazine Issues &mdash; Free Preview</h3>
+          <p>
+            Books are free to read for everyone. <strong>Magazine issues</strong>{" "}
+            show the first 10 pages to visitors and Free members; the reader
+            then turns to a page asking you to <em>log in</em> (if you
+            aren&rsquo;t) or to <em>upgrade to Premium</em> to read the rest.
+            Premium and Creator members read every issue in full.
+          </p>
+
           <h3>Reader Controls</h3>
           <ul>
             <li>
@@ -659,15 +668,17 @@ const UserManual = () => {
           </p>
           <ul>
             <li>
-              <strong>Free</strong> &mdash; read everything, comment, build a
-              profile and share it, and keep a small gallery: 2 galleries,
-              20 pictures, 100&nbsp;MB; message sellers about artwork For
-              Sale. Cannot create books or mark items For Sale.
+              <strong>Free</strong> &mdash; read all books, articles, recipes
+              and galleries, and the first 10 pages of each magazine issue;
+              comment, build a profile and share it, and keep a small gallery:
+              2 galleries, 20 pictures, 100&nbsp;MB; message sellers about
+              artwork For Sale. Cannot create books or mark items For Sale.
             </li>
             <li>
               <strong>Premium</strong> &mdash; 15 galleries, 300 pictures,
-              2&nbsp;GB; mark any picture For Sale; private Messages; create
-              up to 10 books of 50 pages; PDF/DOCX export.
+              2&nbsp;GB; read every magazine issue in full; mark any picture
+              For Sale; private Messages; create up to 10 books of 50 pages;
+              PDF/DOCX export.
             </li>
             <li>
               <strong>Creator / Pro</strong> &mdash; 50 galleries, 1,500

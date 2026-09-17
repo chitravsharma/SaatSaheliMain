@@ -74,6 +74,14 @@ public class Book {
     @Transient
     private String coverImageUrl; // cover page image URL, enriched from page 1
 
+    /** Magazine preview gate: true when pages were cut to the free preview for this caller. */
+    @Transient
+    private boolean previewLimited;
+    @Transient
+    private int previewPages;
+    @Transient
+    private int totalPages;
+
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
@@ -129,4 +137,11 @@ public class Book {
     public String toString() {
         return "Book [id=" + id + ", title=" + title + ", status=" + status + "]";
     }
+
+    public boolean isPreviewLimited() { return previewLimited; }
+    public void setPreviewLimited(boolean previewLimited) { this.previewLimited = previewLimited; }
+    public int getPreviewPages() { return previewPages; }
+    public void setPreviewPages(int previewPages) { this.previewPages = previewPages; }
+    public int getTotalPages() { return totalPages; }
+    public void setTotalPages(int totalPages) { this.totalPages = totalPages; }
 }

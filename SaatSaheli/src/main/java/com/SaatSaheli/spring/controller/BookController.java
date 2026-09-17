@@ -313,9 +313,9 @@ public class BookController {
     }
 
     @GetMapping("/{bookId}")
-    public ResponseEntity<?> getBook(@PathVariable Long bookId) {
+    public ResponseEntity<?> getBook(@PathVariable Long bookId, HttpServletRequest request) {
         try {
-            return ResponseEntity.ok(bookService.getBook(bookId));
+            return ResponseEntity.ok(bookService.getBook(bookId, (Long) request.getAttribute("jwtUserId")));
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorMap(e.getMessage()));
         } catch (Exception e) {
@@ -429,10 +429,33 @@ public class BookController {
         }
     }
 
-    @GetMapping("/{bookId}/pages")
-    public ResponseEntity<?> getPages(@PathVariable Long bookId) {
+    /**
+     * GET /api/books/{bookId}/reader — what the flip-book needs: pages plus the
+     * magazine preview flags (previewLimited / previewPages / totalPages).
+     */
+    @GetMapping("/{bookId}/reader")
+    public ResponseEntity<?> getReaderView(@PathVariable Long bookId, HttpServletRequest request) {
         try {
-            return ResponseEntity.ok(bookService.getPagesByBookId(bookId));
+            Book b = bookService.getReaderView(bookId, (Long) request.getAttribute("jwtUserId"));
+            Map<String, Object> out = new HashMap<>();
+            out.put("pages", b.getPages());
+            out.put("previewLimited", b.isPreviewLimited());
+            out.put("previewPages", b.getPreviewPages());
+            out.put("totalPages", b.getTotalPages() > 0 ? b.getTotalPages() : b.getPages().size());
+            out.put("magazine", bookService.isMagazine(b));
+            return ResponseEntity.ok(out);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorMap(e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(errorMap("Failed to get pages: " + e.getMessage()));
+        }
+    }
+
+    @GetMapping("/{bookId}/pages")
+    public ResponseEntity<?> getPages(@PathVariable Long bookId, HttpServletRequest request) {
+        try {
+            return ResponseEntity.ok(bookService.getPagesByBookId(bookId, (Long) request.getAttribute("jwtUserId")));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(errorMap("Failed to get pages: " + e.getMessage()));
@@ -481,9 +504,9 @@ public class BookController {
     }
 
     @GetMapping("/magazine")
-    public ResponseEntity<?> getMagazine() {
+    public ResponseEntity<?> getMagazine(HttpServletRequest request) {
         try {
-            Book magazine = bookService.getMagazine();
+            Book magazine = bookService.getMagazine((Long) request.getAttribute("jwtUserId"));
             if (magazine == null || !"PUBLISHED".equalsIgnoreCase(magazine.getStatus())) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorMap("Magazine not available yet"));
             }

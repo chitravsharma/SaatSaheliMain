@@ -573,3 +573,14 @@ one-screen lightbox on 360×640, 390×844, 1280×800). Pre-conditions: the
 |---|---|---|
 | 1 | Admin → Comments | All comments, newest first, item deep-links (blog → `/blogs/:id`) |
 | 2 | Remove a comment | Gone from the item; visible here with "Show removed" |
+
+### 11.8 Magazine preview gate (`mag_test.py`, 11 checks)
+| # | Test | Expected |
+|---|---|---|
+| 1 | Logged out → open a published magazine (`/read/44`) | Reader opens (no login wall); indicator `1 / 50`; only 10 pages load |
+| 2 | Turn to the last page | Gate page: "Free preview · 10 of 50 pages", **Log in to continue** + See plans |
+| 3 | Free member → same issue | Gate page offers **Upgrade to read the full issue** |
+| 4 | Premium / Creator / admin / the magazine owner | All 50 pages, no gate |
+| 5 | `GET /api/books/44/pages` without a token | 10 pages only (server enforced) |
+| 6 | Ordinary book, Free member | All pages, no gate; anonymous still gets the existing login wall |
+| 7 | Magazine with ≤10 pages | No gate |

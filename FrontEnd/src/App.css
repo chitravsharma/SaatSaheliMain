@@ -849,3 +849,21 @@
     transform: none !important;
   }
 }
+
+/* Magazine preview gate page (anonymous / Free readers) */
+.flipbook-gate {
+  width: 100%; height: 100%; box-sizing: border-box;
+  display: flex; align-items: center; justify-content: center;
+  background: linear-gradient(160deg, #fff8e7 0%, #fde68a 100%);
+  border: 2px solid #d97706; padding: 24px; text-align: center;
+}
+.flipbook-gate-inner { max-width: 320px; display: flex; flex-direction: column; gap: 10px; align-items: center; }
+.flipbook-gate-kicker { font-size: 0.75rem; letter-spacing: 0.08em; text-transform: uppercase; color: #92400e; font-weight: 700; }
+.flipbook-gate h3 { margin: 0; font-size: 1.3rem; color: #1e293b; }
+.flipbook-gate p { margin: 0; font-size: 0.95rem; color: #374151; line-height: 1.45; }
+.flipbook-gate-btn {
+  display: inline-block; margin-top: 6px; padding: 10px 22px; min-height: 44px; box-sizing: border-box;
+  background: #b45309; color: #fff; border-radius: 8px; font-weight: 700; text-decoration: none;
+}
+.flipbook-gate-btn:hover { background: #92400e; }
+.flipbook-gate-link { font-size: 0.85rem; color: #92400e; text-decoration: underline; }

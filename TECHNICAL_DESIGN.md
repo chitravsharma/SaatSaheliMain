@@ -364,6 +364,8 @@ the Account "Your plan & usage" meter are rendered from the same numbers via
 | Mark gallery items For Sale (`canUseMarketChat`) | ✗ | ✓ unlimited | ✓ unlimited |
 | Seller inbox (receive buyer enquiries) | ✗ | ✓ | ✓ |
 | Contact a seller | ✓ (any member, and visitors via guest form) | ✓ | ✓ |
+| Magazine issues (`canReadFullMagazine`) | first **10 pages**, then log in / upgrade | full | full |
+| Books, articles, recipes, galleries | free (books need login — reader wall since `8f02006`) | free | free |
 
 - **Storage ledger:** `media_assets (url UNIQUE, size_bytes, content_type)`.
   `R2StorageService.putObject` records every object it stores. A one-time
@@ -389,6 +391,22 @@ the Account "Your plan & usage" meter are rendered from the same numbers via
   PDF imports does.
 
 ---
+
+### 7.1 Magazine preview gate
+- Only `books.category = 'MAGAZINE'` is gated; `PlanLimits.MAGAZINE_PREVIEW_PAGES = 10`.
+- Enforced **server-side** in `BookService.applyMagazinePreview` for every
+  public page-returning route (`GET /api/books/{id}`, `/{id}/pages`,
+  `/{id}/reader`, `/magazine`): unless the caller is an admin, the magazine's
+  owner, or on a plan with `canReadFullMagazine`, only the first 10 pages are
+  sent, with `previewLimited / previewPages / totalPages` flags. The one-arg
+  `BookService.getBook(id)` stays ungated for internal use (admin magazine
+  upload, PDF export).
+- `FlipBook.js` loads `/api/books/{id}/reader` through the JWT-aware `api`
+  client and appends a synthetic gate page: anonymous → "Log in to continue"
+  (+ See plans); logged-in Free → "Upgrade to read the full issue". The page
+  indicator shows `n / <real total>`.
+- `ReadBook.jsx`: the reader's login wall no longer applies to magazines
+  (anyone may open the preview); ordinary books still require sign-in.
 
 ## 8. Gallery items For Sale + private messaging (2026-09)
 

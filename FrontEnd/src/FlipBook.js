@@ -1,6 +1,9 @@
 import React, { useEffect, useState, useRef, useCallback } from "react";
 import HTMLFlipBook from "react-pageflip";
 import axios from "axios";
+import { Link } from "react-router-dom";
+import api from "./utils/api";
+import { useAuth } from "./AuthContext";
 import { useStrings } from "./LanguageContext";
 import { optimizeCloudinary } from "./utils/imageUrl";
 import { resolvePageSize, DEFAULT_PAGE_SIZE_KEY } from "./constants/pageSizes";
@@ -178,6 +181,10 @@ function FlipBook({ bookId }) {
   const strings = useStrings();
   const [pages, setPages] = useState([]);
   const [currentPage, setCurrentPage] = useState(0);
+  // Magazine preview gate: anonymous / Free readers get the first N pages, then a
+  // "log in / upgrade" page. Set from the server — the API never sends the rest.
+  const [preview, setPreview] = useState({ limited: false, previewPages: 0, totalPages: 0 });
+  const { user } = useAuth();
   const [zoomIndex, setZoomIndex] = useState(DEFAULT_ZOOM_INDEX);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [pinchZoom, setPinchZoom] = useState(1);
@@ -235,8 +242,15 @@ function FlipBook({ bookId }) {
   const scale = pageSize.w / DESKTOP_W;
 
   useEffect(() => {
-    axios.get(`${process.env.REACT_APP_API_URL}/api/books/${bookId}/pages`)
-      .then(res => setPages(res.data))
+    // `api` attaches the JWT so the server can decide how many magazine pages to send.
+    api.get(`${process.env.REACT_APP_API_URL}/api/books/${bookId}/reader`)
+      .then(res => {
+        const d = res.data || {};
+        const list = Array.isArray(d.pages) ? d.pages : [];
+        setPreview({ limited: !!d.previewLimited, previewPages: d.previewPages || 0, totalPages: d.totalPages || list.length });
+        // Append a synthetic gate page so the reader "turns" onto the prompt.
+        setPages(d.previewLimited ? [...list, { gate: true, pageNumber: list.length + 1 }] : list);
+      })
       .catch(err => console.error(err));
   }, [bookId]);
 
@@ -479,6 +493,29 @@ function FlipBook({ bookId }) {
 
   // Render a single page element (shared between flipbook and scroll reader)
   const renderPageContent = (page, index) => {
+    if (page.gate) {
+      const t = strings.flipBook;
+      const returnTo = `/read/${bookId}`;
+      return (
+        <div key={index} className="card-box flipbook-page">
+          <div className="flipbook-gate">
+            <div className="flipbook-gate-inner">
+              <div className="flipbook-gate-kicker">{t.gateKicker(preview.previewPages, preview.totalPages)}</div>
+              <h3>{t.gateTitle}</h3>
+              <p>{user ? t.gateTextUpgrade : t.gateTextLogin}</p>
+              {user ? (
+                <Link to="/pricing" className="flipbook-gate-btn">{t.gateUpgrade}</Link>
+              ) : (
+                <>
+                  <Link to={`/Login?redirect=${encodeURIComponent(returnTo)}`} className="flipbook-gate-btn">{t.gateLogin}</Link>
+                  <Link to="/pricing" className="flipbook-gate-link">{t.gateSeePlans}</Link>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      );
+    }
     const { style: textStyle, layout, coverDesign, backgroundColor, border, textBlocks, imageBlocks } = parseFormat(page.format);
     const img1Src = resolveImageUrl(page.imageUrl);
     const img2Src = resolveImageUrl(page.imageUrl2);
@@ -677,7 +714,7 @@ function FlipBook({ bookId }) {
     <div className="flipbook-arrow-row">
       <button className="flipbook-arrow" onClick={handleFirstPage} disabled={currentPage === 0} aria-label={strings.flipBook.firstPage}>&#x23EE;</button>
       <button className="flipbook-arrow" onClick={handlePrevPage} disabled={currentPage === 0} aria-label={strings.flipBook.prevPage}>&#8249;</button>
-      <span className="flipbook-page-indicator">{currentPage + 1} / {totalPages}</span>
+      <span className="flipbook-page-indicator">{Math.min(currentPage + 1, preview.limited ? preview.previewPages : totalPages)} / {preview.limited ? preview.totalPages : totalPages}</span>
       <button className="flipbook-arrow" onClick={handleNextPage} disabled={currentPage >= totalPages - 1} aria-label={strings.flipBook.nextPage}>&#8250;</button>
       <button className="flipbook-arrow" onClick={handleLastPage} disabled={currentPage >= totalPages - 1} aria-label={strings.flipBook.lastPage}>&#x23ED;</button>
     </div>
