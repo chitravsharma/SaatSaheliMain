@@ -127,13 +127,17 @@ const COUNTRIES = {
 };
 
 const MagazineSubmit = () => {
-  const { user } = useAuth();
+  const { user, initializing } = useAuth();
   const { requireLogin } = useLoginGate();
   const gateTriggeredRef = useRef(false);
 
   // Anonymous visitor lands here directly — open the login modal once.
   // After login the user state updates and the form renders normally.
+  // Wait for the mount-time session restore first: on a hard load `user` is
+  // null until AuthContext rehydrates from localStorage, and child effects run
+  // before the parent's, so without this a logged-in user got the popup too.
   useEffect(() => {
+    if (initializing) return;
     if (!user && !gateTriggeredRef.current) {
       gateTriggeredRef.current = true;
       requireLogin(window.location.pathname + window.location.search, {
@@ -141,7 +145,7 @@ const MagazineSubmit = () => {
         subtitle: "Sign in or create a free account to submit your creative work to Saat Saheli Magazine.",
       });
     }
-  }, [user, requireLogin]);
+  }, [user, initializing, requireLogin]);
 
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -276,6 +280,10 @@ const MagazineSubmit = () => {
       submittingRef.current = false;
     }
   };
+
+  // Session restore still running — render nothing rather than flashing the
+  // "Login required" panel at a user who is about to be recognised.
+  if (initializing) return null;
 
   if (!user) {
     return (

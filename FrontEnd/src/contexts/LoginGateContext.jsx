@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useCallback } from "react";
+import React, { createContext, useContext, useState, useCallback, useEffect } from "react";
 import LoginGate from "../components/LoginGate";
 import { useAuth } from "../AuthContext";
 
@@ -26,6 +26,14 @@ export function LoginGateProvider({ children }) {
     setReturnTo(null);
     setReason(null);
   }, []);
+
+  // Safety net: if the modal is open but the user is (or becomes) logged in —
+  // e.g. a gate fired during the mount-time session restore, or they signed in
+  // from another tab — dismiss it. Nobody who is logged in should see a login popup.
+  const { user } = useAuth();
+  useEffect(() => {
+    if (user && returnTo !== null) close();
+  }, [user, returnTo, close]);
 
   return (
     <LoginGateContext.Provider value={{ requireLogin }}>
