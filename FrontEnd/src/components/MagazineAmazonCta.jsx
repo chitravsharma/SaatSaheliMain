@@ -11,9 +11,9 @@ import "./MagazineAmazonCta.css";
 export default function MagazineAmazonCta() {
   return (
     <div className="mag-amazon-cta">
-      <span className="mag-amazon-cta-text">📖 Get your hard copy today</span>
+      <span className="mag-amazon-cta-text">📖 Get your printed copy of Saat Saheli Magazine</span>
       <a className="mag-amazon-cta-btn" href={AMAZON_SERIES_URL} target="_blank" rel="noopener noreferrer">
-        🛒 Order now on Amazon
+        🛒 Order your magazine on Amazon
       </a>
     </div>
   );

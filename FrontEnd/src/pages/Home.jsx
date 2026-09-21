@@ -481,14 +481,14 @@ function Home() {
                   <p className="home-hero-amazon-sub"><strong>Both issues</strong> are now on Amazon.</p>
                 </div>
                 <p>Enjoy poetry, creative writing, recipes, crafts, lifestyle &amp; cultural stories — in one beautifully printed magazine.</p>
-                <p className="home-hero-amazon-hard"><strong>👉 Get your hard copy today</strong></p>
+                <p className="home-hero-amazon-hard"><strong>👉 Get your printed copy of Saat Saheli Magazine</strong></p>
                 <a
                   className="home-hero-amazon-btn"
                   href={AMAZON_SERIES_URL}
                   target="_blank"
                   rel="noopener noreferrer"
                 >
-                  🛒 Order now on Amazon
+                  🛒 Order your magazine on Amazon
                 </a>
               </div>
             </div>
