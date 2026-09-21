@@ -230,6 +230,37 @@ public class R2StorageService implements MediaStorageService {
         return "bin";
     }
 
+    /** True if an object with this exact key is already in the bucket. */
+    public boolean exists(String key) {
+        try {
+            s3.headObject(software.amazon.awssdk.services.s3.model.HeadObjectRequest.builder()
+                    .bucket(bucket).key(key).build());
+            return true;
+        } catch (software.amazon.awssdk.services.s3.model.NoSuchKeyException e) {
+            return false;
+        }
+    }
+
+    /**
+     * Store a derived file (e.g. a share-preview rendition) at a fixed key. Not
+     * recorded in the media_assets ledger — it is not the user's upload and must
+     * not count against their storage quota.
+     */
+    public String putDerived(byte[] data, String key, String contentType) {
+        PutObjectRequest req = PutObjectRequest.builder()
+                .bucket(bucket)
+                .key(key)
+                .contentType(contentType)
+                .cacheControl("public, max-age=31536000, immutable")
+                .build();
+        s3.putObject(req, RequestBody.fromBytes(data));
+        return publicBaseUrl + "/" + key;
+    }
+
+    public String publicUrlFor(String key) {
+        return publicBaseUrl + "/" + key;
+    }
+
     private String putObject(byte[] data, String key, String contentType) {
         PutObjectRequest req = PutObjectRequest.builder()
                 .bucket(bucket)

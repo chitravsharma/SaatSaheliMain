@@ -80,6 +80,7 @@ public class OpenGraphController {
     private final PodcastRepository podcastRepo;
     private final UserRepository userRepo;
     private final BookService bookService;
+    private final com.SaatSaheli.spring.service.OgImageService ogImages;
 
     /** Lazily-loaded, cached copy of the built index.html. */
     private volatile String template;
@@ -93,8 +94,10 @@ public class OpenGraphController {
                                GalleryImageRepository galleryImageRepo,
                                PodcastRepository podcastRepo,
                                UserRepository userRepo,
-                               BookService bookService) {
+                               BookService bookService,
+                               com.SaatSaheli.spring.service.OgImageService ogImages) {
         this.bookService = bookService;
+        this.ogImages = ogImages;
         this.userRepo = userRepo;
         this.articleRepo = articleRepo;
         this.bookRepo = bookRepo;
@@ -215,7 +218,9 @@ public class OpenGraphController {
         String title = blank(rawTitle) ? DEFAULT_TITLE : stripAndTrim(rawTitle, 90);
         String fullTitle = blank(rawTitle) ? DEFAULT_TITLE : title + " · " + SITE_NAME;
         String desc = blank(rawDesc) ? DEFAULT_DESC : stripAndTrim(rawDesc, DESC_MAX);
-        String image = absolutize(rawImage, req);
+        // Oversized uploads get a ≤300 KB share rendition — WhatsApp ignores bigger ones.
+        com.SaatSaheli.spring.service.OgImageService.ShareImage share = ogImages.shareVariant(rawImage);
+        String image = absolutize(share != null ? share.url() : null, req);
         boolean customImage = image != null;
         if (image == null) image = absolutize("/og-card.jpg", req);
         String url = absoluteRequestUrl(req);
@@ -235,6 +240,12 @@ public class OpenGraphController {
         // mislead scrapers into a wrong crop.
         if (customImage) {
             out = out.replaceAll("(?s)\\s*<meta property=\"og:image:(?:width|height)\"[^>]*>", "");
+            if (share != null && share.width() != null && share.height() != null) {
+                String dims = "<meta property=\"og:image:width\" content=\"" + share.width() + "\" />"
+                        + "<meta property=\"og:image:height\" content=\"" + share.height() + "\" />"
+                        + "<meta property=\"og:image:type\" content=\"" + share.mimeType() + "\" />";
+                out = out.replaceFirst("(?i)</head>", Matcher.quoteReplacement(dims) + "</head>");
+            }
         }
 
         // Inject canonical og:url / twitter:url just before </head> (idempotent enough).
