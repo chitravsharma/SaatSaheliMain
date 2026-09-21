@@ -73,26 +73,8 @@ public class EmailService {
      * Send a notification when a contact form is submitted.
      */
     public void sendContactNotification(String senderName, String senderEmail, String msgSubject, String message) {
-        String formType;
-        String heading;
-        if (msgSubject != null && msgSubject.startsWith("Magazine Submission:")) {
-            formType = "Magazine Submission";
-            heading = "New Magazine Submission";
-        } else if (msgSubject != null && msgSubject.startsWith("Help & Support:")) {
-            formType = "Help & Support Request";
-            heading = "New Help & Support Request";
-        } else if (msgSubject != null && msgSubject.toLowerCase().startsWith("feedback")) {
-            formType = "Feedback";
-            heading = "New Feedback Received";
-        } else if (msgSubject != null && (
-                msgSubject.startsWith("Advertise with SaatSaheli")
-                || msgSubject.startsWith("Advertising"))) {
-            formType = "Advertising Inquiry";
-            heading = "New Advertising Inquiry";
-        } else {
-            formType = "Contact Us";
-            heading = "New Contact Us Message";
-        }
+        String formType = classifyContactForm(msgSubject);
+        String heading = "Feedback".equals(formType) ? "New Feedback Received" : "New " + formType;
         String subject = "SaatSaheli — " + formType + " from " + senderName;
         String body = """
                 <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 520px; margin: 0 auto; padding: 32px;">
@@ -109,6 +91,81 @@ public class EmailService {
                 """.formatted(heading, senderName, senderEmail, senderEmail, msgSubject, message, senderEmail, senderEmail);
 
         sendHtmlEmail(fromAddress, subject, body);
+    }
+
+    /**
+     * Human label for a /api/contact submission, inferred from the subject prefix
+     * each form stamps. Mirrors ContactController.formatTrackingId — keep in sync.
+     */
+    public static String classifyContactForm(String msgSubject) {
+        if (msgSubject == null) return "Contact Us";
+        if (msgSubject.startsWith("Magazine Submission:")) return "Magazine Submission";
+        if (msgSubject.startsWith("Help & Support:")) return "Help & Support Request";
+        if (msgSubject.toLowerCase().startsWith("feedback")) return "Feedback";
+        if (msgSubject.startsWith("Advertise with SaatSaheli") || msgSubject.startsWith("Advertising")) {
+            return "Advertising Inquiry";
+        }
+        return "Contact Us";
+    }
+
+    /**
+     * Receipt sent to the person who submitted a contact/magazine/support form.
+     * Carries the tracking id so they can quote it later — the on-screen confirmation
+     * is the only other place they ever see it.
+     */
+    public void sendSubmissionAcknowledgement(String toEmail, String recipientName, String msgSubject, String trackingId) {
+        String formType = classifyContactForm(msgSubject);
+        String safeTracking = escape(trackingId != null ? trackingId : "");
+        String greeting = (recipientName != null && !recipientName.isBlank())
+                ? "Hi " + escape(recipientName) + "," : "Hi,";
+
+        String intro;
+        String nextSteps;
+        switch (formType) {
+            case "Magazine Submission" -> {
+                intro = "Thank you for submitting your creative work to Saat Saheli Magazine. We've received it and it's now with our editorial team.";
+                nextSteps = "Our editors review every submission personally, so this can take a little time. "
+                        + "If your piece is selected we'll write to you at this address with next steps.";
+            }
+            case "Help & Support Request" -> {
+                intro = "Thank you for reaching out to Saat Saheli support. We've received your request.";
+                nextSteps = "A member of our team will look into it and reply to this address as soon as possible.";
+            }
+            case "Feedback" -> {
+                intro = "Thank you for sharing your feedback with Saat Saheli — we read every message.";
+                nextSteps = "If your note needs a reply, we'll get back to you at this address.";
+            }
+            case "Advertising Inquiry" -> {
+                intro = "Thank you for your interest in advertising with Saat Saheli. We've received your inquiry.";
+                nextSteps = "Our team will review it and reply to this address with details and next steps.";
+            }
+            default -> {
+                intro = "Thank you for contacting Saat Saheli. We've received your message.";
+                nextSteps = "We'll get back to you at this address as soon as we can.";
+            }
+        }
+
+        String subject = "SaatSaheli — We received your " + formType.toLowerCase()
+                + (safeTracking.isEmpty() ? "" : " (" + safeTracking + ")");
+        String body = """
+                <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 520px; margin: 0 auto; padding: 32px;">
+                  <h2 style="color: #b45309;">We received your %s</h2>
+                  <p>%s</p>
+                  <p>%s</p>
+                  <div style="background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; padding: 16px; text-align: center; margin: 24px 0;">
+                    <div style="color: #78350f; font-size: 0.85rem; margin-bottom: 6px;">Your tracking ID</div>
+                    <code style="font-size: 1.3rem; font-weight: 700; letter-spacing: 2px; color: #78350f;">%s</code>
+                  </div>
+                  <p>%s</p>
+                  <p style="color: #6b7280; font-size: 0.9rem;">Please keep this tracking ID and quote it if you write to us about this submission.</p>
+                  <p style="color: #6b7280; font-size: 0.9rem;"><strong>Subject:</strong> %s</p>
+                  <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 24px 0;" />
+                  <p style="color: #9ca3af; font-size: 0.85rem;">You're receiving this because a form was submitted on SaatSaheli with this email address. If that wasn't you, you can safely ignore this message.<br/>— The SaatSaheli Team</p>
+                </div>
+                """.formatted(escape(formType.toLowerCase()), greeting, intro, safeTracking, nextSteps,
+                escape(msgSubject != null ? msgSubject : ""));
+
+        sendHtmlEmail(toEmail, subject, body);
     }
 
     /**

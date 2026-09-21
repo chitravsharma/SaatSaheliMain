@@ -251,6 +251,38 @@ public class NotificationService {
     }
 
     /**
+     * Receipt in the submitter's own bell after they send a contact/magazine/support
+     * form while logged in. Complements the acknowledgement email — the tracking id
+     * lives here too, so it survives them closing the confirmation screen.
+     */
+    public void notifyOnSubmissionAcknowledged(Long submitterUserId, ContactMessage msg, String trackingId) {
+        if (submitterUserId == null || msg == null) return;
+        try {
+            String formType = EmailService.classifyContactForm(msg.getSubject());
+            String message = "We received your " + formType.toLowerCase()
+                    + (trackingId != null && !trackingId.isBlank() ? " — tracking ID " + trackingId : "")
+                    + ". We'll get back to you by email.";
+
+            Notification n = new Notification();
+            n.setRecipientUserId(submitterUserId);
+            n.setActorName("Saat Saheli");
+            n.setType("SUBMISSION_ACK");
+            n.setTargetType("FEEDBACK");
+            n.setTargetId(msg.getId());
+            n.setTargetTitle(msg.getSubject());
+            n.setMessage(message);
+            n.setLink(null);
+            n.setRead(false);
+            n.setAdminCopy(false);
+            n.setCreatedDate(LocalDateTime.now());
+            notificationRepo.save(n);
+        } catch (Exception e) {
+            log.error("Failed to create submission acknowledgement for user {} / contact message {}: {}",
+                    submitterUserId, msg.getId(), e.getMessage(), e);
+        }
+    }
+
+    /**
      * Notify all admins/super-admins in-app that new feedback/contact was submitted.
      * (Admin email already goes out separately from ContactController.) Non-fatal.
      */

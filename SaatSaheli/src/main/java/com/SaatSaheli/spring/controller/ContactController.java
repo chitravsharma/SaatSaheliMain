@@ -63,7 +63,8 @@ public class ContactController {
             // form) have already proven they're human at login — skip honeypot +
             // reCAPTCHA for them. Rate limit still applies as compromised-account
             // / abuse defense.
-            boolean authenticated = getAuthUserId(request) != null;
+            Long authUserId = getAuthUserId(request);
+            boolean authenticated = authUserId != null;
 
             // Honeypot check — bots fill hidden fields, real users don't
             if (!authenticated) {
@@ -159,6 +160,16 @@ public class ContactController {
 
             // In-app notification for admins/super-admins. Non-fatal — submission is saved.
             notificationService.notifyOnFeedback(contact);
+
+            // Acknowledgement to the submitter: email receipt with the tracking id, plus a
+            // bell notification if they were logged in. Both non-fatal for the same reason.
+            try {
+                emailService.sendSubmissionAcknowledgement(trimmedEmail, name.trim(), contact.getSubject(), trackingId);
+            } catch (Exception ackErr) {
+                log.warn("Failed to send submission acknowledgement email to {} (submission #{} still saved): {}",
+                        trimmedEmail, contact.getId(), ackErr.getMessage());
+            }
+            notificationService.notifyOnSubmissionAcknowledged(authUserId, contact, trackingId);
 
             Map<String, String> response = new HashMap<>();
             response.put("message", "Thank you for reaching out! We'll get back to you soon.");
