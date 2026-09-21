@@ -120,6 +120,7 @@ public class EmailService {
         if (msgSubject.startsWith("Advertise with SaatSaheli") || msgSubject.startsWith("Advertising")) {
             return "Advertising Inquiry";
         }
+        if (msgSubject.startsWith("Sponsor SaatSaheli")) return "Sponsorship Inquiry";
         return "Contact Us";
     }
 
@@ -153,6 +154,10 @@ public class EmailService {
             }
             case "Advertising Inquiry" -> {
                 intro = "Thank you for your interest in advertising with Saat Saheli. We've received your inquiry.";
+                nextSteps = "Our team will review it and reply to this address with details and next steps.";
+            }
+            case "Sponsorship Inquiry" -> {
+                intro = "Thank you for your interest in sponsoring Saat Saheli. We've received your inquiry.";
                 nextSteps = "Our team will review it and reply to this address with details and next steps.";
             }
             default -> {

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
+import { useLocation } from "react-router-dom";
 import api from "../utils/api";
 import { optimizeCloudinary } from "../utils/imageUrl";
 import { useAuth } from "../AuthContext";
@@ -85,7 +86,21 @@ const AdminDashboard = () => {
     const strings = useStrings();
     const s = strings.admin || {};
 
-    const [tab, setTab] = useState("stats");
+    // Bell notifications deep-link to /admin?tab=support|messages|marketplace…
+    const location = useLocation();
+    const ADMIN_TABS = ["stats", "users", "books", "articles", "recipes", "galleries", "marketplace", "analytics",
+        "maintenance", "support", "comments", "messages", "emails", "payments", "magazine", "heroSlides",
+        "advertisements", "audit"];
+    const tabFromUrl = () => {
+        const t = new URLSearchParams(window.location.search).get("tab");
+        return t && ADMIN_TABS.includes(t) ? t : null;
+    };
+    const [tab, setTab] = useState(() => tabFromUrl() || "stats");
+    useEffect(() => {
+        const t = tabFromUrl();
+        if (t) setTab(t);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [location.search]);
     const [stats, setStats] = useState(null);
     const [users, setUsers] = useState([]);
     const [books, setBooks] = useState([]);

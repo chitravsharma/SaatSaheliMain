@@ -160,7 +160,7 @@ public class ContactController {
             }
 
             // In-app notification for admins/super-admins. Non-fatal — submission is saved.
-            notificationService.notifyOnFeedback(contact);
+            notificationService.notifyAdminsOnSubmission(contact, trackingId);
 
             // Acknowledgement to the submitter: email receipt with the tracking id, plus a
             // bell notification if they were logged in. Both non-fatal for the same reason.

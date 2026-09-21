@@ -34,6 +34,7 @@ public class MessagingService {
     @Autowired private GalleryRepository galleryRepo;
     @Autowired private GalleryImageRepository galleryImageRepo;
     @Autowired private MessagingNotifier notifier;
+    @Autowired private NotificationService notificationService;
 
     // ── Eligibility ──────────────────────────────────────────────────────────
 
@@ -130,6 +131,7 @@ public class MessagingService {
         c = convRepo.save(c);
 
         notifier.notifyRecipient(c, m, sellerId, false);
+        notificationService.notifyAdminsOnEnquiry(c, m);
         decorate(c, null);
         return c;
     }
@@ -245,6 +247,10 @@ public class MessagingService {
         convRepo.save(c);
 
         if (recipientId != null) notifier.notifyRecipient(c, m, recipientId, senderIsSeller);
+        // A buyer's opening message is a new enquiry — tell the admins once per thread.
+        if (!senderIsSeller && msgRepo.countByConversationId(convId) == 1) {
+            notificationService.notifyAdminsOnEnquiry(c, m);
+        }
         return m;
     }
 

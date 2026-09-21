@@ -283,39 +283,122 @@ public class NotificationService {
     }
 
     /**
-     * Notify all admins/super-admins in-app that new feedback/contact was submitted.
-     * (Admin email already goes out separately from ContactController.) Non-fatal.
+     * Notify all admins/super-admins in-app that a form was submitted through
+     * /api/contact — magazine submission, help & support, feedback, advertising,
+     * sponsorship or contact-us. The wording names the form and the tracking id so
+     * the bell reads like a queue. (Admin email goes out separately.) Non-fatal.
      */
     @Async("notificationExecutor")
-    public void notifyOnFeedback(ContactMessage msg) {
+    public void notifyAdminsOnSubmission(ContactMessage msg, String trackingId) {
         if (msg == null) return;
         try {
-            String name = msg.getName() != null ? msg.getName() : "Someone";
-            String subject = (msg.getSubject() != null && !msg.getSubject().isBlank())
-                    ? msg.getSubject() : "Feedback";
-            String message = "New feedback from " + name + ": " + subject;
+            String name = msg.getName() != null && !msg.getName().isBlank() ? msg.getName().trim() : "Someone";
+            String subject = msg.getSubject() != null ? msg.getSubject().trim() : "";
+            String formType = EmailService.classifyContactForm(subject);
+            String ref = trackingId != null && !trackingId.isBlank() ? " — " + trackingId : "";
 
-            List<User> admins = userRepo.findByRoleIn(ADMIN_ROLES);
-            for (User admin : admins) {
-                Long adminId = admin.getId();
-                if (adminId == null) continue;
-                Notification n = new Notification();
-                n.setRecipientUserId(adminId);
-                n.setActorName(name);
-                n.setType("FEEDBACK");
-                n.setTargetType("FEEDBACK");
-                n.setTargetId(msg.getId());
-                n.setTargetTitle(subject);
-                n.setMessage(message);
-                n.setLink("/admin");
-                n.setRead(false);
-                n.setAdminCopy(true);
-                n.setCreatedDate(LocalDateTime.now());
-                notificationRepo.save(n);
+            String type;
+            String message;
+            switch (formType) {
+                case "Magazine Submission" -> {
+                    type = "MAGAZINE_SUBMISSION";
+                    // subject = "Magazine Submission: <type> — <title>"
+                    String detail = subject.replaceFirst("^Magazine Submission:\\s*", "");
+                    message = "📖 New magazine submission from " + name + ref + (detail.isBlank() ? "" : ": " + detail);
+                }
+                case "Help & Support Request" -> {
+                    type = "SUPPORT_REQUEST";
+                    String detail = subject.replaceFirst("^Help & Support:\\s*", "");
+                    message = "🛟 New help & support request from " + name + ref + (detail.isBlank() ? "" : ": " + detail);
+                }
+                case "Feedback" -> {
+                    type = "FEEDBACK";
+                    String detail = subject.replaceFirst("(?i)^Feedback:?\\s*", "");
+                    String stars = msg.getRating() != null && !msg.getRating().isBlank() ? " ★" + msg.getRating().trim() : "";
+                    message = "💬 New feedback from " + name + ref + (detail.isBlank() ? "" : ": " + detail) + stars;
+                }
+                case "Advertising Inquiry" -> {
+                    type = "ADVERTISING_INQUIRY";
+                    message = "📣 New advertising inquiry from " + name + ref;
+                }
+                case "Sponsorship Inquiry" -> {
+                    type = "SPONSORSHIP_INQUIRY";
+                    message = "🤝 New sponsorship inquiry from " + name + ref;
+                }
+                default -> {
+                    type = "CONTACT_US";
+                    message = "✉️ New contact message from " + name + ref + (subject.isBlank() ? "" : ": " + subject);
+                }
             }
+            fanOutToAdmins(type, "FEEDBACK", msg.getId(), subject.isBlank() ? formType : subject,
+                    name, null, message, "/admin?tab=support");
         } catch (Exception e) {
-            log.error("Failed to create feedback notifications for contact message {}: {}",
+            log.error("Failed to create admin submission notifications for contact message {}: {}",
                     msg.getId(), e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Admin bell for a buyer enquiry about a For-Sale gallery item — a guest form
+     * submission, or a logged-in buyer's opening message. Admins have read-only
+     * oversight of these threads under Admin → Messages.
+     */
+    @Async("notificationExecutor")
+    public void notifyAdminsOnEnquiry(com.SaatSaheli.spring.model.Conversation c,
+                                      com.SaatSaheli.spring.model.ConversationMessage m) {
+        if (c == null || m == null) return;
+        try {
+            String who = m.getSenderName() != null ? m.getSenderName() : "Someone";
+            String item = c.getItemTitle() != null ? c.getItemTitle() : "an item for sale";
+            String message = "🛍️ New enquiry from " + who + " about \"" + item + "\"";
+            fanOutToAdmins("ENQUIRY", "CONVERSATION", c.getId(), item, who, m.getSenderId(), message, "/admin?tab=messages");
+        } catch (Exception e) {
+            log.error("Failed to create admin enquiry notifications for conversation {}: {}", c.getId(), e.getMessage(), e);
+        }
+    }
+
+    /** Admin bell for a paid marketplace order. */
+    @Async("notificationExecutor")
+    public void notifyAdminsOnOrder(com.SaatSaheli.spring.model.MarketplaceOrder order) {
+        if (order == null) return;
+        try {
+            String who = order.getBuyerName() != null && !order.getBuyerName().isBlank()
+                    ? order.getBuyerName() : (order.getBuyerEmail() != null ? order.getBuyerEmail() : "a buyer");
+            String amount = "";
+            if (order.getTotal() != null) {
+                String cur = order.getCurrency() != null ? order.getCurrency().toUpperCase() : "";
+                String sym = "INR".equals(cur) ? "₹" : "USD".equals(cur) ? "$" : cur + " ";
+                amount = " — " + sym + order.getTotal().stripTrailingZeros().toPlainString();
+            }
+            String message = "🧾 New order " + order.getOrderNumber() + " from " + who + amount;
+            fanOutToAdmins("ORDER", "ORDER", order.getId(), order.getOrderNumber(), who, order.getUserId(),
+                    message, "/admin?tab=marketplace");
+        } catch (Exception e) {
+            log.error("Failed to create admin order notifications for order {}: {}", order.getId(), e.getMessage(), e);
+        }
+    }
+
+    /** One bell row per admin/super-admin. */
+    private void fanOutToAdmins(String type, String targetType, Long targetId, String targetTitle,
+                                String actorName, Long actorUserId, String message, String link) {
+        List<User> admins = userRepo.findByRoleIn(ADMIN_ROLES);
+        for (User admin : admins) {
+            Long adminId = admin.getId();
+            if (adminId == null) continue;
+            Notification n = new Notification();
+            n.setRecipientUserId(adminId);
+            n.setActorUserId(actorUserId);
+            n.setActorName(actorName);
+            n.setType(type);
+            n.setTargetType(targetType);
+            n.setTargetId(targetId);
+            n.setTargetTitle(targetTitle);
+            n.setMessage(message);
+            n.setLink(link);
+            n.setRead(false);
+            n.setAdminCopy(true);
+            n.setCreatedDate(LocalDateTime.now());
+            notificationRepo.save(n);
         }
     }
 

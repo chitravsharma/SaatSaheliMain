@@ -49,6 +49,9 @@ public class MarketplaceOrderService {
     @Autowired
     private EmailService emailService;
 
+    @Autowired
+    private NotificationService notificationService;
+
     /** Customer-facing confirmation number: SS-YYYYMMDD-XXXXXX (hex), unique. */
     public String generateOrderNumber() {
         String day = LocalDateTime.now().format(DAY);
@@ -166,6 +169,9 @@ public class MarketplaceOrderService {
         } catch (Exception e) {
             log.warn("Could not send order confirmation email for {}", order.getOrderNumber(), e);
         }
+
+        // Admin bell (best-effort, async).
+        notificationService.notifyAdminsOnOrder(order);
 
         log.info("Fulfilled marketplace order {} (session {})", order.getOrderNumber(), session.getId());
         return order;
