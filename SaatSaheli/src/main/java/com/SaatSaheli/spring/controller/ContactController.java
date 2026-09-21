@@ -282,6 +282,58 @@ public class ContactController {
     }
 
     /**
+     * POST /api/contact/{id}/resend-ack — Re-send the submitter's acknowledgement (Admin only).
+     * For entries that pre-date the acknowledgement feature, or when the first email bounced.
+     * Sends the receipt email; if the submitter's address belongs to a registered account,
+     * also drops the SUBMISSION_ACK bell notification.
+     */
+    @PostMapping("/{id}/resend-ack")
+    public ResponseEntity<?> resendAcknowledgement(@PathVariable Long id, HttpServletRequest request) {
+        Long callerUserId = getAuthUserId(request);
+        if (callerUserId == null) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorMap("Authentication required"));
+        }
+        Optional<User> callerOpt = userRepo.findById(callerUserId);
+        if (callerOpt.isEmpty() || !RoleUtil.isAdmin(callerOpt.get().getRole())) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorMap("Admin access required"));
+        }
+
+        Optional<ContactMessage> msgOpt = contactRepo.findById(id);
+        if (msgOpt.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorMap("Contact message not found"));
+        }
+        ContactMessage msg = msgOpt.get();
+        if (msg.getEmail() == null || msg.getEmail().isBlank()) {
+            return ResponseEntity.badRequest().body(errorMap("This entry has no email address to send to"));
+        }
+
+        String trackingId = formatTrackingId(msg.getId(), msg.getSubject());
+        try {
+            emailService.sendSubmissionAcknowledgement(msg.getEmail(), msg.getName(), msg.getSubject(), trackingId);
+        } catch (Exception e) {
+            log.warn("Admin #{} resend-ack for contact #{} failed: {}", callerUserId, id, e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_GATEWAY)
+                    .body(errorMap("Email delivery failed: " + e.getMessage()));
+        }
+
+        boolean bellSent = false;
+        Optional<User> submitter = userRepo.findByEmailIgnoreCase(msg.getEmail().trim());
+        if (submitter.isPresent() && submitter.get().getId() != null) {
+            notificationService.notifyOnSubmissionAcknowledged(submitter.get().getId(), msg, trackingId);
+            bellSent = true;
+        }
+
+        log.info("Admin #{} re-sent acknowledgement for contact #{} ({}) to {} — bell: {}",
+                callerUserId, id, trackingId, msg.getEmail(), bellSent);
+        Map<String, Object> response = new HashMap<>();
+        response.put("message", "Acknowledgement sent to " + msg.getEmail()
+                + (bellSent ? " (email + in-app)" : " (email)"));
+        response.put("trackingId", trackingId);
+        response.put("bellSent", bellSent);
+        return ResponseEntity.ok(response);
+    }
+
+    /**
      * DELETE /api/contact/{id} — Delete a contact message (Admin only)
      */
     @DeleteMapping("/{id}")

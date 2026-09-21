@@ -595,6 +595,20 @@ const AdminDashboard = () => {
         }
     };
 
+    const [resendingAckId, setResendingAckId] = useState(null);
+    const resendAcknowledgement = async (q) => {
+        if (!window.confirm(`Re-send the acknowledgement email to ${q.email}?`)) return;
+        setResendingAckId(q.id);
+        try {
+            const res = await api.post(`${API}/api/contact/${q.id}/resend-ack`);
+            setMessage(res?.data?.message || "Acknowledgement sent");
+        } catch (err) {
+            setMessage(err?.response?.data?.error || "Failed to send acknowledgement");
+        } finally {
+            setResendingAckId(null);
+        }
+    };
+
     const deleteQuery = async (queryId) => {
         if (!window.confirm("Delete this support query permanently?")) return;
         try {
@@ -2574,6 +2588,16 @@ const AdminDashboard = () => {
                                                                     )}
                                                                     <span><strong>Submitted:</strong> {q.createdDate ? new Date(q.createdDate).toLocaleString("en-US", { timeZone: "America/Los_Angeles", timeZoneName: "short" }) : "—"}</span>
                                                                     {q.updatedDate && <span><strong>Last Updated:</strong> {new Date(q.updatedDate).toLocaleString("en-US", { timeZone: "America/Los_Angeles", timeZoneName: "short" })}</span>}
+                                                                    <button
+                                                                        type="button"
+                                                                        className="admin-btn"
+                                                                        style={{ fontSize: "0.78rem", padding: "4px 10px" }}
+                                                                        disabled={resendingAckId === q.id}
+                                                                        onClick={(e) => { e.stopPropagation(); resendAcknowledgement(q); }}
+                                                                        title="Email the submitter a receipt with their tracking ID (and a bell notification if they have an account)"
+                                                                    >
+                                                                        {resendingAckId === q.id ? "Sending…" : "📧 Resend acknowledgement"}
+                                                                    </button>
                                                                 </div>
                                                                 <div className="support-query-message">
                                                                     <strong>Message:</strong>
