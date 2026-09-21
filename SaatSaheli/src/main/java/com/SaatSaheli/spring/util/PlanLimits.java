@@ -72,7 +72,7 @@ public final class PlanLimits {
                 // Free can build a profile and a small gallery; cannot create
                 // books, mark items For Sale, or message creators.
                 return new PlanLimits("Free", 0, 20, 20, false, false,
-                        2, 20, 100 * MB, false, 0, false);
+                        5, 50, 100 * MB, false, 0, false);
         }
     }
 

@@ -514,8 +514,8 @@ one-screen lightbox on 360×640, 390×844, 1280×800). Pre-conditions: the
 | # | Test | Expected |
 |---|---|---|
 | 1 | Log in (any plan) → My Account | "Your plan & usage" card shows plan badge, bars for galleries / pictures / storage (books on paid plans), Upgrade link for Free/Premium |
-| 2 | Free user with 2 galleries → create a 3rd | 403 + upgrade modal "reached your Free plan limit of 2 galleries" |
-| 3 | Free user with 20 pictures → upload another | Upgrade modal "limit of 20 pictures"; existing pictures still editable/deletable |
+| 2 | Free user with 5 galleries → create a 6th | 403 + upgrade modal "reached your Free plan limit of 5 galleries" |
+| 3 | Free user with 50 pictures → upload another | Upgrade modal "limit of 50 pictures"; existing pictures still editable/deletable |
 | 4 | Any user → `/pricing` | Free / Premium / Creator cards show gallery limits, For Sale and messaging lines; dark readable text |
 | 5 | Admin account | No caps enforced; usage card hidden |
 

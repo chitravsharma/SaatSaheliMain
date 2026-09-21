@@ -359,7 +359,7 @@ the Account "Your plan & usage" meter are rendered from the same numbers via
 
 | | Free | Premium $3/mo | Creator / Pro $7/mo |
 |---|---|---|---|
-| Galleries · pictures · storage | 2 · 20 · 100 MB | 15 · 300 · 2 GB | 50 · 1,500 · 10 GB |
+| Galleries · pictures · storage | 5 · 50 · 100 MB | 15 · 300 · 2 GB | 50 · 1,500 · 10 GB |
 | Books · pages/book | ✗ | 10 · 50 | 25 · 400 (or the 10 GB cap, whichever first) |
 | Mark gallery items For Sale (`canUseMarketChat`) | ✗ | ✓ unlimited | ✓ unlimited |
 | Seller inbox (receive buyer enquiries) | ✗ | ✓ | ✓ |

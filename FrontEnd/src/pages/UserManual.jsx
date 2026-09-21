@@ -680,7 +680,7 @@ const UserManual = () => {
               <strong>Free</strong> &mdash; read all books, articles, recipes
               and galleries, and the first 10 pages of each magazine issue;
               write and publish articles, blogs and poems; post recipes; keep
-              a small gallery (2 galleries, 20 pictures, 100&nbsp;MB); build a
+              a small gallery (5 galleries, 50 pictures, 100&nbsp;MB); build a
               profile and share it; like, comment and chat. Cannot create books
               or mark items For Sale.
             </li>

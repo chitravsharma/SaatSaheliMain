@@ -17,7 +17,7 @@ const plans = [
       "Magazine preview — first 10 pages of every issue",
       "Write & publish articles, blogs and poems",
       "Post recipes with photos",
-      "Gallery: 2 galleries · 20 pictures · 100 MB",
+      "Gallery: 5 galleries · 50 pictures · 100 MB",
       "Create your profile & share it via link",
       "Like, favourite, comment & join the chat rooms",
       "Community support",
