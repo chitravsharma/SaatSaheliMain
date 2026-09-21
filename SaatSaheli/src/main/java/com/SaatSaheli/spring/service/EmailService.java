@@ -50,6 +50,16 @@ public class EmailService {
     private String redirectTo;
 
     /**
+     * Record-keeping copy. Every real outgoing email is BCC'd here so the mailbox
+     * holds a complete archive of what the site sent. Empty disables it. Not
+     * applied under the dev redirect (everything already lands in test inboxes),
+     * to password-reset mail (would archive temporary passwords), or when the
+     * archive address is already a recipient (e.g. the admin copy of a form).
+     */
+    @Value("${app.email.archive-bcc:}")
+    private String archiveBcc;
+
+    /**
      * Send a password reset email with the temporary password.
      */
     public void sendPasswordResetEmail(String toEmail, String tempPassword) {
@@ -285,6 +295,17 @@ public class EmailService {
         return (amount == null ? BigDecimal.ZERO : amount).setScale(2, java.math.RoundingMode.HALF_UP).toPlainString();
     }
 
+    /** The archive BCC address for this send, or null when it should not be copied. */
+    private String archiveBccFor(String kind, String[] recipients, boolean realDelivery) {
+        String archive = archiveBcc != null ? archiveBcc.trim() : "";
+        if (archive.isEmpty() || !realDelivery) return null;
+        if ("PASSWORD_RESET".equals(kind)) return null;
+        for (String r : recipients) {
+            if (r != null && r.trim().equalsIgnoreCase(archive)) return null;
+        }
+        return archive;
+    }
+
     private static String escape(String s) {
         if (s == null) return "";
         return s.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;");
@@ -332,13 +353,16 @@ public class EmailService {
             recipients = new String[]{ to };
         }
         if (recipients.length == 0) return;
-        String deliveredTo = String.join(",", recipients);
+
+        String bcc = archiveBccFor(kind, recipients, redirect.isEmpty());
+        String deliveredTo = String.join(",", recipients) + (bcc != null ? " (bcc " + bcc + ")" : "");
 
         try {
             MimeMessage mimeMessage = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, "utf-8");
             helper.setFrom(fromAddress);
             helper.setTo(recipients);
+            if (bcc != null) helper.setBcc(bcc);
             helper.setSubject(finalSubject);
             helper.setText(htmlBody, true);
             mailSender.send(mimeMessage);
