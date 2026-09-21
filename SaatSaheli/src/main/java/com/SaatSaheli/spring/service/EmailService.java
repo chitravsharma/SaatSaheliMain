@@ -50,14 +50,15 @@ public class EmailService {
     private String redirectTo;
 
     /**
-     * Record-keeping copy. Every real outgoing email is BCC'd here so the mailbox
-     * holds a complete archive of what the site sent. Empty disables it. Not
+     * Record-keeping copy. Every real outgoing email is CC'd here so the mailbox
+     * holds a complete archive of what the site sent (visible to the recipient —
+     * it is the same address the mail comes from). Empty disables it. Not
      * applied under the dev redirect (everything already lands in test inboxes),
      * to password-reset mail (would archive temporary passwords), or when the
      * archive address is already a recipient (e.g. the admin copy of a form).
      */
-    @Value("${app.email.archive-bcc:}")
-    private String archiveBcc;
+    @Value("${app.email.archive-cc:}")
+    private String archiveCc;
 
     /**
      * Send a password reset email with the temporary password.
@@ -295,9 +296,9 @@ public class EmailService {
         return (amount == null ? BigDecimal.ZERO : amount).setScale(2, java.math.RoundingMode.HALF_UP).toPlainString();
     }
 
-    /** The archive BCC address for this send, or null when it should not be copied. */
-    private String archiveBccFor(String kind, String[] recipients, boolean realDelivery) {
-        String archive = archiveBcc != null ? archiveBcc.trim() : "";
+    /** The archive CC address for this send, or null when it should not be copied. */
+    private String archiveCcFor(String kind, String[] recipients, boolean realDelivery) {
+        String archive = archiveCc != null ? archiveCc.trim() : "";
         if (archive.isEmpty() || !realDelivery) return null;
         if ("PASSWORD_RESET".equals(kind)) return null;
         for (String r : recipients) {
@@ -354,15 +355,15 @@ public class EmailService {
         }
         if (recipients.length == 0) return;
 
-        String bcc = archiveBccFor(kind, recipients, redirect.isEmpty());
-        String deliveredTo = String.join(",", recipients) + (bcc != null ? " (bcc " + bcc + ")" : "");
+        String cc = archiveCcFor(kind, recipients, redirect.isEmpty());
+        String deliveredTo = String.join(",", recipients) + (cc != null ? " (cc " + cc + ")" : "");
 
         try {
             MimeMessage mimeMessage = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, "utf-8");
             helper.setFrom(fromAddress);
             helper.setTo(recipients);
-            if (bcc != null) helper.setBcc(bcc);
+            if (cc != null) helper.setCc(cc);
             helper.setSubject(finalSubject);
             helper.setText(htmlBody, true);
             mailSender.send(mimeMessage);
