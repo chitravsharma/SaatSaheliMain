@@ -152,7 +152,8 @@ public class ContactController {
             // failure must NOT fail the request — otherwise the client retries and we
             // end up with duplicate rows in the support queries table.
             try {
-                emailService.sendContactNotification(name.trim(), trimmedEmail, contact.getSubject(), message.trim());
+                emailService.sendContactNotification(name.trim(), trimmedEmail, contact.getSubject(), message.trim(),
+                        contact.getId(), trackingId);
             } catch (Exception emailErr) {
                 log.warn("Failed to send contact notification email (submission #{} still saved): {}",
                         contact.getId(), emailErr.getMessage());
@@ -164,7 +165,8 @@ public class ContactController {
             // Acknowledgement to the submitter: email receipt with the tracking id, plus a
             // bell notification if they were logged in. Both non-fatal for the same reason.
             try {
-                emailService.sendSubmissionAcknowledgement(trimmedEmail, name.trim(), contact.getSubject(), trackingId);
+                emailService.sendSubmissionAcknowledgement(trimmedEmail, name.trim(), contact.getSubject(), trackingId,
+                        contact.getId());
             } catch (Exception ackErr) {
                 log.warn("Failed to send submission acknowledgement email to {} (submission #{} still saved): {}",
                         trimmedEmail, contact.getId(), ackErr.getMessage());
@@ -309,7 +311,7 @@ public class ContactController {
 
         String trackingId = formatTrackingId(msg.getId(), msg.getSubject());
         try {
-            emailService.sendSubmissionAcknowledgement(msg.getEmail(), msg.getName(), msg.getSubject(), trackingId);
+            emailService.sendSubmissionAcknowledgement(msg.getEmail(), msg.getName(), msg.getSubject(), trackingId, msg.getId());
         } catch (Exception e) {
             log.warn("Admin #{} resend-ack for contact #{} failed: {}", callerUserId, id, e.getMessage());
             return ResponseEntity.status(HttpStatus.BAD_GATEWAY)

@@ -27,6 +27,9 @@ public class EmailService {
     @Autowired
     private JavaMailSender mailSender;
 
+    @Autowired
+    private EmailLogService emailLogService;
+
     @Value("${mail.from:avikaventures.info@gmail.com}")
     private String fromAddress;
 
@@ -66,13 +69,14 @@ public class EmailService {
                 </div>
                 """.formatted(tempPassword);
 
-        sendHtmlEmail(toEmail, subject, body);
+        sendHtmlEmail(toEmail, subject, body, "PASSWORD_RESET", null, null, null);
     }
 
     /**
      * Send a notification when a contact form is submitted.
      */
-    public void sendContactNotification(String senderName, String senderEmail, String msgSubject, String message) {
+    public void sendContactNotification(String senderName, String senderEmail, String msgSubject, String message,
+                                        Long contactId, String trackingId) {
         String formType = classifyContactForm(msgSubject);
         String heading = "Feedback".equals(formType) ? "New Feedback Received" : "New " + formType;
         String subject = "SaatSaheli — " + formType + " from " + senderName;
@@ -90,7 +94,7 @@ public class EmailService {
                 </div>
                 """.formatted(heading, senderName, senderEmail, senderEmail, msgSubject, message, senderEmail, senderEmail);
 
-        sendHtmlEmail(fromAddress, subject, body);
+        sendHtmlEmail(fromAddress, subject, body, "CONTACT_ADMIN", "CONTACT", contactId, trackingId);
     }
 
     /**
@@ -113,7 +117,8 @@ public class EmailService {
      * Carries the tracking id so they can quote it later — the on-screen confirmation
      * is the only other place they ever see it.
      */
-    public void sendSubmissionAcknowledgement(String toEmail, String recipientName, String msgSubject, String trackingId) {
+    public void sendSubmissionAcknowledgement(String toEmail, String recipientName, String msgSubject, String trackingId,
+                                              Long contactId) {
         String formType = classifyContactForm(msgSubject);
         String safeTracking = escape(trackingId != null ? trackingId : "");
         String greeting = (recipientName != null && !recipientName.isBlank())
@@ -165,7 +170,7 @@ public class EmailService {
                 """.formatted(escape(formType.toLowerCase()), greeting, intro, safeTracking, nextSteps,
                 escape(msgSubject != null ? msgSubject : ""));
 
-        sendHtmlEmail(toEmail, subject, body);
+        sendHtmlEmail(toEmail, subject, body, "SUBMISSION_ACK", "CONTACT", contactId, trackingId);
     }
 
     /**
@@ -193,7 +198,7 @@ public class EmailService {
                 </div>
                 """.formatted(itemLabel, greeting, safeActor, safeTitle, escape(commentSnippet), link);
 
-        sendHtmlEmail(toEmail, subject, body);
+        sendHtmlEmail(toEmail, subject, body, "COMMENT", null, null, null);
     }
 
     /** New private message about an item For Sale (buyer ↔ seller). */
@@ -218,7 +223,7 @@ public class EmailService {
                   <p style="color: #9ca3af; font-size: 0.85rem;">You're receiving this because of a private conversation about an item on SaatSaheli. Replies are only visible to you, the other party, and SaatSaheli admins.<br/>— The SaatSaheli Team</p>
                 </div>
                 """.formatted(safeTitle, greeting, safeSender, escape(snippet), link);
-        sendHtmlEmail(toEmail, subject, body);
+        sendHtmlEmail(toEmail, subject, body, "MESSAGE", null, null, null);
     }
 
     /**
@@ -269,7 +274,7 @@ public class EmailService {
                 sym, money(order.getSubtotal()),
                 tracking);
 
-        sendHtmlEmail(toEmail, subject, body);
+        sendHtmlEmail(toEmail, subject, body, "ORDER_CONFIRMATION", "ORDER", order.getId(), order.getOrderNumber());
     }
 
     private static String symbolFor(String currency) {
@@ -299,10 +304,16 @@ public class EmailService {
                   <p style="color: #9ca3af; font-size: 0.85rem;">&mdash; The SaatSaheli Team</p>
                 </div>
                 """;
-        sendHtmlEmail(to, subject, body);
+        sendHtmlEmail(to, subject, body, "TEST", null, null, null);
     }
 
-    private void sendHtmlEmail(String to, String subject, String htmlBody) {
+    /**
+     * Single choke point for outbound mail. Every attempt — sent, failed, or skipped
+     * because delivery is disabled — is recorded in email_log with the given kind
+     * and optional link to the originating record (relatedType/relatedId/reference).
+     */
+    private void sendHtmlEmail(String to, String subject, String htmlBody,
+                               String kind, String relatedType, Long relatedId, String reference) {
         String[] recipients;
         String finalSubject = subject;
         String redirect = redirectTo != null ? redirectTo.trim() : "";
@@ -314,11 +325,14 @@ public class EmailService {
             finalSubject = "[DEV → " + to + "] " + subject;
         } else if (!emailEnabled) {
             log.info("Email delivery disabled (app.email.enabled=false) — skipping send to {} — subject: {}", to, subject);
+            emailLogService.record(kind, to, null, subject, relatedType, relatedId, reference,
+                    com.SaatSaheli.spring.model.EmailLog.STATUS_SKIPPED, "app.email.enabled=false");
             return;
         } else {
             recipients = new String[]{ to };
         }
         if (recipients.length == 0) return;
+        String deliveredTo = String.join(",", recipients);
 
         try {
             MimeMessage mimeMessage = mailSender.createMimeMessage();
@@ -328,9 +342,13 @@ public class EmailService {
             helper.setSubject(finalSubject);
             helper.setText(htmlBody, true);
             mailSender.send(mimeMessage);
-            log.info("Email sent to {} — subject: {}", String.join(",", recipients), finalSubject);
-        } catch (MessagingException e) {
-            log.error("Failed to send email to {} — {}", String.join(",", recipients), e.getMessage());
+            log.info("Email sent to {} — subject: {}", deliveredTo, finalSubject);
+            emailLogService.record(kind, to, deliveredTo, subject, relatedType, relatedId, reference,
+                    com.SaatSaheli.spring.model.EmailLog.STATUS_SENT, null);
+        } catch (MessagingException | org.springframework.mail.MailException e) {
+            log.error("Failed to send email to {} — {}", deliveredTo, e.getMessage());
+            emailLogService.record(kind, to, deliveredTo, subject, relatedType, relatedId, reference,
+                    com.SaatSaheli.spring.model.EmailLog.STATUS_FAILED, e.getMessage());
             throw new RuntimeException("Email delivery failed", e);
         }
     }

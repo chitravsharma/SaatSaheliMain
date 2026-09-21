@@ -675,6 +675,39 @@ public class AdminController {
         }
     }
 
+    // ── Email audit log ──
+
+    @Autowired
+    private com.SaatSaheli.spring.repository.EmailLogRepository emailLogRepo;
+
+    /**
+     * GET /api/admin/email-log?limit=200 — newest outbound emails first, every kind and outcome.
+     * Add relatedType=CONTACT&relatedId=32 to see just the emails tied to one record.
+     */
+    @GetMapping("/email-log")
+    public ResponseEntity<?> emailLog(@RequestParam(defaultValue = "200") int limit,
+                                      @RequestParam(required = false) String relatedType,
+                                      @RequestParam(required = false) Long relatedId,
+                                      HttpServletRequest request) {
+        try {
+            User caller = verifyCaller(getAuthUserId(request), false);
+            if (caller == null) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorMap("Admin access required"));
+            }
+            List<com.SaatSaheli.spring.model.EmailLog> rows;
+            if (relatedType != null && relatedId != null) {
+                rows = emailLogRepo.findByRelatedTypeAndRelatedIdOrderBySentDateDesc(relatedType, relatedId);
+            } else {
+                int safeLimit = Math.min(Math.max(limit, 1), 1000);
+                rows = emailLogRepo.findAllByOrderBySentDateDesc(org.springframework.data.domain.PageRequest.of(0, safeLimit));
+            }
+            return ResponseEntity.ok(Map.of("emails", rows));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(errorMap("Failed to load email log: " + e.getMessage()));
+        }
+    }
+
     // ── Private messages (buyer ↔ seller) — read-only oversight ──
 
     /** GET /api/admin/conversations — every private thread, newest activity first. */

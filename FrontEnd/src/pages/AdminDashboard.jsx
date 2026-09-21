@@ -370,6 +370,13 @@ const AdminDashboard = () => {
     const [supportSearch, setSupportSearch] = useState("");
 
     // Private messages oversight (read-only)
+    const [emailLog, setEmailLog] = useState([]);
+    const [emailLogLoading, setEmailLogLoading] = useState(false);
+    const [emailLogSearch, setEmailLogSearch] = useState("");
+    const [emailLogKind, setEmailLogKind] = useState("ALL");
+    const [emailLogStatus, setEmailLogStatus] = useState("ALL");
+    // contact id -> latest SUBMISSION_ACK row, shown inside each support query
+    const [ackByContactId, setAckByContactId] = useState({});
     const [convos, setConvos] = useState([]);
     const [convosLoading, setConvosLoading] = useState(false);
     const [convoSearch, setConvoSearch] = useState("");
@@ -494,6 +501,25 @@ const AdminDashboard = () => {
         setSupportLoading(false);
     }, [user?.userId]);
 
+    const fetchEmailLog = useCallback(async () => {
+        setEmailLogLoading(true);
+        try {
+            const res = await api.get(`${API}/api/admin/email-log?limit=500`);
+            const rows = Array.isArray(res.data?.emails) ? res.data.emails : [];
+            setEmailLog(rows);
+            // Index the latest acknowledgement per support query so the Support tab
+            // can show "Acknowledged on …" without a second round-trip per row.
+            const acks = {};
+            for (const r of rows) {
+                if (r.kind === "SUBMISSION_ACK" && r.relatedType === "CONTACT" && r.relatedId != null && !acks[r.relatedId]) {
+                    acks[r.relatedId] = r; // rows are newest-first
+                }
+            }
+            setAckByContactId(acks);
+        } catch { /* ignore */ }
+        setEmailLogLoading(false);
+    }, [user?.userId]);
+
     const fetchConvos = useCallback(async () => {
         setConvosLoading(true);
         try {
@@ -602,6 +628,7 @@ const AdminDashboard = () => {
         try {
             const res = await api.post(`${API}/api/contact/${q.id}/resend-ack`);
             setMessage(res?.data?.message || "Acknowledgement sent");
+            fetchEmailLog();
         } catch (err) {
             setMessage(err?.response?.data?.error || "Failed to send acknowledgement");
         } finally {
@@ -681,12 +708,13 @@ const AdminDashboard = () => {
         if (tab === "audit") fetchAuditLog();
         if (tab === "analytics") fetchAnalytics();
         if (tab === "advertisements") fetchAdvertisements();
-        if (tab === "support") fetchSupportQueries();
+        if (tab === "support") { fetchSupportQueries(); fetchEmailLog(); }
         if (tab === "comments") fetchComments();
         if (tab === "messages") fetchConvos();
+        if (tab === "emails") fetchEmailLog();
         if (tab === "payments") fetchPayments();
         if (tab === "heroSlides") fetchHeroSlides();
-    }, [tab, fetchUsers, fetchBooks, fetchArticles, fetchRecipes, fetchGalleries, fetchListings, fetchAuditLog, fetchAnalytics, fetchAdvertisements, fetchSupportQueries, fetchComments, fetchConvos, fetchPayments, fetchHeroSlides]);
+    }, [tab, fetchUsers, fetchBooks, fetchArticles, fetchRecipes, fetchGalleries, fetchListings, fetchAuditLog, fetchAnalytics, fetchAdvertisements, fetchSupportQueries, fetchComments, fetchConvos, fetchEmailLog, fetchPayments, fetchHeroSlides]);
 
     const changeRole = async (userId, newRole) => {
         try {
@@ -1089,6 +1117,9 @@ const AdminDashboard = () => {
                 </button>
                 <button className={tab === "messages" ? "active" : ""} onClick={() => setTab("messages")}>
                     Messages
+                </button>
+                <button className={tab === "emails" ? "active" : ""} onClick={() => setTab("emails")}>
+                    Email Log
                 </button>
                 <button className={tab === "payments" ? "active" : ""} onClick={() => setTab("payments")}>
                     Payments
@@ -2588,6 +2619,18 @@ const AdminDashboard = () => {
                                                                     )}
                                                                     <span><strong>Submitted:</strong> {q.createdDate ? new Date(q.createdDate).toLocaleString("en-US", { timeZone: "America/Los_Angeles", timeZoneName: "short" }) : "—"}</span>
                                                                     {q.updatedDate && <span><strong>Last Updated:</strong> {new Date(q.updatedDate).toLocaleString("en-US", { timeZone: "America/Los_Angeles", timeZoneName: "short" })}</span>}
+                                                                    {(() => {
+                                                                        const ack = ackByContactId[q.id];
+                                                                        if (!ack) return <span><strong>Acknowledged:</strong> not yet emailed</span>;
+                                                                        const ok = ack.status === "SENT";
+                                                                        return (
+                                                                            <span title={ack.error || ack.deliveredTo || ""}>
+                                                                                <strong>Acknowledged:</strong>{" "}
+                                                                                <span style={{ color: ok ? "#15803d" : "#b91c1c", fontWeight: 600 }}>{ack.status}</span>
+                                                                                {" "}{toPSTDateTime(ack.sentDate)} → {ack.recipient}
+                                                                            </span>
+                                                                        );
+                                                                    })()}
                                                                     <button
                                                                         type="button"
                                                                         className="admin-btn"
@@ -2721,6 +2764,93 @@ const AdminDashboard = () => {
                                                         Remove
                                                     </button>
                                                 )}
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                            </div>
+                        )}
+                    </div>
+                );
+            })()}
+
+            {tab === "emails" && (() => {
+                const q = emailLogSearch.trim().toLowerCase();
+                const kinds = Array.from(new Set(emailLog.map(r => r.kind))).sort();
+                const filtered = emailLog.filter(r =>
+                    (emailLogKind === "ALL" || r.kind === emailLogKind)
+                    && (emailLogStatus === "ALL" || r.status === emailLogStatus)
+                    && (!q
+                        || (r.recipient || "").toLowerCase().includes(q)
+                        || (r.subject || "").toLowerCase().includes(q)
+                        || (r.reference || "").toLowerCase().includes(q)
+                        || (r.error || "").toLowerCase().includes(q)));
+                const failed = emailLog.filter(r => r.status === "FAILED").length;
+                const STATUS_COLOR = { SENT: "#15803d", FAILED: "#b91c1c", SKIPPED: "#a16207" };
+                return (
+                    <div>
+                        <h2>Email Log ({emailLog.length})</h2>
+                        <p style={{ color: "#666", marginTop: -8 }}>
+                            Every email the site tried to send, newest first. <strong>SENT</strong> = the mail server accepted it
+                            (inbox delivery itself can't be seen from here); <strong>FAILED</strong> = SMTP error;
+                            <strong> SKIPPED</strong> = delivery disabled (dev). {failed > 0 && <span style={{ color: "#b91c1c" }}>{failed} failed.</span>}
+                        </p>
+                        <div style={{ display: "flex", gap: 12, marginBottom: 16, flexWrap: "wrap", alignItems: "center" }}>
+                            <input
+                                type="text"
+                                placeholder="Search recipient, subject, tracking ID, error..."
+                                value={emailLogSearch}
+                                onChange={(e) => setEmailLogSearch(e.target.value)}
+                                className="admin-search-input"
+                                style={{ flex: 1, minWidth: 200 }}
+                            />
+                            <select className="admin-select" value={emailLogKind} onChange={(e) => setEmailLogKind(e.target.value)}>
+                                <option value="ALL">All kinds</option>
+                                {kinds.map(k => <option key={k} value={k}>{k.replace(/_/g, " ")}</option>)}
+                            </select>
+                            <select className="admin-select" value={emailLogStatus} onChange={(e) => setEmailLogStatus(e.target.value)}>
+                                <option value="ALL">All statuses</option>
+                                <option value="SENT">Sent</option>
+                                <option value="FAILED">Failed</option>
+                                <option value="SKIPPED">Skipped</option>
+                            </select>
+                            <button className="admin-btn" onClick={fetchEmailLog}>Refresh</button>
+                        </div>
+
+                        {emailLogLoading && <p>Loading...</p>}
+                        {!emailLogLoading && filtered.length === 0 && <p>No emails logged yet.</p>}
+                        {!emailLogLoading && filtered.length > 0 && (
+                            <div className="admin-table-wrap">
+                            <table className="admin-table">
+                                <thead>
+                                    <tr>
+                                        <th>Sent</th>
+                                        <th>Kind</th>
+                                        <th>To</th>
+                                        <th>Subject</th>
+                                        <th>Ref</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {filtered.map(r => (
+                                        <tr key={r.id} style={r.status === "FAILED" ? { background: "#fef2f2" } : undefined}>
+                                            <td style={{ whiteSpace: "nowrap" }}>{toPSTDateTime(r.sentDate)}</td>
+                                            <td style={{ whiteSpace: "nowrap" }}>{(r.kind || "").replace(/_/g, " ")}</td>
+                                            <td>
+                                                {r.recipient}
+                                                {r.deliveredTo && r.deliveredTo !== r.recipient && (
+                                                    <div style={{ fontSize: 11, color: "#888" }}>redirected → {r.deliveredTo}</div>
+                                                )}
+                                            </td>
+                                            <td>{r.subject}</td>
+                                            <td style={{ whiteSpace: "nowrap" }}>
+                                                {r.reference ? <code>{r.reference}</code> : (r.relatedType ? `${r.relatedType} #${r.relatedId}` : "—")}
+                                            </td>
+                                            <td>
+                                                <span style={{ color: STATUS_COLOR[r.status] || "#333", fontWeight: 600 }}>{r.status}</span>
+                                                {r.error && <div style={{ fontSize: 11, color: "#b91c1c", maxWidth: 260 }}>{r.error}</div>}
                                             </td>
                                         </tr>
                                     ))}
